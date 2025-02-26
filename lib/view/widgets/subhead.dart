@@ -16,6 +16,6 @@ class Subhead extends StatefulWidget {
 class _SubheadState extends State<Subhead> {
   @override
   Widget build(BuildContext context) {
-    return Text(widget.text,style: GoogleFonts.montserrat(textStyle: TextStyle(fontSize: 17.5.sp,fontWeight: widget.weight,color: widget.color)),);
+    return Text(widget.text,style: GoogleFonts.figtree(textStyle: TextStyle(fontSize: 17.sp,fontWeight: widget.weight,color: widget.color)),);
   }
 }

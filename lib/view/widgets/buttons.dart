@@ -25,7 +25,7 @@ class _ButtonsState extends State<Buttons> {
         color: widget.color,
         borderRadius: widget.radius
       ),
-      child: Center(child: Text(widget.text,style: GoogleFonts.montserrat(textStyle: TextStyle(fontSize: 15.sp,fontWeight: widget.weight,color: Colors.white)),)),
+      child: Center(child: Text(widget.text,style: GoogleFonts.figtree(textStyle: TextStyle(fontSize: 14.5.sp,fontWeight: widget.weight,color: Colors.white)),)),
     );
   }
 }

@@ -35,32 +35,51 @@ class _LoginState extends State<Login> {
   }
   Widget _smallBuildLayout(){
     return Scaffold(
-      body: SizedBox(
-        width: width.w,
-        child: Column(
-          children: [
-            SizedBox(height: 80.h,),
-            Container(
-              height: height/5.h,
-              width: width/2.w,
+      body: Stack(
+        children: [
+          SizedBox(height: 27.h,),
+          Column(
+            children: [
+              Container(
+                height: height/1.8.h,
+                width: width.w,
                 decoration: BoxDecoration(
-                  image: DecorationImage(
-                    image: AssetImage("assets/login.png"),fit: BoxFit.cover
-                  )
+                  color: Colors.teal,
+                  borderRadius: BorderRadius.only(bottomRight: Radius.circular(60),bottomLeft: Radius.circular(60))
                 ),
-           ),
-            SizedBox(height: 10.h,),
-            GestureDetector(
-              onTap: (){
-                Get.to(Dashboard());
-              },
-                child: Buttons(text: "Get Started here ✈", weight: FontWeight.w500, color: Colors.blueGrey, height: height/16.h, width: width/1.5.w, radius: BorderRadius.circular(26.r)))
+              ),
 
-          ],
-        ),
+            ],
+          ),
+          Positioned(
+            bottom: 250,
+            right: 104,
+            child: Container(
+              height: height/4.h,
+              width: width/2.w,
+              decoration: BoxDecoration(
+                  image: DecorationImage(
+                      image: AssetImage("assets/login.png"),fit: BoxFit.cover
+                  )
+              ),
+            ),
+          ),
+          Positioned(
+            bottom: 160,
+              right: 60,
+              child:
+              GestureDetector(
+                  onTap: (){
+                    Get.off(Dashboard());
+                  },
+                  child: Buttons(text: "Get Started here ✈", weight: FontWeight.w500, color: Colors.blueGrey, height: height/16.h, width: width/1.3.w, radius: BorderRadius.circular(26.r)))
+          )
+        ],
       ),
 
     );
   }
+
+
 
 }
