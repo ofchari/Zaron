@@ -46,7 +46,6 @@ class _DashboardState extends State<Dashboard> {
     );
   }
 
-  /// Mobile Layout
   Widget _smallBuildLayout() {
     return Scaffold(
       appBar: AppBar(

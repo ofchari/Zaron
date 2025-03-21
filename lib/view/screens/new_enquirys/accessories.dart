@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:zaron/view/widgets/buttons.dart';
 import '../../widgets/subhead.dart';
 import '../../widgets/text.dart';
+import '../../widgets/buttons.dart';
 
 class Accessories extends StatefulWidget {
   const Accessories({super.key});
@@ -26,7 +26,6 @@ class _AccessoriesState extends State<Accessories> {
 
   @override
   Widget build(BuildContext context) {
-    /// Define Sizes //
     var size = MediaQuery.of(context).size;
     height = size.height;
     width = size.width;
@@ -42,47 +41,33 @@ class _AccessoriesState extends State<Accessories> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Align(
-                alignment: Alignment.centerLeft,
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: MyText(text: "Accessories Name :", weight: FontWeight.w500, color: Colors.black),
-                  )),
-              _buildTextField("Select Accessories", nameController, Icons.person),
-              SizedBox(height: 10.h,),
-              Align(
-                  alignment: Alignment.centerLeft,
-                  child: MyText(text: " Select Base Product:", weight: FontWeight.w500, color: Colors.black)),
-              SizedBox(height: 5.h,),
-              Align(
-                  alignment: Alignment.centerLeft,
-                  child: MyText(text: "Brand :", weight: FontWeight.w500, color: Colors.black)),
-              _buildTextField("Brand", brandController,Icons.business),
-              SizedBox(height: 5.h,),
-              Align(
-                  alignment: Alignment.centerLeft,
-                  child: MyText(text: "Color :", weight: FontWeight.w500, color: Colors.black)),
-              _buildTextField("Color", colorController,Icons.color_lens),
-              SizedBox(height: 5.h,),
-              Align(
-                  alignment: Alignment.centerLeft,
-                  child: MyText(text: "Thickness :", weight: FontWeight.w500, color: Colors.black)),
-              _buildTextField("Thickness", thicknessController,  Icons.layers),
-              SizedBox(height: 5.h,),
-              Align(
-                  alignment: Alignment.centerLeft,
-                  child: MyText(text: "Coating Mass :", weight: FontWeight.w500, color: Colors.black)),
+              _buildLabel("Accessories Name:"),
+              _buildTextField("Select Accessories", nameController, Icons.settings),
+              _buildLabel("Select Base Product:"),
+              _buildLabel("Brand:"),
+              _buildTextField("Brand", brandController, Icons.business),
+              _buildLabel("Color:"),
+              _buildTextField("Color", colorController, Icons.color_lens),
+              _buildLabel("Thickness:"),
+              _buildTextField("Thickness", thicknessController, Icons.layers),
+              _buildLabel("Coating Mass:"),
               _buildTextField("Coating Mass", materialTypeController, Icons.category),
               SizedBox(height: 20.h),
               Center(
                 child: GestureDetector(
-                  onTap: (){
-                    _submitData();
-                  },
-                    child: Buttons(text: "Submit", weight: FontWeight.w500, color: Colors.blue, height: height/17.h, width: width/3.5.w, radius: BorderRadius.circular(10.r)))
+                  onTap: _submitData,
+                  child: Buttons(
+                    text: "Submit",
+                    weight: FontWeight.w500,
+                    color: Colors.blue,
+                    height: height / 17.h,
+                    width: width / 3.5.w,
+                    radius: BorderRadius.circular(10.r),
+                  ),
+                ),
               ),
               SizedBox(height: 20.h),
-              _buildSubmittedData(),
+              submittedData.isEmpty ? _emptyMessage() : _buildSubmittedData(),
             ],
           ),
         ),
@@ -90,14 +75,23 @@ class _AccessoriesState extends State<Accessories> {
     );
   }
 
+  Widget _buildLabel(String text) {
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: 6.h),
+      child: MyText(text: text, weight: FontWeight.w500, color: Colors.black),
+    );
+  }
+
   Widget _buildTextField(String hint, TextEditingController controller, IconData icon) {
     return Padding(
-      padding: EdgeInsets.symmetric(vertical: 10.h),
+      padding: EdgeInsets.symmetric(vertical: 8.h),
       child: TextFormField(
         controller: controller,
         decoration: InputDecoration(
           labelText: hint,
-          labelStyle: GoogleFonts.figtree(textStyle: TextStyle(fontSize: 14.5.sp,fontWeight: FontWeight.w500,color: Colors.grey)),
+          labelStyle: GoogleFonts.figtree(
+            textStyle: TextStyle(fontSize: 14.5.sp, fontWeight: FontWeight.w500, color: Colors.grey),
+          ),
           prefixIcon: Icon(icon, color: Colors.blueAccent),
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r)),
           focusedBorder: OutlineInputBorder(
@@ -141,13 +135,40 @@ class _AccessoriesState extends State<Accessories> {
       thicknessController.clear();
       materialTypeController.clear();
     });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text("Data Submitted Successfully"),
+        backgroundColor: Colors.green,
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
   }
+
+  void _deleteData(int index) {
+    setState(() {
+      submittedData.removeAt(index);
+    });
+
+    // ✅ Show success Snackbar when data is deleted
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text("Data deleted successfully!"),
+        backgroundColor: Colors.orange,
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+
 
   Widget _buildSubmittedData() {
     return Column(
-      children: submittedData.map((data) {
+      children: submittedData.asMap().entries.map((entry) {
+        int index = entry.key;
+        Map<String, String> data = entry.value;
+
         return Card(
-          margin: EdgeInsets.only(bottom: 15.h),
+          margin: EdgeInsets.only(bottom: 12.h),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
           elevation: 4,
           shadowColor: Colors.blueAccent.withOpacity(0.2),
@@ -155,8 +176,8 @@ class _AccessoriesState extends State<Accessories> {
             padding: EdgeInsets.all(12.w),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: data.entries.map((entry) {
-                return Padding(
+              children: [
+                ...data.entries.map((entry) => Padding(
                   padding: EdgeInsets.symmetric(vertical: 5.h),
                   child: Row(
                     children: [
@@ -171,14 +192,22 @@ class _AccessoriesState extends State<Accessories> {
                       ),
                     ],
                   ),
-                );
-              }).toList(),
+                )),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: IconButton(
+                    icon: Icon(Icons.delete, color: Colors.red),
+                    onPressed: () => _deleteData(index),
+                  ),
+                ),
+              ],
             ),
           ),
         );
       }).toList(),
     );
   }
+
 
   Widget _emptyMessage() {
     return Center(
@@ -196,14 +225,14 @@ class _AccessoriesState extends State<Accessories> {
   IconData _getIcon(String key) {
     switch (key) {
       case "Name":
-        return Icons.person;
+        return Icons.settings;
       case "Brand":
         return Icons.business;
       case "Color":
         return Icons.color_lens;
       case "Thickness":
         return Icons.layers;
-      case "Material Type":
+      case "Coating Mass":
         return Icons.category;
       default:
         return Icons.info;

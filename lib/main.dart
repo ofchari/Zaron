@@ -2,11 +2,14 @@ import 'package:animated_splash_screen/animated_splash_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get_navigation/src/root/get_material_app.dart';
+import 'package:hive/hive.dart';
+import 'package:hive_flutter/adapters.dart';
 import 'package:zaron/view/screens/dashboard.dart';
+import 'package:zaron/view/screens/entry.dart';
 import 'package:zaron/view/screens/login.dart';
 import '';
 
-void main() {
+void main() async{
   runApp(const MyApp());
 }
 
@@ -26,12 +29,13 @@ class MyApp extends StatelessWidget {
             colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
             useMaterial3: true,
           ),
-          home: AnimatedSplashScreen(
-              splash: Image.asset("assets/login.png"),
-              splashTransition: SplashTransition.fadeTransition,
-              splashIconSize: 200,
-              duration: 2000,
-              nextScreen: Login()),
+          home: Login()
+          // AnimatedSplashScreen(
+          //     splash: Image.asset("assets/login.png"),
+          //     splashTransition: SplashTransition.fadeTransition,
+          //     splashIconSize: 200,
+          //     duration: 2000,
+          //     nextScreen: Entry()),
         );
       },
 

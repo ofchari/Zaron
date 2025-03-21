@@ -16,17 +16,15 @@ class _AluminumState extends State<Aluminum> {
   late double height;
   late double width;
 
-  final TextEditingController aluminumController = TextEditingController(); // Changed from materialTypeController
+  final TextEditingController aluminumController = TextEditingController();
   final TextEditingController brandController = TextEditingController();
   final TextEditingController colorController = TextEditingController();
-  final TextEditingController thicknessController = TextEditingController(); // Changed from thicknessController
-  final TextEditingController coatingMassController = TextEditingController();
+  final TextEditingController thicknessController = TextEditingController();
 
   List<Map<String, String>> submittedData = [];
 
   @override
   Widget build(BuildContext context) {
-    /// Define Sizes //
     var size = MediaQuery.of(context).size;
     height = size.height;
     width = size.width;
@@ -42,37 +40,21 @@ class _AluminumState extends State<Aluminum> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Align(
-                alignment: Alignment.centerLeft,
-                child: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: MyText(text: "Aluminum:", weight: FontWeight.w500, color: Colors.black),
-                ),
-              ),
-              _buildTextField("Select Alumimum", aluminumController, Icons.miscellaneous_services),
+              _buildLabel("Aluminum:"),
+              _buildTextField("Select Aluminum", aluminumController, Icons.miscellaneous_services),
               SizedBox(height: 10.h),
 
-              Align(
-                alignment: Alignment.centerLeft,
-                child: MyText(text: "Brand:", weight: FontWeight.w500, color: Colors.black),
-              ),
+              _buildLabel("Brand:"),
               _buildTextField("Brand", brandController, Icons.business),
               SizedBox(height: 5.h),
 
-              Align(
-                alignment: Alignment.centerLeft,
-                child: MyText(text: "Color:", weight: FontWeight.w500, color: Colors.black),
-              ),
+              _buildLabel("Color:"),
               _buildTextField("Color", colorController, Icons.color_lens),
               SizedBox(height: 5.h),
 
-              Align(
-                alignment: Alignment.centerLeft,
-                child: MyText(text: "Thickness:", weight: FontWeight.w500, color: Colors.black),
-              ),
-              _buildTextField("thickness", thicknessController, Icons.straighten),
-              SizedBox(height: 5.h),
-
+              _buildLabel("Thickness:"),
+              _buildTextField("Thickness", thicknessController, Icons.straighten),
+              SizedBox(height: 10.h),
 
               Center(
                 child: GestureDetector(
@@ -93,6 +75,13 @@ class _AluminumState extends State<Aluminum> {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildLabel(String text) {
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: MyText(text: text, weight: FontWeight.w500, color: Colors.black),
     );
   }
 
@@ -143,15 +132,42 @@ class _AluminumState extends State<Aluminum> {
       brandController.clear();
       colorController.clear();
       thicknessController.clear();
-      coatingMassController.clear();
     });
+
+    // ✅ Show success Snackbar when data is added
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text("Data added successfully!"),
+        backgroundColor: Colors.green,
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
   }
+
+  void _deleteData(int index) {
+    setState(() {
+      submittedData.removeAt(index);
+    });
+
+    // ✅ Show success Snackbar when data is deleted
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text("Data deleted successfully!"),
+        backgroundColor: Colors.orange,
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+
 
   Widget _buildSubmittedData() {
     return Column(
-      children: submittedData.map((data) {
+      children: submittedData.asMap().entries.map((entry) {
+        int index = entry.key;
+        Map<String, String> data = entry.value;
+
         return Card(
-          margin: EdgeInsets.only(bottom: 15.h),
+          margin: EdgeInsets.only(bottom: 12.h),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
           elevation: 4,
           shadowColor: Colors.blueAccent.withOpacity(0.2),
@@ -159,8 +175,8 @@ class _AluminumState extends State<Aluminum> {
             padding: EdgeInsets.all(12.w),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: data.entries.map((entry) {
-                return Padding(
+              children: [
+                ...data.entries.map((entry) => Padding(
                   padding: EdgeInsets.symmetric(vertical: 5.h),
                   child: Row(
                     children: [
@@ -175,8 +191,15 @@ class _AluminumState extends State<Aluminum> {
                       ),
                     ],
                   ),
-                );
-              }).toList(),
+                )),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: IconButton(
+                    icon: Icon(Icons.delete, color: Colors.red),
+                    onPressed: () => _deleteData(index),
+                  ),
+                ),
+              ],
             ),
           ),
         );
@@ -186,7 +209,7 @@ class _AluminumState extends State<Aluminum> {
 
   IconData _getIcon(String key) {
     switch (key) {
-      case "Accessories":
+      case "Aluminum":
         return Icons.miscellaneous_services;
       case "Brand":
         return Icons.business;
@@ -194,8 +217,6 @@ class _AluminumState extends State<Aluminum> {
         return Icons.color_lens;
       case "Thickness":
         return Icons.straighten;
-      // case "Coating Mass":
-      //   return Icons.category;
       default:
         return Icons.info;
     }

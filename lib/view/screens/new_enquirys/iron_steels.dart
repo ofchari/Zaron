@@ -136,9 +136,27 @@ class _IronSteelState extends State<IronSteel> {
     });
   }
 
+  void _deleteData(int index) {
+    setState(() {
+      submittedData.removeAt(index);
+    });
+
+    // ✅ Show delete confirmation Snackbar
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text("Entry deleted successfully!"),
+        backgroundColor: Colors.redAccent,
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+
   Widget _buildSubmittedData() {
     return Column(
-      children: submittedData.map((data) {
+      children: submittedData.asMap().entries.map((entry) {
+        int index = entry.key;
+        Map<String, String> data = entry.value;
+
         return Card(
           margin: EdgeInsets.only(bottom: 15.h),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
@@ -148,30 +166,42 @@ class _IronSteelState extends State<IronSteel> {
             padding: EdgeInsets.all(12.w),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: data.entries.map((entry) {
-                return Padding(
-                  padding: EdgeInsets.symmetric(vertical: 5.h),
-                  child: Row(
-                    children: [
-                      Icon(_getIcon(entry.key), color: Colors.blueAccent, size: 20.w),
-                      SizedBox(width: 8.w),
-                      Expanded(
-                        child: MyText(
-                          text: "${entry.key}: ${entry.value}",
-                          weight: FontWeight.w500,
-                          color: Colors.black87,
+              children: [
+                ...data.entries.map((e) {
+                  return Padding(
+                    padding: EdgeInsets.symmetric(vertical: 5.h),
+                    child: Row(
+                      children: [
+                        Icon(_getIcon(e.key), color: Colors.blueAccent, size: 20.w),
+                        SizedBox(width: 8.w),
+                        Expanded(
+                          child: MyText(
+                            text: "${e.key}: ${e.value}",
+                            weight: FontWeight.w500,
+                            color: Colors.black87,
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
+                  );
+                }).toList(),
+
+                // ✅ Delete Button (Right-aligned)
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: IconButton(
+                    icon: Icon(Icons.delete, color: Colors.red),
+                    onPressed: () => _deleteData(index),
                   ),
-                );
-              }).toList(),
+                ),
+              ],
             ),
           ),
         );
       }).toList(),
     );
   }
+
 
   IconData _getIcon(String key) {
     switch (key) {

@@ -19,11 +19,11 @@ class _ButtonsState extends State<Buttons> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: widget.height,
-      width: widget.width,
+      height: widget.height.h,
+      width: widget.width.w,
       decoration: BoxDecoration(
         color: widget.color,
-        borderRadius: widget.radius
+        borderRadius: widget.radius.r
       ),
       child: Center(child: Text(widget.text,style: GoogleFonts.figtree(textStyle: TextStyle(fontSize: 14.5.sp,fontWeight: widget.weight,color: Colors.white)),)),
     );

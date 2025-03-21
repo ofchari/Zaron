@@ -22,6 +22,7 @@ class _GlgutterState extends State<Glgutter> {
   final TextEditingController thicknessController = TextEditingController(); // Changed from thicknessController
   final TextEditingController coatingMassController = TextEditingController();
   final TextEditingController yieldController = TextEditingController();
+  final TextEditingController productController = TextEditingController();
 
   List<Map<String, String>> submittedData = [];
 
@@ -50,7 +51,7 @@ class _GlgutterState extends State<Glgutter> {
                   child: MyText(text: "Product Name:", weight: FontWeight.w500, color: Colors.black),
                 ),
               ),
-              _buildTextField("Select Product Name", materialController, Icons.miscellaneous_services),
+              _buildTextField("Select Product Name", productController, Icons.miscellaneous_services),
               SizedBox(height: 10.h),
               Align(
                 alignment: Alignment.centerLeft,
@@ -64,7 +65,7 @@ class _GlgutterState extends State<Glgutter> {
                 alignment: Alignment.centerLeft,
                 child: MyText(text: "Material Type:", weight: FontWeight.w500, color: Colors.black),
               ),
-              _buildTextField("Select Material Type", brandController, Icons.business),
+              _buildTextField("Select Material Type", materialController, Icons.business),
               SizedBox(height: 5.h),
 
               Align(
@@ -86,6 +87,12 @@ class _GlgutterState extends State<Glgutter> {
                 child: MyText(text: "Yield Strength:", weight: FontWeight.w500, color: Colors.black),
               ),
               _buildTextField("yield strength", yieldController, Icons.follow_the_signs),
+              SizedBox(height: 5.h),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: MyText(text: "Brand:", weight: FontWeight.w500, color: Colors.black),
+              ),
+              _buildTextField("brand", brandController, Icons.circle_notifications),
               SizedBox(height: 5.h),
 
 
@@ -132,10 +139,11 @@ class _GlgutterState extends State<Glgutter> {
   }
 
   void _submitData() {
-    if (materialController.text.isEmpty ||
+    if (productController.text.isEmpty || materialController.text.isEmpty ||
         brandController.text.isEmpty ||
         coatingController.text.isEmpty ||
-        thicknessController.text.isEmpty) {
+        thicknessController.text.isEmpty ||
+        yieldController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text("Please fill all fields"),
@@ -148,25 +156,54 @@ class _GlgutterState extends State<Glgutter> {
 
     setState(() {
       submittedData.add({
+        "Product Name": productController.text,
         "Material": materialController.text,
         "Brand": brandController.text,
-        "Color": coatingController.text,
+        "Coating": coatingController.text,
         "Thickness": thicknessController.text,
         "Yield Strength": yieldController.text,
       });
 
+      productController.clear();
       materialController.clear();
       brandController.clear();
       coatingController.clear();
       thicknessController.clear();
-      coatingMassController.clear();
       yieldController.clear();
     });
+
+    // ✅ Show success Snackbar when data is added
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text("Data added successfully!"),
+        backgroundColor: Colors.green,
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
   }
+
+  void _deleteData(int index) {
+    setState(() {
+      submittedData.removeAt(index);
+    });
+
+    // ✅ Show success Snackbar when data is deleted
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text("Data deleted successfully!"),
+        backgroundColor: Colors.orange,
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+
 
   Widget _buildSubmittedData() {
     return Column(
-      children: submittedData.map((data) {
+      children: submittedData.asMap().entries.map((entry) {
+        int index = entry.key;
+        Map<String, String> data = entry.value;
+
         return Card(
           margin: EdgeInsets.only(bottom: 15.h),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
@@ -176,24 +213,35 @@ class _GlgutterState extends State<Glgutter> {
             padding: EdgeInsets.all(12.w),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: data.entries.map((entry) {
-                return Padding(
-                  padding: EdgeInsets.symmetric(vertical: 5.h),
-                  child: Row(
-                    children: [
-                      Icon(_getIcon(entry.key), color: Colors.blueAccent, size: 20.w),
-                      SizedBox(width: 8.w),
-                      Expanded(
-                        child: MyText(
-                          text: "${entry.key}: ${entry.value}",
-                          weight: FontWeight.w500,
-                          color: Colors.black87,
+              children: [
+                ...data.entries.map((entry) {
+                  return Padding(
+                    padding: EdgeInsets.symmetric(vertical: 5.h),
+                    child: Row(
+                      children: [
+                        Icon(_getIcon(entry.key), color: Colors.blueAccent, size: 20.w),
+                        SizedBox(width: 8.w),
+                        Expanded(
+                          child: MyText(
+                            text: "${entry.key}: ${entry.value}",
+                            weight: FontWeight.w500,
+                            color: Colors.black87,
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
+                  );
+                }).toList(),
+
+                /// ✅ Delete Button
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: IconButton(
+                    icon: Icon(Icons.delete, color: Colors.red),
+                    onPressed: () => _deleteData(index),
                   ),
-                );
-              }).toList(),
+                ),
+              ],
             ),
           ),
         );
