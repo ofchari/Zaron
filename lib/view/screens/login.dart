@@ -1,15 +1,14 @@
 import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
-import 'package:get/get_core/src/get_main.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/io_client.dart';
-import 'package:zaron/view/screens/dashboard.dart';
 import 'dart:convert';
+import 'package:zaron/view/screens/dashboard.dart';
 import 'package:zaron/view/widgets/buttons.dart';
+
 
 class Login extends StatefulWidget {
   const Login({super.key});
@@ -18,11 +17,17 @@ class Login extends StatefulWidget {
   State<Login> createState() => _LoginState();
 }
 
+
 class _LoginState extends State<Login> {
   late double height;
   late double width;
   String idValue = "Loading...";
   final userController = TextEditingController();
+  final otpController = TextEditingController();
+  final passwordController = TextEditingController();
+  final confirmPasswordController = TextEditingController();
+  bool showOtpField = false;
+  bool showPasswordField = false;
 
   @override
   void initState() {
@@ -39,8 +44,6 @@ class _LoginState extends State<Login> {
         setState(() {
           idValue = jsonResponse.isNotEmpty ? jsonResponse[0]['id'].toString() : "No Data";
         });
-        print(response.body);
-        print(response.statusCode);
       } else {
         setState(() {
           idValue = "Failed to load data";
@@ -53,72 +56,58 @@ class _LoginState extends State<Login> {
     }
   }
 
-                /// Post method for login ///
   Future<void> addMaterial(BuildContext context) async {
     HttpClient client = HttpClient();
     client.badCertificateCallback = ((X509Certificate cert, String host, int port) => true);
     IOClient ioClient = IOClient(client);
 
-    // final headers = {
-    //   'Authorization': 'Basic ${base64Encode(utf8.encode(apiKey))}',
-    //   'Content-Type': 'application/json',
-    // };
-
     final message = {
-        "user_id" : userController.text
+      "user_id": userController.text
     };
-    print(message);
 
     final url = 'http://demo.zaron.in:8181/ci4/api/login';
     final body = jsonEncode(message);
     try {
       final response = await ioClient.post(Uri.parse(url), body: body);
-
       if (response.statusCode == 200) {
-        Get.snackbar(
-          "Material added",
-          "Successfully",
-          colorText: Colors.white,
-          backgroundColor: Colors.green,
-          snackPosition: SnackPosition.BOTTOM,
-        );
-        Get.to(Dashboard());
-        // fetchMaterials();
-      } else {
-        String message = 'Request failed with status: ${response.statusCode}';
-        if (response.statusCode == 417) {
-          final serverMessages = json.decode(response.body)['_server_messages'];
-          message = serverMessages ?? message;
-        }
-        showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: Text(response.statusCode == 417 ? 'Message' : 'Error'),
-            content: Text(message),
-            actions: [
-              ElevatedButton(
-                child: Text('OK'),
-                onPressed: () => Navigator.of(context).pop(),
-              ),
-            ],
-          ),
-        );
+        setState(() {
+          showOtpField = true;
+        });
       }
     } catch (e) {
-      showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: Text('Error'),
-          content: Text('An error occurred: $e'),
-          actions: [
-            ElevatedButton(
-              child: Text('OK'),
-              onPressed: () => Navigator.of(context).pop(),
-            ),
-          ],
-        ),
-      );
+      showErrorDialog(context, e.toString());
     }
+  }
+
+  Future<void> verifyOtp(BuildContext context) async {
+    setState(() {
+      showOtpField = false;
+      showPasswordField = true;
+    });
+  }
+
+  Future<void> resetPassword(BuildContext context) async {
+    if (passwordController.text == confirmPasswordController.text) {
+      Get.offAll(() => Dashboard());
+    } else {
+      showErrorDialog(context, "Passwords do not match");
+    }
+  }
+
+  void showErrorDialog(BuildContext context, String message) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Error'),
+        content: Text(message),
+        actions: [
+          ElevatedButton(
+            child: Text('OK'),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+        ],
+      ),
+    );
   }
 
 
@@ -156,7 +145,7 @@ class _LoginState extends State<Login> {
             Padding(
               padding: EdgeInsets.only(left: 15.1.w, right: 15.1.w),
               child: TextFormField(
-                controller: userController,
+                  controller: userController,
                   decoration: InputDecoration(
                       labelText: "User Id",
                       labelStyle: GoogleFonts.figtree(
@@ -164,12 +153,65 @@ class _LoginState extends State<Login> {
                           TextStyle(fontSize: 14.5.sp, fontWeight: FontWeight.w500, color: Colors.grey)),
                       border: OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(10))))),
             ),
-            SizedBox(height: 10.h),
-            Text("ID: $idValue", style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.bold)),
+            if (showOtpField)
+              Padding(
+                padding: EdgeInsets.only(left: 15.1.w, right: 15.1.w),
+                child: TextFormField(
+                  controller: otpController,
+                  decoration: InputDecoration(
+                      labelText: "Enter OTP",
+                      labelStyle: GoogleFonts.figtree(
+                          textStyle: TextStyle(
+                              fontSize: 14.5.sp,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.grey)),
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.all(Radius.circular(10)))),
+                ),
+              ),
+            if (showPasswordField)
+              Column(
+                children: [
+                  TextFormField(
+                    controller: passwordController,
+                    decoration: InputDecoration(
+                        labelText: "New Password",
+                        labelStyle: GoogleFonts.figtree(
+                            textStyle: TextStyle(
+                                fontSize: 14.5.sp,
+                                fontWeight: FontWeight.w500,
+                                color: Colors.grey)),
+                        border: OutlineInputBorder(
+                            borderRadius:
+                                BorderRadius.all(Radius.circular(10)))),
+                    obscureText: true,
+                  ),
+                  TextFormField(
+                    controller: confirmPasswordController,
+                    decoration: InputDecoration(
+                        labelText: "Confirm Password",
+                        labelStyle: GoogleFonts.figtree(
+                            textStyle: TextStyle(
+                                fontSize: 14.5.sp,
+                                fontWeight: FontWeight.w500,
+                                color: Colors.grey)),
+                        border: OutlineInputBorder(
+                            borderRadius:
+                                BorderRadius.all(Radius.circular(10)))),
+                    obscureText: true,
+                  ),
+                ],
+              ),
             SizedBox(height: 10.h),
             GestureDetector(
-              onTap: (){
-                addMaterial(context);
+              onTap: () {
+                if (showPasswordField) {
+                  resetPassword(context);
+                } else if (showOtpField) {
+                  verifyOtp(context);
+                } else {
+                  addMaterial(context);
+                }
               },
               child: Buttons(
                   text: "Submit",
