@@ -88,11 +88,38 @@ class _LoginState extends State<Login> {
 
   Future<void> resetPassword(BuildContext context) async {
     if (passwordController.text == confirmPasswordController.text) {
-      Get.offAll(() => Dashboard());
+      HttpClient client = HttpClient();
+      client.badCertificateCallback = ((X509Certificate cert, String host, int port) => true);
+      IOClient ioClient = IOClient(client);
+
+      final message = {
+        "user_id": userController.text,
+        "password": passwordController.text
+      };
+
+      final url = 'http://demo.zaron.in:8181/ci4/api/validcustomer';
+      final body = jsonEncode(message);
+
+      try {
+        final response = await ioClient.post(
+          Uri.parse(url),
+          headers: {"Content-Type": "application/json"},
+          body: body,
+        );
+
+        if (response.statusCode == 200) {
+          Get.offAll(() => Dashboard());
+        } else {
+          showErrorDialog(context, "Failed to reset password");
+        }
+      } catch (e) {
+        showErrorDialog(context, e.toString());
+      }
     } else {
       showErrorDialog(context, "Passwords do not match");
     }
   }
+
 
   void showErrorDialog(BuildContext context, String message) {
     showDialog(
@@ -183,7 +210,7 @@ class _LoginState extends State<Login> {
                                 color: Colors.grey)),
                         border: OutlineInputBorder(
                             borderRadius:
-                                BorderRadius.all(Radius.circular(10)))),
+                            BorderRadius.all(Radius.circular(10)))),
                     obscureText: true,
                   ),
                   TextFormField(
@@ -197,7 +224,7 @@ class _LoginState extends State<Login> {
                                 color: Colors.grey)),
                         border: OutlineInputBorder(
                             borderRadius:
-                                BorderRadius.all(Radius.circular(10)))),
+                            BorderRadius.all(Radius.circular(10)))),
                     obscureText: true,
                   ),
                 ],
@@ -206,7 +233,7 @@ class _LoginState extends State<Login> {
             GestureDetector(
               onTap: () {
                 if (showPasswordField) {
-                  resetPassword(context);
+                  resetPassword(context);  // Call resetPassword function here
                 } else if (showOtpField) {
                   verifyOtp(context);
                 } else {
@@ -214,12 +241,13 @@ class _LoginState extends State<Login> {
                 }
               },
               child: Buttons(
-                  text: "Submit",
-                  weight: FontWeight.w500,
-                  color: Colors.blueGrey,
-                  height: height / 18,
-                  width: width / 2.5,
-                  radius: BorderRadius.circular(15.r)),
+                text: "Submit",
+                weight: FontWeight.w500,
+                color: Colors.blueGrey,
+                height: height / 18,
+                width: width / 2.5,
+                radius: BorderRadius.circular(15.r),
+              ),
             )
           ],
         ),
