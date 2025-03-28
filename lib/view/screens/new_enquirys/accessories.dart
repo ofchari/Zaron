@@ -16,13 +16,46 @@ class _AccessoriesState extends State<Accessories> {
   late double height;
   late double width;
 
-  final TextEditingController nameController = TextEditingController();
-  final TextEditingController brandController = TextEditingController();
-  final TextEditingController colorController = TextEditingController();
-  final TextEditingController thicknessController = TextEditingController();
-  final TextEditingController materialTypeController = TextEditingController();
+  String? selectedAccessory;
+  String? selectedBrand;
+  String? selectedColor;
+  String? selectedThickness;
+  final TextEditingController coatingMassController = TextEditingController();
 
   List<Map<String, String>> submittedData = [];
+
+  final List<String> accessoriesList = ["Gloves", "Helmet", "Goggles"];
+  final Map<String, List<String>> brandsMap = {
+    "Gloves": ["Nike", "Adidas", "Puma"],
+    "Helmet": ["Steelbird", "Vega", "Studds"],
+    "Goggles": ["RayBan", "Oakley", "Fastrack"]
+  };
+
+  final Map<String, List<String>> colorsMap = {
+    "Nike": ["Black", "Red", "Blue"],
+    "Adidas": ["White", "Grey", "Green"],
+    "Puma": ["Yellow", "Pink", "Purple"],
+    "Steelbird": ["Black", "White"],
+    "Vega": ["Blue", "Red"],
+    "Studds": ["Green", "Black"],
+    "RayBan": ["Brown", "Black"],
+    "Oakley": ["Silver", "Blue"],
+    "Fastrack": ["Red", "Grey"]
+  };
+
+  final Map<String, List<String>> thicknessMap = {
+    "Black": ["Thin", "Medium", "Thick"],
+    "Red": ["Ultra Thin", "Thin"],
+    "Blue": ["Medium", "Thick"],
+    "White": ["Thin", "Thick"],
+    "Grey": ["Ultra Thin", "Medium"],
+    "Green": ["Thin", "Medium"],
+    "Yellow": ["Medium", "Thick"],
+    "Pink": ["Ultra Thin", "Thin"],
+    "Purple": ["Medium", "Thick"],
+    "Brown": ["Thin", "Medium"],
+    "Silver": ["Ultra Thin", "Medium"]
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -42,16 +75,42 @@ class _AccessoriesState extends State<Accessories> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _buildLabel("Accessories Name:"),
-              _buildTextField("Select Accessories", nameController, Icons.settings),
-              _buildLabel("Select Base Product:"),
+              _buildDropdown(accessoriesList, selectedAccessory, (value) {
+                setState(() {
+                  selectedAccessory = value;
+                  selectedBrand = null;
+                  selectedColor = null;
+                  selectedThickness = null;
+                });
+              }),
+
               _buildLabel("Brand:"),
-              _buildTextField("Brand", brandController, Icons.business),
+              _buildDropdown(selectedAccessory != null ? brandsMap[selectedAccessory!] ?? [] : [], selectedBrand, (value) {
+                setState(() {
+                  selectedBrand = value;
+                  selectedColor = null;
+                  selectedThickness = null;
+                });
+              }, enabled: selectedAccessory != null),
+
               _buildLabel("Color:"),
-              _buildTextField("Color", colorController, Icons.color_lens),
+              _buildDropdown(selectedBrand != null ? colorsMap[selectedBrand!] ?? [] : [], selectedColor, (value) {
+                setState(() {
+                  selectedColor = value;
+                  selectedThickness = null;
+                });
+              }, enabled: selectedBrand != null),
+
               _buildLabel("Thickness:"),
-              _buildTextField("Thickness", thicknessController, Icons.layers),
+              _buildDropdown(selectedColor != null ? thicknessMap[selectedColor!] ?? [] : [], selectedThickness, (value) {
+                setState(() {
+                  selectedThickness = value;
+                });
+              }, enabled: selectedColor != null),
+
               _buildLabel("Coating Mass:"),
-              _buildTextField("Coating Mass", materialTypeController, Icons.category),
+              _buildTextField("Enter Coating Mass", coatingMassController, Icons.category),
+
               SizedBox(height: 20.h),
               Center(
                 child: GestureDetector(
@@ -75,10 +134,20 @@ class _AccessoriesState extends State<Accessories> {
     );
   }
 
-  Widget _buildLabel(String text) {
+  Widget _buildDropdown(List<String> items, String? selectedValue, ValueChanged<String?> onChanged, {bool enabled = true}) {
     return Padding(
-      padding: EdgeInsets.symmetric(vertical: 6.h),
-      child: MyText(text: text, weight: FontWeight.w500, color: Colors.black),
+      padding: EdgeInsets.symmetric(vertical: 8.h),
+      child: DropdownButtonFormField<String>(
+        value: selectedValue,
+        onChanged: enabled ? onChanged : null,
+        items: items.map((item) => DropdownMenuItem(value: item, child: Text(item))).toList(),
+        decoration: InputDecoration(
+          labelText: "Select",
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r)),
+          contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 14.h),
+        ),
+        disabledHint: Text("Select Previous First"),
+      ),
     );
   }
 
@@ -89,27 +158,30 @@ class _AccessoriesState extends State<Accessories> {
         controller: controller,
         decoration: InputDecoration(
           labelText: hint,
-          labelStyle: GoogleFonts.figtree(
-            textStyle: TextStyle(fontSize: 14.5.sp, fontWeight: FontWeight.w500, color: Colors.grey),
-          ),
           prefixIcon: Icon(icon, color: Colors.blueAccent),
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r)),
-          focusedBorder: OutlineInputBorder(
-            borderSide: BorderSide(color: Colors.blueAccent, width: 1.5),
-            borderRadius: BorderRadius.circular(12.r),
-          ),
           contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 14.h),
         ),
       ),
     );
   }
 
+  Widget _buildLabel(String text) {
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: 6.h),
+      child: Text(
+        text,
+        style: TextStyle(fontWeight: FontWeight.w500, fontSize: 16.sp, color: Colors.black),
+      ),
+    );
+  }
+
   void _submitData() {
-    if (nameController.text.isEmpty ||
-        brandController.text.isEmpty ||
-        colorController.text.isEmpty ||
-        thicknessController.text.isEmpty ||
-        materialTypeController.text.isEmpty) {
+    if (selectedAccessory == null ||
+        selectedBrand == null ||
+        selectedColor == null ||
+        selectedThickness == null ||
+        coatingMassController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text("Please fill all fields"),
@@ -122,18 +194,18 @@ class _AccessoriesState extends State<Accessories> {
 
     setState(() {
       submittedData.add({
-        "Name": nameController.text,
-        "Brand": brandController.text,
-        "Color": colorController.text,
-        "Thickness": thicknessController.text,
-        "Coating Mass": materialTypeController.text,
+        "Accessory": selectedAccessory!,
+        "Brand": selectedBrand!,
+        "Color": selectedColor!,
+        "Thickness": selectedThickness!,
+        "Coating Mass": coatingMassController.text,
       });
 
-      nameController.clear();
-      brandController.clear();
-      colorController.clear();
-      thicknessController.clear();
-      materialTypeController.clear();
+      selectedAccessory = null;
+      selectedBrand = null;
+      selectedColor = null;
+      selectedThickness = null;
+      coatingMassController.clear();
     });
 
     ScaffoldMessenger.of(context).showSnackBar(
@@ -145,69 +217,64 @@ class _AccessoriesState extends State<Accessories> {
     );
   }
 
-  void _deleteData(int index) {
-    setState(() {
-      submittedData.removeAt(index);
-    });
-
-    // ✅ Show success Snackbar when data is deleted
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text("Data deleted successfully!"),
-        backgroundColor: Colors.orange,
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
-  }
-
-
   Widget _buildSubmittedData() {
-    return Column(
-      children: submittedData.asMap().entries.map((entry) {
-        int index = entry.key;
-        Map<String, String> data = entry.value;
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Colors.white, Colors.grey.shade100],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+      ),
+      child: ListView.builder(
+        shrinkWrap: true,
+        physics: NeverScrollableScrollPhysics(),
+        itemCount: submittedData.length,
+        itemBuilder: (context, index) {
+          final data = submittedData[index];
 
-        return Card(
-          margin: EdgeInsets.only(bottom: 12.h),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
-          elevation: 4,
-          shadowColor: Colors.blueAccent.withOpacity(0.2),
-          child: Padding(
-            padding: EdgeInsets.all(12.w),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                ...data.entries.map((entry) => Padding(
-                  padding: EdgeInsets.symmetric(vertical: 5.h),
-                  child: Row(
+          return Card(
+            margin: EdgeInsets.only(bottom: 12.h),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16.r),
+            ),
+            elevation: 5,
+            shadowColor: Colors.black26,
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: data.entries.map((entry) {
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Icon(_getIcon(entry.key), color: Colors.blueAccent, size: 20.w),
-                      SizedBox(width: 8.w),
-                      Expanded(
-                        child: MyText(
-                          text: "${entry.key}: ${entry.value}",
-                          weight: FontWeight.w500,
+                      Text(
+                        entry.key,
+                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
                           color: Colors.black87,
                         ),
                       ),
+                      SizedBox(height: 4.h),
+                      Text(
+                        entry.value.toString(),
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: Colors.black54,
+                        ),
+                      ),
+                      if (entry != data.entries.last)
+                        Divider(thickness: 1, color: Colors.grey.shade300),
                     ],
-                  ),
-                )),
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: IconButton(
-                    icon: Icon(Icons.delete, color: Colors.red),
-                    onPressed: () => _deleteData(index),
-                  ),
-                ),
-              ],
+                  );
+                }).toList(),
+              ),
             ),
-          ),
-        );
-      }).toList(),
+          );
+        },
+      ),
     );
   }
-
 
   Widget _emptyMessage() {
     return Center(
@@ -220,22 +287,5 @@ class _AccessoriesState extends State<Accessories> {
         ),
       ),
     );
-  }
-
-  IconData _getIcon(String key) {
-    switch (key) {
-      case "Name":
-        return Icons.settings;
-      case "Brand":
-        return Icons.business;
-      case "Color":
-        return Icons.color_lens;
-      case "Thickness":
-        return Icons.layers;
-      case "Coating Mass":
-        return Icons.category;
-      default:
-        return Icons.info;
-    }
   }
 }
