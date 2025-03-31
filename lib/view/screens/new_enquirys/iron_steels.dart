@@ -6,7 +6,8 @@ import '../../widgets/subhead.dart';
 import '../../widgets/text.dart';
 
 class IronSteel extends StatefulWidget {
-  const IronSteel({super.key});
+  const IronSteel({super.key, required this.data});
+  final Map<String, dynamic> data;
 
   @override
   State<IronSteel> createState() => _IronSteelState();

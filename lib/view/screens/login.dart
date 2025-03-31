@@ -119,13 +119,9 @@ class _LoginState extends State<Login> {
       }
     } else {
       showErrorDialog(context,
-
-
-
           "Passwords do not match");
     }
   }
-
 
       /// Validate login to check the user and password retun success //
   Future<void> validateLogin(BuildContext context) async  {
@@ -179,7 +175,6 @@ class _LoginState extends State<Login> {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.clear();
   }
-
 
 
   void showErrorDialog(BuildContext context, String message) {
