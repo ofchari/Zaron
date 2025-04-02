@@ -55,6 +55,7 @@ class _NewEnquiryState extends State<NewEnquiry> {
     }
   }
 
+
   Future<void> mobiledocument(BuildContext context, String id, String categoryName) async {
     HttpClient client = HttpClient();
     client.badCertificateCallback = ((X509Certificate cert, String host, int port) => true);
@@ -150,6 +151,10 @@ class _NewEnquiryState extends State<NewEnquiry> {
       );
     }
   }
+
+
+
+
 
 
   Widget getCategoryPage(String categoryName, Map<String, dynamic> data) {

@@ -23,12 +23,6 @@ class _AccessoriesState extends State<Accessories> {
   List<String> thicknessList = [];
   List<Map<String, String>> submittedData = [];
 
-  final Map<String, List<String>> colorsMap = {
-    "BrandA": ["Red", "Blue", "Green"],
-    "BrandB": ["Yellow", "Black", "White"],
-    "BrandC": ["Pink", "Purple", "Grey"],
-  };
-
   final Map<String, List<String>> thicknessMap = {
     "Red": ["Thin", "Thick"],
     "Blue": ["Ultra Thin", "Medium"],
@@ -95,6 +89,62 @@ class _AccessoriesState extends State<Accessories> {
     }
   }
 
+  Future<void> _fetchColors(String brand) async {
+    setState(() {
+      colorsList = [];
+      selectedColor = null;
+    });
+
+    HttpClient client = HttpClient();
+    client.badCertificateCallback = (cert, host, port) => true;
+    IOClient ioClient = IOClient(client);
+
+    final data = {
+      "values": brand,
+      "id": "3",
+      "inputname": "brand",
+      "setgetvalue": brand,
+      "product_value": [brand, null, null, null],
+      "category_value": ["brand", "color", "thickness", "coating_mass"]
+    };
+
+    final url = 'http://demo.zaron.in:8181/index.php/order/select_base_product';
+    final body = jsonEncode(data);
+
+    try {
+      final response = await ioClient.post(
+        Uri.parse(url),
+        headers: {"Content-Type": "application/json"},
+        body: body,
+      );
+
+      if (response.statusCode == 200) {
+        final responseBody = response.body;
+        print("Color API Response: $responseBody"); // Debugging
+
+        final responseData = jsonDecode(responseBody);
+
+        if (responseData is Map && responseData.containsKey("color")) {
+          final colorData = responseData["color"];
+
+          if (colorData is List && colorData.isNotEmpty) {
+            setState(() {
+              colorsList = List<String>.from(colorData);
+              selectedColor = null;
+            });
+          } else {
+            print("No colors found in API response.");
+          }
+        } else {
+          print("Invalid API response format.");
+        }
+      } else {
+        print("Error: ${response.statusCode} - ${response.body}");
+      }
+    } catch (e) {
+      print("Exception: $e");
+    }
+  }
 
   void _submitData() {
     if (selectedAccessory == null ||
@@ -137,7 +187,9 @@ class _AccessoriesState extends State<Accessories> {
     List<String> accessoriesList = List<String>.from(widget.data["accessories_name"] ?? []);
 
     return Scaffold(
-      appBar: AppBar(title: Text("Accessories"), centerTitle: true),
+      appBar: AppBar(
+          title: Text("Accessories"),
+          centerTitle: true),
       body: Padding(
         padding: EdgeInsets.all(16),
         child: SingleChildScrollView(
@@ -159,11 +211,12 @@ class _AccessoriesState extends State<Accessories> {
               _buildDropdown(brandsList, selectedBrand, (value) {
                 setState(() {
                   selectedBrand = value;
-                  colorsList = colorsMap[value!] ?? [];
+                  colorsList = [];
                   thicknessList = [];
                   selectedColor = null;
                   selectedThickness = null;
                 });
+                _fetchColors(value!);
               }, enabled: brandsList.isNotEmpty),
 
               _buildLabel("Color:"),
@@ -189,11 +242,11 @@ class _AccessoriesState extends State<Accessories> {
               Center(
                 child: ElevatedButton(
                   onPressed: _submitData,
-                  child: Text("Submit"),
                   style: ElevatedButton.styleFrom(
                     padding: EdgeInsets.symmetric(horizontal: 40, vertical: 14),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                   ),
+                  child: Text("Submit"),
                 ),
               ),
 
@@ -206,43 +259,8 @@ class _AccessoriesState extends State<Accessories> {
     );
   }
 
-  Widget _buildDropdown(List<String> items, String? selectedValue, ValueChanged<String?> onChanged, {bool enabled = true}) {
-    return Padding(
-      padding: EdgeInsets.symmetric(vertical: 8),
-      child: DropdownButtonFormField<String>(
-        value: selectedValue,
-        onChanged: enabled ? onChanged : null,
-        items: items.map((item) => DropdownMenuItem(value: item, child: Text(item))).toList(),
-        decoration: InputDecoration(
-          labelText: "Select",
-          border: OutlineInputBorder(),
-          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-        ),
-        disabledHint: Text("Select Previous First"),
-      ),
-    );
-  }
-
-  Widget _buildTextField(String hint, TextEditingController controller, IconData icon) {
-    return Padding(
-      padding: EdgeInsets.symmetric(vertical: 8),
-      child: TextFormField(
-        controller: controller,
-        decoration: InputDecoration(
-          labelText: hint,
-          prefixIcon: Icon(icon, color: Colors.blueAccent),
-          border: OutlineInputBorder(),
-          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildLabel(String text) {
-    return Padding(
-      padding: EdgeInsets.symmetric(vertical: 6),
-      child: Text(text, style: TextStyle(fontWeight: FontWeight.w500, fontSize: 16, color: Colors.black)),
-    );
+  Widget _emptyMessage() {
+    return Center(child: Text("No submissions yet."));
   }
 
   Widget _buildSubmittedData() {
@@ -277,7 +295,46 @@ class _AccessoriesState extends State<Accessories> {
     );
   }
 
-  Widget _emptyMessage() {
-    return Center(child: Text("No submissions yet."));
+  Widget _buildLabel(String text) {
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: 6),
+      child: Text(
+        text,
+        style: TextStyle(fontWeight: FontWeight.w500, fontSize: 16, color: Colors.black),
+      ),
+    );
   }
+  Widget _buildTextField(String hint, TextEditingController controller, IconData icon) {
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: 8),
+      child: TextFormField(
+        controller: controller,
+        decoration: InputDecoration(
+          labelText: hint,
+          prefixIcon: Icon(icon, color: Colors.blueAccent),
+          border: OutlineInputBorder(),
+          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+        ),
+      ),
+    );
+  }
+
+
+  Widget _buildDropdown(List<String> items, String? selectedValue, ValueChanged<String?> onChanged, {bool enabled = true}) {
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: 8),
+      child: DropdownButtonFormField<String>(
+        value: selectedValue,
+        onChanged: enabled ? onChanged : null,
+        items: items.map((item) => DropdownMenuItem(value: item, child: Text(item))).toList(),
+        decoration: InputDecoration(
+          labelText: "Select",
+          border: OutlineInputBorder(),
+          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+        ),
+        disabledHint: Text("Select Previous First"),
+      ),
+    );
+  }
+
 }
