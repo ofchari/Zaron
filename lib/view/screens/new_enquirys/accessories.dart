@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:dropdown_search/dropdown_search.dart';
 import 'package:flutter/material.dart';
 import 'package:http/io_client.dart';
 
@@ -431,22 +432,38 @@ class _AccessoriesState extends State<Accessories> {
     );
   }
 
+               ///  Replace the existing _buildDropdown with this ///
+
   Widget _buildDropdown(List<String> items, String? selectedValue, ValueChanged<String?> onChanged, {bool enabled = true}) {
     return Padding(
       padding: EdgeInsets.symmetric(vertical: 8),
-      child: DropdownButtonFormField<String>(
-        value: selectedValue,
+      child: DropdownSearch<String>(
+        items: items,
+        selectedItem: selectedValue,
         onChanged: enabled ? onChanged : null,
-        items: items.map((item) => DropdownMenuItem(value: item, child: Text(item))).toList(),
-        decoration: InputDecoration(
-          labelText: "Select",
-          border: OutlineInputBorder(),
-          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+        dropdownDecoratorProps: DropDownDecoratorProps(
+          dropdownSearchDecoration: InputDecoration(
+            labelText: "Select",
+            border: OutlineInputBorder(),
+            contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+          ),
         ),
-        disabledHint: Text("Select Previous First"),
+        enabled: enabled,
+        popupProps: PopupProps.menu(
+          showSearchBox: true,
+          searchFieldProps: TextFieldProps(
+            decoration: InputDecoration(
+              hintText: "Search...",
+              contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              border: OutlineInputBorder(),
+            ),
+          ),
+        ),
+        dropdownButtonProps: DropdownButtonProps(
+          isVisible: true,
+        ),
       ),
     );
   }
-
 }
 

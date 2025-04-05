@@ -5,14 +5,14 @@ import 'package:zaron/view/widgets/buttons.dart';
 import '../../widgets/subhead.dart';
 import '../../widgets/text.dart';
 
-class Linearsheets extends StatefulWidget {
-  const Linearsheets({super.key});
+class LinearSheets extends StatefulWidget {
+  const LinearSheets({super.key});
 
   @override
-  State<Linearsheets> createState() => _LinearsheetsState();
+  State<LinearSheets> createState() => _LinearSheetsState();
 }
 
-class _LinearsheetsState extends State<Linearsheets> {
+class _LinearSheetsState extends State<LinearSheets> {
   late double height;
   late double width;
 
@@ -85,8 +85,6 @@ class _LinearsheetsState extends State<Linearsheets> {
               ),
               _buildTextField("colour", coatingMassController, Icons.circle_notifications),
               SizedBox(height: 5.h),
-
-
 
               Center(
                 child: GestureDetector(
@@ -212,7 +210,7 @@ class _LinearsheetsState extends State<Linearsheets> {
                       ],
                     ),
                   );
-                }).toList(),
+                }),
 
                 // ✅ Delete Button (Right-aligned)
                 Align(
