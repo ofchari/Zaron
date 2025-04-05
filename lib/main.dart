@@ -7,7 +7,6 @@ import 'package:hive_flutter/adapters.dart';
 import 'package:zaron/view/screens/dashboard.dart';
 import 'package:zaron/view/screens/entry.dart';
 import 'package:zaron/view/screens/login.dart';
-import '';
 
 void main() async{
   runApp(const MyApp());
