@@ -27,7 +27,8 @@ class _LinearSheetsState extends State<LinearSheets> {
 
   @override
   Widget build(BuildContext context) {
-    /// Define Sizes //
+              /// Define Sizes //
+
     var size = MediaQuery.of(context).size;
     height = size.height;
     width = size.width;

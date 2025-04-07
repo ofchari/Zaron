@@ -33,6 +33,7 @@ class _LengthSheetsState extends State<LengthSheets> {
     height = size.height;
     width = size.width;
 
+
     return Scaffold(
       appBar: AppBar(
         title: Subhead(text: "Cut Length Sheets", weight: FontWeight.w500, color: Colors.black),
@@ -91,7 +92,6 @@ class _LengthSheetsState extends State<LengthSheets> {
                 child: MyText(text: "Brand:", weight: FontWeight.w500, color: Colors.black),
               ),
               _buildTextField("brand", brandController, Icons.circle_notifications),
-
 
               Center(
                 child: GestureDetector(
