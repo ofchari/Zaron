@@ -19,12 +19,6 @@ class _AccessoriesState extends State<Accessories> {
   String? selectedThickness;
   String? selectedCoatingMass;
 
-  final TextEditingController coatingMassController = TextEditingController();
-  final TextEditingController sqFeetController = TextEditingController();
-  final TextEditingController lengthController = TextEditingController();
-  final TextEditingController uomController = TextEditingController();
-  final TextEditingController nosController = TextEditingController();
-
   List<String> brandsList = [];
   List<String> colorsList = [];
   List<String> thicknessList = [];
@@ -32,12 +26,15 @@ class _AccessoriesState extends State<Accessories> {
 
   List<Map<String, dynamic>> submittedData = [];
 
+  // Form key for validation
+  final _formKey = GlobalKey<FormState>();
+
   @override
   void initState() {
     super.initState();
   }
 
-  Future<void> _fetchBrands(String s) async {
+  Future<void> _fetchBrands(String accessory) async {
     setState(() {
       brandsList = [];
       selectedBrand = null;
@@ -172,7 +169,6 @@ class _AccessoriesState extends State<Accessories> {
     setState(() {
       coatingMassList = [];
       selectedCoatingMass = null;
-      coatingMassController.clear();
     });
 
     HttpClient client = HttpClient();
@@ -213,29 +209,40 @@ class _AccessoriesState extends State<Accessories> {
       print("Exception: $e");
     }
   }
+
   void _submitData() {
     if (selectedAccessory == null ||
         selectedBrand == null ||
         selectedColor == null ||
         selectedThickness == null ||
         selectedCoatingMass == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Please fill all fields"), backgroundColor: Colors.red),
+      // Show elegant error message
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text('Incomplete Form'),
+          content: Text('Please fill all required fields to add a product.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text('OK'),
+            ),
+          ],
+        ),
       );
       return;
     }
 
     setState(() {
       submittedData.add({
-        "Accessory": selectedAccessory!,
-        "Brand": selectedBrand!,
-        "Color": selectedColor!,
-        "Thickness": selectedThickness!,
-        "Coating Mass": selectedCoatingMass!,
-        "Sq. Feet": sqFeetController.text,
-        "Length": lengthController.text,
-        "UOM": uomController.text,
-        "Nos": nosController.text,
+        "Product": selectedAccessory!,
+        "UOM": "Feet",
+        "Length": "0",
+        "Nos": "1",
+        "Basic Rate": "0",
+        "SQ": "0",
+        "Amount": "0",
+        "Base Product": "$selectedBrand, $selectedColor, $selectedThickness, $selectedCoatingMass",
       });
 
       selectedAccessory = null;
@@ -244,93 +251,271 @@ class _AccessoriesState extends State<Accessories> {
       selectedThickness = null;
       selectedCoatingMass = null;
 
-      coatingMassController.clear();
-      sqFeetController.clear();
-      lengthController.clear();
-      uomController.clear();
-      nosController.clear();
-
       brandsList = [];
       colorsList = [];
       thicknessList = [];
       coatingMassList = [];
     });
 
+    // Show success message with a more elegant snackbar
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text("Data Submitted Successfully"), backgroundColor: Colors.green),
+      SnackBar(
+        content: Row(
+          children: [
+            Icon(Icons.check_circle, color: Colors.white),
+            SizedBox(width: 12),
+            Text("Product added successfully"),
+          ],
+        ),
+        backgroundColor: Colors.green,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+        margin: EdgeInsets.all(16),
+        duration: Duration(seconds: 2),
+      ),
     );
   }
 
-  Widget _buildTextField(String label, TextEditingController controller) {
-    return Padding(
-      padding: EdgeInsets.symmetric(vertical: 8),
+  Widget _buildSubmittedDataList() {
+    if (submittedData.isEmpty) {
+      return Container(
+        padding: EdgeInsets.symmetric(vertical: 40),
+        alignment: Alignment.center,
+        child: Column(
+          children: [
+            Icon(Icons.inventory_2_outlined, size: 60, color: Colors.grey[400]),
+            SizedBox(height: 16),
+            Text(
+              "No products added yet.",
+              style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return Column(
+      children: submittedData.asMap().entries.map((entry) {
+        int index = entry.key;
+        Map<String, dynamic> data = entry.value;
+
+        return Card(
+          margin: EdgeInsets.symmetric(vertical: 10),
+          elevation: 2,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Padding(
+            padding: EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      data["Product"] ?? "",
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18,
+                      ),
+                    ),
+                    IconButton(
+                      icon: Icon(Icons.delete, color: Colors.red),
+                      onPressed: () {
+                        setState(() {
+                          submittedData.removeAt(index);
+                        });
+                      },
+                    ),
+                  ],
+                ),
+                Divider(),
+                SizedBox(height: 8),
+                _buildProductDetailInRows(data),
+              ],
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  // New method that organizes fields in rows, two fields per row
+  Widget _buildProductDetailInRows(Map<String, dynamic> data) {
+    return Column(
+      children: [
+        // Row 1: Product & UOM
+        Row(
+          children: [
+            Expanded(
+              child: _buildDetailItem("Product", Text(data["Product"] ?? "")),
+            ),
+            SizedBox(width: 16),
+            Expanded(
+              child: _buildDetailItem("UOM", _uomDropdown(data)),
+            ),
+          ],
+        ),
+        SizedBox(height: 16),
+
+        // Row 2: Length & Nos
+        Row(
+          children: [
+            Expanded(
+              child: _buildDetailItem("Length", _editableTextField(data, "Length")),
+            ),
+            SizedBox(width: 16),
+            Expanded(
+              child: _buildDetailItem("Nos", _editableTextField(data, "Nos")),
+            ),
+          ],
+        ),
+        SizedBox(height: 16),
+
+        // Row 3: Basic Rate & SQ
+        Row(
+          children: [
+            Expanded(
+              child: _buildDetailItem("Basic Rate", _editableTextField(data, "Basic Rate")),
+            ),
+            SizedBox(width: 16),
+            Expanded(
+              child: _buildDetailItem("SQ", _editableTextField(data, "SQ")),
+            ),
+          ],
+        ),
+        SizedBox(height: 16),
+
+        // Row 4: Amount & Base Product
+        Row(
+          children: [
+            Expanded(
+              child: _buildDetailItem("Amount", _editableTextField(data, "Amount")),
+            ),
+            SizedBox(width: 16),
+            Expanded(
+              child: _buildDetailItem("Base Product", _baseProductField(data)),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDetailItem(String label, Widget field) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            fontWeight: FontWeight.w500,
+            color: Colors.grey[800],
+            fontSize: 14,
+          ),
+        ),
+        SizedBox(height: 6),
+        field,
+      ],
+    );
+  }
+
+  Widget _editableTextField(Map<String, dynamic> data, String key) {
+    return Container(
+      height: 40,
       child: TextField(
-        controller: controller,
+        controller: TextEditingController(text: data[key]),
+        onChanged: (val) => data[key] = val,
         decoration: InputDecoration(
-          labelText: label,
-          border: OutlineInputBorder(),
+          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 0),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(6),
+            borderSide: BorderSide(color: Colors.grey[300]!),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(6),
+            borderSide: BorderSide(color: Colors.grey[300]!),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(6),
+            borderSide: BorderSide(color: Theme.of(context).primaryColor, width: 2),
+          ),
+          filled: true,
+          fillColor: Colors.grey[50],
         ),
       ),
     );
   }
 
-  Widget _buildSubmittedData() {
-    return ListView.builder(
-      shrinkWrap: true,
-      physics: NeverScrollableScrollPhysics(),
-      itemCount: submittedData.length,
-      itemBuilder: (context, index) {
-        final data = submittedData[index];
-        return Card(
-          margin: EdgeInsets.only(bottom: 12),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-          elevation: 5,
-          child: Padding(
-            padding: EdgeInsets.all(16),
-            child: Column(
-              children: data.entries.map((entry) {
-                if (["Sq. Feet", "Length", "UOM", "Nos"].contains(entry.key)) {
-                  return TextField(
-                    decoration: InputDecoration(
-                      labelText: entry.key,
-                      border: OutlineInputBorder(),
-                    ),
-                    controller: TextEditingController(text: entry.value.toString()),
-                    onChanged: (newVal) {
-                      data[entry.key] = newVal;
-                    },
-                  );
-                } else {
-                  return Padding(
-                    padding: EdgeInsets.only(bottom: 8),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(entry.key, style: TextStyle(fontWeight: FontWeight.bold)),
-                        Text(entry.value.toString(), style: TextStyle(color: Colors.black54)),
-                      ],
-                    ),
-                  );
-                }
-              }).toList(),
-            ),
-          ),
-        );
-      },
-    );
-  }
 
-  Widget _buildLabel(String text) {
-    return Padding(
-      padding: EdgeInsets.symmetric(vertical: 6),
-      child: Text(
-        text,
-        style: TextStyle(fontWeight: FontWeight.w500, fontSize: 16, color: Colors.black),
+  Widget _baseProductField(Map<String, dynamic> data) {
+    return SizedBox(
+      height: 40,
+      child: TextField(
+        controller: TextEditingController(text: data["Base Product"]),
+        onChanged: (val) => data["Base Product"] = val,
+        decoration: InputDecoration(
+          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 0),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(6),
+            borderSide: BorderSide(color: Colors.grey[300]!),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(6),
+            borderSide: BorderSide(color: Colors.grey[300]!),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(6),
+            borderSide: BorderSide(color: Theme.of(context).primaryColor, width: 2),
+          ),
+          filled: true,
+          fillColor: Colors.grey[50],
+        ),
+        readOnly: true,
       ),
     );
   }
 
-  Widget _buildDropdown(List<String> items, String? selectedValue, ValueChanged<String?> onChanged, {bool enabled = true}) {
+  Widget _uomDropdown(Map<String, dynamic> data) {
+    List<String> uomOptions = ["Feet", "mm", "cm"];
+    return Container(
+      height: 40,
+      child: DropdownButtonFormField<String>(
+        value: data["UOM"],
+        items: uomOptions
+            .map((uom) => DropdownMenuItem(value: uom, child: Text(uom)))
+            .toList(),
+        onChanged: (val) {
+          setState(() {
+            data["UOM"] = val!;
+          });
+        },
+        decoration: InputDecoration(
+          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 0),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(6),
+            borderSide: BorderSide(color: Colors.grey[300]!),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(6),
+            borderSide: BorderSide(color: Colors.grey[300]!),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(6),
+            borderSide: BorderSide(color: Theme.of(context).primaryColor, width: 2),
+          ),
+          filled: true,
+          fillColor: Colors.grey[50],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDropdown(List<String> items, String? selectedValue, ValueChanged<String?> onChanged,
+      {bool enabled = true, String? label}) {
     return Padding(
       padding: EdgeInsets.symmetric(vertical: 8),
       child: DropdownSearch<String>(
@@ -339,9 +524,21 @@ class _AccessoriesState extends State<Accessories> {
         onChanged: enabled ? onChanged : null,
         dropdownDecoratorProps: DropDownDecoratorProps(
           dropdownSearchDecoration: InputDecoration(
-            labelText: "Select",
-            border: OutlineInputBorder(),
-            contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+            labelText: label ?? "Select",
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: BorderSide(color: Colors.grey[300]!),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: BorderSide(color: Theme.of(context).primaryColor, width: 2),
+            ),
+            filled: true,
+            fillColor: enabled ? Colors.white : Colors.grey[100],
+            contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           ),
         ),
         enabled: enabled,
@@ -350,17 +547,15 @@ class _AccessoriesState extends State<Accessories> {
           searchFieldProps: TextFieldProps(
             decoration: InputDecoration(
               hintText: "Search...",
-              contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              border: OutlineInputBorder(),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+              prefixIcon: Icon(Icons.search),
             ),
           ),
         ),
       ),
     );
-  }
-
-  Widget _emptyMessage() {
-    return Center(child: Text("No submissions yet."));
   }
 
   @override
@@ -370,58 +565,105 @@ class _AccessoriesState extends State<Accessories> {
       appBar: AppBar(
         title: Text("Accessories"),
         centerTitle: true,
+        elevation: 0,
+        backgroundColor: Colors.white
+        ,
       ),
-      body: Padding(
-        padding: EdgeInsets.all(16),
-        child: SingleChildScrollView(
-          child: Column(
-            children: [
-              _buildLabel("Accessories Name:"),
-              _buildDropdown(accessoriesList, selectedAccessory, (value) {
-                setState(() {
-                  selectedAccessory = value;
-                });
-                _fetchBrands(value!);
-              }),
-              _buildLabel("Brand:"),
-              _buildDropdown(brandsList, selectedBrand, (value) {
-                setState(() {
-                  selectedBrand = value;
-                });
-                _fetchColors(value!);
-              }, enabled: brandsList.isNotEmpty),
-              _buildLabel("Color:"),
-              _buildDropdown(colorsList, selectedColor, (value) {
-                setState(() {
-                  selectedColor = value;
-                });
-                _fetchThickness(value!);
-              }, enabled: colorsList.isNotEmpty),
-              _buildLabel("Thickness:"),
-              _buildDropdown(thicknessList, selectedThickness, (value) {
-                setState(() {
-                  selectedThickness = value;
-                });
-                _fetchCoatingMass(value!);
-              }, enabled: thicknessList.isNotEmpty),
-              _buildLabel("Coating Mass:"),
-              _buildDropdown(coatingMassList, selectedCoatingMass, (value) {
-                setState(() {
-                  selectedCoatingMass = value;
-                });
-              }, enabled: coatingMassList.isNotEmpty),
-              _buildTextField("Sq. Feet", sqFeetController),
-              _buildTextField("Length", lengthController),
-              _buildTextField("UOM", uomController),
-              _buildTextField("Nos", nosController),
-              SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: _submitData,
-                child: Text("Submit"),
-              ),
-              SizedBox(height: 20),
-              submittedData.isEmpty ? _emptyMessage() : _buildSubmittedData(),
-            ],
+      body: Container(
+        color: Colors.grey[50],
+        child: Padding(
+          padding: EdgeInsets.all(16),
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Card(
+                  elevation: 2,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Padding(
+                    padding: EdgeInsets.all(16),
+                    child: Form(
+                      key: _formKey,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "Add New Product",
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          SizedBox(height: 16),
+                          _buildDropdown(accessoriesList, selectedAccessory, (value) {
+                            setState(() {
+                              selectedAccessory = value;
+                            });
+                            _fetchBrands(value!);
+                          }, label: "Accessories Name"),
+                          _buildDropdown(brandsList, selectedBrand, (value) {
+                            setState(() {
+                              selectedBrand = value;
+                            });
+                            _fetchColors(value!);
+                          }, enabled: brandsList.isNotEmpty, label: "Brand"),
+                          _buildDropdown(colorsList, selectedColor, (value) {
+                            setState(() {
+                              selectedColor = value;
+                            });
+                            _fetchThickness(value!);
+                          }, enabled: colorsList.isNotEmpty, label: "Color"),
+                          _buildDropdown(thicknessList, selectedThickness, (value) {
+                            setState(() {
+                              selectedThickness = value;
+                            });
+                            _fetchCoatingMass(value!);
+                          }, enabled: thicknessList.isNotEmpty, label: "Thickness"),
+                          _buildDropdown(coatingMassList, selectedCoatingMass, (value) {
+                            setState(() {
+                              selectedCoatingMass = value;
+                            });
+                          }, enabled: coatingMassList.isNotEmpty, label: "Coating Mass"),
+                          SizedBox(height: 20),
+                          SizedBox(
+                            width: double.infinity,
+                            height: 50,
+                            child: ElevatedButton(
+                              onPressed: _submitData,
+                              style: ElevatedButton.styleFrom(
+                                foregroundColor: Colors.white,
+                                backgroundColor: Theme.of(context).primaryColor,
+                                elevation: 0,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                              ),
+                              child: Text(
+                                "Add Product",
+                                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                SizedBox(height: 24),
+                if (submittedData.isNotEmpty)
+                  Text(
+                    "Added Products",
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                SizedBox(height: 8),
+                _buildSubmittedDataList(),
+              ],
+            ),
           ),
         ),
       ),

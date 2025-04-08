@@ -153,10 +153,6 @@ class _NewEnquiryState extends State<NewEnquiry> {
   }
 
 
-
-
-
-
   Widget getCategoryPage(String categoryName, Map<String, dynamic> data) {
     switch (categoryName.toLowerCase()) {
       case 'accessories':
