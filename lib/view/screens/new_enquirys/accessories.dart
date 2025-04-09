@@ -3,6 +3,8 @@ import 'dart:io';
 import 'package:dropdown_search/dropdown_search.dart';
 import 'package:flutter/material.dart';
 import 'package:http/io_client.dart';
+import 'package:zaron/view/widgets/subhead.dart';
+import 'package:zaron/view/widgets/text.dart';
 
 class Accessories extends StatefulWidget {
   const Accessories({super.key, required this.data});
@@ -315,13 +317,7 @@ class _AccessoriesState extends State<Accessories> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      data["Product"] ?? "",
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 18,
-                      ),
-                    ),
+                   MyText(text: data["Product"] ?? "", weight: FontWeight.w500, color: Colors.black),
                     IconButton(
                       icon: Icon(Icons.delete, color: Colors.red),
                       onPressed: () {
@@ -333,7 +329,7 @@ class _AccessoriesState extends State<Accessories> {
                   ],
                 ),
                 Divider(),
-                SizedBox(height: 8),
+                // SizedBox(height: 1),
                 _buildProductDetailInRows(data),
               ],
             ),
@@ -348,26 +344,28 @@ class _AccessoriesState extends State<Accessories> {
     return Column(
       children: [
         // Row 1: Product & UOM
-        Row(
-          children: [
-            Expanded(
-              child: _buildDetailItem("Product", Text(data["Product"] ?? "")),
-            ),
-            SizedBox(width: 16),
-            Expanded(
-              child: _buildDetailItem("UOM", _uomDropdown(data)),
-            ),
-          ],
-        ),
+        // Row(
+        //   children: [
+        //     Expanded(
+        //       child: _buildDetailItem("Product", Text(data["Product"] ?? "")),
+        //     ),
+        //     SizedBox(width: 16),
+        //
+        //   ],
+        // ),
         SizedBox(height: 16),
 
         // Row 2: Length & Nos
         Row(
           children: [
             Expanded(
+              child: _buildDetailItem("UOM", _uomDropdown(data)),
+            ),
+            SizedBox(width: 10,),
+            Expanded(
               child: _buildDetailItem("Length", _editableTextField(data, "Length")),
             ),
-            SizedBox(width: 16),
+            SizedBox(width: 10),
             Expanded(
               child: _buildDetailItem("Nos", _editableTextField(data, "Nos")),
             ),
@@ -381,9 +379,13 @@ class _AccessoriesState extends State<Accessories> {
             Expanded(
               child: _buildDetailItem("Basic Rate", _editableTextField(data, "Basic Rate")),
             ),
-            SizedBox(width: 16),
+            SizedBox(width: 10),
             Expanded(
               child: _buildDetailItem("SQ", _editableTextField(data, "SQ")),
+            ),
+            SizedBox(width: 10,),
+            Expanded(
+              child: _buildDetailItem("Amount", _editableTextField(data, "Amount")),
             ),
           ],
         ),
@@ -392,9 +394,6 @@ class _AccessoriesState extends State<Accessories> {
         // Row 4: Amount & Base Product
         Row(
           children: [
-            Expanded(
-              child: _buildDetailItem("Amount", _editableTextField(data, "Amount")),
-            ),
             SizedBox(width: 16),
             Expanded(
               child: _buildDetailItem("Base Product", _baseProductField(data)),
@@ -563,7 +562,7 @@ class _AccessoriesState extends State<Accessories> {
     List<String> accessoriesList = List<String>.from(widget.data["accessories_name"] ?? []);
     return Scaffold(
       appBar: AppBar(
-        title: Text("Accessories"),
+        title: Subhead(text: 'Accessories', weight: FontWeight.w500, color: Colors.black,),
         centerTitle: true,
         elevation: 0,
         backgroundColor: Colors.white
@@ -589,13 +588,8 @@ class _AccessoriesState extends State<Accessories> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            "Add New Product",
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
+                          Subhead(text: "Add New Product", weight: FontWeight.w600, color: Colors.black),
+
                           SizedBox(height: 16),
                           _buildDropdown(accessoriesList, selectedAccessory, (value) {
                             setState(() {
@@ -640,10 +634,8 @@ class _AccessoriesState extends State<Accessories> {
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                               ),
-                              child: Text(
-                                "Add Product",
-                                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-                              ),
+                              child: MyText(text: "Add Bag", weight: FontWeight.w600, color: Colors.white),
+
                             ),
                           ),
                         ],
@@ -653,13 +645,8 @@ class _AccessoriesState extends State<Accessories> {
                 ),
                 SizedBox(height: 24),
                 if (submittedData.isNotEmpty)
-                  Text(
-                    "Added Products",
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+                  Subhead(text: "   Added Products", weight: FontWeight.w600, color: Colors.black),
+
                 SizedBox(height: 8),
                 _buildSubmittedDataList(),
               ],
