@@ -5,6 +5,7 @@ import 'package:zaron/view/widgets/buttons.dart';
 import '../../widgets/subhead.dart';
 import '../../widgets/text.dart';
 
+
 class LengthSheets extends StatefulWidget {
   const LengthSheets({super.key});
 
@@ -28,7 +29,7 @@ class _LengthSheetsState extends State<LengthSheets> {
 
   @override
   Widget build(BuildContext context) {
-    /// Define Sizes //
+          /// Define Sizes //
     var size = MediaQuery.of(context).size;
     height = size.height;
     width = size.width;
@@ -92,7 +93,6 @@ class _LengthSheetsState extends State<LengthSheets> {
                 child: MyText(text: "Brand:", weight: FontWeight.w500, color: Colors.black),
               ),
               _buildTextField("brand", brandController, Icons.circle_notifications),
-
               Center(
                 child: GestureDetector(
                   onTap: _submitData,
@@ -194,7 +194,6 @@ class _LengthSheetsState extends State<LengthSheets> {
     );
   }
 
-
   Widget _buildSubmittedData() {
     return Column(
       children: submittedData.asMap().entries.map((entry) {
@@ -228,7 +227,7 @@ class _LengthSheetsState extends State<LengthSheets> {
                       ],
                     ),
                   );
-                }).toList(),
+                }),
 
                 /// ✅ Delete Button
                 Align(
