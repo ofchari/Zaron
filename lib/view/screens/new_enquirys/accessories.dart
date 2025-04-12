@@ -67,7 +67,7 @@ class _AccessoriesState extends State<Accessories> {
           final brandData = responseData["brand"];
           if (brandData is List && brandData.isNotEmpty) {
             setState(() {
-              brandsList = List<String>.from(brandData);
+              brandsList = List<Strin>.from(brandData);
             });
           }
         }
@@ -80,6 +80,7 @@ class _AccessoriesState extends State<Accessories> {
   Future<void> _fetchColors(String brand) async {
     setState(() {
       colorsList = [];
+
       selectedColor = null;
     });
 
@@ -258,6 +259,7 @@ class _AccessoriesState extends State<Accessories> {
       thicknessList = [];
       coatingMassList = [];
     });
+
 
     // Show success message with a more elegant snackbar
     ScaffoldMessenger.of(context).showSnackBar(

@@ -5,6 +5,7 @@ import 'package:zaron/view/widgets/buttons.dart';
 import '../../widgets/subhead.dart';
 import '../../widgets/text.dart';
 
+
 class LinearSheets extends StatefulWidget {
   const LinearSheets({super.key});
 
@@ -32,6 +33,7 @@ class _LinearSheetsState extends State<LinearSheets> {
     var size = MediaQuery.of(context).size;
     height = size.height;
     width = size.width;
+
 
     return Scaffold(
       appBar: AppBar(
@@ -66,7 +68,6 @@ class _LinearSheetsState extends State<LinearSheets> {
               ),
               _buildTextField("Coating", coatingController, Icons.color_lens),
               SizedBox(height: 5.h),
-
               Align(
                 alignment: Alignment.centerLeft,
                 child: MyText(text: "Thickness:", weight: FontWeight.w500, color: Colors.black),
@@ -86,7 +87,6 @@ class _LinearSheetsState extends State<LinearSheets> {
               ),
               _buildTextField("colour", coatingMassController, Icons.circle_notifications),
               SizedBox(height: 5.h),
-
               Center(
                 child: GestureDetector(
                   onTap: _submitData,
