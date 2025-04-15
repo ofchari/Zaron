@@ -249,6 +249,7 @@ class _AccessoriesState extends State<Accessories> {
         "Base Product": "$selectedBrand, $selectedColor, $selectedThickness, $selectedCoatingMass",
       });
 
+
       selectedAccessory = null;
       selectedBrand = null;
       selectedColor = null;

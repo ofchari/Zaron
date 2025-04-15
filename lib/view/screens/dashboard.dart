@@ -19,7 +19,7 @@ class _DashboardState extends State<Dashboard> {
 
   @override
   Widget build(BuildContext context) {
-    /// Define Sizes
+           /// Define Sizes ///
     var size = MediaQuery.of(context).size;
     height = size.height;
     width = size.width;
@@ -33,7 +33,7 @@ class _DashboardState extends State<Dashboard> {
     );
   }
 
-  /// Landscape Mode Warning
+  /// Landscape Mode Warning ///
   Widget _landscapeView() {
     return const Scaffold(
       body: Center(
