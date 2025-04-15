@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:dropdown_search/dropdown_search.dart';
 import 'package:flutter/material.dart';
 import 'package:http/io_client.dart';
+import 'package:zaron/view/screens/new_enquirys/new_enquiry.dart';
 import 'package:zaron/view/widgets/subhead.dart';
 import 'package:zaron/view/widgets/text.dart';
 
@@ -67,7 +68,7 @@ class _AccessoriesState extends State<Accessories> {
           final brandData = responseData["brand"];
           if (brandData is List && brandData.isNotEmpty) {
             setState(() {
-              brandsList = List<Strin>.from(brandData);
+              brandsList = List<String>.from(brandData);
             });
           }
         }
@@ -76,6 +77,7 @@ class _AccessoriesState extends State<Accessories> {
       print("Exception: $e");
     }
   }
+
 
   Future<void> _fetchColors(String brand) async {
     setState(() {
@@ -227,9 +229,8 @@ class _AccessoriesState extends State<Accessories> {
           content: Text('Please fill all required fields to add a product.'),
           actions: [
             TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text('OK'),
-            ),
+              onPressed: () => Navigator.pop(context), child: Text('OK'),
+              ),
           ],
         ),
       );
