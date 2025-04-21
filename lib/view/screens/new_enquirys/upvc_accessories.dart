@@ -11,27 +11,27 @@ import 'package:zaron/view/universal_api/api&key.dart';
 import 'package:zaron/view/widgets/subhead.dart';
 import 'package:zaron/view/widgets/text.dart';
 
-class IronSteel extends StatefulWidget {
-  const IronSteel({super.key, required this.data});
+class UpvcAccessories extends StatefulWidget {
+  const UpvcAccessories({super.key, required this.data});
 
   final Map<String, dynamic> data;
 
   @override
-  State<IronSteel> createState() => _IronSteelState();
+  State<UpvcAccessories> createState() => _UpvcAccessoriesState();
 }
 
-class _IronSteelState extends State<IronSteel> {
+class _UpvcAccessoriesState extends State<UpvcAccessories> {
   late TextEditingController editController;
 
   String? selectedBrand;
   String? selectedColor;
-  String? selectedThickness;
-  String? selectedCoatingMass;
+  String? selectProductNameBase;
+  String? selectedSize;
 
   List<String> brandsList = [];
   List<String> colorsList = [];
-  List<String> thicknessList = [];
-  List<String> coatingMassList = [];
+  List<String> productList = [];
+  List<String> sizeList = [];
   List<Map<String, dynamic>> submittedData = [];
 
   // Form key for validation
@@ -41,7 +41,7 @@ class _IronSteelState extends State<IronSteel> {
   void initState() {
     super.initState();
     editController = TextEditingController(text: widget.data["Base Product"]);
-    _fetchBrands();
+    _fetchProductName();
   }
 
   @override
@@ -50,7 +50,43 @@ class _IronSteelState extends State<IronSteel> {
     super.dispose();
   }
 
-  Future<void> _fetchBrands() async {
+  Future<void> _fetchProductName() async {
+    setState(() {
+      productList = [];
+      selectProductNameBase = null;
+    });
+
+    final client =
+        IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
+    final url = Uri.parse('$apiUrl/showlables/15');
+
+    try {
+      final response = await client.get(url);
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final product = data["message"]["message"][1];
+        print(response.body);
+
+        if (product is List) {
+          setState(() {
+            productList = product
+                .whereType<Map>()
+                .map((e) => e["product_name_base"]?.toString())
+                .whereType<String>()
+                .toList();
+          });
+        }
+      }
+    } catch (e) {
+      print("Exception fetching brands: $e");
+    }
+  }
+
+  /// fetch brand Api's //
+  Future<void> _fetchbrand() async {
+    if (selectProductNameBase == null) return;
+
     setState(() {
       brandsList = [];
       selectedBrand = null;
@@ -58,15 +94,25 @@ class _IronSteelState extends State<IronSteel> {
 
     final client =
         IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
-    final url = Uri.parse('$apiUrl/showlables/3');
+    final url = Uri.parse('$apiUrl/validinputdata');
 
     try {
-      final response = await client.get(url);
+      final response = await client.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          "category_id": "15",
+          "selectedlabel": "product_name_base",
+          "selectedvalue": selectProductNameBase,
+          "label_name": "brand",
+        }),
+      );
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final brands = data["message"]["message"][1];
-        print(response.body);
+        final brands = data["message"]["message"];
+        print("Fetching colors for brand: $selectedBrand");
+        print("API response: ${response.body}");
 
         if (brands is List) {
           setState(() {
@@ -79,13 +125,13 @@ class _IronSteelState extends State<IronSteel> {
         }
       }
     } catch (e) {
-      print("Exception fetching brands: $e");
+      print("Exception fetching brand: $e");
     }
   }
 
-  /// fetch colors Api's //
-  Future<void> _fetchColors() async {
-    if (selectedBrand == null) return;
+  // /// fetch Color Api's ///
+  Future<void> _fetchColor() async {
+    if (selectProductNameBase == null) return;
 
     setState(() {
       colorsList = [];
@@ -101,7 +147,7 @@ class _IronSteelState extends State<IronSteel> {
         url,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-          "category_id": "3",
+          "category_id": "15",
           "selectedlabel": "brand",
           "selectedvalue": selectedBrand,
           "label_name": "color",
@@ -110,13 +156,13 @@ class _IronSteelState extends State<IronSteel> {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final colors = data["message"]["message"];
+        final color = data["message"]["message"];
         print("Fetching colors for brand: $selectedBrand");
         print("API response: ${response.body}");
 
-        if (colors is List) {
+        if (color is List) {
           setState(() {
-            colorsList = colors
+            colorsList = color
                 .whereType<Map>()
                 .map((e) => e["color"]?.toString())
                 .whereType<String>()
@@ -125,17 +171,17 @@ class _IronSteelState extends State<IronSteel> {
         }
       }
     } catch (e) {
-      print("Exception fetching colors: $e");
+      print("Exception fetching color: $e");
     }
   }
 
-  /// fetch Thickness Api's ///
-  Future<void> _fetchThickness() async {
-    if (selectedBrand == null) return;
+  /// fetch Sizes Api's ///
+  Future<void> _fetchSize() async {
+    if (selectProductNameBase == null) return;
 
     setState(() {
-      thicknessList = [];
-      selectedThickness = null;
+      sizeList = [];
+      selectedSize = null;
     });
 
     final client =
@@ -147,85 +193,39 @@ class _IronSteelState extends State<IronSteel> {
         url,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-          "category_id": "3",
+          "category_id": "15",
           "selectedlabel": "color",
           "selectedvalue": selectedColor,
-          "label_name": "thickness",
+          "label_name": "SIZE",
         }),
       );
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final thickness = data["message"]["message"];
+        final size = data["message"]["message"];
         print("Fetching colors for brand: $selectedBrand");
         print("API response: ${response.body}");
 
-        if (thickness is List) {
+        if (size is List) {
           setState(() {
-            thicknessList = thickness
+            sizeList = size
                 .whereType<Map>()
-                .map((e) => e["thickness"]?.toString())
+                .map((e) => e["SIZE"]?.toString())
                 .whereType<String>()
                 .toList();
           });
         }
       }
     } catch (e) {
-      print("Exception fetching thickness: $e");
-    }
-  }
-
-  /// fetch Thickness Api's ///
-  Future<void> _fetchCoatingMass() async {
-    if (selectedBrand == null) return;
-
-    setState(() {
-      coatingMassList = [];
-      selectedCoatingMass = null;
-    });
-
-    final client =
-        IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
-    final url = Uri.parse('$apiUrl/validinputdata');
-
-    try {
-      final response = await client.post(
-        url,
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          "category_id": "3",
-          "selectedlabel": "thickness",
-          "selectedvalue": selectedThickness,
-          "label_name": "coating_mass",
-        }),
-      );
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        final coating = data["message"]["message"];
-        print("Fetching colors for brand: $selectedBrand");
-        print("API response: ${response.body}");
-
-        if (coating is List) {
-          setState(() {
-            coatingMassList = coating
-                .whereType<Map>()
-                .map((e) => e["coating_mass"]?.toString())
-                .whereType<String>()
-                .toList();
-          });
-        }
-      }
-    } catch (e) {
-      print("Exception fetching coating mass: $e");
+      print("Exception fetching sizes: $e");
     }
   }
 
   void _submitData() {
     if (selectedBrand == null ||
         selectedColor == null ||
-        selectedThickness == null ||
-        selectedCoatingMass == null) {
+        selectProductNameBase == null ||
+        selectedSize == null) {
       // Show elegant error message
       showDialog(
         context: context,
@@ -252,13 +252,13 @@ class _IronSteelState extends State<IronSteel> {
         "SQ": "0",
         "Amount": "0",
         "Base Product":
-            "$selectedBrand, $selectedColor, $selectedThickness, $selectedCoatingMass",
+            "$selectedBrand, $selectedColor, $selectProductNameBase, $selectedSize",
       });
 
       selectedBrand = null;
       selectedColor = null;
-      selectedThickness = null;
-      selectedCoatingMass = null;
+      selectProductNameBase = null;
+      selectedSize = null;
     });
 
     // Show success message with a more elegant snackbar
@@ -754,35 +754,31 @@ class _IronSteelState extends State<IronSteel> {
                               weight: FontWeight.w600,
                               color: Colors.black),
                           SizedBox(height: 16),
+                          _buildDropdown(productList, selectProductNameBase,
+                              (value) {
+                            setState(() {
+                              selectProductNameBase = value;
+                            });
+                            _fetchbrand();
+                          }, label: "Product Name Base"),
                           _buildDropdown(brandsList, selectedBrand, (value) {
                             setState(() {
                               selectedBrand = value;
                             });
-                            _fetchColors();
-                          }, label: "Brand"),
+                            _fetchColor();
+                            // _fetchThickness();
+                          }, enabled: brandsList.isNotEmpty, label: "Brand"),
                           _buildDropdown(colorsList, selectedColor, (value) {
                             setState(() {
                               selectedColor = value;
                             });
-                            _fetchThickness();
+                            _fetchSize();
                           }, enabled: colorsList.isNotEmpty, label: "Color"),
-                          _buildDropdown(thicknessList, selectedThickness,
-                              (value) {
+                          _buildDropdown(sizeList, selectedSize, (value) {
                             setState(() {
-                              selectedThickness = value;
+                              selectedSize = value;
                             });
-                            _fetchCoatingMass();
-                          },
-                              enabled: thicknessList.isNotEmpty,
-                              label: "Thickness"),
-                          _buildDropdown(coatingMassList, selectedCoatingMass,
-                              (value) {
-                            setState(() {
-                              selectedCoatingMass = value;
-                            });
-                          },
-                              enabled: coatingMassList.isNotEmpty,
-                              label: "Coating Mass"),
+                          }, enabled: sizeList.isNotEmpty, label: "Size"),
                           SizedBox(height: 20),
                           SizedBox(
                             width: double.infinity,

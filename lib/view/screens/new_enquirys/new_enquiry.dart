@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
@@ -8,7 +9,6 @@ import 'package:zaron/view/screens/new_enquirys/accessories.dart';
 import 'package:zaron/view/screens/new_enquirys/iron_steels.dart';
 import 'package:zaron/view/widgets/subhead.dart';
 import 'package:zaron/view/widgets/text.dart';
-
 
 class NewEnquiry extends StatefulWidget {
   const NewEnquiry({super.key});
@@ -38,14 +38,18 @@ class _NewEnquiryState extends State<NewEnquiry> {
           setState(() {
             categories = List<Map<String, dynamic>>.from(
               (data['message']['message'] as List)
-                  .where((item) => item["id"] != null && item["categories"] != null && item["cate_image"] != null)
+                  .where((item) =>
+                      item["id"] != null &&
+                      item["categories"] != null &&
+                      item["cate_image"] != null)
                   .map(
                     (item) => {
-                  "id": item["id"].toString(),
-                  "name": item["categories"],
-                  "imagePath": "http://demo.zaron.in:8181/${item["cate_image"]}",
-                },
-              ),
+                      "id": item["id"].toString(),
+                      "name": item["categories"],
+                      "imagePath":
+                          "http://demo.zaron.in:8181/${item["cate_image"]}",
+                    },
+                  ),
             );
           });
         }
@@ -55,21 +59,23 @@ class _NewEnquiryState extends State<NewEnquiry> {
     }
   }
 
-
-  Future<void> mobiledocument(BuildContext context, String id, String categoryName) async {
+  Future<void> mobiledocument(
+      BuildContext context, String id, String categoryName) async {
     HttpClient client = HttpClient();
-    client.badCertificateCallback = ((X509Certificate cert, String host, int port) => true);
+    client.badCertificateCallback =
+        ((X509Certificate cert, String host, int port) => true);
     IOClient ioClient = IOClient(client);
 
     final Data = {
-      "values" : '',
+      "values": '',
       "id": id,
       "inputname": 'accessories_name',
-      "product_value" : [],
-      "category_value" : [],
+      "product_value": [],
+      "category_value": [],
     };
 
-    final url = 'http://demo.zaron.in:8181/index.php/order/first_check_select_base_product';
+    final url =
+        'http://demo.zaron.in:8181/index.php/order/first_check_select_base_product';
     final body = jsonEncode(Data);
 
     print("🔵 [DEBUG] Sending POST request...");
@@ -86,7 +92,8 @@ class _NewEnquiryState extends State<NewEnquiry> {
       );
       stopwatch.stop(); // Stop measuring
 
-      print("🟢 [DEBUG] Response received in ${stopwatch.elapsedMilliseconds}ms");
+      print(
+          "🟢 [DEBUG] Response received in ${stopwatch.elapsedMilliseconds}ms");
       print("🟢 Status Code: ${response.statusCode}");
 
       if (response.body.isNotEmpty) {
@@ -107,11 +114,13 @@ class _NewEnquiryState extends State<NewEnquiry> {
           print("❌ [ERROR] Failed to parse JSON: $decodeError");
         }
       } else {
-        String message = '❌ [ERROR] Request failed with status: ${response.statusCode}';
+        String message =
+            '❌ [ERROR] Request failed with status: ${response.statusCode}';
 
         if (response.statusCode == 417) {
           try {
-            final serverMessages = jsonDecode(response.body)['_server_messages'];
+            final serverMessages =
+                jsonDecode(response.body)['_server_messages'];
             message = serverMessages ?? message;
           } catch (decodeError) {
             print("❌ [ERROR] Failed to parse error message: $decodeError");
@@ -152,7 +161,6 @@ class _NewEnquiryState extends State<NewEnquiry> {
     }
   }
 
-
   Widget getCategoryPage(String categoryName, Map<String, dynamic> data) {
     switch (categoryName.toLowerCase()) {
       case 'accessories':
@@ -170,7 +178,8 @@ class _NewEnquiryState extends State<NewEnquiry> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Subhead(text: "New Enquiry", weight: FontWeight.w500, color: Colors.black),
+        title: const Subhead(
+            text: "New Enquiry", weight: FontWeight.w500, color: Colors.black),
         centerTitle: true,
       ),
       body: Padding(
@@ -178,18 +187,19 @@ class _NewEnquiryState extends State<NewEnquiry> {
         child: categories.isEmpty
             ? const Center(child: CircularProgressIndicator())
             : GridView.builder(
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 2,
-            childAspectRatio: 1.1,
-            crossAxisSpacing: 12,
-            mainAxisSpacing: 12,
-          ),
-          itemCount: categories.length,
-          itemBuilder: (context, index) {
-            final category = categories[index];
-            return _buildCategoryCard(category["id"], category["name"], category["imagePath"]);
-          },
-        ),
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  childAspectRatio: 1.1,
+                  crossAxisSpacing: 12,
+                  mainAxisSpacing: 12,
+                ),
+                itemCount: categories.length,
+                itemBuilder: (context, index) {
+                  final category = categories[index];
+                  return _buildCategoryCard(
+                      category["id"], category["name"], category["imagePath"]);
+                },
+              ),
       ),
     );
   }
@@ -208,16 +218,19 @@ class _NewEnquiryState extends State<NewEnquiry> {
                   image: DecorationImage(
                     image: imagePath != "assets/aluminum.png"
                         ? NetworkImage(imagePath)
-                        : const AssetImage("assets/aluminum.png") as ImageProvider,
+                        : const AssetImage("assets/aluminum.png")
+                            as ImageProvider,
                     fit: BoxFit.cover,
                   ),
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(15)),
+                  borderRadius:
+                      const BorderRadius.vertical(top: Radius.circular(15)),
                 ),
               ),
             ),
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 10),
-              child: MyText(text: name, weight: FontWeight.w500, color: Colors.black),
+              child: MyText(
+                  text: name, weight: FontWeight.w500, color: Colors.black),
             ),
           ],
         ),

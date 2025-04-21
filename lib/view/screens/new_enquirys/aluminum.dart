@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:zaron/view/widgets/buttons.dart';
+
 import '../../widgets/subhead.dart';
 import '../../widgets/text.dart';
 
@@ -31,7 +32,8 @@ class _AluminumState extends State<Aluminum> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Subhead(text: "Aluminum", weight: FontWeight.w500, color: Colors.black),
+        title: Subhead(
+            text: "Aluminum", weight: FontWeight.w500, color: Colors.black),
         centerTitle: true,
       ),
       body: Padding(
@@ -41,21 +43,19 @@ class _AluminumState extends State<Aluminum> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _buildLabel("Aluminum:"),
-              _buildTextField("Select Aluminum", aluminumController, Icons.miscellaneous_services),
+              _buildTextField("Select Aluminum", aluminumController,
+                  Icons.miscellaneous_services),
               SizedBox(height: 10.h),
-
               _buildLabel("Brand:"),
               _buildTextField("Brand", brandController, Icons.business),
               SizedBox(height: 5.h),
-
               _buildLabel("Color:"),
               _buildTextField("Color", colorController, Icons.color_lens),
               SizedBox(height: 5.h),
-
               _buildLabel("Thickness:"),
-              _buildTextField("Thickness", thicknessController, Icons.straighten),
+              _buildTextField(
+                  "Thickness", thicknessController, Icons.straighten),
               SizedBox(height: 10.h),
-
               Center(
                 child: GestureDetector(
                   onTap: _submitData,
@@ -85,21 +85,27 @@ class _AluminumState extends State<Aluminum> {
     );
   }
 
-  Widget _buildTextField(String hint, TextEditingController controller, IconData icon) {
+  Widget _buildTextField(
+      String hint, TextEditingController controller, IconData icon) {
     return Padding(
       padding: EdgeInsets.symmetric(vertical: 10.h),
       child: TextFormField(
         controller: controller,
         decoration: InputDecoration(
           labelText: hint,
-          labelStyle: GoogleFonts.figtree(textStyle: TextStyle(fontSize: 14.5.sp, fontWeight: FontWeight.w500, color: Colors.grey)),
+          labelStyle: GoogleFonts.figtree(
+              textStyle: TextStyle(
+                  fontSize: 14.5.sp,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.grey)),
           prefixIcon: Icon(icon, color: Colors.blueAccent),
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r)),
           focusedBorder: OutlineInputBorder(
             borderSide: BorderSide(color: Colors.blueAccent, width: 1.5),
             borderRadius: BorderRadius.circular(12.r),
           ),
-          contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 14.h),
+          contentPadding:
+              EdgeInsets.symmetric(horizontal: 12.w, vertical: 14.h),
         ),
       ),
     );
@@ -159,7 +165,6 @@ class _AluminumState extends State<Aluminum> {
     );
   }
 
-
   Widget _buildSubmittedData() {
     return Column(
       children: submittedData.asMap().entries.map((entry) {
@@ -168,7 +173,8 @@ class _AluminumState extends State<Aluminum> {
 
         return Card(
           margin: EdgeInsets.only(bottom: 12.h),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
           elevation: 4,
           shadowColor: Colors.blueAccent.withOpacity(0.2),
           child: Padding(
@@ -177,21 +183,22 @@ class _AluminumState extends State<Aluminum> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 ...data.entries.map((entry) => Padding(
-                  padding: EdgeInsets.symmetric(vertical: 5.h),
-                  child: Row(
-                    children: [
-                      Icon(_getIcon(entry.key), color: Colors.blueAccent, size: 20.w),
-                      SizedBox(width: 8.w),
-                      Expanded(
-                        child: MyText(
-                          text: "${entry.key}: ${entry.value}",
-                          weight: FontWeight.w500,
-                          color: Colors.black87,
-                        ),
+                      padding: EdgeInsets.symmetric(vertical: 5.h),
+                      child: Row(
+                        children: [
+                          Icon(_getIcon(entry.key),
+                              color: Colors.blueAccent, size: 20.w),
+                          SizedBox(width: 8.w),
+                          Expanded(
+                            child: MyText(
+                              text: "${entry.key}: ${entry.value}",
+                              weight: FontWeight.w500,
+                              color: Colors.black87,
+                            ),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                )),
+                    )),
                 Align(
                   alignment: Alignment.centerRight,
                   child: IconButton(

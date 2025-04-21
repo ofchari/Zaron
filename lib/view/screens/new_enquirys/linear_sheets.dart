@@ -15,9 +15,6 @@ class LinearSheets extends StatefulWidget {
 
 class _LinearSheetsState extends State<LinearSheets> {
   late double height;
-
-
-
   late double width;
 
   final TextEditingController materialController = TextEditingController(); // Changed from materialTypeController
