@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get_navigation/src/root/get_material_app.dart';
-import 'package:zaron/view/screens/new_enquirys/upvc_accessories.dart';
+import 'package:zaron/view/screens/new_enquirys/screw.dart';
 
 void main() async {
   runApp(const MyApp());
@@ -23,7 +23,7 @@ class MyApp extends StatelessWidget {
               colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
               useMaterial3: true,
             ),
-            home: UpvcAccessories(data: {})
+            home: Screw(data: {})
             // AnimatedSplashScreen(
             //     splash: Image.asset("assets/login.png"),
             //     splashTransition: SplashTransition.fadeTransition,

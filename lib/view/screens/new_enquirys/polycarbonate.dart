@@ -7,41 +7,40 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:gap/gap.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/io_client.dart';
-import 'package:zaron/view/universal_api/api&key.dart';
 import 'package:zaron/view/widgets/subhead.dart';
 import 'package:zaron/view/widgets/text.dart';
 
-class UpvcAccessories extends StatefulWidget {
-  const UpvcAccessories({super.key, required this.data});
+import '../../universal_api/api&key.dart';
+
+class Polycarbonate extends StatefulWidget {
+  const Polycarbonate({super.key, required this.data});
 
   final Map<String, dynamic> data;
 
   @override
-  State<UpvcAccessories> createState() => _UpvcAccessoriesState();
+  State<Polycarbonate> createState() => _PolycarbonateState();
 }
 
-class _UpvcAccessoriesState extends State<UpvcAccessories> {
+class _PolycarbonateState extends State<Polycarbonate> {
   late TextEditingController editController;
 
   String? selectedBrand;
   String? selectedColor;
-  String? selectProductNameBase;
-  String? selectedSize;
+  String? selectedThickness;
 
   List<String> brandsList = [];
   List<String> colorsList = [];
-  List<String> productList = [];
-  List<String> sizeList = [];
+  List<String> thicknessList = [];
   List<Map<String, dynamic>> submittedData = [];
 
-  // Form key for validation
+// Form key for validation
   final _formKey = GlobalKey<FormState>();
 
   @override
   void initState() {
     super.initState();
     editController = TextEditingController(text: widget.data["Base Product"]);
-    _fetchProductName();
+    _fetchBrands();
   }
 
   @override
@@ -50,29 +49,30 @@ class _UpvcAccessoriesState extends State<UpvcAccessories> {
     super.dispose();
   }
 
-  Future<void> _fetchProductName() async {
+  Future<void> _fetchBrands() async {
     setState(() {
-      productList = [];
-      selectProductNameBase = null;
+      brandsList = [];
+      selectedBrand = null;
     });
 
     final client =
         IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
-    final url = Uri.parse('$apiUrl/showlables/15');
+    final url = Uri.parse('$apiUrl/showlables/19');
 
     try {
       final response = await client.get(url);
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final product = data["message"]["message"][1];
+        final typeofPanel = data["message"]["message"][1];
+
         print(response.body);
 
-        if (product is List) {
+        if (typeofPanel is List) {
           setState(() {
-            productList = product
+            brandsList = typeofPanel
                 .whereType<Map>()
-                .map((e) => e["product_name_base"]?.toString())
+                .map((e) => e["type_of_panel"]?.toString())
                 .whereType<String>()
                 .toList();
           });
@@ -83,55 +83,9 @@ class _UpvcAccessoriesState extends State<UpvcAccessories> {
     }
   }
 
-  /// fetch brand Api's //
-  Future<void> _fetchbrand() async {
-    if (selectProductNameBase == null) return;
-
-    setState(() {
-      brandsList = [];
-      selectedBrand = null;
-    });
-
-    final client =
-        IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
-    final url = Uri.parse('$apiUrl/validinputdata');
-
-    try {
-      final response = await client.post(
-        url,
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          "category_id": "15",
-          "selectedlabel": "product_name_base",
-          "selectedvalue": selectProductNameBase,
-          "label_name": "brand",
-        }),
-      );
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        final brands = data["message"]["message"];
-        print("Fetching colors for brand: $selectedBrand");
-        print("API response: ${response.body}");
-
-        if (brands is List) {
-          setState(() {
-            brandsList = brands
-                .whereType<Map>()
-                .map((e) => e["brand"]?.toString())
-                .whereType<String>()
-                .toList();
-          });
-        }
-      }
-    } catch (e) {
-      print("Exception fetching brand: $e");
-    }
-  }
-
-  // /// fetch Color Api's ///
-  Future<void> _fetchColor() async {
-    if (selectProductNameBase == null) return;
+  /// fetch colors Api's //
+  Future<void> _fetchColors() async {
+    if (selectedBrand == null) return;
 
     setState(() {
       colorsList = [];
@@ -147,8 +101,8 @@ class _UpvcAccessoriesState extends State<UpvcAccessories> {
         url,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-          "category_id": "15",
-          "selectedlabel": "brand",
+          "category_id": "19",
+          "selectedlabel": "type_of_panel",
           "selectedvalue": selectedBrand,
           "label_name": "color",
         }),
@@ -156,13 +110,13 @@ class _UpvcAccessoriesState extends State<UpvcAccessories> {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final color = data["message"]["message"];
+        final colors = data["message"]["message"];
         print("Fetching colors for brand: $selectedBrand");
         print("API response: ${response.body}");
 
-        if (color is List) {
+        if (colors is List) {
           setState(() {
-            colorsList = color
+            colorsList = colors
                 .whereType<Map>()
                 .map((e) => e["color"]?.toString())
                 .whereType<String>()
@@ -171,17 +125,17 @@ class _UpvcAccessoriesState extends State<UpvcAccessories> {
         }
       }
     } catch (e) {
-      print("Exception fetching color: $e");
+      print("Exception fetching colors: $e");
     }
   }
 
-  /// fetch Sizes Api's ///
-  Future<void> _fetchSize() async {
-    if (selectProductNameBase == null) return;
+  /// fetch Thickness Api's ///
+  Future<void> _fetchThickness() async {
+    if (selectedBrand == null) return;
 
     setState(() {
-      sizeList = [];
-      selectedSize = null;
+      thicknessList = [];
+      selectedThickness = null;
     });
 
     final client =
@@ -193,40 +147,41 @@ class _UpvcAccessoriesState extends State<UpvcAccessories> {
         url,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-          "category_id": "15",
+          "category_id": "19",
           "selectedlabel": "color",
           "selectedvalue": selectedColor,
-          "label_name": "SIZE",
+          "label_name": "thickness",
         }),
       );
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final size = data["message"]["message"];
+        final thickness = data["message"]["message"];
         print("Fetching colors for brand: $selectedBrand");
         print("API response: ${response.body}");
 
-        if (size is List) {
+        if (thickness is List) {
           setState(() {
-            sizeList = size
+            thicknessList = thickness
                 .whereType<Map>()
-                .map((e) => e["SIZE"]?.toString())
+                .map((e) => e["thickness"]?.toString())
                 .whereType<String>()
                 .toList();
           });
         }
       }
     } catch (e) {
-      print("Exception fetching sizes: $e");
+      print("Exception fetching thickness: $e");
     }
   }
+
+  /// fetch Thickness Api's ///
 
   void _submitData() {
     if (selectedBrand == null ||
         selectedColor == null ||
-        selectProductNameBase == null ||
-        selectedSize == null) {
-      // Show elegant error message
+        selectedThickness == null) {
+// Show elegant error message
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
@@ -244,24 +199,22 @@ class _UpvcAccessoriesState extends State<UpvcAccessories> {
     }
     setState(() {
       submittedData.add({
-        "Product": "UPVC Accessories",
+        "Product": "Iron and Steel",
         "UOM": "Feet",
         "Length": "0",
         "Nos": "1",
         "Basic Rate": "0",
         "SQ": "0",
         "Amount": "0",
-        "Base Product":
-            "$selectedBrand, $selectedColor, $selectProductNameBase, $selectedSize",
+        "Base Product": "$selectedBrand, $selectedColor, $selectedThickness,",
       });
 
       selectedBrand = null;
       selectedColor = null;
-      selectProductNameBase = null;
-      selectedSize = null;
+      selectedThickness = null;
     });
 
-    // Show success message with a more elegant snackbar
+// Show success message with a more elegant snackbar
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
@@ -432,11 +385,11 @@ class _UpvcAccessoriesState extends State<UpvcAccessories> {
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Row(
-                    // mainAxisAlignment: MainAxisAlignment.spaceBetween,
+// mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       SizedBox(
-                        // color: Colors.red,
+// color: Colors.red,
                         height: 40.h,
                         width: 280.w,
                         child: TextField(
@@ -467,13 +420,12 @@ class _UpvcAccessoriesState extends State<UpvcAccessories> {
                                     context: context,
                                     builder: (context) {
                                       return AlertDialog(
-                                        title:
-                                            Text("Edit Your UPVC Accessories"),
+                                        title: Text("Edit Your Iron and Steel"),
                                         content: Column(
                                           mainAxisSize: MainAxisSize.min,
                                           children: [
                                             Container(
-                                              // color: Colors.white,
+// color: Colors.white,
                                               height: 45.h,
                                               width: double.infinity.w,
                                               decoration: BoxDecoration(
@@ -537,7 +489,7 @@ class _UpvcAccessoriesState extends State<UpvcAccessories> {
     );
   }
 
-  // New method that organizes fields in rows, two fields per row
+// New method that organizes fields in rows, two fields per row
   Widget _buildProductDetailInRows(Map<String, dynamic> data) {
     return Column(
       children: [
@@ -560,7 +512,7 @@ class _UpvcAccessoriesState extends State<UpvcAccessories> {
           ],
         ),
         Gap(35),
-        // Row 3: Basic Rate & SQ
+// Row 3: Basic Rate & SQ
         Row(
           children: [
             Expanded(
@@ -722,7 +674,7 @@ class _UpvcAccessoriesState extends State<UpvcAccessories> {
     return Scaffold(
       appBar: AppBar(
         title: Subhead(
-          text: 'UPVC Accessories',
+          text: 'Polycarbonate',
           weight: FontWeight.w500,
           color: Colors.black,
         ),
@@ -755,31 +707,26 @@ class _UpvcAccessoriesState extends State<UpvcAccessories> {
                               weight: FontWeight.w600,
                               color: Colors.black),
                           SizedBox(height: 16),
-                          _buildDropdown(productList, selectProductNameBase,
-                              (value) {
-                            setState(() {
-                              selectProductNameBase = value;
-                            });
-                            _fetchbrand();
-                          }, label: "Product Name Base"),
                           _buildDropdown(brandsList, selectedBrand, (value) {
                             setState(() {
                               selectedBrand = value;
                             });
-                            _fetchColor();
-                            // _fetchThickness();
-                          }, enabled: brandsList.isNotEmpty, label: "Brand"),
+                            _fetchColors();
+                          }, label: "Brand"),
                           _buildDropdown(colorsList, selectedColor, (value) {
                             setState(() {
                               selectedColor = value;
                             });
-                            _fetchSize();
+                            _fetchThickness();
                           }, enabled: colorsList.isNotEmpty, label: "Color"),
-                          _buildDropdown(sizeList, selectedSize, (value) {
+                          _buildDropdown(thicknessList, selectedThickness,
+                              (value) {
                             setState(() {
-                              selectedSize = value;
+                              selectedThickness = value;
                             });
-                          }, enabled: sizeList.isNotEmpty, label: "Size"),
+                          },
+                              enabled: thicknessList.isNotEmpty,
+                              label: "Thickness"),
                           SizedBox(height: 20),
                           SizedBox(
                             width: double.infinity,

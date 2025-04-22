@@ -11,27 +11,26 @@ import 'package:zaron/view/universal_api/api&key.dart';
 import 'package:zaron/view/widgets/subhead.dart';
 import 'package:zaron/view/widgets/text.dart';
 
-class UpvcAccessories extends StatefulWidget {
-  const UpvcAccessories({super.key, required this.data});
+class Screw extends StatefulWidget {
+  const Screw({super.key, required this.data});
 
   final Map<String, dynamic> data;
 
   @override
-  State<UpvcAccessories> createState() => _UpvcAccessoriesState();
+  State<Screw> createState() => _ScrewState();
 }
 
-class _UpvcAccessoriesState extends State<UpvcAccessories> {
+class _ScrewState extends State<Screw> {
   late TextEditingController editController;
 
   String? selectedBrand;
-  String? selectedColor;
-  String? selectProductNameBase;
-  String? selectedSize;
+  String? selectedScrew;
+  String? selectedThread;
 
-  List<String> brandsList = [];
-  List<String> colorsList = [];
-  List<String> productList = [];
-  List<String> sizeList = [];
+  List<String> brandList = [];
+  List<String> screwLengthList = [];
+  List<String> threadList = [];
+
   List<Map<String, dynamic>> submittedData = [];
 
   // Form key for validation
@@ -41,7 +40,7 @@ class _UpvcAccessoriesState extends State<UpvcAccessories> {
   void initState() {
     super.initState();
     editController = TextEditingController(text: widget.data["Base Product"]);
-    _fetchProductName();
+    _fetchBrand();
   }
 
   @override
@@ -50,73 +49,27 @@ class _UpvcAccessoriesState extends State<UpvcAccessories> {
     super.dispose();
   }
 
-  Future<void> _fetchProductName() async {
+  Future<void> _fetchBrand() async {
     setState(() {
-      productList = [];
-      selectProductNameBase = null;
+      brandList = [];
+      selectedBrand = null;
     });
 
     final client =
         IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
-    final url = Uri.parse('$apiUrl/showlables/15');
+    final url = Uri.parse('$apiUrl/showlables/7');
 
     try {
       final response = await client.get(url);
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final product = data["message"]["message"][1];
+        final brands = data["message"]["message"][1];
         print(response.body);
-
-        if (product is List) {
-          setState(() {
-            productList = product
-                .whereType<Map>()
-                .map((e) => e["product_name_base"]?.toString())
-                .whereType<String>()
-                .toList();
-          });
-        }
-      }
-    } catch (e) {
-      print("Exception fetching brands: $e");
-    }
-  }
-
-  /// fetch brand Api's //
-  Future<void> _fetchbrand() async {
-    if (selectProductNameBase == null) return;
-
-    setState(() {
-      brandsList = [];
-      selectedBrand = null;
-    });
-
-    final client =
-        IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
-    final url = Uri.parse('$apiUrl/validinputdata');
-
-    try {
-      final response = await client.post(
-        url,
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          "category_id": "15",
-          "selectedlabel": "product_name_base",
-          "selectedvalue": selectProductNameBase,
-          "label_name": "brand",
-        }),
-      );
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        final brands = data["message"]["message"];
-        print("Fetching colors for brand: $selectedBrand");
-        print("API response: ${response.body}");
 
         if (brands is List) {
           setState(() {
-            brandsList = brands
+            brandList = brands
                 .whereType<Map>()
                 .map((e) => e["brand"]?.toString())
                 .whereType<String>()
@@ -129,13 +82,13 @@ class _UpvcAccessoriesState extends State<UpvcAccessories> {
     }
   }
 
-  // /// fetch Color Api's ///
-  Future<void> _fetchColor() async {
-    if (selectProductNameBase == null) return;
+  // /// fetch Screw Api's ///
+  Future<void> _fetchScrew() async {
+    if (selectedBrand == null) return;
 
     setState(() {
-      colorsList = [];
-      selectedColor = null;
+      screwLengthList = [];
+      selectedScrew = null;
     });
 
     final client =
@@ -147,41 +100,41 @@ class _UpvcAccessoriesState extends State<UpvcAccessories> {
         url,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-          "category_id": "15",
+          "category_id": "7",
           "selectedlabel": "brand",
           "selectedvalue": selectedBrand,
-          "label_name": "color",
+          "label_name": "length_of_screw",
         }),
       );
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final color = data["message"]["message"];
+        final screws = data["message"]["message"];
         print("Fetching colors for brand: $selectedBrand");
         print("API response: ${response.body}");
 
-        if (color is List) {
+        if (screws is List) {
           setState(() {
-            colorsList = color
+            screwLengthList = screws
                 .whereType<Map>()
-                .map((e) => e["color"]?.toString())
+                .map((e) => e["length_of_screw"]?.toString())
                 .whereType<String>()
                 .toList();
           });
         }
       }
     } catch (e) {
-      print("Exception fetching color: $e");
+      print("Exception fetching screw: $e");
     }
   }
 
-  /// fetch Sizes Api's ///
-  Future<void> _fetchSize() async {
-    if (selectProductNameBase == null) return;
+  /// fetch Types of thread   Api's ///
+  Future<void> _fetchThreads() async {
+    if (selectedBrand == null) return;
 
     setState(() {
-      sizeList = [];
-      selectedSize = null;
+      threadList = [];
+      selectedThread = null;
     });
 
     final client =
@@ -193,39 +146,38 @@ class _UpvcAccessoriesState extends State<UpvcAccessories> {
         url,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-          "category_id": "15",
-          "selectedlabel": "color",
-          "selectedvalue": selectedColor,
-          "label_name": "SIZE",
+          "category_id": "7",
+          "selectedlabel": "length_of_screw",
+          "selectedvalue": selectedScrew,
+          "label_name": "type_of_thread",
         }),
       );
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final size = data["message"]["message"];
-        print("Fetching colors for brand: $selectedBrand");
+        final threadsTypes = data["message"]["message"];
+        print("Fetching colors for brand: $selectedScrew");
         print("API response: ${response.body}");
 
-        if (size is List) {
+        if (threadsTypes is List) {
           setState(() {
-            sizeList = size
+            threadList = threadsTypes
                 .whereType<Map>()
-                .map((e) => e["SIZE"]?.toString())
+                .map((e) => e["type_of_thread"]?.toString())
                 .whereType<String>()
                 .toList();
           });
         }
       }
     } catch (e) {
-      print("Exception fetching sizes: $e");
+      print("Exception fetching thread types: $e");
     }
   }
 
   void _submitData() {
     if (selectedBrand == null ||
-        selectedColor == null ||
-        selectProductNameBase == null ||
-        selectedSize == null) {
+        selectedScrew == null ||
+        selectedThread == null) {
       // Show elegant error message
       showDialog(
         context: context,
@@ -244,21 +196,19 @@ class _UpvcAccessoriesState extends State<UpvcAccessories> {
     }
     setState(() {
       submittedData.add({
-        "Product": "UPVC Accessories",
+        "Product": "Screw",
         "UOM": "Feet",
         "Length": "0",
         "Nos": "1",
         "Basic Rate": "0",
         "SQ": "0",
         "Amount": "0",
-        "Base Product":
-            "$selectedBrand, $selectedColor, $selectProductNameBase, $selectedSize",
+        "Base Product": "$selectedBrand, $selectedScrew, $selectedThread,",
       });
 
       selectedBrand = null;
-      selectedColor = null;
-      selectProductNameBase = null;
-      selectedSize = null;
+      selectedScrew = null;
+      selectedThread = null;
     });
 
     // Show success message with a more elegant snackbar
@@ -467,8 +417,7 @@ class _UpvcAccessoriesState extends State<UpvcAccessories> {
                                     context: context,
                                     builder: (context) {
                                       return AlertDialog(
-                                        title:
-                                            Text("Edit Your UPVC Accessories"),
+                                        title: Text("Edit Your Screw"),
                                         content: Column(
                                           mainAxisSize: MainAxisSize.min,
                                           children: [
@@ -722,7 +671,7 @@ class _UpvcAccessoriesState extends State<UpvcAccessories> {
     return Scaffold(
       appBar: AppBar(
         title: Subhead(
-          text: 'UPVC Accessories',
+          text: 'Screw',
           weight: FontWeight.w500,
           color: Colors.black,
         ),
@@ -755,31 +704,28 @@ class _UpvcAccessoriesState extends State<UpvcAccessories> {
                               weight: FontWeight.w600,
                               color: Colors.black),
                           SizedBox(height: 16),
-                          _buildDropdown(productList, selectProductNameBase,
-                              (value) {
-                            setState(() {
-                              selectProductNameBase = value;
-                            });
-                            _fetchbrand();
-                          }, label: "Product Name Base"),
-                          _buildDropdown(brandsList, selectedBrand, (value) {
+                          _buildDropdown(brandList, selectedBrand, (value) {
                             setState(() {
                               selectedBrand = value;
                             });
-                            _fetchColor();
-                            // _fetchThickness();
-                          }, enabled: brandsList.isNotEmpty, label: "Brand"),
-                          _buildDropdown(colorsList, selectedColor, (value) {
+                            _fetchScrew();
+                          }, label: "Brand"),
+                          _buildDropdown(screwLengthList, selectedScrew,
+                              (value) {
                             setState(() {
-                              selectedColor = value;
+                              selectedScrew = value;
                             });
-                            _fetchSize();
-                          }, enabled: colorsList.isNotEmpty, label: "Color"),
-                          _buildDropdown(sizeList, selectedSize, (value) {
+                            _fetchThreads();
+                          },
+                              enabled: screwLengthList.isNotEmpty,
+                              label: "Length of Screw"),
+                          _buildDropdown(threadList, selectedThread, (value) {
                             setState(() {
-                              selectedSize = value;
+                              selectedThread = value;
                             });
-                          }, enabled: sizeList.isNotEmpty, label: "Size"),
+                          },
+                              enabled: threadList.isNotEmpty,
+                              label: "Type of Thread"),
                           SizedBox(height: 20),
                           SizedBox(
                             width: double.infinity,
