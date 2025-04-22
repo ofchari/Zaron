@@ -31,7 +31,7 @@ class _AluminumState extends State<Aluminum> {
   List<String> brandsList = [];
   List<String> colorsList = [];
   List<String> thicknessList = [];
-  List<String> materialtypeList = [];
+  List<String> materialTypeList = [];
   List<Map<String, dynamic>> submittedData = [];
 
   // Form key for validation
@@ -52,7 +52,7 @@ class _AluminumState extends State<Aluminum> {
 
   Future<void> _fetchMaterialType() async {
     setState(() {
-      materialtypeList = [];
+      materialTypeList = [];
       selectedMaterialType = null;
     });
 
@@ -70,7 +70,7 @@ class _AluminumState extends State<Aluminum> {
 
         if (materials is List) {
           setState(() {
-            materialtypeList = materials
+            materialTypeList = materials
                 .whereType<Map>()
                 .map((e) => e["material_type"]?.toString())
                 .whereType<String>()
@@ -755,7 +755,7 @@ class _AluminumState extends State<Aluminum> {
                               weight: FontWeight.w600,
                               color: Colors.black),
                           SizedBox(height: 16),
-                          _buildDropdown(materialtypeList, selectedMaterialType,
+                          _buildDropdown(materialTypeList, selectedMaterialType,
                               (value) {
                             setState(() {
                               selectedMaterialType = value;
