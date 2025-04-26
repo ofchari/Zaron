@@ -94,7 +94,6 @@ class _AccessoriesState extends State<Accessories> {
   Future<void> _fetchColors(String brand) async {
     setState(() {
       colorsList = [];
-
       selectedColor = null;
     });
 

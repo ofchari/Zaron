@@ -1,7 +1,5 @@
-
 import 'dart:convert';
 import 'dart:io';
-
 import 'package:dropdown_search/dropdown_search.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -12,30 +10,28 @@ import 'package:zaron/view/universal_api/api&key.dart';
 import 'package:zaron/view/widgets/subhead.dart';
 import 'package:zaron/view/widgets/text.dart';
 
-class GIStiffner extends StatefulWidget {
-const GIStiffner({super.key, required this.data});
+class RollSheet extends StatefulWidget {
+const RollSheet({super.key, required this.data});
 
 final Map<String, dynamic> data;
 
 @override
-State<GIStiffner> createState() => _GIStiffnerState();
+State<RollSheet> createState() => _RollSheetState();
 }
 
-class _GIStiffnerState extends State<GIStiffner> {
+class _RollSheetState extends State<RollSheet> {
 late TextEditingController editController;
 String? selectedProduct;
-String? selectedMeterial;
-String? selectedThichness;
-String? selsectedCoat;
-String? selectedyie;
 String? selectedBrand;
+String? selectedColor;
+String? selectedThickness;
+String? selectedCoatingMass;
 
 List<String> productList = [];
-List<String> meterialList = [];
-List<String> thichnessLists = [];
-List<String> coatMassList = [];
-List<String> yieldsListt = [];
-List<String> brandList = [];
+List<String> brandsList = [];
+List<String> colorsList = [];
+List<String> thicknessList = [];
+List<String> coatingMassList = [];
 List<Map<String, dynamic>> submittedData = [];
 
 // Form key for validation
@@ -45,8 +41,8 @@ final _formKey = GlobalKey<FormState>();
 void initState() {
 super.initState();
 editController = TextEditingController(text: widget.data["Base Product"]);
+_fetchBrands();
 _fetchProductName();
-_fetchMeterialType();
 }
 
 @override
@@ -63,7 +59,7 @@ selectedProduct = null;
 
 final client =
 IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
-final url = Uri.parse('$apiUrl/showlables/627');
+final url = Uri.parse('$apiUrl/showlables/591');
 
 try {
 final response = await client.get(url);
@@ -89,29 +85,29 @@ print("Exception fetching brands: $e");
 }
 }
 
-Future<void> _fetchMeterialType() async {
+Future<void> _fetchBrands() async {
 setState(() {
-meterialList = [];
-selectedMeterial;
+brandsList = [];
+selectedBrand = null;
 });
 
 final client =
 IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
-final url = Uri.parse('$apiUrl/showlables/627');
+final url = Uri.parse('$apiUrl/showlables/591');
 
 try {
 final response = await client.get(url);
 
 if (response.statusCode == 200) {
 final data = jsonDecode(response.body);
-final meterialData = data["message"]["message"][2][1];
-debugPrint(response.body);
+final brands = data["message"]["message"][2][1];
+print(response.body);
 
-if (meterialData is List) {
+if (brands is List) {
 setState(() {
-meterialList = meterialData
+brandsList = brands
     .whereType<Map>()
-    .map((e) => e["material_type"]?.toString())
+    .map((e) => e["brand"]?.toString())
     .whereType<String>()
     .toList();
 });
@@ -123,12 +119,12 @@ print("Exception fetching brands: $e");
 }
 
 /// fetch colors Api's //
-Future<void> _fetchThickness() async {
-if (selectedMeterial == null) return;
+Future<void> _fetchColors() async {
+if (selectedBrand == null) return;
 
 setState(() {
-thichnessLists = [];
-selectedThichness = null;
+colorsList = [];
+selectedColor = null;
 });
 
 final client =
@@ -141,23 +137,23 @@ url,
 headers: {'Content-Type': 'application/json'},
 body: jsonEncode({
 "category_id": "3",
-"selectedlabel": "material_type",
-"selectedvalue": selectedMeterial,
-"label_name": "thickness",
+"selectedlabel": "brand",
+"selectedvalue": selectedBrand,
+"label_name": "color",
 }),
 );
 
 if (response.statusCode == 200) {
 final data = jsonDecode(response.body);
-final selectedThickness = data["message"]["message"];
-print("Fetching colors for brand: $selectedThickness");
+final colors = data["message"]["message"];
+print("Fetching colors for brand: $selectedBrand");
 print("API response: ${response.body}");
 
-if (selectedThickness is List) {
+if (colors is List) {
 setState(() {
-thichnessLists = selectedThickness
+colorsList = colors
     .whereType<Map>()
-    .map((e) => e["thickness"]?.toString())
+    .map((e) => e["color"]?.toString())
     .whereType<String>()
     .toList();
 });
@@ -169,12 +165,58 @@ print("Exception fetching colors: $e");
 }
 
 /// fetch Thickness Api's ///
-Future<void> _fetchCoat() async {
-if (selectedMeterial == null) return;
+Future<void> _fetchThickness() async {
+if (selectedBrand == null) return;
 
 setState(() {
-coatMassList = [];
-selsectedCoat = null;
+thicknessList = [];
+selectedThickness = null;
+});
+
+final client =
+IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
+final url = Uri.parse('$apiUrl/validinputdata');
+
+try {
+final response = await client.post(
+url,
+headers: {'Content-Type': 'application/json'},
+body: jsonEncode({
+"category_id": "3",
+"selectedlabel": "color",
+"selectedvalue": selectedColor,
+"label_name": "thickness",
+}),
+);
+
+if (response.statusCode == 200) {
+final data = jsonDecode(response.body);
+final thickness = data["message"]["message"];
+print("Fetching colors for brand: $selectedBrand");
+print("API response: ${response.body}");
+
+if (thickness is List) {
+setState(() {
+thicknessList = thickness
+    .whereType<Map>()
+    .map((e) => e["thickness"]?.toString())
+    .whereType<String>()
+    .toList();
+});
+}
+}
+} catch (e) {
+print("Exception fetching thickness: $e");
+}
+}
+
+/// fetch Thickness Api's ///
+Future<void> _fetchCoatingMass() async {
+if (selectedBrand == null) return;
+
+setState(() {
+coatingMassList = [];
+selectedCoatingMass = null;
 });
 
 final client =
@@ -188,113 +230,22 @@ headers: {'Content-Type': 'application/json'},
 body: jsonEncode({
 "category_id": "3",
 "selectedlabel": "thickness",
-"selectedvalue": selectedThichness,
+"selectedvalue": selectedThickness,
 "label_name": "coating_mass",
 }),
 );
 
 if (response.statusCode == 200) {
 final data = jsonDecode(response.body);
-final coat = data["message"]["message"];
-print("Fetching colors for brand: $selectedThichness");
+final coating = data["message"]["message"];
+print("Fetching colors for brand: $selectedBrand");
 print("API response: ${response.body}");
 
-if (coat is List) {
+if (coating is List) {
 setState(() {
-coatMassList = coat
+coatingMassList = coating
     .whereType<Map>()
     .map((e) => e["coating_mass"]?.toString())
-    .whereType<String>()
-    .toList();
-});
-}
-}
-} catch (e) {
-print("Exception fetching thickness: $e");
-}
-}
-
-/// fetch Thickness Api's ///
-Future<void> _fetchYie() async {
-if (selectedMeterial == null) return;
-
-setState(() {
-yieldsListt = [];
-selectedyie = null;
-});
-
-final client =
-IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
-final url = Uri.parse('$apiUrl/validinputdata');
-
-try {
-final response = await client.post(
-url,
-headers: {'Content-Type': 'application/json'},
-body: jsonEncode({
-"category_id": "3",
-"selectedlabel": "coating_mass",
-"selectedvalue": selsectedCoat,
-"label_name": "yield_strength",
-}),
-);
-
-if (response.statusCode == 200) {
-final data = jsonDecode(response.body);
-final yieldsStrength = data["message"]["message"];
-print("Fetching colors for brand: $selectedThichness");
-print("API response: ${response.body}");
-
-if (yieldsStrength is List) {
-setState(() {
-yieldsListt = yieldsStrength
-    .whereType<Map>()
-    .map((e) => e["yield_strength"]?.toString())
-    .whereType<String>()
-    .toList();
-});
-}
-}
-} catch (e) {
-print("Exception fetching coating mass: $e");
-}
-}
-
-Future<void> _fetchBrandss() async {
-if (selectedMeterial == null) return;
-
-setState(() {
-brandList = [];
-selectedBrand = null;
-});
-
-final client =
-IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
-final url = Uri.parse('$apiUrl/validinputdata');
-
-try {
-final response = await client.post(
-url,
-headers: {'Content-Type': 'application/json'},
-body: jsonEncode({
-"category_id": "3",
-"selectedlabel": "yield_strength",
-"selectedvalue": selectedyie,
-"label_name": "brand",
-}),
-);
-
-if (response.statusCode == 200) {
-final data = jsonDecode(response.body);
-final brands = data["message"]["message"];
-print("Fetching colors for brand: $brands");
-print("API response: ${response.body}");
-
-if (brands is List) {
-setState(() {
-brandList = brands
-    .whereType<Map>()
-    .map((e) => e["brand"]?.toString())
     .whereType<String>()
     .toList();
 });
@@ -306,11 +257,10 @@ print("Exception fetching coating mass: $e");
 }
 
 void _submitData() {
-if (selectedMeterial == null ||
-selectedThichness == null ||
-selsectedCoat == null ||
-selectedyie == null ||
-selectedBrand == null ||
+if (selectedBrand == null ||
+selectedColor == null ||
+selectedThickness == null ||
+selectedCoatingMass == null ||
 selectedProduct == null) {
 // Show elegant error message
 showDialog(
@@ -338,17 +288,17 @@ submittedData.add({
 "SQ": "0",
 "Amount": "0",
 "Base Product":
-"$selectedThichness, $selsectedCoat, $selectedyie, $selectedBrand, $selectedMeterial",
+"$selectedBrand, $selectedColor, $selectedThickness, $selectedCoatingMass,$selectedProduct",
 });
-selectedMeterial = null;
-selectedThichness = null;
-selsectedCoat = null;
-selectedyie = null;
+
 selectedBrand = null;
+selectedColor = null;
+selectedThickness = null;
+selectedCoatingMass = null;
 selectedProduct = null;
 });
 
-// Show success message with a more elegant snackBar
+// Show success message with a more elegant snackbar
 ScaffoldMessenger.of(context).showSnackBar(
 SnackBar(
 content: Row(
@@ -808,7 +758,7 @@ Widget build(BuildContext context) {
 return Scaffold(
 appBar: AppBar(
 title: Subhead(
-text: 'Cut To Length Sheets',
+text: 'Roll Sheet',
 weight: FontWeight.w500,
 color: Colors.black,
 ),
@@ -849,43 +799,35 @@ selectedProduct = value;
 },
 // enabled: productList.isNotEmpty,
 label: "Product Name"),
-_buildDropdown(meterialList, selectedMeterial,
-(value) {
-setState(() {
-selectedMeterial = value;
-});
-_fetchThickness();
-}, label: "Meterial Type"),
-_buildDropdown(thichnessLists, selectedThichness,
-(value) {
-setState(() {
-selectedThichness = value;
-});
-_fetchCoat();
-},
-enabled: thichnessLists.isNotEmpty,
-label: "Thickness"),
-_buildDropdown(coatMassList, selsectedCoat, (value) {
-setState(() {
-selsectedCoat = value;
-});
-_fetchYie();
-},
-enabled: coatMassList.isNotEmpty,
-label: "Coating Mass"),
-_buildDropdown(yieldsListt, selectedyie, (value) {
-setState(() {
-selectedyie = value;
-});
-_fetchBrandss();
-},
-enabled: yieldsListt.isNotEmpty,
-label: "Yield Strength"),
-_buildDropdown(brandList, selectedBrand, (value) {
+_buildDropdown(brandsList, selectedBrand, (value) {
 setState(() {
 selectedBrand = value;
 });
-}, enabled: brandList.isNotEmpty, label: "Brand"),
+_fetchColors();
+}, label: "Brand"),
+_buildDropdown(colorsList, selectedColor, (value) {
+setState(() {
+selectedColor = value;
+});
+_fetchThickness();
+}, enabled: colorsList.isNotEmpty, label: "Color"),
+_buildDropdown(thicknessList, selectedThickness,
+(value) {
+setState(() {
+selectedThickness = value;
+});
+_fetchCoatingMass();
+},
+enabled: thicknessList.isNotEmpty,
+label: "Thickness"),
+_buildDropdown(coatingMassList, selectedCoatingMass,
+(value) {
+setState(() {
+selectedCoatingMass = value;
+});
+},
+enabled: coatingMassList.isNotEmpty,
+label: "Coating Mass"),
 SizedBox(height: 20),
 SizedBox(
 width: double.infinity,
