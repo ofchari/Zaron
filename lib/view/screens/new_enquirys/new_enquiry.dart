@@ -1,14 +1,25 @@
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
-import 'package:http/io_client.dart';
 import 'package:zaron/view/screens/new_enquirys/accessories.dart';
+import 'package:zaron/view/screens/new_enquirys/aluminum.dart';
+import 'package:zaron/view/screens/new_enquirys/decking_sheets.dart';
 import 'package:zaron/view/screens/new_enquirys/iron_steels.dart';
+import 'package:zaron/view/screens/new_enquirys/length_sheets.dart';
+import 'package:zaron/view/screens/new_enquirys/polycarbonate.dart';
+import 'package:zaron/view/screens/new_enquirys/profile_arch.dart';
+import 'package:zaron/view/screens/new_enquirys/purlin.dart';
+import 'package:zaron/view/screens/new_enquirys/roll_sheets.dart';
+import 'package:zaron/view/screens/new_enquirys/screw.dart';
+import 'package:zaron/view/screens/new_enquirys/tile_sheets.dart';
+import 'package:zaron/view/screens/new_enquirys/upvc_accessories.dart';
+import 'package:zaron/view/screens/new_enquirys/upvc_tiles.dart';
 import 'package:zaron/view/widgets/subhead.dart';
 import 'package:zaron/view/widgets/text.dart';
+
+import 'linear_sheets.dart';
 
 class NewEnquiry extends StatefulWidget {
   const NewEnquiry({super.key});
@@ -27,13 +38,13 @@ class _NewEnquiryState extends State<NewEnquiry> {
   }
 
   Future<void> fetchCategories() async {
-    final url = Uri.parse('http://demo.zaron.in:8181/ci4/api/allcategories');
+    final url = Uri.parse('https://demo.zaron.in:8181/ci4/api/allcategories');
     try {
       final response = await http.get(url);
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        print("Full Response: $data");
-
+        print(response.body);
+        print(response.statusCode);
         if (data['message']['success']) {
           setState(() {
             categories = List<Map<String, dynamic>>.from(
@@ -47,7 +58,7 @@ class _NewEnquiryState extends State<NewEnquiry> {
                       "id": item["id"].toString(),
                       "name": item["categories"],
                       "imagePath":
-                          "http://demo.zaron.in:8181/${item["cate_image"]}",
+                          "https://demo.zaron.in:8181/${item["cate_image"]}",
                     },
                   ),
             );
@@ -59,105 +70,25 @@ class _NewEnquiryState extends State<NewEnquiry> {
     }
   }
 
-  Future<void> mobiledocument(
+  Future<void> handleCategoryTap(
       BuildContext context, String id, String categoryName) async {
-    HttpClient client = HttpClient();
-    client.badCertificateCallback =
-        ((X509Certificate cert, String host, int port) => true);
-    IOClient ioClient = IOClient(client);
-
-    final Data = {
-      "values": '',
-      "id": id,
-      "inputname": 'accessories_name',
-      "product_value": [],
-      "category_value": [],
-    };
-
-    final url =
-        'http://demo.zaron.in:8181/index.php/order/first_check_select_base_product';
-    final body = jsonEncode(Data);
-
-    print("🔵 [DEBUG] Sending POST request...");
-    print("🔵 URL: $url");
-    print("🔵 Headers: {\"Content-Type\": \"application/json\"}");
-    print("🔵 Body: $body");
-
+    final url = Uri.parse('https://demo.zaron.in:8181/ci4/api/showlables/$id');
     try {
-      final stopwatch = Stopwatch()..start(); // Start measuring response time
-      final response = await ioClient.post(
-        Uri.parse(url),
-        headers: {"Content-Type": "application/json"},
-        body: body,
-      );
-      stopwatch.stop(); // Stop measuring
-
-      print(
-          "🟢 [DEBUG] Response received in ${stopwatch.elapsedMilliseconds}ms");
-      print("🟢 Status Code: ${response.statusCode}");
-
-      if (response.body.isNotEmpty) {
-        print("🟢 Response Body: ${response.body}");
-      } else {
-        print("🟡 [WARNING] Empty response body!");
-      }
-
+      final response = await http.get(url);
       if (response.statusCode == 200) {
-        try {
-          final responseData = jsonDecode(response.body);
-          print("✅ [SUCCESS] Parsed Response: $responseData");
+        final responseData = jsonDecode(response.body);
+        print("✅ [SUCCESS] Response Data: $responseData");
 
-          // Route based on the category name
-          Widget nextPage = getCategoryPage(categoryName, responseData);
-          Get.to(() => nextPage);
-        } catch (decodeError) {
-          print("❌ [ERROR] Failed to parse JSON: $decodeError");
-        }
+        // Route to the correct page based on category name
+        Widget nextPage = getCategoryPage(categoryName, responseData);
+        Get.to(() => nextPage);
       } else {
-        String message =
-            '❌ [ERROR] Request failed with status: ${response.statusCode}';
-
-        if (response.statusCode == 417) {
-          try {
-            final serverMessages =
-                jsonDecode(response.body)['_server_messages'];
-            message = serverMessages ?? message;
-          } catch (decodeError) {
-            print("❌ [ERROR] Failed to parse error message: $decodeError");
-          }
-        }
-
-        print(message);
-        showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: Text(response.statusCode == 417 ? 'Message' : 'Error'),
-            content: Text(message),
-            actions: [
-              ElevatedButton(
-                child: Text('OK'),
-                onPressed: () => Navigator.of(context).pop(),
-              ),
-            ],
-          ),
-        );
+        print("❌ [ERROR] Status Code: ${response.statusCode}");
+        _showErrorDialog(context, 'Failed to load labels.');
       }
     } catch (e) {
       print("❌ [ERROR] Exception: $e");
-
-      showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: Text('Error'),
-          content: Text('An error occurred: $e'),
-          actions: [
-            ElevatedButton(
-              child: Text('OK'),
-              onPressed: () => Navigator.of(context).pop(),
-            ),
-          ],
-        ),
-      );
+      _showErrorDialog(context, 'An error occurred: $e');
     }
   }
 
@@ -167,10 +98,52 @@ class _NewEnquiryState extends State<NewEnquiry> {
         return Accessories(data: data);
       case 'iron & steel':
         return IronSteel(data: data);
+      case 'aluminum':
+        return Aluminum(data: data);
+      case 'cut to length sheets':
+        return CutToLengthSheet(data: data);
+      case 'decking sheet':
+        return DeckingSheets(data: data);
+      case 'liner sheets':
+        return LinerSheetPage(data: data);
+      case 'polycarbonate':
+        return Polycarbonate(data: data);
+      case 'profile ridge & arch':
+        return ProfileRidgeAndArch(data: data);
+      case 'purlin':
+        return Purlin(data: data);
+      case 'roll sheets':
+        return RollSheet(data: data);
+      case 'screw':
+        return Screw(data: data);
+      case 'tile sheet':
+        return TileSheetPage(data: data);
+      case 'upvc accessories':
+        return UpvcAccessories(data: data);
+      case 'upvc tile':
+        return UpvcTiles(data: data);
+
+      default:
+        return Scaffold(
+          appBar: AppBar(title: Text("Unknown Category")),
+          body: Center(child: Text("No page found for: $categoryName")),
+        );
     }
-    return Scaffold(
-      appBar: AppBar(title: Text("Unknown Category")),
-      body: Center(child: Text("No page found for: $categoryName")),
+  }
+
+  void _showErrorDialog(BuildContext context, String message) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Error'),
+        content: Text(message),
+        actions: [
+          ElevatedButton(
+            child: Text('OK'),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+        ],
+      ),
     );
   }
 
@@ -206,7 +179,7 @@ class _NewEnquiryState extends State<NewEnquiry> {
 
   Widget _buildCategoryCard(String id, String name, String imagePath) {
     return GestureDetector(
-      onTap: () => mobiledocument(context, id, name),
+      onTap: () => handleCategoryTap(context, id, name),
       child: Card(
         elevation: 3,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
