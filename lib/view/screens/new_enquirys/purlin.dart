@@ -37,7 +37,7 @@ class _PurlinState extends State<Purlin> {
   List<String> materialTypeList = [];
   List<Map<String, dynamic>> submittedData = [];
 
-  // Form key for validation
+// Form key for validation
   final _formKey = GlobalKey<FormState>();
 
   @override
@@ -98,17 +98,17 @@ class _PurlinState extends State<Purlin> {
 
     final client =
         IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
-    final url = Uri.parse('$apiUrl/validinputdata');
+    final url = Uri.parse('$apiUrl/onchangeinputdata');
 
     try {
       final response = await client.post(
         url,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-          "category_id": "5",
-          "selectedlabel": "shape_of_product",
-          "selectedvalue": selectProduct,
-          "label_name": "size",
+          "product_label": "size",
+          "base_product_filters": [selectProduct],
+          "base_label_filters": ["shape_of_product"],
+          "base_category_id": "5",
         }),
       );
 
@@ -145,17 +145,17 @@ class _PurlinState extends State<Purlin> {
 
     final client =
         IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
-    final url = Uri.parse('$apiUrl/validinputdata');
+    final url = Uri.parse('$apiUrl/onchangeinputdata');
 
     try {
       final response = await client.post(
         url,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-          "category_id": "5",
-          "selectedlabel": "size",
-          "selectedvalue": selectedSize,
-          "label_name": "material_type",
+          "product_label": "material_type",
+          "base_product_filters": [selectProduct, selectedSize],
+          "base_label_filters": ["shape_of_product", "size"],
+          "base_category_id": "5",
         }),
       );
 
@@ -192,17 +192,21 @@ class _PurlinState extends State<Purlin> {
 
     final client =
         IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
-    final url = Uri.parse('$apiUrl/validinputdata');
+    final url = Uri.parse('$apiUrl/onchangeinputdata');
 
     try {
       final response = await client.post(
         url,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-          "category_id": "5",
-          "selectedlabel": "material_type",
-          "selectedvalue": selectedMaterialType,
-          "label_name": "thickness",
+          "product_label": "thickness",
+          "base_product_filters": [
+            selectProduct,
+            selectedSize,
+            selectedMaterialType
+          ],
+          "base_label_filters": ["shape_of_product", "size", "material_type"],
+          "base_category_id": "5",
         }),
       );
 
@@ -239,17 +243,27 @@ class _PurlinState extends State<Purlin> {
 
     final client =
         IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
-    final url = Uri.parse('$apiUrl/validinputdata');
+    final url = Uri.parse('$apiUrl/onchangeinputdata');
 
     try {
       final response = await client.post(
         url,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-          "category_id": "5",
-          "selectedlabel": "thickness",
-          "selectedvalue": selectedThickness,
-          "label_name": "brand",
+          "product_label": "brand",
+          "base_product_filters": [
+            selectProduct,
+            selectedSize,
+            selectedMaterialType,
+            selectedThickness
+          ],
+          "base_label_filters": [
+            "shape_of_product",
+            "size",
+            "material_type",
+            "thickness",
+          ],
+          "base_category_id": "5",
         }),
       );
 
@@ -332,7 +346,7 @@ class _PurlinState extends State<Purlin> {
     }
   }
 
-  //
+//
 
   void _submitData() {
     if (selectedBrand == null ||
@@ -340,7 +354,7 @@ class _PurlinState extends State<Purlin> {
         selectedThickness == null ||
         selectProduct == null ||
         selectedMaterialType == null) {
-      // Show elegant error message
+// Show elegant error message
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
@@ -382,7 +396,7 @@ class _PurlinState extends State<Purlin> {
       _fetchShapeProduct();
     });
 
-    // Show success message with a more elegant snackbar
+// Show success message with a more elegant snackbar
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
@@ -553,11 +567,11 @@ class _PurlinState extends State<Purlin> {
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Row(
-                    // mainAxisAlignment: MainAxisAlignment.spaceBetween,
+// mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       SizedBox(
-                        // color: Colors.red,
+// color: Colors.red,
                         height: 40.h,
                         width: 280.w,
                         child: TextField(
@@ -593,7 +607,7 @@ class _PurlinState extends State<Purlin> {
                                           mainAxisSize: MainAxisSize.min,
                                           children: [
                                             Container(
-                                              // color: Colors.white,
+// color: Colors.white,
                                               height: 45.h,
                                               width: double.infinity.w,
                                               decoration: BoxDecoration(
@@ -657,7 +671,7 @@ class _PurlinState extends State<Purlin> {
     );
   }
 
-  // New method that organizes fields in rows, two fields per row
+// New method that organizes fields in rows, two fields per row
   Widget _buildProductDetailInRows(Map<String, dynamic> data) {
     return Column(
       children: [
@@ -680,7 +694,7 @@ class _PurlinState extends State<Purlin> {
           ],
         ),
         Gap(35),
-        // Row 3: Basic Rate & SQ
+// Row 3: Basic Rate & SQ
         Row(
           children: [
             Expanded(
@@ -889,7 +903,7 @@ class _PurlinState extends State<Purlin> {
                           _buildDropdown(productList, selectProduct, (value) {
                             setState(() {
                               selectProduct = value;
-                              // Clear dependent fields
+// Clear dependent fields
                               selectedSize = null;
                               selectedMaterialType = null;
                               selectedThickness = null;
@@ -904,7 +918,7 @@ class _PurlinState extends State<Purlin> {
                           _buildDropdown(sizeList, selectedSize, (value) {
                             setState(() {
                               selectedSize = value;
-                              // Clear dependent fields
+// Clear dependent fields
                               selectedMaterialType = null;
                               selectedThickness = null;
                               selectedBrand = null;
@@ -918,7 +932,7 @@ class _PurlinState extends State<Purlin> {
                               (value) {
                             setState(() {
                               selectedMaterialType = value;
-                              // Clear dependent fields
+// Clear dependent fields
                               selectedThickness = null;
                               selectedBrand = null;
                               thicknessList = [];
@@ -932,7 +946,7 @@ class _PurlinState extends State<Purlin> {
                               (value) {
                             setState(() {
                               selectedThickness = value;
-                              // Clear dependent fields
+// Clear dependent fields
                               selectedBrand = null;
                               brandsList = [];
                             });
@@ -944,7 +958,7 @@ class _PurlinState extends State<Purlin> {
                             setState(() {
                               selectedBrand = value;
                             });
-                            // _fetchColor();
+// _fetchColor();
                           }, enabled: brandsList.isNotEmpty, label: "Brand"),
                           Gap(20),
                           Card(
@@ -960,10 +974,11 @@ class _PurlinState extends State<Purlin> {
                                       text: "Selected Product Details",
                                       weight: FontWeight.w600,
                                       color: Colors.black),
+                                  Gap(5),
                                   MyText(
                                       text: selectProductDetails(),
                                       weight: FontWeight.w400,
-                                      color: Colors.black)
+                                      color: Colors.grey)
                                 ],
                               ),
                             ),

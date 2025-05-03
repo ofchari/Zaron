@@ -5,7 +5,6 @@ import 'package:dropdown_search/dropdown_search.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:gap/gap.dart';
-import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/io_client.dart';
 import 'package:zaron/view/widgets/subhead.dart';
@@ -95,17 +94,17 @@ class _PolycarbonateState extends State<Polycarbonate> {
 
     final client =
         IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
-    final url = Uri.parse('$apiUrl/validinputdata');
+    final url = Uri.parse('$apiUrl/onchangeinputdata');
 
     try {
       final response = await client.post(
         url,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-          "category_id": "19",
-          "selectedlabel": "type_of_panel",
-          "selectedvalue": selectedBrand,
-          "label_name": "color",
+          "product_label": "color",
+          "base_product_filters": [selectedBrand],
+          "base_label_filters": ["type_of_panel"],
+          "base_category_id": "19",
         }),
       );
 
@@ -141,17 +140,17 @@ class _PolycarbonateState extends State<Polycarbonate> {
 
     final client =
         IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
-    final url = Uri.parse('$apiUrl/validinputdata');
+    final url = Uri.parse('$apiUrl/onchangeinputdata');
 
     try {
       final response = await client.post(
         url,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-          "category_id": "19",
-          "selectedlabel": "color",
-          "selectedvalue": selectedColor,
-          "label_name": "thickness",
+          "product_label": "thickness",
+          "base_product_filters": [selectedBrand, selectedColor],
+          "base_label_filters": ["type_of_panel", "color"],
+          "base_category_id": "19",
         }),
       );
 
@@ -215,13 +214,13 @@ class _PolycarbonateState extends State<Polycarbonate> {
           selectedThickness == null) return;
 
       if (response.statusCode == 200) {
-        Get.snackbar(
-          "Data Added",
-          "Successfully",
-          colorText: Colors.white,
-          backgroundColor: Colors.green,
-          snackPosition: SnackPosition.BOTTOM,
-        );
+// Get.snackbar(
+//   "Data Added",
+//   "Successfully",
+//   colorText: Colors.white,
+//   backgroundColor: Colors.green,
+//   snackPosition: SnackPosition.BOTTOM,
+// );
       }
     } catch (e) {
       throw Exception("Error posting data: $e");
@@ -776,7 +775,7 @@ class _PolycarbonateState extends State<Polycarbonate> {
                           _buildDropdown(brandsList, selectedBrand, (value) {
                             setState(() {
                               selectedBrand = value;
-                              // Clear dependent fields
+// Clear dependent fields
                               selectedColor = null;
                               selectedThickness = null;
                               colorsList = [];
@@ -787,7 +786,7 @@ class _PolycarbonateState extends State<Polycarbonate> {
                           _buildDropdown(colorsList, selectedColor, (value) {
                             setState(() {
                               selectedColor = value;
-                              // Clear dependent fields
+// Clear dependent fields
                               selectedThickness = null;
                               thicknessList = [];
                             });
@@ -816,10 +815,11 @@ class _PolycarbonateState extends State<Polycarbonate> {
                                       text: "Selected Product Details",
                                       weight: FontWeight.w600,
                                       color: Colors.black),
+                                  Gap(5),
                                   MyText(
                                       text: selectPolycarbonate(),
                                       weight: FontWeight.w400,
-                                      color: Colors.black)
+                                      color: Colors.grey)
                                 ],
                               ),
                             ),

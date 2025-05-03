@@ -5,7 +5,6 @@ import 'package:dropdown_search/dropdown_search.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:gap/gap.dart';
-import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/io_client.dart';
 import 'package:zaron/view/universal_api/api&key.dart';
@@ -34,7 +33,7 @@ class _ScrewState extends State<Screw> {
 
   List<Map<String, dynamic>> submittedData = [];
 
-  // Form key for validation
+// Form key for validation
   final _formKey = GlobalKey<FormState>();
 
   @override
@@ -83,7 +82,7 @@ class _ScrewState extends State<Screw> {
     }
   }
 
-  // /// fetch Screw Api's ///
+// /// fetch Screw Api's ///
   Future<void> _fetchScrew() async {
     if (selectedBrand == null) return;
 
@@ -94,17 +93,17 @@ class _ScrewState extends State<Screw> {
 
     final client =
         IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
-    final url = Uri.parse('$apiUrl/validinputdata');
+    final url = Uri.parse('$apiUrl/onchangeinputdata');
 
     try {
       final response = await client.post(
         url,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-          "category_id": "7",
-          "selectedlabel": "brand",
-          "selectedvalue": selectedBrand,
-          "label_name": "length_of_screw",
+          "product_label": "length_of_screw",
+          "base_product_filters": [selectedBrand],
+          "base_label_filters": ["brand"],
+          "base_category_id": "7",
         }),
       );
 
@@ -140,17 +139,17 @@ class _ScrewState extends State<Screw> {
 
     final client =
         IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
-    final url = Uri.parse('$apiUrl/validinputdata');
+    final url = Uri.parse('$apiUrl/onchangeinputdata');
 
     try {
       final response = await client.post(
         url,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-          "category_id": "7",
-          "selectedlabel": "length_of_screw",
-          "selectedvalue": selectedScrew,
-          "label_name": "type_of_thread",
+          "product_label": "type_of_thread",
+          "base_product_filters": [selectedBrand, selectedScrew],
+          "base_label_filters": ["brand", "length_of_screw"],
+          "base_category_id": "7",
         }),
       );
 
@@ -210,13 +209,13 @@ class _ScrewState extends State<Screw> {
           selectedScrew == null ||
           selectedThread == null) return;
       if (response.statusCode == 200) {
-        Get.snackbar(
-          "Data Added",
-          "Successfully",
-          colorText: Colors.white,
-          backgroundColor: Colors.green,
-          snackPosition: SnackPosition.BOTTOM,
-        );
+// Get.snackbar(
+//   "Data Added",
+//   "Successfully",
+//   colorText: Colors.white,
+//   backgroundColor: Colors.green,
+//   snackPosition: SnackPosition.BOTTOM,
+// );
       }
     } catch (e) {
       throw Exception("Error posting data: $e");
@@ -227,7 +226,7 @@ class _ScrewState extends State<Screw> {
     if (selectedBrand == null ||
         selectedScrew == null ||
         selectedThread == null) {
-      // Show elegant error message
+// Show elegant error message
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
@@ -263,7 +262,7 @@ class _ScrewState extends State<Screw> {
       threadList = [];
       _fetchBrand();
     });
-    // Show success message with a more elegant snackBar
+// Show success message with a more elegant snackBar
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
@@ -434,11 +433,11 @@ class _ScrewState extends State<Screw> {
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Row(
-                    // mainAxisAlignment: MainAxisAlignment.spaceBetween,
+// mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       SizedBox(
-                        // color: Colors.red,
+// color: Colors.red,
                         height: 40.h,
                         width: 280.w,
                         child: TextField(
@@ -474,7 +473,7 @@ class _ScrewState extends State<Screw> {
                                           mainAxisSize: MainAxisSize.min,
                                           children: [
                                             Container(
-                                              // color: Colors.white,
+// color: Colors.white,
                                               height: 45.h,
                                               width: double.infinity.w,
                                               decoration: BoxDecoration(
@@ -538,7 +537,7 @@ class _ScrewState extends State<Screw> {
     );
   }
 
-  // New method that organizes fields in rows, two fields per row
+// New method that organizes fields in rows, two fields per row
   Widget _buildProductDetailInRows(Map<String, dynamic> data) {
     return Column(
       children: [
@@ -561,7 +560,7 @@ class _ScrewState extends State<Screw> {
           ],
         ),
         Gap(35),
-        // Row 3: Basic Rate & SQ
+// Row 3: Basic Rate & SQ
         Row(
           children: [
             Expanded(
@@ -676,8 +675,8 @@ class _ScrewState extends State<Screw> {
   String _previewText() {
     List<String> selectedData = [
       if (selectedBrand != null) "Brand: $selectedBrand",
-      if (selectedScrew != null) "Brand: $selectedScrew",
-      if (selectedThread != null) "Brand: $selectedThread",
+      if (selectedScrew != null) "Length of Screw: $selectedScrew",
+      if (selectedThread != null) "Thread: $selectedThread",
     ];
     return selectedData.isEmpty ? "No Selection Yet" : selectedData.join(", ");
   }
@@ -770,7 +769,7 @@ class _ScrewState extends State<Screw> {
                             setState(() {
                               selectedBrand = value;
 
-                              // Clear dependent fields
+// Clear dependent fields
                               selectedScrew = null;
                               selectedThread = null;
                               screwLengthList = [];
@@ -782,7 +781,7 @@ class _ScrewState extends State<Screw> {
                               (value) {
                             setState(() {
                               selectedScrew = value;
-                              // Clear dependent fields
+// Clear dependent fields
                               selectedThread = null;
                               threadList = [];
                             });
@@ -807,24 +806,15 @@ class _ScrewState extends State<Screw> {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text(
-                                    "Selected Items",
-                                    style: GoogleFonts.figtree(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w600,
-                                      color: Colors.black87,
-                                    ),
-                                  ),
-                                  SizedBox(
-                                    height: 8,
-                                  ),
-                                  Text(
-                                    _previewText(),
-                                    style: GoogleFonts.figtree(
-                                      fontSize: 12,
-                                      color: Colors.grey[700],
-                                    ),
-                                  )
+                                  MyText(
+                                      text: "Selected Product Details",
+                                      weight: FontWeight.w600,
+                                      color: Colors.black),
+                                  Gap(5),
+                                  MyText(
+                                      text: _previewText(),
+                                      weight: FontWeight.w400,
+                                      color: Colors.grey),
                                 ],
                               ),
                             ),

@@ -132,17 +132,22 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
 
     final client =
         IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
-    final url = Uri.parse('$apiUrl/validinputdata');
+    final url = Uri.parse('$apiUrl/onchangeinputdata');
 
     try {
       final response = await client.post(
         url,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-          "category_id": "3",
-          "selectedlabel": "material_type",
-          "selectedvalue": selectedMeterial,
-          "label_name": "thickness",
+          // "category_id": "3",
+          // "selectedlabel": "material_type",
+          // "selectedvalue": selectedMeterial,
+          // "label_name": "thickness",
+
+          "product_label": "thickness",
+          "base_product_filters": [selectedMeterial],
+          "base_label_filters": ["material_type"],
+          "base_category_id": "3",
         }),
       );
 
@@ -178,17 +183,22 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
 
     final client =
         IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
-    final url = Uri.parse('$apiUrl/validinputdata');
+    final url = Uri.parse('$apiUrl/onchangeinputdata');
 
     try {
       final response = await client.post(
         url,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-          "category_id": "3",
-          "selectedlabel": "thickness",
-          "selectedvalue": selectedThichness,
-          "label_name": "coating_mass",
+          // "category_id": "3",
+          // "selectedlabel": "thickness",
+          // "selectedvalue": selectedThichness,
+          // "label_name": "coating_mass",
+
+          "product_label": "coating_mass",
+          "base_product_filters": [selectedMeterial, selectedThichness],
+          "base_label_filters": ["material_type", "thickness"],
+          "base_category_id": "3",
         }),
       );
 
@@ -224,17 +234,26 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
 
     final client =
         IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
-    final url = Uri.parse('$apiUrl/validinputdata');
+    final url = Uri.parse('$apiUrl/onchangeinputdata');
 
     try {
       final response = await client.post(
         url,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-          "category_id": "3",
-          "selectedlabel": "coating_mass",
-          "selectedvalue": selsectedCoat,
-          "label_name": "yield_strength",
+          // "category_id": "3",
+          // "selectedlabel": "coating_mass",
+          // "selectedvalue": selsectedCoat,
+          // "label_name": "yield_strength",
+
+          "product_label": "yield_strength",
+          "base_product_filters": [
+            selectedMeterial,
+            selectedThichness,
+            selsectedCoat
+          ],
+          "base_label_filters": ["material_type", "thickness", "coating_mass"],
+          "base_category_id": "3",
         }),
       );
 
@@ -269,17 +288,32 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
 
     final client =
         IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
-    final url = Uri.parse('$apiUrl/validinputdata');
+    final url = Uri.parse('$apiUrl/onchangeinputdata');
 
     try {
       final response = await client.post(
         url,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-          "category_id": "3",
-          "selectedlabel": "yield_strength",
-          "selectedvalue": selectedyie,
-          "label_name": "brand",
+          // "category_id": "3",
+          // "selectedlabel": "yield_strength",
+          // "selectedvalue": selectedyie,
+          // "label_name": "brand",
+
+          "product_label": "brand",
+          "base_product_filters": [
+            selectedMeterial,
+            selectedThichness,
+            selsectedCoat,
+            selectedyie
+          ],
+          "base_label_filters": [
+            "material_type",
+            "thickness",
+            "coating_mass",
+            "yield_strength"
+          ],
+          "base_category_id": "3",
         }),
       );
 

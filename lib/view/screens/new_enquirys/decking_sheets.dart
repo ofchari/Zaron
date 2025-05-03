@@ -36,7 +36,7 @@ class _DeckingSheetsState extends State<DeckingSheets> {
   List<String> brandList = [];
   List<Map<String, dynamic>> submittedData = [];
 
-  // Form key for validation
+// Form key for validation
   final _formKey = GlobalKey<FormState>();
 
   @override
@@ -97,17 +97,17 @@ class _DeckingSheetsState extends State<DeckingSheets> {
 
     final client =
         IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
-    final url = Uri.parse('$apiUrl/validinputdata');
+    final url = Uri.parse('$apiUrl/onchangeinputdata');
 
     try {
       final response = await client.post(
         url,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-          "category_id": "34",
-          "selectedlabel": "material_type",
-          "selectedvalue": selectedMaterialType,
-          "label_name": "thickness",
+          "product_label": "thickness",
+          "base_product_filters": ["$selectedMaterialType"],
+          "base_label_filters": ["material_type"],
+          "base_category_id": "34",
         }),
       );
 
@@ -151,10 +151,10 @@ class _DeckingSheetsState extends State<DeckingSheets> {
         url,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-          "base_category_id": "34",
-          "base_label_filters": ["thickness"],
-          "base_product_filters": [selectedThickness],
           "product_label": "coating_mass",
+          "base_product_filters": [selectedMaterialType, selectedThickness],
+          "base_label_filters": ["material_type", "thickness"],
+          "base_category_id": "34",
         }),
       );
 
@@ -191,17 +191,21 @@ class _DeckingSheetsState extends State<DeckingSheets> {
 
     final client =
         IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
-    final url = Uri.parse('$apiUrl/validinputdata');
+    final url = Uri.parse('$apiUrl/onchangeinputdata');
 
     try {
       final response = await client.post(
         url,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-          "category_id": "34",
-          "selectedlabel": "coating_mass",
-          "selectedvalue": selectCoatingMass,
-          "label_name": "yield_strength",
+          "product_label": "yield_strength",
+          "base_product_filters": [
+            selectedMaterialType,
+            selectedThickness,
+            selectCoatingMass
+          ],
+          "base_label_filters": ["material_type", "thickness", "coating_mass"],
+          "base_category_id": "34",
         }),
       );
 
@@ -238,17 +242,27 @@ class _DeckingSheetsState extends State<DeckingSheets> {
 
     final client =
         IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
-    final url = Uri.parse('$apiUrl/validinputdata');
+    final url = Uri.parse('$apiUrl/onchangeinputdata');
 
     try {
       final response = await client.post(
         url,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-          "category_id": "34",
-          "selectedlabel": "yield_strength",
-          "selectedvalue": selectedYieldStrength,
-          "label_name": "brand",
+          "product_label": "brand",
+          "base_product_filters": [
+            selectedMaterialType,
+            selectedThickness,
+            selectCoatingMass,
+            selectedYieldStrength
+          ],
+          "base_label_filters": [
+            "material_type",
+            "thickness",
+            "coating_mass",
+            "yield_strength"
+          ],
+          "base_category_id": "34",
         }),
       );
 
@@ -653,7 +667,7 @@ class _DeckingSheetsState extends State<DeckingSheets> {
     );
   }
 
-  // New method that organizes fields in rows, two fields per row
+// New method that organizes fields in rows, two fields per row
   Widget _buildProductDetailInRows(Map<String, dynamic> data) {
     return Column(
       children: [
@@ -782,7 +796,7 @@ class _DeckingSheetsState extends State<DeckingSheets> {
     );
   }
 
-  // Helper method to format the preview text
+// Helper method to format the preview text
   String _getPreviewText() {
     List<String> selectedValues = [
       if (selectedMaterialType != null) "Material: $selectedMaterialType",
@@ -885,7 +899,7 @@ class _DeckingSheetsState extends State<DeckingSheets> {
                               (value) {
                             setState(() {
                               selectedMaterialType = value;
-                              // Clear dependent fields
+// Clear dependent fields
                               selectedThickness = null;
                               selectCoatingMass = null;
                               selectedYieldStrength = null;
@@ -901,7 +915,7 @@ class _DeckingSheetsState extends State<DeckingSheets> {
                               (value) {
                             setState(() {
                               selectedThickness = value;
-                              // Clear dependent fields
+// Clear dependent fields
                               selectCoatingMass = null;
                               selectedYieldStrength = null;
                               selectedBrand = null;
@@ -917,7 +931,7 @@ class _DeckingSheetsState extends State<DeckingSheets> {
                               (value) {
                             setState(() {
                               selectCoatingMass = value;
-                              // Clear dependent fields
+// Clear dependent fields
                               selectedYieldStrength = null;
                               selectedBrand = null;
                               yieldStrengthList = [];
@@ -932,7 +946,7 @@ class _DeckingSheetsState extends State<DeckingSheets> {
                               (value) {
                             setState(() {
                               selectedYieldStrength = value;
-                              // Clear dependent fields
+// Clear dependent fields
                               selectedBrand = null;
                               brandList = [];
                             });
@@ -946,7 +960,7 @@ class _DeckingSheetsState extends State<DeckingSheets> {
                             });
                           }, enabled: brandList.isNotEmpty, label: "Brand"),
                           SizedBox(height: 20),
-                          // Preview Container
+// Preview Container
                           Card(
                             elevation: 1,
                             shape: RoundedRectangleBorder(

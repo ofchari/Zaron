@@ -148,8 +148,8 @@ class _IronSteelState extends State<IronSteel> {
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           "product_label": "thickness",
-          "base_product_filters": [selectedColor],
-          "base_label_filters": ["color"],
+          "base_product_filters": [selectedBrand, selectedColor],
+          "base_label_filters": ["brand", "color"],
           "base_category_id": "3",
         }),
       );
@@ -194,8 +194,12 @@ class _IronSteelState extends State<IronSteel> {
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           "product_label": "coating_mass",
-          "base_product_filters": [selectedThickness],
-          "base_label_filters": ["thickness"],
+          "base_product_filters": [
+            selectedBrand,
+            selectedColor,
+            selectedThickness
+          ],
+          "base_label_filters": ["brand", "color", "thickness"],
           "base_category_id": "3",
         }),
       );

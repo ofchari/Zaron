@@ -95,17 +95,22 @@ class _UpvcAccessoriesState extends State<UpvcAccessories> {
 
     final client =
         IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
-    final url = Uri.parse('$apiUrl/validinputdata');
+    final url = Uri.parse('$apiUrl/onchangeinputdata');
 
     try {
       final response = await client.post(
         url,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-          "category_id": "15",
-          "selectedlabel": "product_name_base",
-          "selectedvalue": selectProductNameBase,
-          "label_name": "brand",
+          // "category_id": "15",
+          // "selectedlabel": "product_name_base",
+          // "selectedvalue": selectProductNameBase,
+          // "label_name": "brand",
+
+          "base_category_id": "15",
+          "base_label_filters": ["product_name_base"],
+          "base_product_filters": [selectProductNameBase],
+          "product_label": "brand",
         }),
       );
 
@@ -141,17 +146,22 @@ class _UpvcAccessoriesState extends State<UpvcAccessories> {
 
     final client =
         IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
-    final url = Uri.parse('$apiUrl/validinputdata');
+    final url = Uri.parse('$apiUrl/onchangeinputdata');
 
     try {
       final response = await client.post(
         url,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-          "category_id": "15",
-          "selectedlabel": "brand",
-          "selectedvalue": selectedBrand,
-          "label_name": "color",
+          // "category_id": "15",
+          // "selectedlabel": "brand",
+          // "selectedvalue": selectedBrand,
+          // "label_name": "color",
+
+          "base_category_id": "15",
+          "base_label_filters": ["product_name_base", "brand"],
+          "base_product_filters": [selectProductNameBase, selectedBrand],
+          "product_label": "color",
         }),
       );
 
@@ -187,17 +197,26 @@ class _UpvcAccessoriesState extends State<UpvcAccessories> {
 
     final client =
         IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
-    final url = Uri.parse('$apiUrl/validinputdata');
+    final url = Uri.parse('$apiUrl/onchangeinputdata');
 
     try {
       final response = await client.post(
         url,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-          "category_id": "15",
-          "selectedlabel": "color",
-          "selectedvalue": selectedColor,
-          "label_name": "SIZE",
+          // "category_id": "15",
+          // "selectedlabel": "color",
+          // "selectedvalue": selectedColor,
+          // "label_name": "SIZE",
+
+          "base_category_id": "15",
+          "base_label_filters": ["product_name_base", "brand", "color"],
+          "base_product_filters": [
+            selectProductNameBase,
+            selectedBrand,
+            selectedColor
+          ],
+          "product_label": "SIZE",
         }),
       );
 

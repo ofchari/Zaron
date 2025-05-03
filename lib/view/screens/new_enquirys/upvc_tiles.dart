@@ -5,7 +5,6 @@ import 'package:dropdown_search/dropdown_search.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:gap/gap.dart';
-import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/io_client.dart';
 import 'package:zaron/view/universal_api/api&key.dart';
@@ -34,7 +33,7 @@ class _UpvcTilesState extends State<UpvcTiles> {
 
   List<Map<String, dynamic>> submittedData = [];
 
-  // Form key for validation
+// Form key for validation
   final _formKey = GlobalKey<FormState>();
 
   @override
@@ -94,17 +93,17 @@ class _UpvcTilesState extends State<UpvcTiles> {
 
     final client =
         IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
-    final url = Uri.parse('$apiUrl/validinputdata');
+    final url = Uri.parse('$apiUrl/onchangeinputdata');
 
     try {
       final response = await client.post(
         url,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-          "category_id": "631",
-          "selectedlabel": "material_type",
-          "selectedvalue": selectMaterial,
-          "label_name": "color",
+          "product_label": "color",
+          "base_product_filters": [selectMaterial],
+          "base_label_filters": ["material_type"],
+          "base_category_id": "631",
         }),
       );
 
@@ -140,17 +139,17 @@ class _UpvcTilesState extends State<UpvcTiles> {
 
     final client =
         IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
-    final url = Uri.parse('$apiUrl/validinputdata');
+    final url = Uri.parse('$apiUrl/onchangeinputdata');
 
     try {
       final response = await client.post(
         url,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-          "category_id": "631",
-          "selectedlabel": "color",
-          "selectedvalue": selectedColor,
-          "label_name": "thickness",
+          "product_label": "thickness",
+          "base_product_filters": [selectMaterial, selectedColor],
+          "base_label_filters": ["material_type", "color"],
+          "base_category_id": "631",
         }),
       );
 
@@ -212,13 +211,13 @@ class _UpvcTilesState extends State<UpvcTiles> {
           selectedColor == null ||
           selectThickness == null) return;
       if (response.statusCode == 200) {
-        Get.snackbar(
-          "Data Added",
-          "Successfully",
-          colorText: Colors.white,
-          backgroundColor: Colors.green,
-          snackPosition: SnackPosition.BOTTOM,
-        );
+// Get.snackbar(
+//   "Data Added",
+//   "Successfully",
+//   colorText: Colors.white,
+//   backgroundColor: Colors.green,
+//   snackPosition: SnackPosition.BOTTOM,
+// );
       }
     } catch (e) {
       throw Exception("Error posting data: $e");
@@ -229,7 +228,7 @@ class _UpvcTilesState extends State<UpvcTiles> {
     if (selectMaterial == null ||
         selectedColor == null ||
         selectThickness == null) {
-      // Show elegant error message
+// Show elegant error message
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
@@ -266,7 +265,7 @@ class _UpvcTilesState extends State<UpvcTiles> {
       _fetchMaterial();
     });
 
-    // Show success message with a more elegant snackbar
+// Show success message with a more elegant snackbar
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
@@ -437,11 +436,11 @@ class _UpvcTilesState extends State<UpvcTiles> {
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Row(
-                    // mainAxisAlignment: MainAxisAlignment.spaceBetween,
+// mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       SizedBox(
-                        // color: Colors.red,
+// color: Colors.red,
                         height: 40.h,
                         width: 280.w,
                         child: TextField(
@@ -477,7 +476,7 @@ class _UpvcTilesState extends State<UpvcTiles> {
                                           mainAxisSize: MainAxisSize.min,
                                           children: [
                                             Container(
-                                              // color: Colors.white,
+// color: Colors.white,
                                               height: 45.h,
                                               width: double.infinity.w,
                                               decoration: BoxDecoration(
@@ -541,7 +540,7 @@ class _UpvcTilesState extends State<UpvcTiles> {
     );
   }
 
-  // New method that organizes fields in rows, two fields per row
+// New method that organizes fields in rows, two fields per row
   Widget _buildProductDetailInRows(Map<String, dynamic> data) {
     return Column(
       children: [
@@ -564,7 +563,7 @@ class _UpvcTilesState extends State<UpvcTiles> {
           ],
         ),
         Gap(35),
-        // Row 3: Basic Rate & SQ
+// Row 3: Basic Rate & SQ
         Row(
           children: [
             Expanded(
@@ -784,7 +783,7 @@ class _UpvcTilesState extends State<UpvcTiles> {
                           _buildDropdown(colorsList, selectedColor, (value) {
                             setState(() {
                               selectedColor = value;
-                              // Clear dependent fields
+// Clear dependent fields
                               selectThickness = null;
                               thicknessList = [];
                             });
@@ -812,10 +811,11 @@ class _UpvcTilesState extends State<UpvcTiles> {
                                       text: "Selected Product Details ",
                                       weight: FontWeight.w600,
                                       color: Colors.black),
+                                  Gap(5),
                                   MyText(
                                       text: _selectedItems(),
                                       weight: FontWeight.w400,
-                                      color: Colors.black)
+                                      color: Colors.grey)
                                 ],
                               ),
                             ),

@@ -140,7 +140,7 @@ class _AluminumState extends State<Aluminum> {
 
     final client =
         IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
-    final url = Uri.parse('$apiUrl/validinputdata');
+    final url = Uri.parse('$apiUrl/onchangeinputdata');
 
     try {
       final response = await client.post(
@@ -148,8 +148,8 @@ class _AluminumState extends State<Aluminum> {
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           "product_label": "brand",
-          "base_product_filters": [selectedThickness],
-          "base_label_filters": ["thickness"],
+          "base_product_filters": [selectedMaterialType, selectedThickness],
+          "base_label_filters": ["material_type", "thickness"],
           "base_category_id": "36",
         }),
       );
@@ -187,7 +187,7 @@ class _AluminumState extends State<Aluminum> {
 
     final client =
         IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
-    final url = Uri.parse('$apiUrl/validinputdata');
+    final url = Uri.parse('$apiUrl/onchangeinputdata');
 
     try {
       final response = await client.post(
@@ -195,8 +195,12 @@ class _AluminumState extends State<Aluminum> {
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           "product_label": "color",
-          "base_product_filters": [selectedBrand],
-          "base_label_filters": ["brand"],
+          "base_product_filters": [
+            selectedMaterialType,
+            selectedThickness,
+            selectedBrand
+          ],
+          "base_label_filters": ["material_type", "thickness", "brand"],
           "base_category_id": "36",
         }),
       );
