@@ -5,6 +5,7 @@ import 'package:dropdown_search/dropdown_search.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:gap/gap.dart';
+import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/io_client.dart';
 import 'package:zaron/view/universal_api/api&key.dart';
@@ -221,6 +222,61 @@ class _UpvcAccessoriesState extends State<UpvcAccessories> {
     }
   }
 
+  ///postData
+  Future<void> postAllData() async {
+    HttpClient client = HttpClient();
+    client.badCertificateCallback =
+        ((X509Certificate cert, String host, int port) => true);
+    IOClient ioClient = IOClient(client);
+    final headers = {"Content-Type": "application/json"};
+    final data = {
+      "product_filters": null,
+      "product_label_filters": null,
+      "product_category_id": null,
+      "base_product_filters": [
+        "${selectProductNameBase?.trim()}",
+        "${selectedBrand?.trim()}",
+        "${selectedColor?.trim()}",
+        "${selectedSize?.trim()}",
+      ],
+      "base_label_filters": [
+        "product_name_base",
+        "brand",
+        "color",
+        "SIZE",
+      ],
+      "base_category_id": 15
+    };
+
+    print("This is a body data: $data");
+    final url = "https://demo.zaron.in:8181/ci4/api/baseproduct";
+    final body = jsonEncode(data);
+    try {
+      final response = await ioClient.post(
+        Uri.parse(url),
+        headers: headers,
+        body: body,
+      );
+
+      debugPrint("This is a response: ${response.body}");
+      if (selectedBrand == null ||
+          selectedColor == null ||
+          selectProductNameBase == null ||
+          selectedSize == null) return;
+      if (response.statusCode == 200) {
+        Get.snackbar(
+          "Data Added",
+          "Successfully",
+          colorText: Colors.white,
+          backgroundColor: Colors.green,
+          snackPosition: SnackPosition.BOTTOM,
+        );
+      }
+    } catch (e) {
+      throw Exception("Error posting data: $e");
+    }
+  }
+
   void _submitData() {
     if (selectedBrand == null ||
         selectedColor == null ||
@@ -252,16 +308,20 @@ class _UpvcAccessoriesState extends State<UpvcAccessories> {
         "SQ": "0",
         "Amount": "0",
         "Base Product":
-            "$selectedBrand, $selectedColor, $selectProductNameBase, $selectedSize",
+            "$selectProductNameBase, $selectedBrand, $selectedColor,  $selectedSize",
       });
-
+      selectProductNameBase = null;
       selectedBrand = null;
       selectedColor = null;
-      selectProductNameBase = null;
       selectedSize = null;
+      productList = [];
+      brandsList = [];
+      colorsList = [];
+      sizeList = [];
+      _fetchProductName();
     });
 
-    // Show success message with a more elegant snackbar
+    // Show success message with a more elegant snackBar
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
@@ -671,6 +731,16 @@ class _UpvcAccessoriesState extends State<UpvcAccessories> {
     );
   }
 
+  String postUPVCAccessoriesDetails() {
+    List<String> value = [
+      if (selectProductNameBase != null) "ProductName: $selectProductNameBase",
+      if (selectedBrand != null) "Brand: $selectedBrand",
+      if (selectedColor != null) "Color: $selectedColor",
+      if (selectedSize != null) "Size: $selectedSize",
+    ];
+    return value.isEmpty ? "No selections yet" : value.join(",  ");
+  }
+
   Widget _buildDropdown(List<String> items, String? selectedValue,
       ValueChanged<String?> onChanged,
       {bool enabled = true, String? label}) {
@@ -759,12 +829,24 @@ class _UpvcAccessoriesState extends State<UpvcAccessories> {
                               (value) {
                             setState(() {
                               selectProductNameBase = value;
+                              // Clear dependent fields
+                              selectedBrand = null;
+                              selectedColor = null;
+                              selectedSize = null;
+                              brandsList = [];
+                              colorsList = [];
+                              sizeList = [];
                             });
                             _fetchbrand();
                           }, label: "Product Name Base"),
                           _buildDropdown(brandsList, selectedBrand, (value) {
                             setState(() {
                               selectedBrand = value;
+                              // Clear dependent fields
+                              selectedColor = null;
+                              selectedSize = null;
+                              colorsList = [];
+                              sizeList = [];
                             });
                             _fetchColor();
                             // _fetchThickness();
@@ -772,6 +854,9 @@ class _UpvcAccessoriesState extends State<UpvcAccessories> {
                           _buildDropdown(colorsList, selectedColor, (value) {
                             setState(() {
                               selectedColor = value;
+                              // Clear dependent fields
+                              selectedSize = null;
+                              sizeList = [];
                             });
                             _fetchSize();
                           }, enabled: colorsList.isNotEmpty, label: "Color"),
@@ -780,12 +865,38 @@ class _UpvcAccessoriesState extends State<UpvcAccessories> {
                               selectedSize = value;
                             });
                           }, enabled: sizeList.isNotEmpty, label: "Size"),
+                          Gap(20),
+                          Card(
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            elevation: 1,
+                            child: Padding(
+                              padding: const EdgeInsets.all(12),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  MyText(
+                                      text: "Selected Product Details",
+                                      weight: FontWeight.w600,
+                                      color: Colors.black),
+                                  MyText(
+                                      text: postUPVCAccessoriesDetails(),
+                                      weight: FontWeight.w400,
+                                      color: Colors.black),
+                                ],
+                              ),
+                            ),
+                          ),
                           SizedBox(height: 20),
                           SizedBox(
                             width: double.infinity,
                             height: 50,
                             child: ElevatedButton(
-                              onPressed: _submitData,
+                              onPressed: () async {
+                                await postAllData();
+                                _submitData();
+                              },
                               style: ElevatedButton.styleFrom(
                                 foregroundColor: Colors.white,
                                 backgroundColor: Colors.blue,

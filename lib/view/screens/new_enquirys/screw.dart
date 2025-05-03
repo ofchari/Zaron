@@ -5,6 +5,7 @@ import 'package:dropdown_search/dropdown_search.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:gap/gap.dart';
+import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/io_client.dart';
 import 'package:zaron/view/universal_api/api&key.dart';
@@ -174,6 +175,54 @@ class _ScrewState extends State<Screw> {
     }
   }
 
+  Future<void> postScrewData() async {
+    HttpClient client = HttpClient();
+    client.badCertificateCallback =
+        ((X509Certificate cert, String host, int port) => true);
+    IOClient ioClient = IOClient(client);
+    final headers = {"Content-Type": "application/json"};
+    final data = {
+      "product_filters": null,
+      "product_label_filters": null,
+      "product_category_id": null,
+      "base_product_filters": [
+        "${selectedBrand?.trim()}",
+        "${selectedScrew?.trim()}",
+        "${selectedThread?.trim()}",
+      ],
+      "base_label_filters": [
+        "brand",
+        "length_of_screw",
+        "type_of_thread",
+      ],
+      "base_category_id": 7
+    };
+
+    print("User input Data: $data");
+    final url = "https://demo.zaron.in:8181/ci4/api/baseproduct";
+    final body = jsonEncode(data);
+    try {
+      final response =
+          await ioClient.post(Uri.parse(url), body: body, headers: headers);
+
+      debugPrint("This is a response: ${response.body}");
+      if (selectedBrand == null ||
+          selectedScrew == null ||
+          selectedThread == null) return;
+      if (response.statusCode == 200) {
+        Get.snackbar(
+          "Data Added",
+          "Successfully",
+          colorText: Colors.white,
+          backgroundColor: Colors.green,
+          snackPosition: SnackPosition.BOTTOM,
+        );
+      }
+    } catch (e) {
+      throw Exception("Error posting data: $e");
+    }
+  }
+
   void _submitData() {
     if (selectedBrand == null ||
         selectedScrew == null ||
@@ -209,9 +258,12 @@ class _ScrewState extends State<Screw> {
       selectedBrand = null;
       selectedScrew = null;
       selectedThread = null;
+      brandList = [];
+      screwLengthList = [];
+      threadList = [];
+      _fetchBrand();
     });
-
-    // Show success message with a more elegant snackbar
+    // Show success message with a more elegant snackBar
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
@@ -620,6 +672,16 @@ class _ScrewState extends State<Screw> {
     );
   }
 
+  ///Preview text///
+  String _previewText() {
+    List<String> selectedData = [
+      if (selectedBrand != null) "Brand: $selectedBrand",
+      if (selectedScrew != null) "Brand: $selectedScrew",
+      if (selectedThread != null) "Brand: $selectedThread",
+    ];
+    return selectedData.isEmpty ? "No Selection Yet" : selectedData.join(", ");
+  }
+
   Widget _buildDropdown(List<String> items, String? selectedValue,
       ValueChanged<String?> onChanged,
       {bool enabled = true, String? label}) {
@@ -707,6 +769,12 @@ class _ScrewState extends State<Screw> {
                           _buildDropdown(brandList, selectedBrand, (value) {
                             setState(() {
                               selectedBrand = value;
+
+                              // Clear dependent fields
+                              selectedScrew = null;
+                              selectedThread = null;
+                              screwLengthList = [];
+                              threadList = [];
                             });
                             _fetchScrew();
                           }, label: "Brand"),
@@ -714,6 +782,9 @@ class _ScrewState extends State<Screw> {
                               (value) {
                             setState(() {
                               selectedScrew = value;
+                              // Clear dependent fields
+                              selectedThread = null;
+                              threadList = [];
                             });
                             _fetchThreads();
                           },
@@ -726,12 +797,47 @@ class _ScrewState extends State<Screw> {
                           },
                               enabled: threadList.isNotEmpty,
                               label: "Type of Thread"),
+                          Gap(20),
+                          Card(
+                            elevation: 4,
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10)),
+                            child: Padding(
+                              padding: const EdgeInsets.all(12),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    "Selected Items",
+                                    style: GoogleFonts.figtree(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.black87,
+                                    ),
+                                  ),
+                                  SizedBox(
+                                    height: 8,
+                                  ),
+                                  Text(
+                                    _previewText(),
+                                    style: GoogleFonts.figtree(
+                                      fontSize: 12,
+                                      color: Colors.grey[700],
+                                    ),
+                                  )
+                                ],
+                              ),
+                            ),
+                          ),
                           SizedBox(height: 20),
                           SizedBox(
                             width: double.infinity,
                             height: 50,
                             child: ElevatedButton(
-                              onPressed: _submitData,
+                              onPressed: () async {
+                                await postScrewData();
+                                _submitData();
+                              },
                               style: ElevatedButton.styleFrom(
                                 foregroundColor: Colors.white,
                                 backgroundColor: Colors.blue,

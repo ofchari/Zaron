@@ -329,7 +329,7 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
     }
     setState(() {
       submittedData.add({
-        "Product": "Iron and Steel",
+        "Product": "Length Sheets",
         "UOM": "Feet",
         "Length": "0",
         "Nos": "1",
@@ -553,7 +553,7 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
                                     context: context,
                                     builder: (context) {
                                       return AlertDialog(
-                                        title: Text("Edit Your Iron and Steel"),
+                                        title: Text("Edit Your Length Sheets"),
                                         content: Column(
                                           mainAxisSize: MainAxisSize.min,
                                           children: [

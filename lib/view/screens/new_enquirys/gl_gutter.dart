@@ -247,7 +247,7 @@ class _GlGutterState extends State<GlGutter> {
     }
     setState(() {
       submittedData.add({
-        "Product": "Iron and Steel",
+        "Product": "GI Glutter",
         "UOM": "Feet",
         "Length": "0",
         "Nos": "1",

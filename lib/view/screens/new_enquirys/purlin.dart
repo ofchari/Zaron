@@ -5,6 +5,7 @@ import 'package:dropdown_search/dropdown_search.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:gap/gap.dart';
+import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/io_client.dart';
 import 'package:zaron/view/universal_api/api&key.dart';
@@ -68,7 +69,8 @@ class _PurlinState extends State<Purlin> {
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         final products = data["message"]["message"][1];
-        print(response.body);
+        print("Shape of Product ${response.body}");
+        debugPrint(response.body);
 
         if (products is List) {
           setState(() {
@@ -115,6 +117,7 @@ class _PurlinState extends State<Purlin> {
         final sizes = data["message"]["message"];
         print("Fetching colors for thick: $selectProduct");
         print("API response: ${response.body}");
+        debugPrint(response.body);
 
         if (sizes is List) {
           setState(() {
@@ -131,7 +134,7 @@ class _PurlinState extends State<Purlin> {
     }
   }
 
-  // /// fetch Material Type Api's ///
+  /// fetch Material Type Api's ///
   Future<void> _fetchMaterial() async {
     if (selectProduct == null) return;
 
@@ -161,6 +164,7 @@ class _PurlinState extends State<Purlin> {
         final materials = data["message"]["message"];
         print("Fetching colors for brand: $selectedSize");
         print("API response: ${response.body}");
+        debugPrint(response.body);
 
         if (materials is List) {
           setState(() {
@@ -207,6 +211,7 @@ class _PurlinState extends State<Purlin> {
         final thick = data["message"]["message"];
         print("Fetching colors for thick: $selectedMaterialType");
         print("API response: ${response.body}");
+        debugPrint(response.body);
 
         if (thick is List) {
           setState(() {
@@ -269,6 +274,64 @@ class _PurlinState extends State<Purlin> {
     }
   }
 
+  ///postData
+  Future<void> postAllData() async {
+    HttpClient client = HttpClient();
+    client.badCertificateCallback =
+        ((X509Certificate cert, String host, int port) => true);
+    IOClient ioClient = IOClient(client);
+    final headers = {"Content-Type": "application/json"};
+    final data = {
+      "product_filters": null,
+      "product_label_filters": null,
+      "product_category_id": null,
+      "base_product_filters": [
+        "${selectProduct?.trim()}",
+        "${selectedSize?.trim()}",
+        "${selectedMaterialType?.trim()}",
+        "${selectedThickness?.trim()}",
+        "${selectedBrand?.trim()}"
+      ],
+      "base_label_filters": [
+        "shape_of_product",
+        "size",
+        "material_type",
+        "thickness",
+        "Brand"
+      ],
+      "base_category_id": 5
+    };
+
+    print("This is a body data: $data");
+    final url = "https://demo.zaron.in:8181/ci4/api/baseproduct";
+    final body = jsonEncode(data);
+    try {
+      final response = await ioClient.post(
+        Uri.parse(url),
+        headers: headers,
+        body: body,
+      );
+
+      debugPrint("This is a response: ${response.body}");
+      if (selectedBrand == null ||
+          selectedSize == null ||
+          selectedThickness == null ||
+          selectProduct == null ||
+          selectedMaterialType == null) return;
+      if (response.statusCode == 200) {
+        Get.snackbar(
+          "Data Added",
+          "Successfully",
+          colorText: Colors.white,
+          backgroundColor: Colors.green,
+          snackPosition: SnackPosition.BOTTOM,
+        );
+      }
+    } catch (e) {
+      throw Exception("Error posting data: $e");
+    }
+  }
+
   //
 
   void _submitData() {
@@ -303,13 +366,20 @@ class _PurlinState extends State<Purlin> {
         "SQ": "0",
         "Amount": "0",
         "Base Product":
-            "$selectedBrand, $selectedSize, $selectedThickness, $selectedMaterialType , $selectProduct",
+            "$selectProduct, $selectedSize, $selectedMaterialType, $selectedThickness, $selectedBrand, ",
       });
       selectProduct = null;
-      selectedBrand = null;
       selectedSize = null;
-      selectedThickness = null;
       selectedMaterialType = null;
+      selectedThickness = null;
+      selectedBrand = null;
+
+      productList = [];
+      sizeList = [];
+      materialTypeList = [];
+      thicknessList = [];
+      brandsList = [];
+      _fetchShapeProduct();
     });
 
     // Show success message with a more elegant snackbar
@@ -379,7 +449,7 @@ class _PurlinState extends State<Purlin> {
                         "  ${index + 1}.  ${data["Product"]}" ?? "",
                         overflow: TextOverflow.ellipsis,
                         style: GoogleFonts.figtree(
-                            fontSize: 14,
+                            fontSize: 14.sp,
                             fontWeight: FontWeight.w600,
                             color: Colors.black87),
                       ),
@@ -721,6 +791,17 @@ class _PurlinState extends State<Purlin> {
     );
   }
 
+  String selectProductDetails() {
+    List<String> values = [
+      if (selectProduct != null) "Product: $selectProduct",
+      if (selectedSize != null) "Size: $selectedSize",
+      if (selectedMaterialType != null) "Material: $selectedMaterialType",
+      if (selectedThickness != null) "Thickness: $selectedThickness",
+      if (selectedBrand != null) "Brand: $selectedBrand",
+    ];
+    return values.isEmpty ? "No Selections yet" : values.join(", ");
+  }
+
   Widget _buildDropdown(List<String> items, String? selectedValue,
       ValueChanged<String?> onChanged,
       {bool enabled = true, String? label}) {
@@ -808,12 +889,28 @@ class _PurlinState extends State<Purlin> {
                           _buildDropdown(productList, selectProduct, (value) {
                             setState(() {
                               selectProduct = value;
+                              // Clear dependent fields
+                              selectedSize = null;
+                              selectedMaterialType = null;
+                              selectedThickness = null;
+                              selectedBrand = null;
+                              sizeList = [];
+                              materialTypeList = [];
+                              thicknessList = [];
+                              brandsList = [];
                             });
                             _fetchSizes();
                           }, label: "Shape of Product"),
                           _buildDropdown(sizeList, selectedSize, (value) {
                             setState(() {
                               selectedSize = value;
+                              // Clear dependent fields
+                              selectedMaterialType = null;
+                              selectedThickness = null;
+                              selectedBrand = null;
+                              materialTypeList = [];
+                              thicknessList = [];
+                              brandsList = [];
                             });
                             _fetchMaterial();
                           }, enabled: sizeList.isNotEmpty, label: "Size"),
@@ -821,6 +918,11 @@ class _PurlinState extends State<Purlin> {
                               (value) {
                             setState(() {
                               selectedMaterialType = value;
+                              // Clear dependent fields
+                              selectedThickness = null;
+                              selectedBrand = null;
+                              thicknessList = [];
+                              brandsList = [];
                             });
                             _fetchThickness();
                           },
@@ -830,6 +932,9 @@ class _PurlinState extends State<Purlin> {
                               (value) {
                             setState(() {
                               selectedThickness = value;
+                              // Clear dependent fields
+                              selectedBrand = null;
+                              brandsList = [];
                             });
                             _fetchBrand();
                           },
@@ -841,12 +946,37 @@ class _PurlinState extends State<Purlin> {
                             });
                             // _fetchColor();
                           }, enabled: brandsList.isNotEmpty, label: "Brand"),
+                          Gap(20),
+                          Card(
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10)),
+                            elevation: 1,
+                            child: Padding(
+                              padding: const EdgeInsets.all(12),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  MyText(
+                                      text: "Selected Product Details",
+                                      weight: FontWeight.w600,
+                                      color: Colors.black),
+                                  MyText(
+                                      text: selectProductDetails(),
+                                      weight: FontWeight.w400,
+                                      color: Colors.black)
+                                ],
+                              ),
+                            ),
+                          ),
                           SizedBox(height: 20),
                           SizedBox(
                             width: double.infinity,
-                            height: 50,
+                            height: 50.h,
                             child: ElevatedButton(
-                              onPressed: _submitData,
+                              onPressed: () async {
+                                await postAllData();
+                                _submitData();
+                              },
                               style: ElevatedButton.styleFrom(
                                 foregroundColor: Colors.white,
                                 backgroundColor: Colors.blue,

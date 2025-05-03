@@ -285,7 +285,7 @@ class _ProfileRidgeAndArchState extends State<ProfileRidgeAndArch> {
     }
     setState(() {
       submittedData.add({
-        "Product": "Iron and Steel",
+        "Product": "Profile and Arch",
         "UOM": "Feet",
         "Length": "0",
         "Nos": "1",
@@ -508,7 +508,8 @@ class _ProfileRidgeAndArchState extends State<ProfileRidgeAndArch> {
                                     context: context,
                                     builder: (context) {
                                       return AlertDialog(
-                                        title: Text("Edit Your Iron and Steel"),
+                                        title:
+                                            Text("Edit Your Profile and Arch"),
                                         content: Column(
                                           mainAxisSize: MainAxisSize.min,
                                           children: [

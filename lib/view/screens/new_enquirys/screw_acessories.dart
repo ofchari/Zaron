@@ -201,7 +201,7 @@ class _ScrewAccessoriesState extends State<ScrewAccessories> {
     }
     setState(() {
       submittedData.add({
-        "Product": "Iron and Steel",
+        "Product": "Screw Accessories",
         "UOM": "Feet",
         "Length": "0",
         "Nos": "1",
@@ -421,7 +421,8 @@ class _ScrewAccessoriesState extends State<ScrewAccessories> {
                                     context: context,
                                     builder: (context) {
                                       return AlertDialog(
-                                        title: Text("Edit Your Iron and Steel"),
+                                        title:
+                                            Text("Edit Your Screw Accessories"),
                                         content: Column(
                                           mainAxisSize: MainAxisSize.min,
                                           children: [

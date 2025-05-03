@@ -20,65 +20,68 @@ class _EntryState extends State<Entry> {
     var size = MediaQuery.of(context).size;
     height = size.height;
     width = size.width;
-    
-    return LayoutBuilder(builder: (BuildContext context, BoxConstraints constraints) {
-      height = constraints.maxHeight;
-      width = constraints.maxWidth;
-      if(width<=450){
-        return _smallBuildLayout();
-      }
-      else{
-        return Text("Please make Sure your device is in portrait view");
-      }
-    },);
+
+    return LayoutBuilder(
+      builder: (BuildContext context, BoxConstraints constraints) {
+        height = constraints.maxHeight;
+        width = constraints.maxWidth;
+        if (width <= 450) {
+          return _smallBuildLayout();
+        } else {
+          return Text("Please make Sure your device is in portrait view");
+        }
+      },
+    );
   }
-  Widget _smallBuildLayout(){
+
+  Widget _smallBuildLayout() {
     return Scaffold(
       body: Stack(
         children: [
-          SizedBox(height: 27.h,),
+          SizedBox(
+            height: 27.h,
+          ),
           Column(
             children: [
               Container(
-                height: height/1.8.h,
+                height: height / 1.8.h,
                 width: width.w,
                 decoration: BoxDecoration(
-                  color: Colors.teal,
-                  borderRadius: BorderRadius.only(bottomRight: Radius.circular(60),bottomLeft: Radius.circular(60))
-                ),
+                    color: Colors.teal,
+                    borderRadius: BorderRadius.only(
+                        bottomRight: Radius.circular(60),
+                        bottomLeft: Radius.circular(60))),
               ),
-
             ],
           ),
           Positioned(
             bottom: 250,
             right: 104,
             child: Container(
-              height: height/4.h,
-              width: width/2.w,
+              height: height / 4.h,
+              width: width / 2.w,
               decoration: BoxDecoration(
                   image: DecorationImage(
-                      image: AssetImage("assets/login.png"),fit: BoxFit.cover
-                  )
-              ),
+                      image: AssetImage("assets/login.png"),
+                      fit: BoxFit.cover)),
             ),
           ),
           Positioned(
-            bottom: 160,
+              bottom: 160,
               right: 60,
-              child:
-              GestureDetector(
-                  onTap: (){
+              child: GestureDetector(
+                  onTap: () {
                     Get.off(Dashboard());
                   },
-                  child: Buttons(text: "Get Started here ✈", weight: FontWeight.w500, color: Colors.blueGrey, height: height/16.h, width: width/1.3.w, radius: BorderRadius.circular(26.r)))
-          )
+                  child: Buttons(
+                      text: "Get Started here ✈",
+                      weight: FontWeight.w500,
+                      color: Colors.blueGrey,
+                      height: height / 16.h,
+                      width: width / 1.3.w,
+                      radius: BorderRadius.circular(26.r))))
         ],
       ),
-
     );
   }
-
-
-
 }

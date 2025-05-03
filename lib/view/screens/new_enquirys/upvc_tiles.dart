@@ -5,6 +5,7 @@ import 'package:dropdown_search/dropdown_search.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:gap/gap.dart';
+import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/io_client.dart';
 import 'package:zaron/view/universal_api/api&key.dart';
@@ -174,6 +175,56 @@ class _UpvcTilesState extends State<UpvcTiles> {
     }
   }
 
+  Future<void> postUPVCData() async {
+    HttpClient client = HttpClient();
+    client.badCertificateCallback =
+        ((X509Certificate cert, String host, int port) => true);
+    IOClient ioClient = IOClient(client);
+    final headers = {"Content-Type": "application/json"};
+    final data = {
+      "product_filters": null,
+      "product_label_filters": null,
+      "product_category_id": null,
+      "base_product_filters": [
+        "${selectMaterial?.trim()}",
+        "${selectedColor?.trim()}",
+        "${selectThickness?.trim()}",
+      ],
+      "base_label_filters": [
+        "material_type",
+        "color",
+        "thickness",
+      ],
+      "base_category_id": 631
+    };
+    print("User input Data $data");
+    final url = "https://demo.zaron.in:8181/ci4/api/baseproduct";
+    final body = jsonEncode(data);
+    try {
+      final response = await ioClient.post(
+          Uri.parse(
+            url,
+          ),
+          headers: headers,
+          body: body);
+      debugPrint("This is a response: ${response.body}");
+      if (selectMaterial == null ||
+          selectedColor == null ||
+          selectThickness == null) return;
+      if (response.statusCode == 200) {
+        Get.snackbar(
+          "Data Added",
+          "Successfully",
+          colorText: Colors.white,
+          backgroundColor: Colors.green,
+          snackPosition: SnackPosition.BOTTOM,
+        );
+      }
+    } catch (e) {
+      throw Exception("Error posting data: $e");
+    }
+  }
+
   void _submitData() {
     if (selectMaterial == null ||
         selectedColor == null ||
@@ -209,6 +260,10 @@ class _UpvcTilesState extends State<UpvcTiles> {
       selectMaterial = null;
       selectedColor = null;
       selectThickness = null;
+      materialList = [];
+      colorsList = [];
+      thicknessList = [];
+      _fetchMaterial();
     });
 
     // Show success message with a more elegant snackbar
@@ -620,6 +675,16 @@ class _UpvcTilesState extends State<UpvcTiles> {
     );
   }
 
+  String _selectedItems() {
+    List<String> values = [
+      if (selectMaterial != null) "Material Type:  $selectMaterial",
+      if (selectedColor != null) "Color:  $selectedColor",
+      if (selectThickness != null) "Thickness:  $selectThickness"
+    ];
+
+    return values.isEmpty ? "No selections yet" : values.join(",  ");
+  }
+
   Widget _buildDropdown(List<String> items, String? selectedValue,
       ValueChanged<String?> onChanged,
       {bool enabled = true, String? label}) {
@@ -707,12 +772,21 @@ class _UpvcTilesState extends State<UpvcTiles> {
                           _buildDropdown(materialList, selectMaterial, (value) {
                             setState(() {
                               selectMaterial = value;
+
+                              /// Clear dependent fields
+                              selectedColor = null;
+                              selectThickness = null;
+                              colorsList = [];
+                              thicknessList = [];
                             });
                             _fetchColor();
                           }, label: "Material Type"),
                           _buildDropdown(colorsList, selectedColor, (value) {
                             setState(() {
                               selectedColor = value;
+                              // Clear dependent fields
+                              selectThickness = null;
+                              thicknessList = [];
                             });
                             _fetchThickness();
                           }, enabled: colorsList.isNotEmpty, label: "Color"),
@@ -724,12 +798,37 @@ class _UpvcTilesState extends State<UpvcTiles> {
                           },
                               enabled: thicknessList.isNotEmpty,
                               label: "Thickness"),
+                          Gap(20),
+                          Card(
+                            elevation: 1,
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10)),
+                            child: Padding(
+                              padding: const EdgeInsets.all(12),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  MyText(
+                                      text: "Selected Product Details ",
+                                      weight: FontWeight.w600,
+                                      color: Colors.black),
+                                  MyText(
+                                      text: _selectedItems(),
+                                      weight: FontWeight.w400,
+                                      color: Colors.black)
+                                ],
+                              ),
+                            ),
+                          ),
                           SizedBox(height: 20),
                           SizedBox(
                             width: double.infinity,
                             height: 50,
                             child: ElevatedButton(
-                              onPressed: _submitData,
+                              onPressed: () async {
+                                await postUPVCData();
+                                _submitData();
+                              },
                               style: ElevatedButton.styleFrom(
                                 foregroundColor: Colors.white,
                                 backgroundColor: Colors.blue,

@@ -5,6 +5,7 @@ import 'package:dropdown_search/dropdown_search.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:gap/gap.dart';
+import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/io_client.dart';
 import 'package:zaron/view/widgets/subhead.dart';
@@ -175,6 +176,58 @@ class _PolycarbonateState extends State<Polycarbonate> {
     }
   }
 
+  ///postData
+  Future<void> postPolycarbonateData() async {
+    HttpClient client = HttpClient();
+    client.badCertificateCallback =
+        ((X509Certificate cert, String host, int port) => true);
+    IOClient ioClient = IOClient(client);
+    final headers = {"Content-Type": "application/json"};
+    final data = {
+      "product_filters": null,
+      "product_label_filters": null,
+      "product_category_id": null,
+      "base_product_filters": [
+        "${selectedBrand?.trim()}",
+        "${selectedColor?.trim()}",
+        "${selectedThickness?.trim()}",
+      ],
+      "base_label_filters": [
+        "type_of_panel",
+        "color",
+        "thickness",
+      ],
+      "base_category_id": 19
+    };
+    print("User input Data $data");
+    final url = "https://demo.zaron.in:8181/ci4/api/baseproduct";
+    final body = jsonEncode(data);
+    try {
+      final response = await ioClient.post(
+          Uri.parse(
+            url,
+          ),
+          headers: headers,
+          body: body);
+      debugPrint("This is a response: ${response.body}");
+      if (selectedBrand == null ||
+          selectedColor == null ||
+          selectedThickness == null) return;
+
+      if (response.statusCode == 200) {
+        Get.snackbar(
+          "Data Added",
+          "Successfully",
+          colorText: Colors.white,
+          backgroundColor: Colors.green,
+          snackPosition: SnackPosition.BOTTOM,
+        );
+      }
+    } catch (e) {
+      throw Exception("Error posting data: $e");
+    }
+  }
+
   /// fetch Thickness Api's ///
 
   void _submitData() {
@@ -199,7 +252,7 @@ class _PolycarbonateState extends State<Polycarbonate> {
     }
     setState(() {
       submittedData.add({
-        "Product": "Iron and Steel",
+        "Product": "Polycarbonate",
         "UOM": "Feet",
         "Length": "0",
         "Nos": "1",
@@ -212,9 +265,13 @@ class _PolycarbonateState extends State<Polycarbonate> {
       selectedBrand = null;
       selectedColor = null;
       selectedThickness = null;
+      brandsList = [];
+      colorsList = [];
+      thicknessList = [];
+      _fetchBrands();
     });
 
-// Show success message with a more elegant snackbar
+// Show success message with a more elegant snackBar
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
@@ -623,6 +680,15 @@ class _PolycarbonateState extends State<Polycarbonate> {
     );
   }
 
+  String selectPolycarbonate() {
+    List<String> values = [
+      if (selectedBrand != null) "Brand: $selectedBrand",
+      if (selectedColor != null) "Color: $selectedColor",
+      if (selectedThickness != null) "Thickness: $selectedThickness",
+    ];
+    return values.isEmpty ? "No selection yet" : values.join(",  ");
+  }
+
   Widget _buildDropdown(List<String> items, String? selectedValue,
       ValueChanged<String?> onChanged,
       {bool enabled = true, String? label}) {
@@ -710,12 +776,20 @@ class _PolycarbonateState extends State<Polycarbonate> {
                           _buildDropdown(brandsList, selectedBrand, (value) {
                             setState(() {
                               selectedBrand = value;
+                              // Clear dependent fields
+                              selectedColor = null;
+                              selectedThickness = null;
+                              colorsList = [];
+                              thicknessList = [];
                             });
                             _fetchColors();
                           }, label: "Brand"),
                           _buildDropdown(colorsList, selectedColor, (value) {
                             setState(() {
                               selectedColor = value;
+                              // Clear dependent fields
+                              selectedThickness = null;
+                              thicknessList = [];
                             });
                             _fetchThickness();
                           }, enabled: colorsList.isNotEmpty, label: "Color"),
@@ -727,12 +801,38 @@ class _PolycarbonateState extends State<Polycarbonate> {
                           },
                               enabled: thicknessList.isNotEmpty,
                               label: "Thickness"),
+                          Gap(20),
+                          Card(
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            elevation: 1,
+                            child: Padding(
+                              padding: const EdgeInsets.all(12),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  MyText(
+                                      text: "Selected Product Details",
+                                      weight: FontWeight.w600,
+                                      color: Colors.black),
+                                  MyText(
+                                      text: selectPolycarbonate(),
+                                      weight: FontWeight.w400,
+                                      color: Colors.black)
+                                ],
+                              ),
+                            ),
+                          ),
                           SizedBox(height: 20),
                           SizedBox(
                             width: double.infinity,
                             height: 50,
                             child: ElevatedButton(
-                              onPressed: _submitData,
+                              onPressed: () async {
+                                await postPolycarbonateData();
+                                _submitData();
+                              },
                               style: ElevatedButton.styleFrom(
                                 foregroundColor: Colors.white,
                                 backgroundColor: Colors.blue,

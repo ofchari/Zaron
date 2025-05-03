@@ -327,7 +327,7 @@ class _LinerSheetPageState extends State<LinerSheetPage> {
     }
     setState(() {
       submittedData.add({
-        "Product": "Iron and Steel",
+        "Product": "Linear Sheets",
         "UOM": "Feet",
         "Length": "0",
         "Nos": "1",
@@ -549,7 +549,7 @@ class _LinerSheetPageState extends State<LinerSheetPage> {
                                     context: context,
                                     builder: (context) {
                                       return AlertDialog(
-                                        title: Text("Edit Your Iron and Steel"),
+                                        title: Text("Edit Your Linear Sheets"),
                                         content: Column(
                                           mainAxisSize: MainAxisSize.min,
                                           children: [

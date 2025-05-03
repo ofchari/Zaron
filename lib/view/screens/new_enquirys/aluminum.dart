@@ -34,7 +34,7 @@ class _AluminumState extends State<Aluminum> {
   List<String> materialTypeList = [];
   List<Map<String, dynamic>> submittedData = [];
 
-  // Form key for validation
+// Form key for validation
   final _formKey = GlobalKey<FormState>();
 
   @override
@@ -94,17 +94,17 @@ class _AluminumState extends State<Aluminum> {
 
     final client =
         IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
-    final url = Uri.parse('$apiUrl/validinputdata');
+    final url = Uri.parse('$apiUrl/onchangeinputdata');
 
     try {
       final response = await client.post(
         url,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-          "category_id": "36",
-          "selectedlabel": "material_type",
-          "selectedvalue": selectedMaterialType,
-          "label_name": "thickness",
+          "product_label": "thickness",
+          "base_product_filters": [selectedMaterialType],
+          "base_label_filters": ["material_type"],
+          "base_category_id": "36",
         }),
       );
 
@@ -147,10 +147,10 @@ class _AluminumState extends State<Aluminum> {
         url,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-          "category_id": "36",
-          "selectedlabel": "thickness",
-          "selectedvalue": selectedThickness,
-          "label_name": "brand",
+          "product_label": "brand",
+          "base_product_filters": [selectedThickness],
+          "base_label_filters": ["thickness"],
+          "base_category_id": "36",
         }),
       );
 
@@ -175,8 +175,8 @@ class _AluminumState extends State<Aluminum> {
     }
   }
 
-  //
-  // /// fetch Color Api's ///
+//
+// /// fetch Color Api's ///
   Future<void> _fetchColor() async {
     if (selectedMaterialType == null) return;
 
@@ -194,10 +194,10 @@ class _AluminumState extends State<Aluminum> {
         url,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-          "category_id": "36",
-          "selectedlabel": "brand",
-          "selectedvalue": selectedBrand,
-          "label_name": "color",
+          "product_label": "color",
+          "base_product_filters": [selectedBrand],
+          "base_label_filters": ["brand"],
+          "base_category_id": "36",
         }),
       );
 
@@ -222,12 +222,68 @@ class _AluminumState extends State<Aluminum> {
     }
   }
 
+  Future<void> postAllData() async {
+    HttpClient client = HttpClient();
+    client.badCertificateCallback =
+        ((X509Certificate cert, String host, int port) => true);
+    IOClient ioClient = IOClient(client);
+    final headers = {"Content-Type": "application/json"};
+    final data = {
+      "product_filters": null,
+      "product_label_filters": null,
+      "product_category_id": null,
+      "base_product_filters": [
+        "${selectedMaterialType?.trim()}",
+        "${selectedThickness?.trim()}",
+        "${selectedBrand?.trim()}",
+        "${selectedColor?.trim()}",
+      ],
+      "base_label_filters": [
+        "material_type",
+        "thickness",
+        "brand",
+        "color",
+      ],
+      "base_category_id": 36
+    };
+
+    print("This is a body data: $data");
+    final url = "https://demo.zaron.in:8181/ci4/api/baseproduct";
+    final body = jsonEncode(data);
+    try {
+      final response = await ioClient.post(
+        Uri.parse(url),
+        headers: headers,
+        body: body,
+      );
+
+      debugPrint("This is a response: ${response.body}");
+      if (selectedBrand == null ||
+          selectedColor == null ||
+          selectedThickness == null ||
+          selectedMaterialType == null) {
+        return;
+      }
+      if (response.statusCode == 200) {
+// Get.snackbar(
+//   "Data Added",
+//   "Successfully",
+//   colorText: Colors.white,
+//   backgroundColor: Colors.green,
+//   snackPosition: SnackPosition.BOTTOM,
+// );
+      }
+    } catch (e) {
+      throw Exception("Error posting data: $e");
+    }
+  }
+
   void _submitData() {
     if (selectedBrand == null ||
         selectedColor == null ||
         selectedThickness == null ||
         selectedMaterialType == null) {
-      // Show elegant error message
+// Show elegant error message
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
@@ -253,16 +309,20 @@ class _AluminumState extends State<Aluminum> {
         "SQ": "0",
         "Amount": "0",
         "Base Product":
-            "$selectedBrand, $selectedColor, $selectedThickness, $selectedMaterialType",
+            " $selectedMaterialType,  $selectedThickness, $selectedBrand, $selectedColor,",
       });
-
+      selectedMaterialType = null;
+      selectedThickness = null;
       selectedBrand = null;
       selectedColor = null;
-      selectedThickness = null;
-      selectedMaterialType = null;
+      materialTypeList = [];
+      thicknessList = [];
+      brandsList = [];
+      colorsList = [];
+      _fetchMaterialType();
     });
 
-    // Show success message with a more elegant snackbar
+// Show success message with a more elegant snackbar
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
@@ -433,11 +493,11 @@ class _AluminumState extends State<Aluminum> {
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Row(
-                    // mainAxisAlignment: MainAxisAlignment.spaceBetween,
+// mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       SizedBox(
-                        // color: Colors.red,
+// color: Colors.red,
                         height: 40.h,
                         width: 280.w,
                         child: TextField(
@@ -473,7 +533,7 @@ class _AluminumState extends State<Aluminum> {
                                           mainAxisSize: MainAxisSize.min,
                                           children: [
                                             Container(
-                                              // color: Colors.white,
+// color: Colors.white,
                                               height: 45.h,
                                               width: double.infinity.w,
                                               decoration: BoxDecoration(
@@ -537,7 +597,7 @@ class _AluminumState extends State<Aluminum> {
     );
   }
 
-  // New method that organizes fields in rows, two fields per row
+// New method that organizes fields in rows, two fields per row
   Widget _buildProductDetailInRows(Map<String, dynamic> data) {
     return Column(
       children: [
@@ -560,7 +620,7 @@ class _AluminumState extends State<Aluminum> {
           ],
         ),
         Gap(35),
-        // Row 3: Basic Rate & SQ
+// Row 3: Basic Rate & SQ
         Row(
           children: [
             Expanded(
@@ -671,6 +731,16 @@ class _AluminumState extends State<Aluminum> {
     );
   }
 
+  String selectedData() {
+    List<String> value = [
+      if (selectedMaterialType != null) "Material: $selectedMaterialType",
+      if (selectedThickness != null) "Thickness: $selectedThickness",
+      if (selectedBrand != null) "brand: $selectedBrand",
+      if (selectedColor != null) "Color: $selectedColor",
+    ];
+    return value.isEmpty ? "No selections yet" : value.join(",  ");
+  }
+
   Widget _buildDropdown(List<String> items, String? selectedValue,
       ValueChanged<String?> onChanged,
       {bool enabled = true, String? label}) {
@@ -759,6 +829,14 @@ class _AluminumState extends State<Aluminum> {
                               (value) {
                             setState(() {
                               selectedMaterialType = value;
+
+                              ///clear fields
+                              selectedThickness = null;
+                              selectedBrand = null;
+                              selectedColor = null;
+                              thicknessList = [];
+                              brandsList = [];
+                              colorsList = [];
                             });
                             _fetchThickness();
                           }, label: "Material Type"),
@@ -766,6 +844,12 @@ class _AluminumState extends State<Aluminum> {
                               (value) {
                             setState(() {
                               selectedThickness = value;
+
+                              ///clear fields
+                              selectedBrand = null;
+                              selectedColor = null;
+                              brandsList = [];
+                              colorsList = [];
                             });
                             _fetchBrand();
                           },
@@ -774,6 +858,10 @@ class _AluminumState extends State<Aluminum> {
                           _buildDropdown(brandsList, selectedBrand, (value) {
                             setState(() {
                               selectedBrand = value;
+
+                              ///clear fields
+                              selectedColor = null;
+                              colorsList = [];
                             });
                             _fetchColor();
                           }, enabled: brandsList.isNotEmpty, label: "Brand"),
@@ -782,12 +870,38 @@ class _AluminumState extends State<Aluminum> {
                               selectedColor = value;
                             });
                           }, enabled: colorsList.isNotEmpty, label: "Color"),
+                          Gap(20.h),
+                          Card(
+                            elevation: 1,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.all(12),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  MyText(
+                                      text: "Selected Item Details",
+                                      weight: FontWeight.w600,
+                                      color: Colors.black),
+                                  MyText(
+                                      text: selectedData(),
+                                      weight: FontWeight.w400,
+                                      color: Colors.black)
+                                ],
+                              ),
+                            ),
+                          ),
                           SizedBox(height: 20),
                           SizedBox(
                             width: double.infinity,
                             height: 50,
                             child: ElevatedButton(
-                              onPressed: _submitData,
+                              onPressed: () async {
+                                await postAllData();
+                                _submitData();
+                              },
                               style: ElevatedButton.styleFrom(
                                 foregroundColor: Colors.white,
                                 backgroundColor: Colors.blue,

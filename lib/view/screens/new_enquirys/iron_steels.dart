@@ -34,7 +34,7 @@ class _IronSteelState extends State<IronSteel> {
   List<String> coatingMassList = [];
   List<Map<String, dynamic>> submittedData = [];
 
-  // Form key for validation
+// Form key for validation
   final _formKey = GlobalKey<FormState>();
 
   @override
@@ -94,17 +94,17 @@ class _IronSteelState extends State<IronSteel> {
 
     final client =
         IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
-    final url = Uri.parse('$apiUrl/validinputdata');
+    final url = Uri.parse('$apiUrl/onchangeinputdata');
 
     try {
       final response = await client.post(
         url,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-          "category_id": "3",
-          "selectedlabel": "brand",
-          "selectedvalue": selectedBrand,
-          "label_name": "color",
+          "product_label": "color",
+          "base_product_filters": [selectedBrand],
+          "base_label_filters": ["brand"],
+          "base_category_id": "3",
         }),
       );
 
@@ -140,17 +140,17 @@ class _IronSteelState extends State<IronSteel> {
 
     final client =
         IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
-    final url = Uri.parse('$apiUrl/validinputdata');
+    final url = Uri.parse('$apiUrl/onchangeinputdata');
 
     try {
       final response = await client.post(
         url,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-          "category_id": "3",
-          "selectedlabel": "color",
-          "selectedvalue": selectedColor,
-          "label_name": "thickness",
+          "product_label": "thickness",
+          "base_product_filters": [selectedColor],
+          "base_label_filters": ["color"],
+          "base_category_id": "3",
         }),
       );
 
@@ -186,17 +186,17 @@ class _IronSteelState extends State<IronSteel> {
 
     final client =
         IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
-    final url = Uri.parse('$apiUrl/validinputdata');
+    final url = Uri.parse('$apiUrl/onchangeinputdata');
 
     try {
       final response = await client.post(
         url,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-          "category_id": "3",
-          "selectedlabel": "thickness",
-          "selectedvalue": selectedThickness,
-          "label_name": "coating_mass",
+          "product_label": "coating_mass",
+          "base_product_filters": [selectedThickness],
+          "base_label_filters": ["thickness"],
+          "base_category_id": "3",
         }),
       );
 
@@ -221,12 +221,68 @@ class _IronSteelState extends State<IronSteel> {
     }
   }
 
+  Future<void> postAllData() async {
+    HttpClient client = HttpClient();
+    client.badCertificateCallback =
+        ((X509Certificate cert, String host, int port) => true);
+    IOClient ioClient = IOClient(client);
+    final headers = {"Content-Type": "application/json"};
+    final data = {
+      "product_filters": null,
+      "product_label_filters": null,
+      "product_category_id": null,
+      "base_product_filters": [
+        "${selectedBrand?.trim()}",
+        "${selectedColor?.trim()}",
+        "${selectedThickness?.trim()}",
+        "${selectedCoatingMass?.trim()}",
+      ],
+      "base_label_filters": [
+        "brand",
+        "color",
+        "thickness",
+        "coating_mass",
+      ],
+      "base_category_id": 3
+    };
+
+    print("This is a body data: $data");
+    final url = "$apiUrl/baseproduct";
+    final body = jsonEncode(data);
+    try {
+      final response = await ioClient.post(
+        Uri.parse(url),
+        headers: headers,
+        body: body,
+      );
+
+      debugPrint("This is a response: ${response.body}");
+      if (selectedBrand == null ||
+          selectedColor == null ||
+          selectedThickness == null ||
+          selectedCoatingMass == null) {
+        return;
+      }
+      if (response.statusCode == 200) {
+// Get.snackbar(
+//   "Data Added",
+//   "Successfully",
+//   colorText: Colors.white,
+//   backgroundColor: Colors.green,
+//   snackPosition: SnackPosition.BOTTOM,
+// );
+      }
+    } catch (e) {
+      throw Exception("Error posting data: $e");
+    }
+  }
+
   void _submitData() {
     if (selectedBrand == null ||
         selectedColor == null ||
         selectedThickness == null ||
         selectedCoatingMass == null) {
-      // Show elegant error message
+// Show elegant error message
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
@@ -259,9 +315,14 @@ class _IronSteelState extends State<IronSteel> {
       selectedColor = null;
       selectedThickness = null;
       selectedCoatingMass = null;
+      brandsList = [];
+      colorsList = [];
+      thicknessList = [];
+      coatingMassList = [];
+      _fetchBrands();
     });
 
-    // Show success message with a more elegant snackbar
+// Show success message with a more elegant snackbar
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
@@ -432,11 +493,11 @@ class _IronSteelState extends State<IronSteel> {
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Row(
-                    // mainAxisAlignment: MainAxisAlignment.spaceBetween,
+// mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       SizedBox(
-                        // color: Colors.red,
+// color: Colors.red,
                         height: 40.h,
                         width: 280.w,
                         child: TextField(
@@ -472,7 +533,7 @@ class _IronSteelState extends State<IronSteel> {
                                           mainAxisSize: MainAxisSize.min,
                                           children: [
                                             Container(
-                                              // color: Colors.white,
+// color: Colors.white,
                                               height: 45.h,
                                               width: double.infinity.w,
                                               decoration: BoxDecoration(
@@ -536,7 +597,7 @@ class _IronSteelState extends State<IronSteel> {
     );
   }
 
-  // New method that organizes fields in rows, two fields per row
+// New method that organizes fields in rows, two fields per row
   Widget _buildProductDetailInRows(Map<String, dynamic> data) {
     return Column(
       children: [
@@ -559,7 +620,7 @@ class _IronSteelState extends State<IronSteel> {
           ],
         ),
         Gap(35),
-        // Row 3: Basic Rate & SQ
+// Row 3: Basic Rate & SQ
         Row(
           children: [
             Expanded(
@@ -670,6 +731,16 @@ class _IronSteelState extends State<IronSteel> {
     );
   }
 
+  String selectedItems() {
+    List<String> values = [
+      if (selectedBrand != null) "Brand: $selectedBrand",
+      if (selectedColor != null) "Color: $selectedColor",
+      if (selectedThickness != null) "Thickness: $selectedThickness",
+      if (selectedCoatingMass != null) "CoatingMass: $selectedCoatingMass",
+    ];
+    return values.isEmpty ? "No selections yet" : values.join(",  ");
+  }
+
   Widget _buildDropdown(List<String> items, String? selectedValue,
       ValueChanged<String?> onChanged,
       {bool enabled = true, String? label}) {
@@ -757,12 +828,26 @@ class _IronSteelState extends State<IronSteel> {
                           _buildDropdown(brandsList, selectedBrand, (value) {
                             setState(() {
                               selectedBrand = value;
+
+                              ///clear Data
+                              selectedColor = null;
+                              selectedThickness = null;
+                              selectedCoatingMass = null;
+                              colorsList = [];
+                              thicknessList = [];
+                              coatingMassList = [];
                             });
                             _fetchColors();
                           }, label: "Brand"),
                           _buildDropdown(colorsList, selectedColor, (value) {
                             setState(() {
                               selectedColor = value;
+
+                              ///clear Data
+                              selectedThickness = null;
+                              selectedCoatingMass = null;
+                              thicknessList = [];
+                              coatingMassList = [];
                             });
                             _fetchThickness();
                           }, enabled: colorsList.isNotEmpty, label: "Color"),
@@ -770,6 +855,10 @@ class _IronSteelState extends State<IronSteel> {
                               (value) {
                             setState(() {
                               selectedThickness = value;
+
+                              ///clear Data
+                              selectedCoatingMass = null;
+                              coatingMassList = [];
                             });
                             _fetchCoatingMass();
                           },
@@ -783,12 +872,38 @@ class _IronSteelState extends State<IronSteel> {
                           },
                               enabled: coatingMassList.isNotEmpty,
                               label: "Coating Mass"),
+                          Gap(20),
+                          Card(
+                            elevation: 1,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.all(12),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  MyText(
+                                      text: "Selected Items Details",
+                                      weight: FontWeight.w600,
+                                      color: Colors.black),
+                                  MyText(
+                                      text: selectedItems(),
+                                      weight: FontWeight.w500,
+                                      color: Colors.grey)
+                                ],
+                              ),
+                            ),
+                          ),
                           SizedBox(height: 20),
                           SizedBox(
                             width: double.infinity,
                             height: 50,
                             child: ElevatedButton(
-                              onPressed: _submitData,
+                              onPressed: () async {
+                                await postAllData();
+                                _submitData();
+                              },
                               style: ElevatedButton.styleFrom(
                                 foregroundColor: Colors.white,
                                 backgroundColor: Colors.blue,

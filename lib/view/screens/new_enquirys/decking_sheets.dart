@@ -5,6 +5,7 @@ import 'package:dropdown_search/dropdown_search.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:gap/gap.dart';
+import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/io_client.dart';
 import 'package:zaron/view/universal_api/api&key.dart';
@@ -22,7 +23,7 @@ class DeckingSheets extends StatefulWidget {
 
 class _DeckingSheetsState extends State<DeckingSheets> {
   late TextEditingController editController;
-  String? selectedMeterialType;
+  String? selectedMaterialType;
   String? selectedThickness;
   String? selectCoatingMass;
   String? selectedYieldStrength;
@@ -54,7 +55,7 @@ class _DeckingSheetsState extends State<DeckingSheets> {
   Future<void> _fetchMaterialType() async {
     setState(() {
       materialTypeList = [];
-      selectedMeterialType;
+      selectedMaterialType = null;
     });
 
     final client =
@@ -68,6 +69,7 @@ class _DeckingSheetsState extends State<DeckingSheets> {
         final data = jsonDecode(response.body);
         final meterialType = data["message"]["message"][1];
         print(response.body);
+        debugPrint(response.body);
 
         if (meterialType is List) {
           setState(() {
@@ -86,7 +88,7 @@ class _DeckingSheetsState extends State<DeckingSheets> {
 
   /// fetch colors Api's //
   Future<void> _fetchThick() async {
-    if (selectedMeterialType == null) return;
+    if (selectedMaterialType == null) return;
 
     setState(() {
       thicknessList = [];
@@ -104,7 +106,7 @@ class _DeckingSheetsState extends State<DeckingSheets> {
         body: jsonEncode({
           "category_id": "34",
           "selectedlabel": "material_type",
-          "selectedvalue": selectedMeterialType,
+          "selectedvalue": selectedMaterialType,
           "label_name": "thickness",
         }),
       );
@@ -114,6 +116,7 @@ class _DeckingSheetsState extends State<DeckingSheets> {
         final selectedThickness = data["message"]["message"];
         print("Fetching colors for brand: $selectedThickness");
         print("API response: ${response.body}");
+        debugPrint(response.body);
 
         if (selectedThickness is List) {
           setState(() {
@@ -132,7 +135,7 @@ class _DeckingSheetsState extends State<DeckingSheets> {
 
   /// fetch Thickness Api's ///
   Future<void> _fetchCoat() async {
-    if (selectedMeterialType == null) return;
+    if (selectedThickness == null) return;
 
     setState(() {
       coatingMassList = [];
@@ -141,17 +144,17 @@ class _DeckingSheetsState extends State<DeckingSheets> {
 
     final client =
         IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
-    final url = Uri.parse('$apiUrl/validinputdata');
+    final url = Uri.parse('$apiUrl/onchangeinputdata');
 
     try {
       final response = await client.post(
         url,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-          "category_id": "34",
-          "selectedlabel": "thickness",
-          "selectedvalue": selectedThickness,
-          "label_name": "coating_mass",
+          "base_category_id": "34",
+          "base_label_filters": ["thickness"],
+          "base_product_filters": [selectedThickness],
+          "product_label": "coating_mass",
         }),
       );
 
@@ -160,6 +163,7 @@ class _DeckingSheetsState extends State<DeckingSheets> {
         final thickness = data["message"]["message"];
         print("Fetching colors for brand: $selectedThickness");
         print("API response: ${response.body}");
+        debugPrint(response.body);
 
         if (thickness is List) {
           setState(() {
@@ -176,9 +180,9 @@ class _DeckingSheetsState extends State<DeckingSheets> {
     }
   }
 
-  /// fetch Thickness Api's ///
+  /// fetch Coating Mass Api's ///
   Future<void> _yieldStrength() async {
-    if (selectedMeterialType == null) return;
+    if (selectCoatingMass == null) return;
 
     setState(() {
       yieldStrengthList = [];
@@ -206,6 +210,7 @@ class _DeckingSheetsState extends State<DeckingSheets> {
         final coating = data["message"]["message"];
         print("Fetching colors for brand: $selectedThickness");
         print("API response: ${response.body}");
+        debugPrint(response.body);
 
         if (coating is List) {
           setState(() {
@@ -222,8 +227,9 @@ class _DeckingSheetsState extends State<DeckingSheets> {
     }
   }
 
+  /// fetch Brand Api's ///
   Future<void> _fetchBrand() async {
-    if (selectedMeterialType == null) return;
+    if (selectedYieldStrength == null) return;
 
     setState(() {
       brandList = [];
@@ -248,13 +254,14 @@ class _DeckingSheetsState extends State<DeckingSheets> {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final coating = data["message"]["message"];
-        print("Fetching colors for brand: $selectedThickness");
+        final brands = data["message"]["message"];
+        print("Fetching brands: $brands");
         print("API response: ${response.body}");
+        debugPrint(response.body);
 
-        if (coating is List) {
+        if (brands is List) {
           setState(() {
-            brandList = coating
+            brandList = brands
                 .whereType<Map>()
                 .map((e) => e["brand"]?.toString())
                 .whereType<String>()
@@ -263,17 +270,78 @@ class _DeckingSheetsState extends State<DeckingSheets> {
         }
       }
     } catch (e) {
-      print("Exception fetching coating mass: $e");
+      print("Exception fetching brands: $e");
+    }
+  }
+
+  Future<void> postAllData() async {
+    HttpClient client = HttpClient();
+    client.badCertificateCallback =
+        ((X509Certificate cert, String host, int port) => true);
+    IOClient ioClient = IOClient(client);
+    final headers = {"Content-Type": "application/json"};
+    final data = {
+      "product_filters": null,
+      "product_label_filters": null,
+      "product_category_id": null,
+      "base_product_filters": [
+        "${selectedMaterialType?.trim()}",
+        "${selectedThickness?.trim()}",
+        "${selectCoatingMass?.trim()}",
+        "${selectedYieldStrength?.trim()}",
+        "${selectedBrand?.trim()}"
+      ],
+      "base_label_filters": [
+        "material_type",
+        "thickness",
+        "coating_mass",
+        "yield_strength",
+        "brand"
+      ],
+      "base_category_id": 34
+    };
+
+    print("This is a body data: $data");
+
+    final url = "https://demo.zaron.in:8181/ci4/api/baseproduct";
+
+    final body = jsonEncode(data);
+    try {
+      final response = await ioClient.post(
+        Uri.parse(url),
+        headers: headers,
+        body: body,
+      );
+
+      debugPrint("This is a response: ${response.body}");
+      if (selectedMaterialType == null ||
+          selectedThickness == null ||
+          selectCoatingMass == null ||
+          selectedYieldStrength == null ||
+          selectedBrand == null) {
+        return;
+      }
+
+      if (response.statusCode == 200) {
+        Get.snackbar(
+          "Data Added",
+          "Successfully",
+          colorText: Colors.white,
+          backgroundColor: Colors.green,
+          snackPosition: SnackPosition.BOTTOM,
+        );
+      }
+    } catch (e) {
+      throw Exception("Error posting data: $e");
     }
   }
 
   void _submitData() {
-    if (selectedMeterialType == null ||
+    if (selectedMaterialType == null ||
         selectedThickness == null ||
         selectCoatingMass == null ||
         selectedYieldStrength == null ||
         selectedBrand == null) {
-      // Show elegant error message
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
@@ -291,7 +359,7 @@ class _DeckingSheetsState extends State<DeckingSheets> {
     }
     setState(() {
       submittedData.add({
-        "Product": "Iron and Steel",
+        "Product": "Decking Sheets",
         "UOM": "Feet",
         "Length": "0",
         "Nos": "1",
@@ -299,16 +367,21 @@ class _DeckingSheetsState extends State<DeckingSheets> {
         "SQ": "0",
         "Amount": "0",
         "Base Product":
-            "$selectedThickness, $selectCoatingMass, $selectedYieldStrength, $selectedBrand, $selectedMeterialType",
+            "$selectedMaterialType, $selectedThickness, $selectCoatingMass, $selectedYieldStrength, $selectedBrand",
       });
-      selectedMeterialType = null;
+      selectedMaterialType = null;
       selectedThickness = null;
       selectCoatingMass = null;
       selectedYieldStrength = null;
       selectedBrand = null;
+      materialTypeList = [];
+      thicknessList = [];
+      coatingMassList = [];
+      yieldStrengthList = [];
+      brandList = [];
+      _fetchMaterialType(); // Re-fetch material types for the next selection
     });
 
-    // Show success message with a more elegant snackBar
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
@@ -479,11 +552,9 @@ class _DeckingSheetsState extends State<DeckingSheets> {
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Row(
-                    // mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       SizedBox(
-                        // color: Colors.red,
                         height: 40.h,
                         width: 280.w,
                         child: TextField(
@@ -519,7 +590,6 @@ class _DeckingSheetsState extends State<DeckingSheets> {
                                           mainAxisSize: MainAxisSize.min,
                                           children: [
                                             Container(
-                                              // color: Colors.white,
                                               height: 45.h,
                                               width: double.infinity.w,
                                               decoration: BoxDecoration(
@@ -592,9 +662,7 @@ class _DeckingSheetsState extends State<DeckingSheets> {
             Expanded(
               child: _buildDetailItem("UOM", _uomDropdown(data)),
             ),
-            SizedBox(
-              width: 10,
-            ),
+            SizedBox(width: 10),
             Expanded(
               child: _buildDetailItem(
                   "Length", _editableTextField(data, "Length")),
@@ -606,7 +674,6 @@ class _DeckingSheetsState extends State<DeckingSheets> {
           ],
         ),
         Gap(35),
-        // Row 3: Basic Rate & SQ
         Row(
           children: [
             Expanded(
@@ -617,9 +684,7 @@ class _DeckingSheetsState extends State<DeckingSheets> {
             Expanded(
               child: _buildDetailItem("SQ", _editableTextField(data, "SQ")),
             ),
-            SizedBox(
-              width: 10,
-            ),
+            SizedBox(width: 10),
             Expanded(
               child: _buildDetailItem(
                   "Amount", _editableTextField(data, "Amount")),
@@ -670,7 +735,7 @@ class _DeckingSheetsState extends State<DeckingSheets> {
             borderSide: BorderSide(color: Colors.grey[300]!),
           ),
           focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(6),
+            borderRadius: BorderRadius.circular(10),
             borderSide:
                 BorderSide(color: Theme.of(context).primaryColor, width: 2),
           ),
@@ -715,6 +780,21 @@ class _DeckingSheetsState extends State<DeckingSheets> {
         ),
       ),
     );
+  }
+
+  // Helper method to format the preview text
+  String _getPreviewText() {
+    List<String> selectedValues = [
+      if (selectedMaterialType != null) "Material: $selectedMaterialType",
+      if (selectedThickness != null) "Thickness: $selectedThickness",
+      if (selectCoatingMass != null) "Coating Mass: $selectCoatingMass",
+      if (selectedYieldStrength != null)
+        "Yield Strength: $selectedYieldStrength",
+      if (selectedBrand != null) "Brand: $selectedBrand",
+    ];
+    return selectedValues.isEmpty
+        ? "No selections yet"
+        : selectedValues.join(",  ");
   }
 
   Widget _buildDropdown(List<String> items, String? selectedValue,
@@ -801,17 +881,33 @@ class _DeckingSheetsState extends State<DeckingSheets> {
                               weight: FontWeight.w600,
                               color: Colors.black),
                           SizedBox(height: 16),
-                          _buildDropdown(materialTypeList, selectedMeterialType,
+                          _buildDropdown(materialTypeList, selectedMaterialType,
                               (value) {
                             setState(() {
-                              selectedMeterialType = value;
+                              selectedMaterialType = value;
+                              // Clear dependent fields
+                              selectedThickness = null;
+                              selectCoatingMass = null;
+                              selectedYieldStrength = null;
+                              selectedBrand = null;
+                              thicknessList = [];
+                              coatingMassList = [];
+                              yieldStrengthList = [];
+                              brandList = [];
                             });
                             _fetchThick();
-                          }, label: "Meterial Type"),
+                          }, label: "Material Type"),
                           _buildDropdown(thicknessList, selectedThickness,
                               (value) {
                             setState(() {
                               selectedThickness = value;
+                              // Clear dependent fields
+                              selectCoatingMass = null;
+                              selectedYieldStrength = null;
+                              selectedBrand = null;
+                              coatingMassList = [];
+                              yieldStrengthList = [];
+                              brandList = [];
                             });
                             _fetchCoat();
                           },
@@ -821,6 +917,11 @@ class _DeckingSheetsState extends State<DeckingSheets> {
                               (value) {
                             setState(() {
                               selectCoatingMass = value;
+                              // Clear dependent fields
+                              selectedYieldStrength = null;
+                              selectedBrand = null;
+                              yieldStrengthList = [];
+                              brandList = [];
                             });
                             _yieldStrength();
                           },
@@ -831,6 +932,9 @@ class _DeckingSheetsState extends State<DeckingSheets> {
                               (value) {
                             setState(() {
                               selectedYieldStrength = value;
+                              // Clear dependent fields
+                              selectedBrand = null;
+                              brandList = [];
                             });
                             _fetchBrand();
                           },
@@ -842,11 +946,46 @@ class _DeckingSheetsState extends State<DeckingSheets> {
                             });
                           }, enabled: brandList.isNotEmpty, label: "Brand"),
                           SizedBox(height: 20),
+                          // Preview Container
+                          Card(
+                            elevation: 1,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Padding(
+                              padding: EdgeInsets.all(12),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    "Selected Product Details",
+                                    style: GoogleFonts.figtree(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.black87,
+                                    ),
+                                  ),
+                                  SizedBox(height: 8),
+                                  Text(
+                                    _getPreviewText(),
+                                    style: GoogleFonts.figtree(
+                                      fontSize: 12,
+                                      color: Colors.grey[700],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          SizedBox(height: 20),
                           SizedBox(
                             width: double.infinity,
                             height: 50,
                             child: ElevatedButton(
-                              onPressed: _submitData,
+                              onPressed: () async {
+                                await postAllData();
+                                _submitData();
+                              },
                               style: ElevatedButton.styleFrom(
                                 foregroundColor: Colors.white,
                                 backgroundColor: Colors.blue,
