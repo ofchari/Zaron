@@ -338,6 +338,63 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
     }
   }
 
+  Future<void> postAllData() async {
+    HttpClient client = HttpClient();
+    client.badCertificateCallback =
+        ((X509Certificate cert, String host, int port) => true);
+    IOClient ioClient = IOClient(client);
+    final headers = {"Content-Type": "application/json"};
+    final data = {
+      "product_filters": null,
+      "product_label_filters": null,
+      "product_category_id": null,
+      "base_product_filters": [
+        "${selectedMeterial?.trim()}",
+        "${selectedThichness?.trim()}",
+        "${selsectedCoat?.trim()}",
+        "${selectedyie?.trim()}",
+        "${selectedBrand?.trim()}"
+      ],
+      "base_label_filters": [
+        "material_type",
+        "thickness",
+        "coating_mass",
+        "yield_strength",
+        "brand"
+      ],
+      "base_category_id": 626
+    };
+
+    print("This is a body data: $data");
+    final url = "https://demo.zaron.in:8181/ci4/api/baseproduct";
+    final body = jsonEncode(data);
+    try {
+      final response = await ioClient.post(
+        Uri.parse(url),
+        headers: headers,
+        body: body,
+      );
+
+      debugPrint("This is a response: ${response.body}");
+      if (selectedMeterial == null ||
+          selectedThichness == null ||
+          selsectedCoat == null ||
+          selectedyie == null ||
+          selectedBrand == null) return;
+      if (response.statusCode == 200) {
+        // Get.snackbar(
+        //   "Data Added",
+        //   "Successfully",
+        //   colorText: Colors.white,
+        //   backgroundColor: Colors.green,
+        //   snackPosition: SnackPosition.BOTTOM,
+        // );
+      }
+    } catch (e) {
+      throw Exception("Error posting data: $e");
+    }
+  }
+
   void _submitData() {
     if (selectedMeterial == null ||
         selectedThichness == null ||
@@ -371,7 +428,7 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
         "SQ": "0",
         "Amount": "0",
         "Base Product":
-            "$selectedThichness, $selsectedCoat, $selectedyie, $selectedBrand, $selectedMeterial",
+            "$selectedMeterial ,$selectedThichness, $selsectedCoat, $selectedyie, $selectedBrand, ",
       });
       selectedMeterial = null;
       selectedThichness = null;
@@ -790,6 +847,18 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
     );
   }
 
+  String selectedItems() {
+    List<String> values = [
+      if (selectedMeterial != null) "Material: $selectedMeterial",
+      if (selectedThichness != null) "Thickness: $selectedThichness",
+      if (selsectedCoat != null) "CoatingMass: $selsectedCoat",
+      if (selectedyie != null) "YieldStrength: $selectedyie",
+      if (selectedBrand != null) "Brand: $selectedBrand",
+    ];
+
+    return values.isEmpty ? "No selection yet" : values.join(",  ");
+  }
+
   Widget _buildDropdown(List<String> items, String? selectedValue,
       ValueChanged<String?> onChanged,
       {bool enabled = true, String? label}) {
@@ -886,6 +955,16 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
                               (value) {
                             setState(() {
                               selectedMeterial = value;
+
+                              ///clear field
+                              selectedThichness = null;
+                              selsectedCoat = null;
+                              selectedyie = null;
+                              selectedBrand = null;
+                              thichnessLists = [];
+                              coatMassList = [];
+                              yieldsListt = [];
+                              brandList = [];
                             });
                             _fetchThickness();
                           }, label: "Meterial Type"),
@@ -893,6 +972,16 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
                               (value) {
                             setState(() {
                               selectedThichness = value;
+
+                              ///clear field
+
+                              selsectedCoat = null;
+                              selectedyie = null;
+                              selectedBrand = null;
+
+                              coatMassList = [];
+                              yieldsListt = [];
+                              brandList = [];
                             });
                             _fetchCoat();
                           },
@@ -901,6 +990,14 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
                           _buildDropdown(coatMassList, selsectedCoat, (value) {
                             setState(() {
                               selsectedCoat = value;
+
+                              ///clear field
+
+                              selectedyie = null;
+                              selectedBrand = null;
+
+                              yieldsListt = [];
+                              brandList = [];
                             });
                             _fetchYie();
                           },
@@ -909,6 +1006,12 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
                           _buildDropdown(yieldsListt, selectedyie, (value) {
                             setState(() {
                               selectedyie = value;
+
+                              ///clear field
+
+                              selectedBrand = null;
+
+                              brandList = [];
                             });
                             _fetchBrandss();
                           },
@@ -919,12 +1022,38 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
                               selectedBrand = value;
                             });
                           }, enabled: brandList.isNotEmpty, label: "Brand"),
+                          Gap(20),
+                          Card(
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10)),
+                            elevation: 1,
+                            child: Padding(
+                              padding: const EdgeInsets.all(12),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  MyText(
+                                      text: "Selected Product Details",
+                                      weight: FontWeight.w600,
+                                      color: Colors.black),
+                                  Gap(5),
+                                  MyText(
+                                      text: selectedItems(),
+                                      weight: FontWeight.w400,
+                                      color: Colors.grey)
+                                ],
+                              ),
+                            ),
+                          ),
                           SizedBox(height: 20),
                           SizedBox(
                             width: double.infinity,
                             height: 50,
                             child: ElevatedButton(
-                              onPressed: _submitData,
+                              onPressed: () async {
+                                await postAllData();
+                                _submitData();
+                              },
                               style: ElevatedButton.styleFrom(
                                 foregroundColor: Colors.white,
                                 backgroundColor: Colors.blue,

@@ -130,17 +130,22 @@ class _RollSheetState extends State<RollSheet> {
 
     final client =
         IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
-    final url = Uri.parse('$apiUrl/validinputdata');
+    final url = Uri.parse('$apiUrl/onchangeinputdata');
 
     try {
       final response = await client.post(
         url,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-          "category_id": "3",
-          "selectedlabel": "brand",
-          "selectedvalue": selectedBrand,
-          "label_name": "color",
+// "category_id": "3",
+// "selectedlabel": "brand",
+// "selectedvalue": selectedBrand,
+// "label_name": "color",
+
+          "product_label": "color",
+          "base_product_filters": [selectedBrand],
+          "base_label_filters": ["brand"],
+          "base_category_id": 3
         }),
       );
 
@@ -176,17 +181,22 @@ class _RollSheetState extends State<RollSheet> {
 
     final client =
         IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
-    final url = Uri.parse('$apiUrl/validinputdata');
+    final url = Uri.parse('$apiUrl/onchangeinputdata');
 
     try {
       final response = await client.post(
         url,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-          "category_id": "3",
-          "selectedlabel": "color",
-          "selectedvalue": selectedColor,
-          "label_name": "thickness",
+// "category_id": "3",
+// "selectedlabel": "color",
+// "selectedvalue": selectedColor,
+// "label_name": "thickness",
+
+          "product_label": "thickness",
+          "base_product_filters": [selectedBrand, selectedColor],
+          "base_label_filters": ["brand", "color"],
+          "base_category_id": 3
         }),
       );
 
@@ -222,17 +232,26 @@ class _RollSheetState extends State<RollSheet> {
 
     final client =
         IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
-    final url = Uri.parse('$apiUrl/validinputdata');
+    final url = Uri.parse('$apiUrl/onchangeinputdata');
 
     try {
       final response = await client.post(
         url,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-          "category_id": "3",
-          "selectedlabel": "thickness",
-          "selectedvalue": selectedThickness,
-          "label_name": "coating_mass",
+// "category_id": "3",
+// "selectedlabel": "thickness",
+// "selectedvalue": selectedThickness,
+// "label_name": "coating_mass",
+
+          "product_label": "coating_mass",
+          "base_product_filters": [
+            selectedBrand,
+            selectedColor,
+            selectedThickness
+          ],
+          "base_label_filters": ["brand", "color", "thickness"],
+          "base_category_id": 3
         }),
       );
 
@@ -254,6 +273,61 @@ class _RollSheetState extends State<RollSheet> {
       }
     } catch (e) {
       print("Exception fetching coating mass: $e");
+    }
+  }
+
+  ///post All Data
+  Future<void> postAllData() async {
+    HttpClient client = HttpClient();
+    client.badCertificateCallback =
+        ((X509Certificate cert, String host, int port) => true);
+    IOClient ioClient = IOClient(client);
+    final headers = {"Content-Type": "application/json"};
+    final data = {
+      "product_filters": null,
+      "product_label_filters": null,
+      "product_category_id": null,
+      "base_product_filters": [
+        "${selectedBrand?.trim()}",
+        "${selectedColor?.trim()}",
+        "${selectedThickness?.trim()}",
+        "${selectedCoatingMass?.trim()}",
+      ],
+      "base_label_filters": [
+        "brand",
+        "color",
+        "thickness",
+        "coating_mass",
+      ],
+      "base_category_id": 591
+    };
+
+    print("This is a body data: $data");
+    final url = "https://demo.zaron.in:8181/ci4/api/baseproduct";
+    final body = jsonEncode(data);
+    try {
+      final response = await ioClient.post(
+        Uri.parse(url),
+        headers: headers,
+        body: body,
+      );
+
+      debugPrint("This is a response: ${response.body}");
+      if (selectedBrand == null ||
+          selectedColor == null ||
+          selectedThickness == null ||
+          selectedCoatingMass == null) return;
+      if (response.statusCode == 200) {
+// Get.snackbar(
+//   "Data Added",
+//   "Successfully",
+//   colorText: Colors.white,
+//   backgroundColor: Colors.green,
+//   snackPosition: SnackPosition.BOTTOM,
+// );
+      }
+    } catch (e) {
+      throw Exception("Error posting data: $e");
     }
   }
 
@@ -291,15 +365,19 @@ class _RollSheetState extends State<RollSheet> {
         "Base Product":
             "$selectedBrand, $selectedColor, $selectedThickness, $selectedCoatingMass,$selectedProduct",
       });
-
+      selectedProduct = null;
       selectedBrand = null;
       selectedColor = null;
       selectedThickness = null;
       selectedCoatingMass = null;
-      selectedProduct = null;
+      brandsList = [];
+      colorsList = [];
+      thicknessList = [];
+      coatingMassList = [];
+      _fetchBrands();
     });
 
-// Show success message with a more elegant snackbar
+// Show success message with a more elegant snackBar
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
@@ -708,6 +786,16 @@ class _RollSheetState extends State<RollSheet> {
     );
   }
 
+  String selectedItems() {
+    List<String> value = [
+      if (selectedBrand != null) "Brand: $selectedBrand",
+      if (selectedColor != null) "Color: $selectedColor",
+      if (selectedThickness != null) "Thickness: $selectedThickness",
+      if (selectedCoatingMass != null) "CoatingMass: $selectedCoatingMass",
+    ];
+    return value.isEmpty ? "No selection yet" : value.join(",  ");
+  }
+
   Widget _buildDropdown(List<String> items, String? selectedValue,
       ValueChanged<String?> onChanged,
       {bool enabled = true, String? label}) {
@@ -803,12 +891,28 @@ class _RollSheetState extends State<RollSheet> {
                           _buildDropdown(brandsList, selectedBrand, (value) {
                             setState(() {
                               selectedBrand = value;
+
+                              ///clear fields
+                              selectedColor = null;
+                              selectedThickness = null;
+                              selectedCoatingMass = null;
+                              colorsList = [];
+                              thicknessList = [];
+                              coatingMassList = [];
                             });
                             _fetchColors();
                           }, label: "Brand"),
                           _buildDropdown(colorsList, selectedColor, (value) {
                             setState(() {
                               selectedColor = value;
+
+                              ///clear fields
+
+                              selectedThickness = null;
+                              selectedCoatingMass = null;
+
+                              thicknessList = [];
+                              coatingMassList = [];
                             });
                             _fetchThickness();
                           }, enabled: colorsList.isNotEmpty, label: "Color"),
@@ -816,6 +920,10 @@ class _RollSheetState extends State<RollSheet> {
                               (value) {
                             setState(() {
                               selectedThickness = value;
+
+                              ///clear fields
+                              selectedCoatingMass = null;
+                              coatingMassList = [];
                             });
                             _fetchCoatingMass();
                           },
@@ -829,12 +937,38 @@ class _RollSheetState extends State<RollSheet> {
                           },
                               enabled: coatingMassList.isNotEmpty,
                               label: "Coating Mass"),
+                          Gap(20),
+                          Card(
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10)),
+                            elevation: 1,
+                            child: Padding(
+                              padding: const EdgeInsets.all(12),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  MyText(
+                                      text: "Selected Product Details",
+                                      weight: FontWeight.w600,
+                                      color: Colors.black),
+                                  Gap(5),
+                                  MyText(
+                                      text: selectedItems(),
+                                      weight: FontWeight.w400,
+                                      color: Colors.grey)
+                                ],
+                              ),
+                            ),
+                          ),
                           SizedBox(height: 20),
                           SizedBox(
                             width: double.infinity,
                             height: 50,
                             child: ElevatedButton(
-                              onPressed: _submitData,
+                              onPressed: () async {
+                                await postAllData();
+                                _submitData();
+                              },
                               style: ElevatedButton.styleFrom(
                                 foregroundColor: Colors.white,
                                 backgroundColor: Colors.blue,

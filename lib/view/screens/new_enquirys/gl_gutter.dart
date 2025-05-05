@@ -11,40 +11,41 @@ import 'package:zaron/view/universal_api/api&key.dart';
 import 'package:zaron/view/widgets/subhead.dart';
 import 'package:zaron/view/widgets/text.dart';
 
-class GlGutter extends StatefulWidget {
-  const GlGutter({super.key, required this.data});
+class GIGlutter extends StatefulWidget {
+  const GIGlutter({super.key, required this.data});
 
   final Map<String, dynamic> data;
 
   @override
-  State<GlGutter> createState() => _GlGutterState();
+  State<GIGlutter> createState() => _GIGlutterState();
 }
 
-class _GlGutterState extends State<GlGutter> {
+class _GIGlutterState extends State<GIGlutter> {
   late TextEditingController editController;
-
-  String? selectedMaterial;
+  String? selectedProduct;
+  String? selectedMeterial;
+  String? selectedThichness;
+  String? selsectedCoat;
+  String? selectedyie;
   String? selectedBrand;
-  String? selectedYield;
-  String? selectedThickness;
-  String? selectedCoatingMass;
 
-  List<String> brandsList = [];
-  List<String> materialList = [];
-  List<String> yieldStrength = [];
-  List<String> colorsList = [];
-  List<String> thicknessList = [];
-  List<String> coatingMassList = [];
+  List<String> productList = [];
+  List<String> meterialList = [];
+  List<String> thichnessLists = [];
+  List<String> coatMassList = [];
+  List<String> yieldsListt = [];
+  List<String> brandList = [];
   List<Map<String, dynamic>> submittedData = [];
 
-  // Form key for validation
+// Form key for validation
   final _formKey = GlobalKey<FormState>();
 
   @override
   void initState() {
     super.initState();
     editController = TextEditingController(text: widget.data["Base Product"]);
-    _fetchMaterial();
+    _fetchProductName();
+    _fetchMeterialType();
   }
 
   @override
@@ -53,10 +54,10 @@ class _GlGutterState extends State<GlGutter> {
     super.dispose();
   }
 
-  Future<void> _fetchMaterial() async {
+  Future<void> _fetchProductName() async {
     setState(() {
-      materialList = [];
-      selectedMaterial = null;
+      productList = [];
+      selectedProduct = null;
     });
 
     final client =
@@ -68,12 +69,46 @@ class _GlGutterState extends State<GlGutter> {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final materials = data["message"]["message"][2][1];
-        print(response.body);
+        final products = data["message"]["message"][1];
+        debugPrint("PRoduct:::${products}");
+        debugPrint(response.body, wrapWidth: 1024);
 
-        if (materials is List) {
+        if (products is List) {
           setState(() {
-            materialList = materials
+            productList = products
+                .whereType<Map>()
+                .map((e) => e["product_name"]?.toString())
+                .whereType<String>()
+                .toList();
+          });
+        }
+      }
+    } catch (e) {
+      print("Exception fetching brands: $e");
+    }
+  }
+
+  Future<void> _fetchMeterialType() async {
+    setState(() {
+      meterialList = [];
+      selectedMeterial;
+    });
+
+    final client =
+        IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
+    final url = Uri.parse('$apiUrl/showlables/628');
+
+    try {
+      final response = await client.get(url);
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final meterialData = data["message"]["message"][2][1];
+        debugPrint(response.body);
+
+        if (meterialData is List) {
+          setState(() {
+            meterialList = meterialData
                 .whereType<Map>()
                 .map((e) => e["material_type"]?.toString())
                 .whereType<String>()
@@ -82,46 +117,46 @@ class _GlGutterState extends State<GlGutter> {
         }
       }
     } catch (e) {
-      print("Exception fetching material: $e");
+      print("Exception fetching brands: $e");
     }
   }
 
   /// fetch colors Api's //
-  Future<void> _fetchColors() async {
-    if (selectedBrand == null) return;
+  Future<void> _fetchThickness() async {
+    if (selectedMeterial == null) return;
 
     setState(() {
-      colorsList = [];
-      selectedYield = null;
+      thichnessLists = [];
+      selectedThichness = null;
     });
 
     final client =
         IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
-    final url = Uri.parse('$apiUrl/validinputdata');
+    final url = Uri.parse('$apiUrl/onchangeinputdata');
 
     try {
       final response = await client.post(
         url,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-          "category_id": "3",
-          "selectedlabel": "brand",
-          "selectedvalue": selectedBrand,
-          "label_name": "color",
+          "product_label": "thickness",
+          "base_product_filters": [selectedMeterial],
+          "base_label_filters": ["material_type"],
+          "base_category_id": "34",
         }),
       );
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final colors = data["message"]["message"];
-        print("Fetching colors for brand: $selectedBrand");
+        final selectedThickness = data["message"]["message"];
+        print("Fetching colors for brand: $selectedThickness");
         print("API response: ${response.body}");
 
-        if (colors is List) {
+        if (selectedThickness is List) {
           setState(() {
-            colorsList = colors
+            thichnessLists = selectedThickness
                 .whereType<Map>()
-                .map((e) => e["color"]?.toString())
+                .map((e) => e["thickness"]?.toString())
                 .whereType<String>()
                 .toList();
           });
@@ -133,41 +168,41 @@ class _GlGutterState extends State<GlGutter> {
   }
 
   /// fetch Thickness Api's ///
-  Future<void> _fetchThickness() async {
-    if (selectedBrand == null) return;
+  Future<void> _fetchCoat() async {
+    if (selectedMeterial == null) return;
 
     setState(() {
-      thicknessList = [];
-      selectedThickness = null;
+      coatMassList = [];
+      selsectedCoat = null;
     });
 
     final client =
         IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
-    final url = Uri.parse('$apiUrl/validinputdata');
+    final url = Uri.parse('$apiUrl/onchangeinputdata');
 
     try {
       final response = await client.post(
         url,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-          "category_id": "3",
-          "selectedlabel": "color",
-          "selectedvalue": selectedYield,
-          "label_name": "thickness",
+          "product_label": "coating_mass",
+          "base_product_filters": [selectedMeterial, selectedThichness],
+          "base_label_filters": ["material_type", "thickness"],
+          "base_category_id": "34",
         }),
       );
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final thickness = data["message"]["message"];
-        print("Fetching colors for brand: $selectedBrand");
+        final coat = data["message"]["message"];
+        print("Fetching colors for brand: $selectedThichness");
         print("API response: ${response.body}");
 
-        if (thickness is List) {
+        if (coat is List) {
           setState(() {
-            thicknessList = thickness
+            coatMassList = coat
                 .whereType<Map>()
-                .map((e) => e["thickness"]?.toString())
+                .map((e) => e["coating_mass"]?.toString())
                 .whereType<String>()
                 .toList();
           });
@@ -179,41 +214,45 @@ class _GlGutterState extends State<GlGutter> {
   }
 
   /// fetch Thickness Api's ///
-  Future<void> _fetchCoatingMass() async {
-    if (selectedBrand == null) return;
+  Future<void> _fetchYie() async {
+    if (selectedMeterial == null) return;
 
     setState(() {
-      coatingMassList = [];
-      selectedCoatingMass = null;
+      yieldsListt = [];
+      selectedyie = null;
     });
 
     final client =
         IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
-    final url = Uri.parse('$apiUrl/validinputdata');
+    final url = Uri.parse('$apiUrl/onchangeinputdata');
 
     try {
       final response = await client.post(
         url,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-          "category_id": "3",
-          "selectedlabel": "thickness",
-          "selectedvalue": selectedThickness,
-          "label_name": "coating_mass",
+          "product_label": "yield_strength",
+          "base_product_filters": [
+            selectedMeterial,
+            selectedThichness,
+            selsectedCoat
+          ],
+          "base_label_filters": ["material_type", "thickness", "coating_mass"],
+          "base_category_id": "34",
         }),
       );
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final coating = data["message"]["message"];
-        print("Fetching colors for brand: $selectedBrand");
+        final yieldsStrength = data["message"]["message"];
+        print("Fetching colors for brand: $selectedThichness");
         print("API response: ${response.body}");
 
-        if (coating is List) {
+        if (yieldsStrength is List) {
           setState(() {
-            coatingMassList = coating
+            yieldsListt = yieldsStrength
                 .whereType<Map>()
-                .map((e) => e["coating_mass"]?.toString())
+                .map((e) => e["yield_strength"]?.toString())
                 .whereType<String>()
                 .toList();
           });
@@ -224,12 +263,128 @@ class _GlGutterState extends State<GlGutter> {
     }
   }
 
+  Future<void> _fetchBrandss() async {
+    if (selectedMeterial == null) return;
+
+    setState(() {
+      brandList = [];
+      selectedBrand = null;
+    });
+
+    final client =
+        IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
+    final url = Uri.parse('$apiUrl/onchangeinputdata');
+
+    try {
+      final response = await client.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          "product_label": "brand",
+          "base_product_filters": [
+            selectedMeterial,
+            selectedThichness,
+            selsectedCoat,
+            selectedyie
+          ],
+          "base_label_filters": [
+            "material_type",
+            "thickness",
+            "coating_mass",
+            "yield_strength"
+          ],
+          "base_category_id": "34",
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final brands = data["message"]["message"];
+        print("Fetching colors for brand: $brands");
+        print("API response: ${response.body}");
+
+        if (brands is List) {
+          setState(() {
+            brandList = brands
+                .whereType<Map>()
+                .map((e) => e["brand"]?.toString())
+                .whereType<String>()
+                .toList();
+          });
+        }
+      }
+    } catch (e) {
+      print("Exception fetching coating mass: $e");
+    }
+  }
+
+  ///post All Data
+  Future<void> postAllData() async {
+    HttpClient client = HttpClient();
+    client.badCertificateCallback =
+        ((X509Certificate cert, String host, int port) => true);
+    IOClient ioClient = IOClient(client);
+    final headers = {"Content-Type": "application/json"};
+    final data = {
+      "product_filters": null,
+      "product_label_filters": null,
+      "product_category_id": null,
+      "base_product_filters": [
+        "${selectedMeterial?.trim()}",
+        "${selectedThichness?.trim()}",
+        "${selsectedCoat?.trim()}",
+        "${selectedyie?.trim()}",
+        "${selectedBrand?.trim()}"
+      ],
+      "base_label_filters": [
+        "material_type",
+        "thickness",
+        "coating_mass",
+        "yield_strength",
+        "brand"
+      ],
+      "base_category_id": 34
+    };
+
+    print("This is a body data: $data");
+    final url = "https://demo.zaron.in:8181/ci4/api/baseproduct";
+    final body = jsonEncode(data);
+    try {
+      final response = await ioClient.post(
+        Uri.parse(url),
+        headers: headers,
+        body: body,
+      );
+
+      debugPrint("This is a response: ${response.body}");
+      if (selectedMeterial == null ||
+          selectedThichness == null ||
+          selsectedCoat == null ||
+          selectedyie == null ||
+          selectedBrand == null) return;
+
+      if (response.statusCode == 200) {
+// Get.snackbar(
+//   "Data Added",
+//   "Successfully",
+//   colorText: Colors.white,
+//   backgroundColor: Colors.green,
+//   snackPosition: SnackPosition.BOTTOM,
+// );
+      }
+    } catch (e) {
+      throw Exception("Error posting data: $e");
+    }
+  }
+
   void _submitData() {
-    if (selectedBrand == null ||
-        selectedYield == null ||
-        selectedThickness == null ||
-        selectedCoatingMass == null) {
-      // Show elegant error message
+    if (selectedMeterial == null ||
+        selectedThichness == null ||
+        selsectedCoat == null ||
+        selectedyie == null ||
+        selectedBrand == null ||
+        selectedProduct == null) {
+// Show elegant error message
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
@@ -255,16 +410,23 @@ class _GlGutterState extends State<GlGutter> {
         "SQ": "0",
         "Amount": "0",
         "Base Product":
-            "$selectedBrand, $selectedYield, $selectedThickness, $selectedCoatingMass",
+            "$selectedProduct, $selectedMeterial, $selectedThichness, $selsectedCoat, $selectedyie, $selectedBrand,",
       });
-
+      selectedMeterial = null;
+      selectedThichness = null;
+      selsectedCoat = null;
+      selectedyie = null;
       selectedBrand = null;
-      selectedYield = null;
-      selectedThickness = null;
-      selectedCoatingMass = null;
+      selectedProduct = null;
+      meterialList = [];
+      thichnessLists = [];
+      coatMassList = [];
+      yieldsListt = [];
+      brandList = [];
+      _fetchMeterialType();
     });
 
-    // Show success message with a more elegant snackbar
+// Show success message with a more elegant snackBar
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
@@ -435,11 +597,11 @@ class _GlGutterState extends State<GlGutter> {
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Row(
-                    // mainAxisAlignment: MainAxisAlignment.spaceBetween,
+// mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       SizedBox(
-                        // color: Colors.red,
+// color: Colors.red,
                         height: 40.h,
                         width: 280.w,
                         child: TextField(
@@ -470,12 +632,12 @@ class _GlGutterState extends State<GlGutter> {
                                     context: context,
                                     builder: (context) {
                                       return AlertDialog(
-                                        title: Text("Edit Your Iron and Steel"),
+                                        title: Text("Edit Your GI Stiffner"),
                                         content: Column(
                                           mainAxisSize: MainAxisSize.min,
                                           children: [
                                             Container(
-                                              // color: Colors.white,
+// color: Colors.white,
                                               height: 45.h,
                                               width: double.infinity.w,
                                               decoration: BoxDecoration(
@@ -539,7 +701,7 @@ class _GlGutterState extends State<GlGutter> {
     );
   }
 
-  // New method that organizes fields in rows, two fields per row
+// New method that organizes fields in rows, two fields per row
   Widget _buildProductDetailInRows(Map<String, dynamic> data) {
     return Column(
       children: [
@@ -562,7 +724,7 @@ class _GlGutterState extends State<GlGutter> {
           ],
         ),
         Gap(35),
-        // Row 3: Basic Rate & SQ
+// Row 3: Basic Rate & SQ
         Row(
           children: [
             Expanded(
@@ -673,6 +835,17 @@ class _GlGutterState extends State<GlGutter> {
     );
   }
 
+  String selectedItems() {
+    List<String> values = [
+      if (selectedMeterial != null) "Material: $selectedMeterial",
+      if (selectedThichness != null) "Thickness: $selectedThichness",
+      if (selsectedCoat != null) "CoatingMass: $selsectedCoat",
+      if (selectedyie != null) "yieldStrength: $selectedyie",
+      if (selectedBrand != null) "Brand: $selectedBrand",
+    ];
+    return values.isEmpty ? "No Selections yet" : values.join(", ");
+  }
+
   Widget _buildDropdown(List<String> items, String? selectedValue,
       ValueChanged<String?> onChanged,
       {bool enabled = true, String? label}) {
@@ -724,7 +897,7 @@ class _GlGutterState extends State<GlGutter> {
     return Scaffold(
       appBar: AppBar(
         title: Subhead(
-          text: 'GL GLUTTER',
+          text: 'GI Glutter',
           weight: FontWeight.w500,
           color: Colors.black,
         ),
@@ -757,42 +930,113 @@ class _GlGutterState extends State<GlGutter> {
                               weight: FontWeight.w600,
                               color: Colors.black),
                           SizedBox(height: 16),
-                          _buildDropdown(materialList, selectedMaterial,
+                          _buildDropdown(productList, selectedProduct, (value) {
+                            setState(() {
+                              selectedProduct = value;
+                            });
+// _fetchProductName();
+                          },
+// enabled: productList.isNotEmpty,
+                              label: "Product Name"),
+                          _buildDropdown(meterialList, selectedMeterial,
                               (value) {
                             setState(() {
-                              selectedMaterial = value;
-                            });
-                            // _fetchColors();
-                          }, label: "Material Type"),
-                          _buildDropdown(colorsList, selectedYield, (value) {
-                            setState(() {
-                              selectedYield = value;
+                              selectedMeterial = value;
+
+                              ///clear fields
+                              selectedThichness = null;
+                              selsectedCoat = null;
+                              selectedyie = null;
+                              selectedBrand = null;
+                              thichnessLists = [];
+                              coatMassList = [];
+                              yieldsListt = [];
+                              brandList = [];
                             });
                             _fetchThickness();
-                          }, enabled: colorsList.isNotEmpty, label: "Color"),
-                          _buildDropdown(thicknessList, selectedThickness,
+                          }, label: "Meterial Type"),
+                          _buildDropdown(thichnessLists, selectedThichness,
                               (value) {
                             setState(() {
-                              selectedThickness = value;
+                              selectedThichness = value;
+
+                              ///clear fields
+
+                              selsectedCoat = null;
+                              selectedyie = null;
+                              selectedBrand = null;
+
+                              coatMassList = [];
+                              yieldsListt = [];
+                              brandList = [];
                             });
-                            _fetchCoatingMass();
+                            _fetchCoat();
                           },
-                              enabled: thicknessList.isNotEmpty,
+                              enabled: thichnessLists.isNotEmpty,
                               label: "Thickness"),
-                          _buildDropdown(coatingMassList, selectedCoatingMass,
-                              (value) {
+                          _buildDropdown(coatMassList, selsectedCoat, (value) {
                             setState(() {
-                              selectedCoatingMass = value;
+                              selsectedCoat = value;
+
+                              ///clear fields
+                              selectedyie = null;
+                              selectedBrand = null;
+                              yieldsListt = [];
+                              brandList = [];
                             });
+                            _fetchYie();
                           },
-                              enabled: coatingMassList.isNotEmpty,
+                              enabled: coatMassList.isNotEmpty,
                               label: "Coating Mass"),
+                          _buildDropdown(yieldsListt, selectedyie, (value) {
+                            setState(() {
+                              selectedyie = value;
+
+                              ///clear fields
+                              selectedBrand = null;
+                              brandList = [];
+                            });
+                            _fetchBrandss();
+                          },
+                              enabled: yieldsListt.isNotEmpty,
+                              label: "Yield Strength"),
+                          _buildDropdown(brandList, selectedBrand, (value) {
+                            setState(() {
+                              selectedBrand = value;
+                            });
+                          }, enabled: brandList.isNotEmpty, label: "Brand"),
+                          Gap(20),
+                          Card(
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10)),
+                            elevation: 1,
+                            child: Padding(
+                              padding: const EdgeInsets.all(12),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  MyText(
+                                      text: "Selected Product Details",
+                                      weight: FontWeight.w600,
+                                      color: Colors.black),
+                                  Gap(5),
+                                  MyText(
+                                      text: selectedItems(),
+                                      weight: FontWeight.w400,
+                                      color: Colors.grey)
+                                ],
+                              ),
+                            ),
+                          ),
                           SizedBox(height: 20),
                           SizedBox(
                             width: double.infinity,
                             height: 50,
                             child: ElevatedButton(
-                              onPressed: _submitData,
+                              onPressed: () async {
+                                await postAllData();
+                                _submitData();
+                              },
                               style: ElevatedButton.styleFrom(
                                 foregroundColor: Colors.white,
                                 backgroundColor: Colors.blue,

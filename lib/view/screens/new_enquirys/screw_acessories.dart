@@ -94,17 +94,17 @@ class _ScrewAccessoriesState extends State<ScrewAccessories> {
 
     final client =
         IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
-    final url = Uri.parse('$apiUrl/validinputdata');
+    final url = Uri.parse('$apiUrl/onchangeinputdata');
 
     try {
       final response = await client.post(
         url,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-          "category_id": "9",
-          "selectedlabel": "product_name",
-          "selectedvalue": selectedProduct,
-          "label_name": "color",
+          "product_label": "color",
+          "base_product_filters": [selectedProduct],
+          "base_label_filters": ["product_name"],
+          "base_category_id": "9",
         }),
       );
 
@@ -140,7 +140,7 @@ class _ScrewAccessoriesState extends State<ScrewAccessories> {
 
     final client =
         IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
-    final url = Uri.parse('$apiUrl/validinputdata');
+    final url = Uri.parse('$apiUrl/onchangeinputdata');
 
     try {
       final response = await client.post(
@@ -148,10 +148,10 @@ class _ScrewAccessoriesState extends State<ScrewAccessories> {
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode(
           {
-            "category_id": "9",
-            "selectedlabel": "color",
-            "selectedvalue": selectedColor,
-            "label_name": "brand",
+            "product_label": "brand",
+            "base_product_filters": [selectedProduct, selectedColor],
+            "base_label_filters": ["product_name", "color"],
+            "base_category_id": "9",
           },
         ),
       );
@@ -174,6 +174,59 @@ class _ScrewAccessoriesState extends State<ScrewAccessories> {
       }
     } catch (e) {
       print("Exception fetching thickness: $e");
+    }
+  }
+
+  ///postData
+  Future<void> postAllData() async {
+    HttpClient client = HttpClient();
+    client.badCertificateCallback =
+        ((X509Certificate cert, String host, int port) => true);
+    IOClient ioClient = IOClient(client);
+    final headers = {"Content-Type": "application/json"};
+    final data = {
+      "product_filters": null,
+      "product_label_filters": null,
+      "product_category_id": null,
+      "base_product_filters": [
+        "${selectedProduct?.trim()}",
+        "${selectedColor?.trim()}",
+        "${selsectedBrand?.trim()}",
+      ],
+      "base_label_filters": [
+        "product_name",
+        "color",
+        "brand",
+      ],
+      "base_category_id": 9
+    };
+    print("User input Data $data");
+    final url = "https://demo.zaron.in:8181/ci4/api/baseproduct";
+    final body = jsonEncode(data);
+    try {
+      final response = await ioClient.post(
+          Uri.parse(
+            url,
+          ),
+          headers: headers,
+          body: body);
+      debugPrint("This is a response: ${response.body}");
+      if (selectedProduct == null ||
+          selectedColor == null ||
+          selsectedBrand == null) return;
+
+      if (response.statusCode == 200) {
+        print(response.statusCode);
+// Get.snackbar(
+//   "Data Added",
+//   "Successfully",
+//   colorText: Colors.white,
+//   backgroundColor: Colors.green,
+//   snackPosition: SnackPosition.BOTTOM,
+// );
+      }
+    } catch (e) {
+      throw Exception("Error posting data: $e");
     }
   }
 
@@ -213,6 +266,10 @@ class _ScrewAccessoriesState extends State<ScrewAccessories> {
       selectedProduct = null;
       selectedColor = null;
       selsectedBrand = null;
+      productList = [];
+      colorsList = [];
+      brandList = [];
+      _fetchBrands();
     });
 
 // Show success message with a more elegant snackbar
@@ -625,6 +682,15 @@ class _ScrewAccessoriesState extends State<ScrewAccessories> {
     );
   }
 
+  String selectedData() {
+    List<String> value = [
+      if (selectedProduct != null) "Product: $selectedProduct",
+      if (selectedColor != null) "Color: $selectedColor",
+      if (selsectedBrand != null) "Brand: $selsectedBrand",
+    ];
+    return value.isEmpty ? "No selections yet" : value.join(",  ");
+  }
+
   Widget _buildDropdown(List<String> items, String? selectedValue,
       ValueChanged<String?> onChanged,
       {bool enabled = true, String? label}) {
@@ -712,12 +778,22 @@ class _ScrewAccessoriesState extends State<ScrewAccessories> {
                           _buildDropdown(productList, selectedProduct, (value) {
                             setState(() {
                               selectedProduct = value;
+
+                              ///clear fields
+                              selectedColor = null;
+                              selsectedBrand = null;
+                              colorsList = [];
+                              brandList = [];
                             });
                             _fetchColors();
                           }, label: "Products"),
                           _buildDropdown(colorsList, selectedColor, (value) {
                             setState(() {
                               selectedColor = value;
+
+                              ///clear fields
+                              selsectedBrand = null;
+                              brandList = [];
                             });
                             _fetchBrand();
                           }, enabled: colorsList.isNotEmpty, label: "Color"),
@@ -726,12 +802,39 @@ class _ScrewAccessoriesState extends State<ScrewAccessories> {
                               selsectedBrand = value;
                             });
                           }, enabled: brandList.isNotEmpty, label: "Brand"),
+                          Gap(20),
+                          Card(
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            elevation: 1,
+                            child: Padding(
+                              padding: const EdgeInsets.all(12),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  MyText(
+                                      text: "Selected Product Details",
+                                      weight: FontWeight.w600,
+                                      color: Colors.black),
+                                  Gap(5),
+                                  MyText(
+                                      text: selectedData(),
+                                      weight: FontWeight.w400,
+                                      color: Colors.grey)
+                                ],
+                              ),
+                            ),
+                          ),
                           SizedBox(height: 20),
                           SizedBox(
                             width: double.infinity,
                             height: 50,
                             child: ElevatedButton(
-                              onPressed: _submitData,
+                              onPressed: () async {
+                                await postAllData();
+                                _submitData();
+                              },
                               style: ElevatedButton.styleFrom(
                                 foregroundColor: Colors.white,
                                 backgroundColor: Colors.blue,

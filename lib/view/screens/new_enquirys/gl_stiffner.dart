@@ -132,17 +132,17 @@ class _GIStiffnerState extends State<GIStiffner> {
 
     final client =
         IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
-    final url = Uri.parse('$apiUrl/validinputdata');
+    final url = Uri.parse('$apiUrl/onchangeinputdata');
 
     try {
       final response = await client.post(
         url,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-          "category_id": "3",
-          "selectedlabel": "material_type",
-          "selectedvalue": selectedMeterial,
-          "label_name": "thickness",
+          "product_label": "thickness",
+          "base_product_filters": [selectedMeterial],
+          "base_label_filters": ["material_type"],
+          "base_category_id": "34",
         }),
       );
 
@@ -178,17 +178,17 @@ class _GIStiffnerState extends State<GIStiffner> {
 
     final client =
         IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
-    final url = Uri.parse('$apiUrl/validinputdata');
+    final url = Uri.parse('$apiUrl/onchangeinputdata');
 
     try {
       final response = await client.post(
         url,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-          "category_id": "3",
-          "selectedlabel": "thickness",
-          "selectedvalue": selectedThichness,
-          "label_name": "coating_mass",
+          "product_label": "coating_mass",
+          "base_product_filters": [selectedMeterial, selectedThichness],
+          "base_label_filters": ["material_type", "thickness"],
+          "base_category_id": "34",
         }),
       );
 
@@ -224,17 +224,21 @@ class _GIStiffnerState extends State<GIStiffner> {
 
     final client =
         IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
-    final url = Uri.parse('$apiUrl/validinputdata');
+    final url = Uri.parse('$apiUrl/onchangeinputdata');
 
     try {
       final response = await client.post(
         url,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-          "category_id": "3",
-          "selectedlabel": "coating_mass",
-          "selectedvalue": selsectedCoat,
-          "label_name": "yield_strength",
+          "product_label": "yield_strength",
+          "base_product_filters": [
+            selectedMeterial,
+            selectedThichness,
+            selsectedCoat
+          ],
+          "base_label_filters": ["material_type", "thickness", "coating_mass"],
+          "base_category_id": "34",
         }),
       );
 
@@ -269,17 +273,27 @@ class _GIStiffnerState extends State<GIStiffner> {
 
     final client =
         IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
-    final url = Uri.parse('$apiUrl/validinputdata');
+    final url = Uri.parse('$apiUrl/onchangeinputdata');
 
     try {
       final response = await client.post(
         url,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-          "category_id": "3",
-          "selectedlabel": "yield_strength",
-          "selectedvalue": selectedyie,
-          "label_name": "brand",
+          "product_label": "brand",
+          "base_product_filters": [
+            selectedMeterial,
+            selectedThichness,
+            selsectedCoat,
+            selectedyie
+          ],
+          "base_label_filters": [
+            "material_type",
+            "thickness",
+            "coating_mass",
+            "yield_strength"
+          ],
+          "base_category_id": "34",
         }),
       );
 
@@ -301,6 +315,65 @@ class _GIStiffnerState extends State<GIStiffner> {
       }
     } catch (e) {
       print("Exception fetching coating mass: $e");
+    }
+  }
+
+  ///post All Data
+  Future<void> postAllData() async {
+    HttpClient client = HttpClient();
+    client.badCertificateCallback =
+        ((X509Certificate cert, String host, int port) => true);
+    IOClient ioClient = IOClient(client);
+    final headers = {"Content-Type": "application/json"};
+    final data = {
+      "product_filters": null,
+      "product_label_filters": null,
+      "product_category_id": null,
+      "base_product_filters": [
+        "${selectedMeterial?.trim()}",
+        "${selectedThichness?.trim()}",
+        "${selsectedCoat?.trim()}",
+        "${selectedyie?.trim()}",
+        "${selectedBrand?.trim()}"
+      ],
+      "base_label_filters": [
+        "material_type",
+        "thickness",
+        "coating_mass",
+        "yield_strength",
+        "brand"
+      ],
+      "base_category_id": 34
+    };
+
+    print("This is a body data: $data");
+    final url = "https://demo.zaron.in:8181/ci4/api/baseproduct";
+    final body = jsonEncode(data);
+    try {
+      final response = await ioClient.post(
+        Uri.parse(url),
+        headers: headers,
+        body: body,
+      );
+
+      debugPrint("This is a response: ${response.body}");
+      if (selectedMeterial == null ||
+          selectedThichness == null ||
+          selsectedCoat == null ||
+          selectedyie == null ||
+          selectedBrand == null) return;
+
+      if (response.statusCode == 200) {
+// Get.snackbar(
+//   "Data Added",
+//   "Successfully",
+//   colorText: Colors.white,
+//   backgroundColor: Colors.green,
+//   snackPosition: SnackPosition.BOTTOM,
+// );
+      }
+    } catch (e) {
+      throw Exception("Error posting data: $e");
     }
   }
 
@@ -337,7 +410,7 @@ class _GIStiffnerState extends State<GIStiffner> {
         "SQ": "0",
         "Amount": "0",
         "Base Product":
-            "$selectedThichness, $selsectedCoat, $selectedyie, $selectedBrand, $selectedMeterial",
+            "$selectedProduct, $selectedMeterial, $selectedThichness, $selsectedCoat, $selectedyie, $selectedBrand,",
       });
       selectedMeterial = null;
       selectedThichness = null;
@@ -345,6 +418,12 @@ class _GIStiffnerState extends State<GIStiffner> {
       selectedyie = null;
       selectedBrand = null;
       selectedProduct = null;
+      meterialList = [];
+      thichnessLists = [];
+      coatMassList = [];
+      yieldsListt = [];
+      brandList = [];
+      _fetchMeterialType();
     });
 
 // Show success message with a more elegant snackBar
@@ -756,6 +835,17 @@ class _GIStiffnerState extends State<GIStiffner> {
     );
   }
 
+  String selectedItems() {
+    List<String> values = [
+      if (selectedMeterial != null) "Material: $selectedMeterial",
+      if (selectedThichness != null) "Thickness: $selectedThichness",
+      if (selsectedCoat != null) "CoatingMass: $selsectedCoat",
+      if (selectedyie != null) "yieldStrength: $selectedyie",
+      if (selectedBrand != null) "Brand: $selectedBrand",
+    ];
+    return values.isEmpty ? "No Selections yet" : values.join(", ");
+  }
+
   Widget _buildDropdown(List<String> items, String? selectedValue,
       ValueChanged<String?> onChanged,
       {bool enabled = true, String? label}) {
@@ -807,7 +897,7 @@ class _GIStiffnerState extends State<GIStiffner> {
     return Scaffold(
       appBar: AppBar(
         title: Subhead(
-          text: 'Cut To Length Sheets',
+          text: 'GI Stiffner',
           weight: FontWeight.w500,
           color: Colors.black,
         ),
@@ -852,6 +942,16 @@ class _GIStiffnerState extends State<GIStiffner> {
                               (value) {
                             setState(() {
                               selectedMeterial = value;
+
+                              ///clear fields
+                              selectedThichness = null;
+                              selsectedCoat = null;
+                              selectedyie = null;
+                              selectedBrand = null;
+                              thichnessLists = [];
+                              coatMassList = [];
+                              yieldsListt = [];
+                              brandList = [];
                             });
                             _fetchThickness();
                           }, label: "Meterial Type"),
@@ -859,6 +959,16 @@ class _GIStiffnerState extends State<GIStiffner> {
                               (value) {
                             setState(() {
                               selectedThichness = value;
+
+                              ///clear fields
+
+                              selsectedCoat = null;
+                              selectedyie = null;
+                              selectedBrand = null;
+
+                              coatMassList = [];
+                              yieldsListt = [];
+                              brandList = [];
                             });
                             _fetchCoat();
                           },
@@ -867,6 +977,12 @@ class _GIStiffnerState extends State<GIStiffner> {
                           _buildDropdown(coatMassList, selsectedCoat, (value) {
                             setState(() {
                               selsectedCoat = value;
+
+                              ///clear fields
+                              selectedyie = null;
+                              selectedBrand = null;
+                              yieldsListt = [];
+                              brandList = [];
                             });
                             _fetchYie();
                           },
@@ -875,6 +991,10 @@ class _GIStiffnerState extends State<GIStiffner> {
                           _buildDropdown(yieldsListt, selectedyie, (value) {
                             setState(() {
                               selectedyie = value;
+
+                              ///clear fields
+                              selectedBrand = null;
+                              brandList = [];
                             });
                             _fetchBrandss();
                           },
@@ -885,12 +1005,38 @@ class _GIStiffnerState extends State<GIStiffner> {
                               selectedBrand = value;
                             });
                           }, enabled: brandList.isNotEmpty, label: "Brand"),
+                          Gap(20),
+                          Card(
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10)),
+                            elevation: 1,
+                            child: Padding(
+                              padding: const EdgeInsets.all(12),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  MyText(
+                                      text: "Selected Product Details",
+                                      weight: FontWeight.w600,
+                                      color: Colors.black),
+                                  Gap(5),
+                                  MyText(
+                                      text: selectedItems(),
+                                      weight: FontWeight.w400,
+                                      color: Colors.grey)
+                                ],
+                              ),
+                            ),
+                          ),
                           SizedBox(height: 20),
                           SizedBox(
                             width: double.infinity,
                             height: 50,
                             child: ElevatedButton(
-                              onPressed: _submitData,
+                              onPressed: () async {
+                                await postAllData();
+                                _submitData();
+                              },
                               style: ElevatedButton.styleFrom(
                                 foregroundColor: Colors.white,
                                 backgroundColor: Colors.blue,

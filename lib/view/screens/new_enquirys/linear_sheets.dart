@@ -27,13 +27,13 @@ class _LinerSheetPageState extends State<LinerSheetPage> {
   String? selectedColors;
   String? selectedThickness;
   String? selectedCoatingMass;
-  String? selectedBrand;
 
   List<String> productList = [];
   List<String> brandandList = [];
   List<String> colorandList = [];
   List<String> thickAndList = [];
   List<String> coatingAndList = [];
+
 // List<String> brandList = [];
   List<Map<String, dynamic>> submittedData = [];
 
@@ -132,17 +132,22 @@ class _LinerSheetPageState extends State<LinerSheetPage> {
 
     final client =
         IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
-    final url = Uri.parse('$apiUrl/validinputdata');
+    final url = Uri.parse('$apiUrl/onchangeinputdata');
 
     try {
       final response = await client.post(
         url,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-          "category_id": "3",
-          "selectedlabel": "brand",
-          "selectedvalue": selectedBrands,
-          "label_name": "color",
+// "category_id": "3",
+// "selectedlabel": "brand",
+// "selectedvalue": selectedBrands,
+// "label_name": "color",
+
+          "product_label": "color",
+          "base_product_filters": [selectedBrands],
+          "base_label_filters": ["brand"],
+          "base_category_id": 3
         }),
       );
 
@@ -178,17 +183,22 @@ class _LinerSheetPageState extends State<LinerSheetPage> {
 
     final client =
         IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
-    final url = Uri.parse('$apiUrl/validinputdata');
+    final url = Uri.parse('$apiUrl/onchangeinputdata');
 
     try {
       final response = await client.post(
         url,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-          "category_id": "3",
-          "selectedlabel": "color",
-          "selectedvalue": selectedColors,
-          "label_name": "thickness",
+// "category_id": "3",
+// "selectedlabel": "color",
+// "selectedvalue": selectedColors,
+// "label_name": "thickness",
+
+          "product_label": "thickness",
+          "base_product_filters": [selectedBrands, selectedColors],
+          "base_label_filters": ["brand", "color"],
+          "base_category_id": 3
         }),
       );
 
@@ -224,17 +234,26 @@ class _LinerSheetPageState extends State<LinerSheetPage> {
 
     final client =
         IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
-    final url = Uri.parse('$apiUrl/validinputdata');
+    final url = Uri.parse('$apiUrl/onchangeinputdata');
 
     try {
       final response = await client.post(
         url,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-          "category_id": "3",
-          "selectedlabel": "thickness",
-          "selectedvalue": selectedThickness,
-          "label_name": "coating_mass",
+// "category_id": "3",
+// "selectedlabel": "thickness",
+// "selectedvalue": selectedThickness,
+// "label_name": "coating_mass",
+
+          "product_label": "coating_mass",
+          "base_product_filters": [
+            selectedBrands,
+            selectedColors,
+            selectedThickness
+          ],
+          "base_label_filters": ["brand", "color", "thickness"],
+          "base_category_id": 3
         }),
       );
 
@@ -269,7 +288,7 @@ class _LinerSheetPageState extends State<LinerSheetPage> {
 //
 //   final client =
 //       IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
-//   final url = Uri.parse('$apiUrl/validinputdata');
+//   final url = Uri.parse('$apiUrl/onchangeinputdata');
 //
 //   try {
 //     final response = await client.post(
@@ -304,6 +323,61 @@ class _LinerSheetPageState extends State<LinerSheetPage> {
 //   }
 // }
 
+  ///post All Data
+  Future<void> postAllData() async {
+    HttpClient client = HttpClient();
+    client.badCertificateCallback =
+        ((X509Certificate cert, String host, int port) => true);
+    IOClient ioClient = IOClient(client);
+    final headers = {"Content-Type": "application/json"};
+    final data = {
+      "product_filters": null,
+      "product_label_filters": null,
+      "product_category_id": null,
+      "base_product_filters": [
+        "${selectedBrands?.trim()}",
+        "${selectedColors?.trim()}",
+        "${selectedThickness?.trim()}",
+        "${selectedCoatingMass?.trim()}",
+      ],
+      "base_label_filters": [
+        "brand",
+        "color",
+        "thickness",
+        "coating_mass",
+      ],
+      "base_category_id": 590
+    };
+
+    print("This is a body data: $data");
+    final url = "https://demo.zaron.in:8181/ci4/api/baseproduct";
+    final body = jsonEncode(data);
+    try {
+      final response = await ioClient.post(
+        Uri.parse(url),
+        headers: headers,
+        body: body,
+      );
+
+      debugPrint("This is a response: ${response.body}");
+      if (selectedBrands == null ||
+          selectedColors == null ||
+          selectedThickness == null ||
+          selectedCoatingMass == null) return;
+      if (response.statusCode == 200) {
+// Get.snackbar(
+//   "Data Added",
+//   "Successfully",
+//   colorText: Colors.white,
+//   backgroundColor: Colors.green,
+//   snackPosition: SnackPosition.BOTTOM,
+// );
+      }
+    } catch (e) {
+      throw Exception("Error posting data: $e");
+    }
+  }
+
   void _submitData() {
     if (selectedBrands == null ||
         selectedColors == null ||
@@ -335,12 +409,17 @@ class _LinerSheetPageState extends State<LinerSheetPage> {
         "SQ": "0",
         "Amount": "0",
         "Base Product":
-            "$selectedColors, $selectedThickness, $selectedCoatingMass, $selectedBrand, $selectedBrands",
+            " $selectedBrands, $selectedColors, $selectedThickness, $selectedCoatingMass,",
       });
       selectedBrands = null;
       selectedColors = null;
       selectedThickness = null;
       selectedCoatingMass = null;
+      brandandList = [];
+      colorandList = [];
+      thickAndList = [];
+      colorandList = [];
+      _fetchProductName();
     });
 
 // Show success message with a more elegant snackBar
@@ -752,6 +831,16 @@ class _LinerSheetPageState extends State<LinerSheetPage> {
     );
   }
 
+  String selectedItem() {
+    List<String> value = [
+      if (selectedBrands != null) "Brand: $selectedBrands",
+      if (selectedColors != null) "Color: $selectedColors",
+      if (selectedThickness != null) "Thickness: $selectedThickness",
+      if (selectedCoatingMass != null) "CoatingMass: $selectedCoatingMass",
+    ];
+    return value.isEmpty ? "No selection yet" : value.join(",  ");
+  }
+
   Widget _buildDropdown(List<String> items, String? selectedValue,
       ValueChanged<String?> onChanged,
       {bool enabled = true, String? label}) {
@@ -847,12 +936,28 @@ class _LinerSheetPageState extends State<LinerSheetPage> {
                           _buildDropdown(brandandList, selectedBrands, (value) {
                             setState(() {
                               selectedBrands = value;
+
+                              ///clear fields
+                              selectedColors = null;
+                              selectedThickness = null;
+                              selectedCoatingMass = null;
+                              colorandList = [];
+                              thickAndList = [];
+                              coatingAndList = [];
                             });
                             _fetchColorData();
                           }, label: "Brand"),
                           _buildDropdown(colorandList, selectedColors, (value) {
                             setState(() {
                               selectedColors = value;
+
+                              ///clear fields
+
+                              selectedThickness = null;
+                              selectedCoatingMass = null;
+
+                              thickAndList = [];
+                              coatingAndList = [];
                             });
                             _fetchThicknessData();
                           }, enabled: colorandList.isNotEmpty, label: "Color"),
@@ -860,6 +965,10 @@ class _LinerSheetPageState extends State<LinerSheetPage> {
                               (value) {
                             setState(() {
                               selectedThickness = value;
+
+                              ///clear fields
+                              selectedCoatingMass = null;
+                              coatingAndList = [];
                             });
                             _fetchCoatingMassData();
                           },
@@ -873,6 +982,30 @@ class _LinerSheetPageState extends State<LinerSheetPage> {
                           },
                               enabled: coatingAndList.isNotEmpty,
                               label: "Coating Mass"),
+
+                          Gap(20),
+                          Card(
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10)),
+                            elevation: 1,
+                            child: Padding(
+                              padding: const EdgeInsets.all(12),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  MyText(
+                                      text: "Selected Product Details",
+                                      weight: FontWeight.w600,
+                                      color: Colors.black),
+                                  Gap(5),
+                                  MyText(
+                                      text: selectedItem(),
+                                      weight: FontWeight.w400,
+                                      color: Colors.grey)
+                                ],
+                              ),
+                            ),
+                          ),
 // _buildDropdown(coatingAndList, selectedBrand, (value) {
 //   setState(() {
 //     selectedBrand = value;
@@ -883,7 +1016,10 @@ class _LinerSheetPageState extends State<LinerSheetPage> {
                             width: double.infinity,
                             height: 50,
                             child: ElevatedButton(
-                              onPressed: _submitData,
+                              onPressed: () async {
+                                await postAllData();
+                                _submitData();
+                              },
                               style: ElevatedButton.styleFrom(
                                 foregroundColor: Colors.white,
                                 backgroundColor: Colors.blue,

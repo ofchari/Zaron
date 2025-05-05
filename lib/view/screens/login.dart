@@ -1,11 +1,11 @@
+import 'dart:convert';
 import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:http/http.dart' as http;
 import 'package:http/io_client.dart';
-import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:zaron/view/screens/dashboard.dart';
 import 'package:zaron/view/widgets/buttons.dart';
@@ -54,11 +54,12 @@ class _LoginState extends State<Login> {
 
   Future<void> checkUserStatus(BuildContext context) async {
     HttpClient client = HttpClient();
-    client.badCertificateCallback = ((X509Certificate cert, String host, int port) => true);
+    client.badCertificateCallback =
+        ((X509Certificate cert, String host, int port) => true);
     IOClient ioClient = IOClient(client);
 
     final message = {"user_id": userController.text};
-    final url = 'http://demo.zaron.in:8181/ci4/api/login';
+    final url = 'https://demo.zaron.in:8181/ci4/api/login';
     final body = jsonEncode(message);
 
     try {
@@ -77,7 +78,7 @@ class _LoginState extends State<Login> {
     }
   }
 
-                /// Otp method
+  /// Otp method
   Future<void> verifyOtp(BuildContext context) async {
     setState(() {
       showOtpField = false;
@@ -85,12 +86,12 @@ class _LoginState extends State<Login> {
     });
   }
 
-
-            /// User can set the Password and post that to db  //
+  /// User can set the Password and post that to db  //
   Future<void> resetPassword(BuildContext context) async {
     if (passwordController.text == confirmPasswordController.text) {
       HttpClient client = HttpClient();
-      client.badCertificateCallback = ((X509Certificate cert, String host, int port) => true);
+      client.badCertificateCallback =
+          ((X509Certificate cert, String host, int port) => true);
       IOClient ioClient = IOClient(client);
 
       final message = {
@@ -98,7 +99,7 @@ class _LoginState extends State<Login> {
         "password": passwordController.text
       };
 
-      final url = 'http://demo.zaron.in:8181/ci4/api/validcustomer';
+      final url = 'https://demo.zaron.in:8181/ci4/api/validcustomer';
       final body = jsonEncode(message);
 
       try {
@@ -118,15 +119,15 @@ class _LoginState extends State<Login> {
         showErrorDialog(context, e.toString());
       }
     } else {
-      showErrorDialog(context,
-          "Passwords do not match");
+      showErrorDialog(context, "Passwords do not match");
     }
   }
 
-      /// Validate login to check the user and password retun success //
-  Future<void> validateLogin(BuildContext context) async  {
+  /// Validate login to check the user and password retun success //
+  Future<void> validateLogin(BuildContext context) async {
     HttpClient client = HttpClient();
-    client.badCertificateCallback = ((X509Certificate cert, String host, int port) => true);
+    client.badCertificateCallback =
+        ((X509Certificate cert, String host, int port) => true);
     IOClient ioClient = IOClient(client);
 
     final Map<String, dynamic> message = {
@@ -134,7 +135,7 @@ class _LoginState extends State<Login> {
       "password": passwordController.text.trim()
     };
 
-    final String url = 'http://demo.zaron.in:8181/ci4/api/validlogin';
+    final String url = 'https://demo.zaron.in:8181/ci4/api/validlogin';
     final String body = jsonEncode(message);
 
     try {
@@ -159,7 +160,8 @@ class _LoginState extends State<Login> {
         if (messageData != null && messageData["success"] == true) {
           Get.offAll(() => Dashboard());
         } else {
-          showErrorDialog(context, messageData?["message"] ?? "Invalid credentials");
+          showErrorDialog(
+              context, messageData?["message"] ?? "Invalid credentials");
         }
       } else {
         showErrorDialog(context, "Failed to login. Please try again.");
@@ -169,13 +171,11 @@ class _LoginState extends State<Login> {
     }
   }
 
-
-              /// Clear the Shared prefernees //
+  /// Clear the Shared prefernees //
   Future<void> clearSharedPreferences() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.clear();
   }
-
 
   void showErrorDialog(BuildContext context, String message) {
     showDialog(
@@ -199,7 +199,8 @@ class _LoginState extends State<Login> {
     height = size.height;
     width = size.width;
 
-    return LayoutBuilder(builder: (BuildContext context, BoxConstraints constraints) {
+    return LayoutBuilder(
+        builder: (BuildContext context, BoxConstraints constraints) {
       height = constraints.maxHeight;
       width = constraints.maxWidth;
       if (width <= 450) {
@@ -221,7 +222,9 @@ class _LoginState extends State<Login> {
               height: height / 4.h,
               width: width / 2.w,
               decoration: BoxDecoration(
-                  image: DecorationImage(image: AssetImage("assets/login.png"), fit: BoxFit.cover)),
+                  image: DecorationImage(
+                      image: AssetImage("assets/login.png"),
+                      fit: BoxFit.cover)),
             ),
             SizedBox(height: 10.h),
             Padding(
@@ -231,20 +234,25 @@ class _LoginState extends State<Login> {
                   decoration: InputDecoration(
                       labelText: "User Id",
                       labelStyle: GoogleFonts.figtree(
-                          textStyle:
-                          TextStyle(fontSize: 14.5.sp, fontWeight: FontWeight.w500, color: Colors.grey)),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(10))))),
+                          textStyle: TextStyle(
+                              fontSize: 14.5.sp,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.grey)),
+                      border: OutlineInputBorder(
+                          borderRadius:
+                              BorderRadius.all(Radius.circular(10))))),
             ),
-            SizedBox(height: 10.h,),
+            SizedBox(
+              height: 10.h,
+            ),
             if (showOtpField)
               Padding(
                 padding: EdgeInsets.only(left: 15.1.w, right: 15.1.w),
                 child: TextFormField(
                   controller: otpController,
                   decoration: InputDecoration(
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(10))
-                    ),
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.all(Radius.circular(10))),
                       labelText: "Enter OTP",
                       labelStyle: GoogleFonts.figtree(
                           textStyle: TextStyle(
@@ -262,22 +270,23 @@ class _LoginState extends State<Login> {
                       controller: passwordController,
                       decoration: InputDecoration(
                           border: OutlineInputBorder(
-                              borderRadius: BorderRadius.all(Radius.circular(10))
-                          ),
+                              borderRadius:
+                                  BorderRadius.all(Radius.circular(10))),
                           labelText: "New Password"),
-
                       obscureText: true,
                     ),
                   ),
-                  SizedBox(height: 5.h,),
+                  SizedBox(
+                    height: 5.h,
+                  ),
                   Padding(
                     padding: EdgeInsets.only(left: 15.1.w, right: 15.1.w),
                     child: TextFormField(
                       controller: confirmPasswordController,
                       decoration: InputDecoration(
                           border: OutlineInputBorder(
-                              borderRadius: BorderRadius.all(Radius.circular(10))
-                          ),
+                              borderRadius:
+                                  BorderRadius.all(Radius.circular(10))),
                           labelText: "Confirm Password"),
                       obscureText: true,
                     ),
@@ -291,12 +300,10 @@ class _LoginState extends State<Login> {
                   controller: passwordController,
                   decoration: InputDecoration(
                     border: OutlineInputBorder(
-                        borderRadius: BorderRadius.all(Radius.circular(10))
-                    ),
-                      labelText: "Password",),
-
+                        borderRadius: BorderRadius.all(Radius.circular(10))),
+                    labelText: "Password",
+                  ),
                   obscureText: true,
-
                 ),
               ),
             SizedBox(height: 10.h),
@@ -312,7 +319,14 @@ class _LoginState extends State<Login> {
                   checkUserStatus(context);
                 }
               },
-              child: Buttons(text: "Submit", weight: FontWeight.w500, color: Colors.blueGrey, height: height/18.h, width: width/2.5.w, radius: BorderRadius.circular(10.r),),
+              child: Buttons(
+                text: "Submit",
+                weight: FontWeight.w500,
+                color: Colors.blueGrey,
+                height: height / 18.h,
+                width: width / 2.5.w,
+                radius: BorderRadius.circular(10.r),
+              ),
             ),
 
             // ElevatedButton(onPressed: () {
