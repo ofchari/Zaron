@@ -11,10 +11,11 @@ import 'package:zaron/view/widgets/subhead.dart';
 import 'package:zaron/view/widgets/text.dart';
 
 import '../../universal_api/api&key.dart';
+import '../global_user/global_user.dart';
 
 class Polycarbonate extends StatefulWidget {
-  const Polycarbonate({super.key, required this.data});
-
+  const Polycarbonate({super.key, required this.data, required this.userid});
+  final String userid;
   final Map<String, dynamic> data;
 
   @override
@@ -39,6 +40,7 @@ class _PolycarbonateState extends State<Polycarbonate> {
   @override
   void initState() {
     super.initState();
+    print("User Id Data${UserSession().userId}");
     editController = TextEditingController(text: widget.data["Base Product"]);
     _fetchBrands();
   }
@@ -183,23 +185,31 @@ class _PolycarbonateState extends State<Polycarbonate> {
     IOClient ioClient = IOClient(client);
     final headers = {"Content-Type": "application/json"};
     final data = {
-      "product_filters": null,
-      "product_label_filters": null,
-      "product_category_id": null,
-      "base_product_filters": [
-        "${selectedBrand?.trim()}",
-        "${selectedColor?.trim()}",
-        "${selectedThickness?.trim()}",
-      ],
-      "base_label_filters": [
-        "type_of_panel",
-        "color",
-        "thickness",
-      ],
-      "base_category_id": 19
+      // "product_filters": null,
+      // "product_label_filters": null,
+      // "product_category_id": null,
+      // "base_product_filters": [
+      //   "${selectedBrand?.trim()}",
+      //   "${selectedColor?.trim()}",
+      //   "${selectedThickness?.trim()}",
+      // ],
+      // "base_label_filters": [
+      //   "type_of_panel",
+      //   "color",
+      //   "thickness",
+      // ],
+      // "base_category_id": 19
+
+      "customer_id": UserSession().userId,
+      "product_id": null,
+      "product_name": null,
+      "product_base_id": null,
+      "product_base_name": "$selectedBrand,$selectedColor,$selectedThickness",
+      "category_id": 19,
+      "category_name": "Polycarbonate"
     };
     print("User input Data $data");
-    final url = "https://demo.zaron.in:8181/ci4/api/baseproduct";
+    final url = "https://demo.zaron.in:8181/ci4/api/addbag";
     final body = jsonEncode(data);
     try {
       final response = await ioClient.post(

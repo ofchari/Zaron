@@ -34,7 +34,7 @@ class _IronSteelState extends State<IronSteel> {
   List<String> coatingMassList = [];
   List<Map<String, dynamic>> submittedData = [];
 
-// Form key for validation
+  /// Form key for validation
   final _formKey = GlobalKey<FormState>();
 
   @override
@@ -83,7 +83,8 @@ class _IronSteelState extends State<IronSteel> {
     }
   }
 
-  /// fetch colors Api's //
+  /// fetch colors Api's ///
+
   Future<void> _fetchColors() async {
     if (selectedBrand == null) return;
 
@@ -232,26 +233,34 @@ class _IronSteelState extends State<IronSteel> {
     IOClient ioClient = IOClient(client);
     final headers = {"Content-Type": "application/json"};
     final data = {
-      "product_filters": null,
-      "product_label_filters": null,
-      "product_category_id": null,
-      "base_product_filters": [
-        "${selectedBrand?.trim()}",
-        "${selectedColor?.trim()}",
-        "${selectedThickness?.trim()}",
-        "${selectedCoatingMass?.trim()}",
-      ],
-      "base_label_filters": [
-        "brand",
-        "color",
-        "thickness",
-        "coating_mass",
-      ],
-      "base_category_id": 3
+      // "product_filters": null,
+      // "product_label_filters": null,
+      // "product_category_id": null,
+      // "base_product_filters": [
+      //   "${selectedBrand?.trim()}",
+      //   "${selectedColor?.trim()}",
+      //   "${selectedThickness?.trim()}",
+      //   "${selectedCoatingMass?.trim()}",
+      // ],
+      // "base_label_filters": [
+      //   "brand",
+      //   "color",
+      //   "thickness",
+      //   "coating_mass",
+      // ],
+      // "base_category_id": 3
+      //
+      "customer_id": 377423,
+      "product_id": 2193,
+      "product_name": "GI Cut To Length Sheets",
+      "product_base_id": 473,
+      "product_base_name": "GI 0.75MM 120GSM 240 mpa JSW Steel ltd 1220MM",
+      "category_id": 626,
+      "category_name": "Cut To Length Sheets"
     };
 
     print("This is a body data: $data");
-    final url = "$apiUrl/baseproduct";
+    final url = "$apiUrl/addbag";
     final body = jsonEncode(data);
     try {
       final response = await ioClient.post(
@@ -601,7 +610,7 @@ class _IronSteelState extends State<IronSteel> {
     );
   }
 
-// New method that organizes fields in rows, two fields per row
+  /// New method that organizes fields in rows, two fields per row
   Widget _buildProductDetailInRows(Map<String, dynamic> data) {
     return Column(
       children: [

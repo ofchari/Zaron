@@ -71,7 +71,7 @@ class _EntryState extends State<Entry> {
               right: 60,
               child: GestureDetector(
                   onTap: () {
-                    Get.off(Dashboard());
+                    Get.off(Dashboard(userid: '',));
                   },
                   child: Buttons(
                       text: "Get Started here ✈",

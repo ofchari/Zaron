@@ -10,6 +10,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:zaron/view/screens/dashboard.dart';
 import 'package:zaron/view/widgets/buttons.dart';
 
+import 'global_user/global_user.dart';
+
 class Login extends StatefulWidget {
   const Login({super.key});
 
@@ -110,8 +112,9 @@ class _LoginState extends State<Login> {
         );
 
         if (response.statusCode == 200) {
+          UserSession().userId = userController.text;
           await saveUserId(userController.text);
-          Get.offAll(() => Dashboard());
+          Get.offAll(() => Dashboard(userid: userController.text));
         } else {
           showErrorDialog(context, "Failed to reset password");
         }
@@ -158,7 +161,10 @@ class _LoginState extends State<Login> {
         final Map<String, dynamic>? messageData = jsonResponse["message"];
 
         if (messageData != null && messageData["success"] == true) {
-          Get.offAll(() => Dashboard());
+          UserSession().userId = userController.text;
+          Get.offAll(() => Dashboard(
+                userid: userController.text,
+              ));
         } else {
           showErrorDialog(
               context, messageData?["message"] ?? "Invalid credentials");
