@@ -11,6 +11,8 @@ import 'package:zaron/view/universal_api/api&key.dart';
 import 'package:zaron/view/widgets/subhead.dart';
 import 'package:zaron/view/widgets/text.dart';
 
+import '../global_user/global_user.dart';
+
 class UpvcTiles extends StatefulWidget {
   const UpvcTiles({super.key, required this.data});
 
@@ -181,23 +183,30 @@ class _UpvcTilesState extends State<UpvcTiles> {
     IOClient ioClient = IOClient(client);
     final headers = {"Content-Type": "application/json"};
     final data = {
-      "product_filters": null,
-      "product_label_filters": null,
-      "product_category_id": null,
-      "base_product_filters": [
-        "${selectMaterial?.trim()}",
-        "${selectedColor?.trim()}",
-        "${selectThickness?.trim()}",
-      ],
-      "base_label_filters": [
-        "material_type",
-        "color",
-        "thickness",
-      ],
-      "base_category_id": 631
+      // "product_filters": null,
+      // "product_label_filters": null,
+      // "product_category_id": null,
+      // "base_product_filters": [
+      //   "${selectMaterial?.trim()}",
+      //   "${selectedColor?.trim()}",
+      //   "${selectThickness?.trim()}",
+      // ],
+      // "base_label_filters": [
+      //   "material_type",
+      //   "color",
+      //   "thickness",
+      // ],
+      // "base_category_id": 631
+      "customer_id": UserSession().userId,
+      "product_id": null,
+      "product_name": null,
+      "product_base_id": null,
+      "product_base_name": "$selectMaterial$selectedColor$selectThickness",
+      "category_id": 631,
+      "category_name": "UPVC Tiles"
     };
     print("User input Data $data");
-    final url = "https://demo.zaron.in:8181/ci4/api/baseproduct";
+    final url = "$apiUrl/addbag";
     final body = jsonEncode(data);
     try {
       final response = await ioClient.post(

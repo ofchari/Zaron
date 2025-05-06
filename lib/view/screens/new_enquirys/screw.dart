@@ -11,6 +11,8 @@ import 'package:zaron/view/universal_api/api&key.dart';
 import 'package:zaron/view/widgets/subhead.dart';
 import 'package:zaron/view/widgets/text.dart';
 
+import '../global_user/global_user.dart';
+
 class Screw extends StatefulWidget {
   const Screw({super.key, required this.data});
 
@@ -181,24 +183,17 @@ class _ScrewState extends State<Screw> {
     IOClient ioClient = IOClient(client);
     final headers = {"Content-Type": "application/json"};
     final data = {
-      "product_filters": null,
-      "product_label_filters": null,
-      "product_category_id": null,
-      "base_product_filters": [
-        "${selectedBrand?.trim()}",
-        "${selectedScrew?.trim()}",
-        "${selectedThread?.trim()}",
-      ],
-      "base_label_filters": [
-        "brand",
-        "length_of_screw",
-        "type_of_thread",
-      ],
-      "base_category_id": 7
+      "customer_id": UserSession().userId,
+      "product_id": null,
+      "product_name": null,
+      "product_base_id": null,
+      "product_base_name": "$selectedBrand,$selectedScrew,$selectedThread",
+      "category_id": 7,
+      "category_name": "Screw"
     };
 
     print("User input Data: $data");
-    final url = "https://demo.zaron.in:8181/ci4/api/baseproduct";
+    final url = "$apiUrl/addbag";
     final body = jsonEncode(data);
     try {
       final response =

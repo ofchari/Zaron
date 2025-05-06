@@ -8,6 +8,7 @@ import 'package:gap/gap.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/io_client.dart';
+import 'package:zaron/view/screens/global_user/global_user.dart';
 import 'package:zaron/view/universal_api/api&key.dart';
 import 'package:zaron/view/widgets/subhead.dart';
 import 'package:zaron/view/widgets/text.dart';
@@ -295,29 +296,38 @@ class _DeckingSheetsState extends State<DeckingSheets> {
     IOClient ioClient = IOClient(client);
     final headers = {"Content-Type": "application/json"};
     final data = {
-      "product_filters": null,
-      "product_label_filters": null,
-      "product_category_id": null,
-      "base_product_filters": [
-        "${selectedMaterialType?.trim()}",
-        "${selectedThickness?.trim()}",
-        "${selectCoatingMass?.trim()}",
-        "${selectedYieldStrength?.trim()}",
-        "${selectedBrand?.trim()}"
-      ],
-      "base_label_filters": [
-        "material_type",
-        "thickness",
-        "coating_mass",
-        "yield_strength",
-        "brand"
-      ],
-      "base_category_id": 34
+      // "product_filters": null,
+      // "product_label_filters": null,
+      // "product_category_id": null,
+      // "base_product_filters": [
+      //   "${selectedMaterialType?.trim()}",
+      //   "${selectedThickness?.trim()}",
+      //   "${selectCoatingMass?.trim()}",
+      //   "${selectedYieldStrength?.trim()}",
+      //   "${selectedBrand?.trim()}"
+      // ],
+      // "base_label_filters": [
+      //   "material_type",
+      //   "thickness",
+      //   "coating_mass",
+      //   "yield_strength",
+      //   "brand"
+      // ],
+      // "base_category_id": 34
+
+      "customer_id": UserSession().userId,
+      "product_id": null,
+      "product_name": null,
+      "product_base_id": null,
+      "product_base_name":
+          "$selectedMaterialType,$selectedThickness,$selectCoatingMass$selectedYieldStrength$selectedBrand",
+      "category_id": 34,
+      "category_name": "Decking sheets"
     };
 
     print("This is a body data: $data");
 
-    final url = "https://demo.zaron.in:8181/ci4/api/baseproduct";
+    final url = "$apiUrl/addbag";
 
     final body = jsonEncode(data);
     try {

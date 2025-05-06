@@ -185,20 +185,28 @@ class _ScrewAccessoriesState extends State<ScrewAccessories> {
     IOClient ioClient = IOClient(client);
     final headers = {"Content-Type": "application/json"};
     final data = {
-      "product_filters": null,
-      "product_label_filters": null,
-      "product_category_id": null,
-      "base_product_filters": [
-        "${selectedProduct?.trim()}",
-        "${selectedColor?.trim()}",
-        "${selsectedBrand?.trim()}",
-      ],
-      "base_label_filters": [
-        "product_name",
-        "color",
-        "brand",
-      ],
-      "base_category_id": 9
+      // "product_filters": null,
+      // "product_label_filters": null,
+      // "product_category_id": null,
+      // "base_product_filters": [
+      //   "${selectedProduct?.trim()}",
+      //   "${selectedColor?.trim()}",
+      //   "${selsectedBrand?.trim()}",
+      // ],
+      // "base_label_filters": [
+      //   "product_name",
+      //   "color",
+      //   "brand",
+      // ],
+      // "base_category_id": 9
+
+      "customer_id": 377423,
+      "product_id": null,
+      "product_name": null,
+      "product_base_id": null,
+      "product_base_name": "$selectedProduct,$selectedColor,$selsectedBrand",
+      "category_id": 9,
+      "category_name": "Screw accessories"
     };
     print("User input Data $data");
     final url = "https://demo.zaron.in:8181/ci4/api/baseproduct";

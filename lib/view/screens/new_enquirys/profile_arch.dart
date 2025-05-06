@@ -11,6 +11,8 @@ import 'package:zaron/view/universal_api/api&key.dart';
 import 'package:zaron/view/widgets/subhead.dart';
 import 'package:zaron/view/widgets/text.dart';
 
+import '../global_user/global_user.dart';
+
 class ProfileRidgeAndArch extends StatefulWidget {
   const ProfileRidgeAndArch({super.key, required this.data});
 
@@ -288,22 +290,31 @@ class _ProfileRidgeAndArchState extends State<ProfileRidgeAndArch> {
     IOClient ioClient = IOClient(client);
     final headers = {"Content-Type": "application/json"};
     final data = {
-      "product_filters": null,
-      "product_label_filters": null,
-      "product_category_id": null,
-      "base_product_filters": [
-        "${selectedBrands?.trim()}",
-        "${selectedColors?.trim()}",
-        "${selectedThickness?.trim()}",
-        "${selectedCoatingMass?.trim()}",
-      ],
-      "base_label_filters": [
-        "brand",
-        "color",
-        "thickness",
-        "coating_mass",
-      ],
-      "base_category_id": 32
+      // "product_filters": null,
+      // "product_label_filters": null,
+      // "product_category_id": null,
+      // "base_product_filters": [
+      //   "${selectedBrands?.trim()}",
+      //   "${selectedColors?.trim()}",
+      //   "${selectedThickness?.trim()}",
+      //   "${selectedCoatingMass?.trim()}",
+      // ],
+      // "base_label_filters": [
+      //   "brand",
+      //   "color",
+      //   "thickness",
+      //   "coating_mass",
+      // ],
+      // "base_category_id": 32
+
+      "customer_id": UserSession().userId,
+      "product_id": 1590,
+      "product_name": selectedMaterial,
+      "product_base_id": null,
+      "product_base_name":
+          "$selectedBrands,$selectedColors,$selectedThickness,$selectedCoatingMass,",
+      "category_id": 590,
+      "category_name": "Profile ridge & Arch "
     };
 
     print("This is a body data: $data");

@@ -11,6 +11,8 @@ import 'package:zaron/view/universal_api/api&key.dart';
 import 'package:zaron/view/widgets/subhead.dart';
 import 'package:zaron/view/widgets/text.dart';
 
+import '../global_user/global_user.dart';
+
 class RollSheet extends StatefulWidget {
   const RollSheet({super.key, required this.data});
 
@@ -284,26 +286,35 @@ class _RollSheetState extends State<RollSheet> {
     IOClient ioClient = IOClient(client);
     final headers = {"Content-Type": "application/json"};
     final data = {
-      "product_filters": null,
-      "product_label_filters": null,
-      "product_category_id": null,
-      "base_product_filters": [
-        "${selectedBrand?.trim()}",
-        "${selectedColor?.trim()}",
-        "${selectedThickness?.trim()}",
-        "${selectedCoatingMass?.trim()}",
-      ],
-      "base_label_filters": [
-        "brand",
-        "color",
-        "thickness",
-        "coating_mass",
-      ],
-      "base_category_id": 591
+      "customer_id": UserSession().userId,
+      "product_id": 689,
+      "product_name": selectedProduct,
+      "product_base_id": null,
+      "product_base_name":
+          "$selectedBrand,$selectedColor,$selectedThickness,$selectedCoatingMass,",
+      "category_id": 591,
+      "category_name": "Roll Sheet"
+
+      // "product_filters": null,
+      // "product_label_filters": null,
+      // "product_category_id": null,
+      // "base_product_filters": [
+      //   "${selectedBrand?.trim()}",
+      //   "${selectedColor?.trim()}",
+      //   "${selectedThickness?.trim()}",
+      //   "${selectedCoatingMass?.trim()}",
+      // ],
+      // "base_label_filters": [
+      //   "brand",
+      //   "color",
+      //   "thickness",
+      //   "coating_mass",
+      // ],
+      // "base_category_id": 591
     };
 
     print("This is a body data: $data");
-    final url = "https://demo.zaron.in:8181/ci4/api/baseproduct";
+    final url = "https://demo.zaron.in:8181/ci4/api/addbag";
     final body = jsonEncode(data);
     try {
       final response = await ioClient.post(
@@ -313,7 +324,8 @@ class _RollSheetState extends State<RollSheet> {
       );
 
       debugPrint("This is a response: ${response.body}");
-      if (selectedBrand == null ||
+      if (selectedProduct == null ||
+          selectedBrand == null ||
           selectedColor == null ||
           selectedThickness == null ||
           selectedCoatingMass == null) return;
@@ -332,11 +344,11 @@ class _RollSheetState extends State<RollSheet> {
   }
 
   void _submitData() {
-    if (selectedBrand == null ||
+    if (selectedProduct == null ||
+        selectedBrand == null ||
         selectedColor == null ||
         selectedThickness == null ||
-        selectedCoatingMass == null ||
-        selectedProduct == null) {
+        selectedCoatingMass == null) {
 // Show elegant error message
       showDialog(
         context: context,
@@ -370,10 +382,12 @@ class _RollSheetState extends State<RollSheet> {
       selectedColor = null;
       selectedThickness = null;
       selectedCoatingMass = null;
+      productList = [];
       brandsList = [];
       colorsList = [];
       thicknessList = [];
       coatingMassList = [];
+      _fetchProductName();
       _fetchBrands();
     });
 
@@ -788,6 +802,7 @@ class _RollSheetState extends State<RollSheet> {
 
   String selectedItems() {
     List<String> value = [
+      if (selectedProduct != null) "Product: $selectedProduct",
       if (selectedBrand != null) "Brand: $selectedBrand",
       if (selectedColor != null) "Color: $selectedColor",
       if (selectedThickness != null) "Thickness: $selectedThickness",
@@ -907,10 +922,8 @@ class _RollSheetState extends State<RollSheet> {
                               selectedColor = value;
 
                               ///clear fields
-
                               selectedThickness = null;
                               selectedCoatingMass = null;
-
                               thicknessList = [];
                               coatingMassList = [];
                             });

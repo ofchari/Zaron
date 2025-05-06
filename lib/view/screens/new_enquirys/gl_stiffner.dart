@@ -11,6 +11,8 @@ import 'package:zaron/view/universal_api/api&key.dart';
 import 'package:zaron/view/widgets/subhead.dart';
 import 'package:zaron/view/widgets/text.dart';
 
+import '../global_user/global_user.dart';
+
 class GIStiffner extends StatefulWidget {
   const GIStiffner({super.key, required this.data});
 
@@ -326,28 +328,37 @@ class _GIStiffnerState extends State<GIStiffner> {
     IOClient ioClient = IOClient(client);
     final headers = {"Content-Type": "application/json"};
     final data = {
-      "product_filters": null,
-      "product_label_filters": null,
-      "product_category_id": null,
-      "base_product_filters": [
-        "${selectedMeterial?.trim()}",
-        "${selectedThichness?.trim()}",
-        "${selsectedCoat?.trim()}",
-        "${selectedyie?.trim()}",
-        "${selectedBrand?.trim()}"
-      ],
-      "base_label_filters": [
-        "material_type",
-        "thickness",
-        "coating_mass",
-        "yield_strength",
-        "brand"
-      ],
-      "base_category_id": 34
+      // "product_filters": null,
+      // "product_label_filters": null,
+      // "product_category_id": null,
+      // "base_product_filters": [
+      //   "${selectedMeterial?.trim()}",
+      //   "${selectedThichness?.trim()}",
+      //   "${selsectedCoat?.trim()}",
+      //   "${selectedyie?.trim()}",
+      //   "${selectedBrand?.trim()}"
+      // ],
+      // "base_label_filters": [
+      //   "material_type",
+      //   "thickness",
+      //   "coating_mass",
+      //   "yield_strength",
+      //   "brand"
+      // ],
+      // "base_category_id": 34
+
+      "customer_id": UserSession().userId,
+      "product_id": 1330,
+      "product_name": selectedProduct,
+      "product_base_id": null,
+      "product_base_name":
+          "$selectedMeterial,$selectedThichness,$selsectedCoat$selectedyie$selectedBrand",
+      "category_id": 627,
+      "category_name": "GI Stiffner"
     };
 
     print("This is a body data: $data");
-    final url = "https://demo.zaron.in:8181/ci4/api/baseproduct";
+    final url = "$apiUrl/addbag";
     final body = jsonEncode(data);
     try {
       final response = await ioClient.post(

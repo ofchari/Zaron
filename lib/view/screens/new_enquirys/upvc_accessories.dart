@@ -12,6 +12,8 @@ import 'package:zaron/view/universal_api/api&key.dart';
 import 'package:zaron/view/widgets/subhead.dart';
 import 'package:zaron/view/widgets/text.dart';
 
+import '../global_user/global_user.dart';
+
 class UpvcAccessories extends StatefulWidget {
   const UpvcAccessories({super.key, required this.data});
 
@@ -249,26 +251,35 @@ class _UpvcAccessoriesState extends State<UpvcAccessories> {
     IOClient ioClient = IOClient(client);
     final headers = {"Content-Type": "application/json"};
     final data = {
-      "product_filters": null,
-      "product_label_filters": null,
-      "product_category_id": null,
-      "base_product_filters": [
-        "${selectProductNameBase?.trim()}",
-        "${selectedBrand?.trim()}",
-        "${selectedColor?.trim()}",
-        "${selectedSize?.trim()}",
-      ],
-      "base_label_filters": [
-        "product_name_base",
-        "brand",
-        "color",
-        "SIZE",
-      ],
-      "base_category_id": 15
+      // "product_filters": null,
+      // "product_label_filters": null,
+      // "product_category_id": null,
+      // "base_product_filters": [
+      //   "${selectProductNameBase?.trim()}",
+      //   "${selectedBrand?.trim()}",
+      //   "${selectedColor?.trim()}",
+      //   "${selectedSize?.trim()}",
+      // ],
+      // "base_label_filters": [
+      //   "product_name_base",
+      //   "brand",
+      //   "color",
+      //   "SIZE",
+      // ],
+      // "base_category_id": 15
+
+      "customer_id": UserSession().userId,
+      "product_id": null,
+      "product_name": null,
+      "product_base_id": null,
+      "product_base_name":
+          "$selectProductNameBase$selectedBrand$selectedColor$selectedSize",
+      "category_id": 15,
+      "category_name": "UPVC Accessories"
     };
 
     print("This is a body data: $data");
-    final url = "https://demo.zaron.in:8181/ci4/api/baseproduct";
+    final url = "$apiUrl/addbag";
     final body = jsonEncode(data);
     try {
       final response = await ioClient.post(

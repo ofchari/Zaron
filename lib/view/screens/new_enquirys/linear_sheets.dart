@@ -11,6 +11,8 @@ import 'package:zaron/view/universal_api/api&key.dart';
 import 'package:zaron/view/widgets/subhead.dart';
 import 'package:zaron/view/widgets/text.dart';
 
+import '../global_user/global_user.dart';
+
 class LinerSheetPage extends StatefulWidget {
   const LinerSheetPage({super.key, required this.data});
 
@@ -331,26 +333,35 @@ class _LinerSheetPageState extends State<LinerSheetPage> {
     IOClient ioClient = IOClient(client);
     final headers = {"Content-Type": "application/json"};
     final data = {
-      "product_filters": null,
-      "product_label_filters": null,
-      "product_category_id": null,
-      "base_product_filters": [
-        "${selectedBrands?.trim()}",
-        "${selectedColors?.trim()}",
-        "${selectedThickness?.trim()}",
-        "${selectedCoatingMass?.trim()}",
-      ],
-      "base_label_filters": [
-        "brand",
-        "color",
-        "thickness",
-        "coating_mass",
-      ],
-      "base_category_id": 590
+      "customer_id": UserSession().userId,
+      "product_id": 1590,
+      "product_name": selectedProduct,
+      "product_base_id": null,
+      "product_base_name":
+          "$selectedBrands,$selectedColors,$selectedThickness,$selectedCoatingMass,",
+      "category_id": 590,
+      "category_name": "Liner Sheets"
+
+// "product_filters": null,
+// "product_label_filters": null,
+// "product_category_id": null,
+// "base_product_filters": [
+//   "${selectedBrands?.trim()}",
+//   "${selectedColors?.trim()}",
+//   "${selectedThickness?.trim()}",
+//   "${selectedCoatingMass?.trim()}",
+// ],
+// "base_label_filters": [
+//   "brand",
+//   "color",
+//   "thickness",
+//   "coating_mass",
+// ],
+// "base_category_id": 590
     };
 
     print("This is a body data: $data");
-    final url = "https://demo.zaron.in:8181/ci4/api/baseproduct";
+    final url = "https://demo.zaron.in:8181/ci4/api/addbag";
     final body = jsonEncode(data);
     try {
       final response = await ioClient.post(
@@ -360,7 +371,8 @@ class _LinerSheetPageState extends State<LinerSheetPage> {
       );
 
       debugPrint("This is a response: ${response.body}");
-      if (selectedBrands == null ||
+      if (selectedProduct == null ||
+          selectedBrands == null ||
           selectedColors == null ||
           selectedThickness == null ||
           selectedCoatingMass == null) return;
@@ -379,7 +391,8 @@ class _LinerSheetPageState extends State<LinerSheetPage> {
   }
 
   void _submitData() {
-    if (selectedBrands == null ||
+    if (selectedProduct == null ||
+        selectedBrands == null ||
         selectedColors == null ||
         selectedThickness == null ||
         selectedCoatingMass == null) {
@@ -409,17 +422,20 @@ class _LinerSheetPageState extends State<LinerSheetPage> {
         "SQ": "0",
         "Amount": "0",
         "Base Product":
-            " $selectedBrands, $selectedColors, $selectedThickness, $selectedCoatingMass,",
+            "$selectedProduct, $selectedBrands, $selectedColors, $selectedThickness, $selectedCoatingMass,",
       });
+      selectedProduct = null;
       selectedBrands = null;
       selectedColors = null;
       selectedThickness = null;
       selectedCoatingMass = null;
+      productList = [];
       brandandList = [];
       colorandList = [];
       thickAndList = [];
       colorandList = [];
       _fetchProductName();
+      _fetchBrandData();
     });
 
 // Show success message with a more elegant snackBar
@@ -833,6 +849,7 @@ class _LinerSheetPageState extends State<LinerSheetPage> {
 
   String selectedItem() {
     List<String> value = [
+      if (selectedProduct != null) "Product: $selectedProduct",
       if (selectedBrands != null) "Brand: $selectedBrands",
       if (selectedColors != null) "Color: $selectedColors",
       if (selectedThickness != null) "Thickness: $selectedThickness",

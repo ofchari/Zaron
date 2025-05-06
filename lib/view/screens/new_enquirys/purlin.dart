@@ -12,6 +12,8 @@ import 'package:zaron/view/universal_api/api&key.dart';
 import 'package:zaron/view/widgets/subhead.dart';
 import 'package:zaron/view/widgets/text.dart';
 
+import '../global_user/global_user.dart';
+
 class Purlin extends StatefulWidget {
   const Purlin({super.key, required this.data});
 
@@ -296,24 +298,33 @@ class _PurlinState extends State<Purlin> {
     IOClient ioClient = IOClient(client);
     final headers = {"Content-Type": "application/json"};
     final data = {
-      "product_filters": null,
-      "product_label_filters": null,
-      "product_category_id": null,
-      "base_product_filters": [
-        "${selectProduct?.trim()}",
-        "${selectedSize?.trim()}",
-        "${selectedMaterialType?.trim()}",
-        "${selectedThickness?.trim()}",
-        "${selectedBrand?.trim()}"
-      ],
-      "base_label_filters": [
-        "shape_of_product",
-        "size",
-        "material_type",
-        "thickness",
-        "Brand"
-      ],
-      "base_category_id": 5
+      // "product_filters": null,
+      // "product_label_filters": null,
+      // "product_category_id": null,
+      // "base_product_filters": [
+      //   "${selectProduct?.trim()}",
+      //   "${selectedSize?.trim()}",
+      //   "${selectedMaterialType?.trim()}",
+      //   "${selectedThickness?.trim()}",
+      //   "${selectedBrand?.trim()}"
+      // ],
+      // "base_label_filters": [
+      //   "shape_of_product",
+      //   "size",
+      //   "material_type",
+      //   "thickness",
+      //   "Brand"
+      // ],
+      // "base_category_id": 5
+
+      "customer_id": UserSession().userId,
+      "product_id": null,
+      "product_name": null,
+      "product_base_id": null,
+      "product_base_name":
+          "$selectProduct,$selectedSize,$selectedMaterialType,$selectedThickness, $selectedBrand",
+      "category_id": 5,
+      "category_name": "Purlin"
     };
 
     print("This is a body data: $data");

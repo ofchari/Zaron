@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get_navigation/src/root/get_material_app.dart';
-import 'package:zaron/view/screens/login.dart';
-import 'package:zaron/view/screens/new_enquirys/gl_gutter.dart';
+import 'package:zaron/view/screens/new_enquirys/length_sheets.dart';
 
 void main() async {
   runApp(const MyApp());
@@ -24,7 +23,7 @@ class MyApp extends StatelessWidget {
               colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
               useMaterial3: true,
             ),
-            home: Login()
+            home: CutToLengthSheet(data: {})
             // AnimatedSplashScreen(
             //     splash: Image.asset("assets/login.png"),
             //     splashTransition: SplashTransition.fadeTransition,

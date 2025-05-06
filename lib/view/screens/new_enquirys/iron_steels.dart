@@ -7,6 +7,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:gap/gap.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/io_client.dart';
+import 'package:zaron/view/screens/global_user/global_user.dart';
 import 'package:zaron/view/universal_api/api&key.dart';
 import 'package:zaron/view/widgets/subhead.dart';
 import 'package:zaron/view/widgets/text.dart';
@@ -250,13 +251,14 @@ class _IronSteelState extends State<IronSteel> {
       // ],
       // "base_category_id": 3
       //
-      "customer_id": 377423,
-      "product_id": 2193,
-      "product_name": "GI Cut To Length Sheets",
-      "product_base_id": 473,
-      "product_base_name": "GI 0.75MM 120GSM 240 mpa JSW Steel ltd 1220MM",
-      "category_id": 626,
-      "category_name": "Cut To Length Sheets"
+      "customer_id": UserSession().userId,
+      "product_id": null,
+      "product_name": null,
+      "product_base_id": null,
+      "product_base_name":
+          "$selectedBrand$selectedColor$selectedThickness$selectedCoatingMass",
+      "category_id": 3,
+      "category_name": "Iron And Steel Corrugated Sheet"
     };
 
     print("This is a body data: $data");

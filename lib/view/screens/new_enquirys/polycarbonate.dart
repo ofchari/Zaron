@@ -209,7 +209,7 @@ class _PolycarbonateState extends State<Polycarbonate> {
       "category_name": "Polycarbonate"
     };
     print("User input Data $data");
-    final url = "https://demo.zaron.in:8181/ci4/api/addbag";
+    final url = "$apiUrl/addbag";
     final body = jsonEncode(data);
     try {
       final response = await ioClient.post(

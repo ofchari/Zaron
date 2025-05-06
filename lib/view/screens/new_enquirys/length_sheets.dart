@@ -11,6 +11,8 @@ import 'package:zaron/view/universal_api/api&key.dart';
 import 'package:zaron/view/widgets/subhead.dart';
 import 'package:zaron/view/widgets/text.dart';
 
+import '../global_user/global_user.dart';
+
 class CutToLengthSheet extends StatefulWidget {
   const CutToLengthSheet({super.key, required this.data});
 
@@ -70,7 +72,7 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         final products = data["message"]["message"][1];
-        debugPrint("PRoduct:::${products}");
+        debugPrint("PRoduct:::$products");
         debugPrint(response.body, wrapWidth: 1024);
 
         if (products is List) {
@@ -345,28 +347,37 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
     IOClient ioClient = IOClient(client);
     final headers = {"Content-Type": "application/json"};
     final data = {
-      "product_filters": null,
-      "product_label_filters": null,
-      "product_category_id": null,
-      "base_product_filters": [
-        "${selectedMeterial?.trim()}",
-        "${selectedThichness?.trim()}",
-        "${selsectedCoat?.trim()}",
-        "${selectedyie?.trim()}",
-        "${selectedBrand?.trim()}"
-      ],
-      "base_label_filters": [
-        "material_type",
-        "thickness",
-        "coating_mass",
-        "yield_strength",
-        "brand"
-      ],
-      "base_category_id": 626
+      // "product_filters": null,
+      // "product_label_filters": null,
+      // "product_category_id": null,
+      // "base_product_filters": [
+      //   "${selectedMeterial?.trim()}",
+      //   "${selectedThichness?.trim()}",
+      //   "${selsectedCoat?.trim()}",
+      //   "${selectedyie?.trim()}",
+      //   "${selectedBrand?.trim()}"
+      // ],
+      // "base_label_filters": [
+      //   "material_type",
+      //   "thickness",
+      //   "coating_mass",
+      //   "yield_strength",
+      //   "brand"
+      // ],
+      // "base_category_id": 626
+
+      "customer_id": UserSession().userId,
+      "product_id": 2193,
+      "product_name": selectedProduct,
+      "product_base_id": 473,
+      "product_base_name":
+          "$selectedMeterial,$selectedThichness,$selsectedCoat$selectedyie$selectedBrand",
+      "category_id": 626,
+      "category_name": "Cut to Length Sheets"
     };
 
     print("This is a body data: $data");
-    final url = "https://demo.zaron.in:8181/ci4/api/baseproduct";
+    final url = "$apiUrl/addbag";
     final body = jsonEncode(data);
     try {
       final response = await ioClient.post(
