@@ -33,15 +33,18 @@ class _PolycarbonateState extends State<Polycarbonate> {
   List<String> colorsList = [];
   List<String> thicknessList = [];
   List<Map<String, dynamic>> submittedData = [];
+  bool isLoading = false;
 
-// Form key for validation
+  // Form key for validation
   final _formKey = GlobalKey<FormState>();
 
   @override
   void initState() {
     super.initState();
-    print("User Id Data${UserSession().userId}");
-    editController = TextEditingController(text: widget.data["Base Product"]);
+    // Print safely with null check
+    debugPrint("User Id Data: ${UserSession().userId ?? 'No User ID'}");
+    editController =
+        TextEditingController(text: widget.data["Base Product"] ?? "");
     _fetchBrands();
   }
 
@@ -52,7 +55,10 @@ class _PolycarbonateState extends State<Polycarbonate> {
   }
 
   Future<void> _fetchBrands() async {
+    if (!mounted) return;
+
     setState(() {
+      isLoading = true;
       brandsList = [];
       selectedBrand = null;
     });
@@ -64,32 +70,54 @@ class _PolycarbonateState extends State<Polycarbonate> {
     try {
       final response = await client.get(url);
 
+      if (!mounted) return;
+
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final typeofPanel = data["message"]["message"][1];
 
-        print(response.body);
+        // Added safety checks
+        if (data != null &&
+            data["message"] != null &&
+            data["message"]["message"] != null &&
+            data["message"]["message"].length > 1) {
+          final typeofPanel = data["message"]["message"][1];
+          debugPrint("Response body: ${response.body}");
 
-        if (typeofPanel is List) {
-          setState(() {
-            brandsList = typeofPanel
-                .whereType<Map>()
-                .map((e) => e["type_of_panel"]?.toString())
-                .whereType<String>()
-                .toList();
-          });
+          if (typeofPanel is List) {
+            setState(() {
+              brandsList = typeofPanel
+                  .whereType<Map>()
+                  .map((e) => e["type_of_panel"]?.toString() ?? "")
+                  .where((e) => e.isNotEmpty) // Filter out empty strings
+                  .toList();
+            });
+          }
         }
+      } else {
+        debugPrint("Error fetching brands: ${response.statusCode}");
+        // Show error to user
+        _showErrorSnackBar("Unable to load brands. Please try again.");
       }
     } catch (e) {
-      print("Exception fetching brands: $e");
+      debugPrint("Exception fetching brands: $e");
+      if (mounted) {
+        _showErrorSnackBar("Network error. Please check your connection.");
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+        });
+      }
     }
   }
 
   /// fetch colors Api's //
   Future<void> _fetchColors() async {
-    if (selectedBrand == null) return;
+    if (selectedBrand == null || !mounted) return;
 
     setState(() {
+      isLoading = true;
       colorsList = [];
       selectedColor = null;
     });
@@ -110,32 +138,53 @@ class _PolycarbonateState extends State<Polycarbonate> {
         }),
       );
 
+      if (!mounted) return;
+
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final colors = data["message"]["message"];
-        print("Fetching colors for brand: $selectedBrand");
-        print("API response: ${response.body}");
+        debugPrint("Fetching colors for brand: $selectedBrand");
+        debugPrint("API response: ${response.body}");
 
-        if (colors is List) {
-          setState(() {
-            colorsList = colors
-                .whereType<Map>()
-                .map((e) => e["color"]?.toString())
-                .whereType<String>()
-                .toList();
-          });
+        // Add safety checks
+        if (data != null &&
+            data["message"] != null &&
+            data["message"]["message"] != null) {
+          final colors = data["message"]["message"];
+
+          if (colors is List) {
+            setState(() {
+              colorsList = colors
+                  .whereType<Map>()
+                  .map((e) => e["color"]?.toString() ?? "")
+                  .where((e) => e.isNotEmpty) // Filter out empty strings
+                  .toList();
+            });
+          }
         }
+      } else {
+        debugPrint("Error fetching colors: ${response.statusCode}");
+        _showErrorSnackBar("Unable to load colors. Please try again.");
       }
     } catch (e) {
-      print("Exception fetching colors: $e");
+      debugPrint("Exception fetching colors: $e");
+      if (mounted) {
+        _showErrorSnackBar("Network error. Please check your connection.");
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+        });
+      }
     }
   }
 
   /// fetch Thickness Api's ///
   Future<void> _fetchThickness() async {
-    if (selectedBrand == null) return;
+    if (selectedBrand == null || selectedColor == null || !mounted) return;
 
     setState(() {
+      isLoading = true;
       thicknessList = [];
       selectedThickness = null;
     });
@@ -156,51 +205,80 @@ class _PolycarbonateState extends State<Polycarbonate> {
         }),
       );
 
+      if (!mounted) return;
+
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final thickness = data["message"]["message"];
-        print("Fetching colors for brand: $selectedBrand");
-        print("API response: ${response.body}");
+        debugPrint(
+            "Fetching thickness for brand: $selectedBrand, color: $selectedColor");
+        debugPrint("API response: ${response.body}");
 
-        if (thickness is List) {
-          setState(() {
-            thicknessList = thickness
-                .whereType<Map>()
-                .map((e) => e["thickness"]?.toString())
-                .whereType<String>()
-                .toList();
-          });
+        // Add safety checks
+        if (data != null &&
+            data["message"] != null &&
+            data["message"]["message"] != null) {
+          final thickness = data["message"]["message"];
+
+          if (thickness is List) {
+            setState(() {
+              thicknessList = thickness
+                  .whereType<Map>()
+                  .map((e) => e["thickness"]?.toString() ?? "")
+                  .where((e) => e.isNotEmpty) // Filter out empty strings
+                  .toList();
+            });
+          }
         }
+      } else {
+        debugPrint("Error fetching thickness: ${response.statusCode}");
+        _showErrorSnackBar(
+            "Unable to load thickness options. Please try again.");
       }
     } catch (e) {
-      print("Exception fetching thickness: $e");
+      debugPrint("Exception fetching thickness: $e");
+      if (mounted) {
+        _showErrorSnackBar("Network error. Please check your connection.");
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+        });
+      }
     }
   }
 
   ///postData
-  Future<void> postPolycarbonateData() async {
+  Future<bool> postPolycarbonateData() async {
+    if (selectedBrand == null ||
+        selectedColor == null ||
+        selectedThickness == null ||
+        !mounted) {
+      return false;
+    }
+
+    setState(() {
+      isLoading = true;
+    });
+
     HttpClient client = HttpClient();
     client.badCertificateCallback =
         ((X509Certificate cert, String host, int port) => true);
     IOClient ioClient = IOClient(client);
     final headers = {"Content-Type": "application/json"};
-    final data = {
-      // "product_filters": null,
-      // "product_label_filters": null,
-      // "product_category_id": null,
-      // "base_product_filters": [
-      //   "${selectedBrand?.trim()}",
-      //   "${selectedColor?.trim()}",
-      //   "${selectedThickness?.trim()}",
-      // ],
-      // "base_label_filters": [
-      //   "type_of_panel",
-      //   "color",
-      //   "thickness",
-      // ],
-      // "base_category_id": 19
 
-      "customer_id": UserSession().userId,
+    // Get user ID safely
+    final userId = UserSession().userId;
+    if (userId == null) {
+      _showErrorSnackBar("User session not found. Please login again.");
+      setState(() {
+        isLoading = false;
+      });
+      return false;
+    }
+
+    final data = {
+      "customer_id": userId,
       "product_id": null,
       "product_name": null,
       "product_base_id": null,
@@ -208,42 +286,67 @@ class _PolycarbonateState extends State<Polycarbonate> {
       "category_id": 19,
       "category_name": "Polycarbonate"
     };
-    print("User input Data $data");
+
+    debugPrint("User input Data $data");
     final url = "$apiUrl/addbag";
     final body = jsonEncode(data);
+
     try {
-      final response = await ioClient.post(
-          Uri.parse(
-            url,
-          ),
-          headers: headers,
-          body: body);
-      debugPrint("This is a response: ${response.body}");
-      if (selectedBrand == null ||
-          selectedColor == null ||
-          selectedThickness == null) return;
+      final response =
+          await ioClient.post(Uri.parse(url), headers: headers, body: body);
+
+      debugPrint("Response: ${response.body}");
+
+      if (!mounted) return false;
+
+      setState(() {
+        isLoading = false;
+      });
 
       if (response.statusCode == 200) {
-// Get.snackbar(
-//   "Data Added",
-//   "Successfully",
-//   colorText: Colors.white,
-//   backgroundColor: Colors.green,
-//   snackPosition: SnackPosition.BOTTOM,
-// );
+        return true;
+      } else {
+        _showErrorSnackBar("Failed to add product. Please try again.");
+        return false;
       }
     } catch (e) {
-      throw Exception("Error posting data: $e");
+      debugPrint("Error posting data: $e");
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+        });
+        _showErrorSnackBar("Network error. Please check your connection.");
+      }
+      return false;
     }
   }
 
-  /// fetch Thickness Api's ///
+  void _showErrorSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            Icon(Icons.error_outline, color: Colors.white),
+            SizedBox(width: 12),
+            Expanded(child: Text(message)),
+          ],
+        ),
+        backgroundColor: Colors.red,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+        margin: EdgeInsets.all(16),
+        duration: Duration(seconds: 3),
+      ),
+    );
+  }
 
-  void _submitData() {
+  void _submitData() async {
     if (selectedBrand == null ||
         selectedColor == null ||
         selectedThickness == null) {
-// Show elegant error message
+      // Show elegant error message
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
@@ -259,46 +362,52 @@ class _PolycarbonateState extends State<Polycarbonate> {
       );
       return;
     }
-    setState(() {
-      submittedData.add({
-        "Product": "Polycarbonate",
-        "UOM": "Feet",
-        "Length": "0",
-        "Nos": "1",
-        "Basic Rate": "0",
-        "SQ": "0",
-        "Amount": "0",
-        "Base Product": "$selectedBrand, $selectedColor, $selectedThickness,",
+
+    final success = await postPolycarbonateData();
+
+    if (success && mounted) {
+      setState(() {
+        submittedData.add({
+          "Product": "Polycarbonate",
+          "UOM": "Feet",
+          "Length": "0",
+          "Nos": "1",
+          "Basic Rate": "0",
+          "SQ": "0",
+          "Amount": "0",
+          "Base Product": "$selectedBrand, $selectedColor, $selectedThickness",
+        });
+
+        selectedBrand = null;
+        selectedColor = null;
+        selectedThickness = null;
+        brandsList = [];
+        colorsList = [];
+        thicknessList = [];
       });
 
-      selectedBrand = null;
-      selectedColor = null;
-      selectedThickness = null;
-      brandsList = [];
-      colorsList = [];
-      thicknessList = [];
       _fetchBrands();
-    });
 
-// Show success message with a more elegant snackBar
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            Icon(Icons.check_circle, color: Colors.white),
-            SizedBox(width: 12),
-            Text("Product added successfully"),
-          ],
+      // Show success message with a more elegant snackBar
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              Icon(Icons.check_circle, color: Colors.white),
+              SizedBox(width: 12),
+              Text("Product added successfully"),
+            ],
+          ),
+          backgroundColor: Colors.green,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+          ),
+          margin: EdgeInsets.all(16),
+          duration: Duration(seconds: 2),
         ),
-        backgroundColor: Colors.green,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
-        margin: EdgeInsets.all(16),
-        duration: Duration(seconds: 2),
-      ),
-    );
+      );
+    }
   }
 
   Widget _buildSubmittedDataList() {
@@ -344,7 +453,7 @@ class _PolycarbonateState extends State<Polycarbonate> {
                       height: 40.h,
                       width: 210.w,
                       child: Text(
-                        "  ${index + 1}.  ${data["Product"]}" ?? "",
+                        "  ${index + 1}.  ${data["Product"] ?? ""}",
                         overflow: TextOverflow.ellipsis,
                         style: GoogleFonts.figtree(
                             fontSize: 14,
@@ -414,7 +523,7 @@ class _PolycarbonateState extends State<Polycarbonate> {
                                             Navigator.pop(context);
                                           },
                                           child: Text("No"),
-                                        )
+                                        ),
                                       ],
                                     );
                                   });
@@ -423,7 +532,7 @@ class _PolycarbonateState extends State<Polycarbonate> {
                         ],
                       ),
                     ),
-                  )
+                  ),
                 ],
               ),
               Row(
@@ -451,11 +560,9 @@ class _PolycarbonateState extends State<Polycarbonate> {
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Row(
-// mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       SizedBox(
-// color: Colors.red,
                         height: 40.h,
                         width: 280.w,
                         child: TextField(
@@ -467,8 +574,8 @@ class _PolycarbonateState extends State<Polycarbonate> {
                             enabledBorder: InputBorder.none,
                             focusedBorder: InputBorder.none,
                           ),
-                          controller:
-                              TextEditingController(text: data["Base Product"]),
+                          controller: TextEditingController(
+                              text: data["Base Product"] ?? ""),
                           readOnly: true,
                         ),
                       ),
@@ -481,7 +588,8 @@ class _PolycarbonateState extends State<Polycarbonate> {
                               borderRadius: BorderRadius.circular(10)),
                           child: IconButton(
                               onPressed: () {
-                                editController.text = data["Base Product"];
+                                editController.text =
+                                    data["Base Product"] ?? "";
                                 showDialog(
                                     context: context,
                                     builder: (context) {
@@ -491,7 +599,6 @@ class _PolycarbonateState extends State<Polycarbonate> {
                                           mainAxisSize: MainAxisSize.min,
                                           children: [
                                             Container(
-// color: Colors.white,
                                               height: 45.h,
                                               width: double.infinity.w,
                                               decoration: BoxDecoration(
@@ -555,7 +662,7 @@ class _PolycarbonateState extends State<Polycarbonate> {
     );
   }
 
-// New method that organizes fields in rows, two fields per row
+  // New method that organizes fields in rows, two fields per row
   Widget _buildProductDetailInRows(Map<String, dynamic> data) {
     return Column(
       children: [
@@ -578,7 +685,7 @@ class _PolycarbonateState extends State<Polycarbonate> {
           ],
         ),
         Gap(35),
-// Row 3: Basic Rate & SQ
+        // Row 3: Basic Rate & SQ
         Row(
           children: [
             Expanded(
@@ -629,7 +736,7 @@ class _PolycarbonateState extends State<Polycarbonate> {
       child: TextField(
         style: GoogleFonts.figtree(
             fontWeight: FontWeight.w500, color: Colors.black, fontSize: 15.sp),
-        controller: TextEditingController(text: data[key]),
+        controller: TextEditingController(text: data[key] ?? ""),
         onChanged: (val) => data[key] = val,
         decoration: InputDecoration(
           contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 0),
@@ -658,14 +765,16 @@ class _PolycarbonateState extends State<Polycarbonate> {
     return SizedBox(
       height: 40.h,
       child: DropdownButtonFormField<String>(
-        value: data["UOM"],
+        value: data["UOM"] ?? uomOptions[0],
         items: uomOptions
             .map((uom) => DropdownMenuItem(value: uom, child: Text(uom)))
             .toList(),
         onChanged: (val) {
-          setState(() {
-            data["UOM"] = val!;
-          });
+          if (val != null) {
+            setState(() {
+              data["UOM"] = val;
+            });
+          }
         },
         decoration: InputDecoration(
           contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 0),
