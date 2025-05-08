@@ -784,13 +784,13 @@ class _ScrewState extends State<Screw> {
                           },
                               enabled: screwLengthList.isNotEmpty,
                               label: "Length of Screw"),
-                          _buildDropdown(threadList, selectedThread, (value) {
-                            setState(() {
-                              selectedThread = value;
-                            });
-                          },
-                              enabled: threadList.isNotEmpty,
-                              label: "Type of Thread"),
+                          // _buildDropdown(threadList, selectedThread, (value) {
+                          //   setState(() {
+                          //     selectedThread = value;
+                          //   });
+                          // },
+                          //     enabled: threadList.isNotEmpty,
+                          //     label: "Type of Thread"),
                           Gap(20),
                           Card(
                             elevation: 4,
