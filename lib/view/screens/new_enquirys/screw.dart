@@ -41,7 +41,6 @@ class _ScrewState extends State<Screw> {
   @override
   void initState() {
     super.initState();
-    editController = TextEditingController(text: widget.data["Base Product"]);
     _fetchBrand();
   }
 
@@ -66,17 +65,20 @@ class _ScrewState extends State<Screw> {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final brands = data["message"]["message"][1];
+        // final brands = data["message"]["message"][1];
         print(response.body);
-
-        if (brands is List) {
-          setState(() {
-            brandList = brands
-                .whereType<Map>()
-                .map((e) => e["brand"]?.toString())
-                .whereType<String>()
-                .toList();
-          });
+        final message = data["message"]["message"];
+        if (message is List && message.length > 1) {
+          final brands = message[1];
+          if (brands is List) {
+            setState(() {
+              brandList = brands
+                  .whereType<Map>()
+                  .map((e) => e["brand"]?.toString())
+                  .whereType<String>()
+                  .toList();
+            });
+          }
         }
       }
     } catch (e) {
@@ -132,7 +134,7 @@ class _ScrewState extends State<Screw> {
 
   /// fetch Types of thread   Api's ///
   Future<void> _fetchThreads() async {
-    if (selectedBrand == null) return;
+    if (selectedBrand == null || selectedScrew == null) return;
 
     setState(() {
       threadList = [];
@@ -177,6 +179,10 @@ class _ScrewState extends State<Screw> {
   }
 
   Future<void> postScrewData() async {
+    if (selectedBrand == null ||
+        selectedScrew == null ||
+        selectedThread == null) return;
+
     HttpClient client = HttpClient();
     client.badCertificateCallback =
         ((X509Certificate cert, String host, int port) => true);
@@ -683,7 +689,9 @@ class _ScrewState extends State<Screw> {
       padding: EdgeInsets.symmetric(vertical: 8),
       child: DropdownSearch<String>(
         items: items,
-        selectedItem: selectedValue,
+        selectedItem: items.contains(selectedValue?.trim())
+            ? selectedValue?.trim()
+            : null,
         onChanged: enabled ? onChanged : null,
         dropdownDecoratorProps: DropDownDecoratorProps(
           dropdownSearchDecoration: InputDecoration(
@@ -769,8 +777,8 @@ class _ScrewState extends State<Screw> {
                               selectedThread = null;
                               screwLengthList = [];
                               threadList = [];
+                              _fetchScrew();
                             });
-                            _fetchScrew();
                           }, label: "Brand"),
                           _buildDropdown(screwLengthList, selectedScrew,
                               (value) {
@@ -779,8 +787,8 @@ class _ScrewState extends State<Screw> {
 // Clear dependent fields
                               selectedThread = null;
                               threadList = [];
+                              _fetchThreads();
                             });
-                            _fetchThreads();
                           },
                               enabled: screwLengthList.isNotEmpty,
                               label: "Length of Screw"),
