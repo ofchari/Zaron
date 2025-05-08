@@ -116,7 +116,7 @@ class _PurlinState extends State<Purlin> {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final sizes = data["message"]["message"];
+        final sizes = data["message"]["message"][0];
         print("Fetching colors for thick: $selectProduct");
         print("API response: ${response.body}");
         debugPrint(response.body);
@@ -163,7 +163,7 @@ class _PurlinState extends State<Purlin> {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final materials = data["message"]["message"];
+        final materials = data["message"]["message"][0];
         print("Fetching colors for brand: $selectedSize");
         print("API response: ${response.body}");
         debugPrint(response.body);
@@ -214,7 +214,7 @@ class _PurlinState extends State<Purlin> {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final thick = data["message"]["message"];
+        final thick = data["message"]["message"][0];
         print("Fetching colors for thick: $selectedMaterialType");
         print("API response: ${response.body}");
         debugPrint(response.body);

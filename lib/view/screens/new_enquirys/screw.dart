@@ -66,17 +66,20 @@ class _ScrewState extends State<Screw> {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final brands = data["message"]["message"][1];
+        final message = data["message"]["message"];
         print(response.body);
 
-        if (brands is List) {
-          setState(() {
-            brandList = brands
-                .whereType<Map>()
-                .map((e) => e["brand"]?.toString())
-                .whereType<String>()
-                .toList();
-          });
+        if (message is List && message.length > 1) {
+          final brands = message[1];
+          if (brands is List) {
+            setState(() {
+              brandList = brands
+                  .whereType<Map>()
+                  .map((e) => e["brand"]?.toString())
+                  .whereType<String>()
+                  .toList();
+            });
+          }
         }
       }
     } catch (e) {
@@ -111,18 +114,21 @@ class _ScrewState extends State<Screw> {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final screws = data["message"]["message"];
-        print("Fetching colors for brand: $selectedBrand");
+        final message = data["message"]["message"];
+        print("Fetching screws for brand: $selectedBrand");
         print("API response: ${response.body}");
 
-        if (screws is List) {
-          setState(() {
-            screwLengthList = screws
-                .whereType<Map>()
-                .map((e) => e["length_of_screw"]?.toString())
-                .whereType<String>()
-                .toList();
-          });
+        if (message is List && message.length > 1) {
+          final screws = message[0];
+          if (screws is List) {
+            setState(() {
+              screwLengthList = screws
+                  .whereType<Map>()
+                  .map((e) => e["length_of_screw"]?.toString())
+                  .whereType<String>()
+                  .toList();
+            });
+          }
         }
       }
     } catch (e) {
@@ -130,9 +136,9 @@ class _ScrewState extends State<Screw> {
     }
   }
 
-  /// fetch Types of thread   Api's ///
+  /// fetch Types of thread Api's ///
   Future<void> _fetchThreads() async {
-    if (selectedBrand == null) return;
+    if (selectedBrand == null || selectedScrew == null) return;
 
     setState(() {
       threadList = [];
@@ -157,18 +163,21 @@ class _ScrewState extends State<Screw> {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final threadsTypes = data["message"]["message"];
-        print("Fetching colors for brand: $selectedScrew");
+        final message = data["message"]["message"];
+        print("Fetching thread types for screw: $selectedScrew");
         print("API response: ${response.body}");
 
-        if (threadsTypes is List) {
-          setState(() {
-            threadList = threadsTypes
-                .whereType<Map>()
-                .map((e) => e["type_of_thread"]?.toString())
-                .whereType<String>()
-                .toList();
-          });
+        if (message is List && message.length > 1) {
+          final threadTypes = message[0];
+          if (threadTypes is List) {
+            setState(() {
+              threadList = threadTypes
+                  .whereType<Map>()
+                  .map((e) => e["type_of_thread"]?.toString())
+                  .whereType<String>()
+                  .toList();
+            });
+          }
         }
       }
     } catch (e) {
@@ -784,13 +793,13 @@ class _ScrewState extends State<Screw> {
                           },
                               enabled: screwLengthList.isNotEmpty,
                               label: "Length of Screw"),
-                          // _buildDropdown(threadList, selectedThread, (value) {
-                          //   setState(() {
-                          //     selectedThread = value;
-                          //   });
-                          // },
-                          //     enabled: threadList.isNotEmpty,
-                          //     label: "Type of Thread"),
+                          _buildDropdown(threadList, selectedThread, (value) {
+                            setState(() {
+                              selectedThread = value;
+                            });
+                          },
+                              enabled: threadList.isNotEmpty,
+                              label: "Type of Thread"),
                           Gap(20),
                           Card(
                             elevation: 4,

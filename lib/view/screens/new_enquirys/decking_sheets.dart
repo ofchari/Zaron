@@ -114,7 +114,7 @@ class _DeckingSheetsState extends State<DeckingSheets> {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final selectedThickness = data["message"]["message"];
+        final selectedThickness = data["message"]["message"][0];
         print("Fetching colors for brand: $selectedThickness");
         print("API response: ${response.body}");
         debugPrint(response.body);
@@ -161,7 +161,7 @@ class _DeckingSheetsState extends State<DeckingSheets> {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final thickness = data["message"]["message"];
+        final thickness = data["message"]["message"][0];
         print("Fetching colors for brand: $selectedThickness");
         print("API response: ${response.body}");
         debugPrint(response.body);
@@ -212,7 +212,7 @@ class _DeckingSheetsState extends State<DeckingSheets> {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final coating = data["message"]["message"];
+        final coating = data["message"]["message"][0];
         print("Fetching colors for brand: $selectedThickness");
         print("API response: ${response.body}");
         debugPrint(response.body);
@@ -269,7 +269,7 @@ class _DeckingSheetsState extends State<DeckingSheets> {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final brands = data["message"]["message"];
+        final brands = data["message"]["message"][0];
         print("Fetching brands: $brands");
         print("API response: ${response.body}");
         debugPrint(response.body);
@@ -609,7 +609,8 @@ class _DeckingSheetsState extends State<DeckingSheets> {
                                     context: context,
                                     builder: (context) {
                                       return AlertDialog(
-                                        title: Text("Edit Your Iron and Steel"),
+                                        title:
+                                            Text("Edit Your Decking  Sheets"),
                                         content: Column(
                                           mainAxisSize: MainAxisSize.min,
                                           children: [

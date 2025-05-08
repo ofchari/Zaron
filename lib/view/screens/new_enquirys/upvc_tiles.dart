@@ -111,7 +111,7 @@ class _UpvcTilesState extends State<UpvcTiles> {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final color = data["message"]["message"];
+        final color = data["message"]["message"][0];
         print("Fetching colors for brand: $selectMaterial");
         print("API response: ${response.body}");
 
@@ -157,7 +157,7 @@ class _UpvcTilesState extends State<UpvcTiles> {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final thick = data["message"]["message"];
+        final thick = data["message"]["message"][0];
         print("Fetching colors for brand: $selectedColor");
         print("API response: ${response.body}");
 

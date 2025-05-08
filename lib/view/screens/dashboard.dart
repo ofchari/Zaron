@@ -63,7 +63,7 @@ class _DashboardState extends State<Dashboard> {
         "title": "New Enquiry",
         "icon": FontAwesomeIcons.plus,
         "color": Colors.green,
-        "route": NewEnquiry(userid: widget.userid)
+        "route": NewEnquiry()
       },
       {
         "title": "Total Enquiry",

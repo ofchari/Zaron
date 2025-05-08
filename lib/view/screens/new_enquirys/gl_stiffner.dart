@@ -150,7 +150,7 @@ class _GIStiffnerState extends State<GIStiffner> {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final selectedThickness = data["message"]["message"];
+        final selectedThickness = data["message"]["message"][0];
         print("Fetching colors for brand: $selectedThickness");
         print("API response: ${response.body}");
 
@@ -196,7 +196,7 @@ class _GIStiffnerState extends State<GIStiffner> {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final coat = data["message"]["message"];
+        final coat = data["message"]["message"][0];
         print("Fetching colors for brand: $selectedThichness");
         print("API response: ${response.body}");
 
@@ -246,7 +246,7 @@ class _GIStiffnerState extends State<GIStiffner> {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final yieldsStrength = data["message"]["message"];
+        final yieldsStrength = data["message"]["message"][0];
         print("Fetching colors for brand: $selectedThichness");
         print("API response: ${response.body}");
 
@@ -301,7 +301,7 @@ class _GIStiffnerState extends State<GIStiffner> {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final brands = data["message"]["message"];
+        final brands = data["message"]["message"][0];
         print("Fetching colors for brand: $brands");
         print("API response: ${response.body}");
 

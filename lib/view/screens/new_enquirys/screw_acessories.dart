@@ -110,7 +110,7 @@ class _ScrewAccessoriesState extends State<ScrewAccessories> {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final colors = data["message"]["message"];
+        final colors = data["message"]["message"][0];
         print("Fetching colors for brand: $selectedProduct");
         print("API response: ${response.body}");
 
@@ -158,7 +158,7 @@ class _ScrewAccessoriesState extends State<ScrewAccessories> {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final brand = data["message"]["message"];
+        final brand = data["message"]["message"][0];
         print("Fetching colors for brand: $selectedProduct");
         print("API response: ${response.body}");
 

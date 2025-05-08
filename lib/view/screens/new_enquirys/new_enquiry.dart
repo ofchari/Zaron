@@ -22,8 +22,7 @@ import 'package:zaron/view/widgets/text.dart';
 import 'linear_sheets.dart';
 
 class NewEnquiry extends StatefulWidget {
-  const NewEnquiry({super.key, required this.userid});
-  final String userid;
+  const NewEnquiry({super.key});
 
   @override
   State<NewEnquiry> createState() => _NewEnquiryState();
@@ -35,7 +34,7 @@ class _NewEnquiryState extends State<NewEnquiry> {
   @override
   void initState() {
     super.initState();
-    print("check user id ${widget.userid}");
+    // print("check user id ${widget.userid}");
     fetchCategories();
   }
 
@@ -109,7 +108,7 @@ class _NewEnquiryState extends State<NewEnquiry> {
       case 'liner sheets':
         return LinerSheetPage(data: data);
       case 'polycarbonate':
-        return Polycarbonate(data: data, userid: widget.userid);
+        return Polycarbonate(data: data);
       case 'profile ridge & arch':
         return ProfileRidgeAndArch(data: data);
       case 'purlin':

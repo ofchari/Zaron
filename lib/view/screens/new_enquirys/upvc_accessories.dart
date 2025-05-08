@@ -118,7 +118,7 @@ class _UpvcAccessoriesState extends State<UpvcAccessories> {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final brands = data["message"]["message"];
+        final brands = data["message"]["message"][0];
         print("Fetching colors for brand: $selectedBrand");
         print("API response: ${response.body}");
 
@@ -169,7 +169,7 @@ class _UpvcAccessoriesState extends State<UpvcAccessories> {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final color = data["message"]["message"];
+        final color = data["message"]["message"][0];
         print("Fetching colors for brand: $selectedBrand");
         print("API response: ${response.body}");
 
@@ -224,7 +224,7 @@ class _UpvcAccessoriesState extends State<UpvcAccessories> {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final size = data["message"]["message"];
+        final size = data["message"]["message"][0];
         print("Fetching colors for brand: $selectedBrand");
         print("API response: ${response.body}");
 

@@ -153,7 +153,7 @@ class _RollSheetState extends State<RollSheet> {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final colors = data["message"]["message"];
+        final colors = data["message"]["message"][0];
         print("Fetching colors for brand: $selectedBrand");
         print("API response: ${response.body}");
 
@@ -204,7 +204,7 @@ class _RollSheetState extends State<RollSheet> {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final thickness = data["message"]["message"];
+        final thickness = data["message"]["message"][0];
         print("Fetching colors for brand: $selectedBrand");
         print("API response: ${response.body}");
 
@@ -259,7 +259,7 @@ class _RollSheetState extends State<RollSheet> {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final coating = data["message"]["message"];
+        final coating = data["message"]["message"][0];
         print("Fetching colors for brand: $selectedBrand");
         print("API response: ${response.body}");
 

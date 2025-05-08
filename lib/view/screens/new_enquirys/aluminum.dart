@@ -112,7 +112,7 @@ class _AluminumState extends State<Aluminum> {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final thick = data["message"]["message"];
+        final thick = data["message"]["message"][0];
         print("Fetching colors for thick: $selectedMaterialType");
         print("API response: ${response.body}");
 
@@ -158,7 +158,7 @@ class _AluminumState extends State<Aluminum> {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final brand = data["message"]["message"];
+        final brand = data["message"]["message"][0];
         print("Fetching colors for brand: $selectedThickness");
         print("API response: ${response.body}");
 
@@ -209,7 +209,7 @@ class _AluminumState extends State<Aluminum> {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final colors = data["message"]["message"];
+        final colors = data["message"]["message"][0];
         print("Fetching colors for brand: $selectedBrand");
         print("API response: ${response.body}");
 
