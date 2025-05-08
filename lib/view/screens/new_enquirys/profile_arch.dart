@@ -29,6 +29,7 @@ class _ProfileRidgeAndArchState extends State<ProfileRidgeAndArch> {
   String? selectedColors;
   String? selectedThickness;
   String? selectedCoatingMass;
+  String? selectedProductBaseId;
 
 // String? selectedBrand;
 
@@ -48,7 +49,7 @@ class _ProfileRidgeAndArchState extends State<ProfileRidgeAndArch> {
   void initState() {
     super.initState();
     editController = TextEditingController(text: widget.data["Base Product"]);
-    _fetchProductName();
+    _fetchMaterial();
     _fetchBrandData();
   }
 
@@ -58,7 +59,7 @@ class _ProfileRidgeAndArchState extends State<ProfileRidgeAndArch> {
     super.dispose();
   }
 
-  Future<void> _fetchProductName() async {
+  Future<void> _fetchMaterial() async {
     setState(() {
       materialList = [];
       selectedMaterial = null;
@@ -136,7 +137,7 @@ class _ProfileRidgeAndArchState extends State<ProfileRidgeAndArch> {
 
     final client =
         IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
-    final url = Uri.parse('$apiUrl/onchangeinputdata');
+    final url = Uri.parse('$apiUrl/test');
 
     try {
       final response = await client.post(
@@ -149,6 +150,9 @@ class _ProfileRidgeAndArchState extends State<ProfileRidgeAndArch> {
 // "label_name": "color",
 
           "product_label": "color",
+          "product_filters": [selectedMaterial],
+          "product_label_filters": ["product_name"],
+          "product_category_id": 32,
           "base_product_filters": [selectedBrands],
           "base_label_filters": ["brand"],
           "base_category_id": 3
@@ -187,7 +191,7 @@ class _ProfileRidgeAndArchState extends State<ProfileRidgeAndArch> {
 
     final client =
         IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
-    final url = Uri.parse('$apiUrl/onchangeinputdata');
+    final url = Uri.parse('$apiUrl/test');
 
     try {
       final response = await client.post(
@@ -200,6 +204,9 @@ class _ProfileRidgeAndArchState extends State<ProfileRidgeAndArch> {
 // "label_name": "thickness",
 
           "product_label": "thickness",
+          "product_filters": [selectedMaterial],
+          "product_label_filters": ["product_name"],
+          "product_category_id": 32,
           "base_product_filters": [selectedBrands, selectedColors],
           "base_label_filters": ["brand", "color"],
           "base_category_id": 3
@@ -229,7 +236,10 @@ class _ProfileRidgeAndArchState extends State<ProfileRidgeAndArch> {
 
   /// fetch Thickness Api's ///
   Future<void> _fetchCoatingMassData() async {
-    if (selectedBrands == null) return;
+    if (selectedBrands == null ||
+        selectedColors == null ||
+        selectedThickness == null ||
+        !mounted) return;
 
     setState(() {
       coatingAndList = [];
@@ -238,19 +248,17 @@ class _ProfileRidgeAndArchState extends State<ProfileRidgeAndArch> {
 
     final client =
         IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
-    final url = Uri.parse('$apiUrl/onchangeinputdata');
+    final url = Uri.parse('$apiUrl/test');
 
     try {
       final response = await client.post(
         url,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-// "category_id": "3",
-// "selectedlabel": "thickness",
-// "selectedvalue": selectedThickness,
-// "label_name": "coating_mass",
-
           "product_label": "coating_mass",
+          "product_filters": [selectedMaterial],
+          "product_label_filters": ["product_name"],
+          "product_category_id": 32,
           "base_product_filters": [
             selectedColors,
             selectedBrands,
@@ -263,19 +271,32 @@ class _ProfileRidgeAndArchState extends State<ProfileRidgeAndArch> {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final coating = data["message"]["message"][0];
-        print("Fetching colors for brand: $selectedColors");
+        final message = data["message"]["message"];
+        print("Fetching coating mass for brand: $selectedBrands");
         print("API response: ${response.body}");
 
-        if (coating is List) {
-          setState(() {
-            coatingAndList = coating
-                .whereType<Map>()
-                .map((e) => e["coating_mass"]?.toString())
-                .whereType<String>()
-                .toList();
-          });
+        if (message is List && message.isNotEmpty) {
+          final coating = message[0];
+          if (coating is List) {
+            setState(() {
+              coatingAndList = coating
+                  .whereType<Map>()
+                  .map((e) => e["coating_mass"]?.toString())
+                  .whereType<String>()
+                  .toList();
+            });
+          }
+
+          final idData = message.length > 1 ? message[1] : null;
+          if (idData is List && idData.isNotEmpty && idData.first is Map) {
+            selectedProductBaseId = idData.first["id"]?.toString();
+            print("Selected Product Base ID: $selectedProductBaseId");
+          }
+        } else {
+          debugPrint("Unexpected message format for coating mass data.");
         }
+      } else {
+        debugPrint("Failed to fetch coating mass data: ${response.statusCode}");
       }
     } catch (e) {
       print("Exception fetching coating mass: $e");
@@ -290,35 +311,35 @@ class _ProfileRidgeAndArchState extends State<ProfileRidgeAndArch> {
     IOClient ioClient = IOClient(client);
     final headers = {"Content-Type": "application/json"};
     final data = {
-      // "product_filters": null,
-      // "product_label_filters": null,
-      // "product_category_id": null,
-      // "base_product_filters": [
-      //   "${selectedBrands?.trim()}",
-      //   "${selectedColors?.trim()}",
-      //   "${selectedThickness?.trim()}",
-      //   "${selectedCoatingMass?.trim()}",
-      // ],
-      // "base_label_filters": [
-      //   "brand",
-      //   "color",
-      //   "thickness",
-      //   "coating_mass",
-      // ],
-      // "base_category_id": 32
+// "product_filters": null,
+// "product_label_filters": null,
+// "product_category_id": null,
+// "base_product_filters": [
+//   "${selectedBrands?.trim()}",
+//   "${selectedColors?.trim()}",
+//   "${selectedThickness?.trim()}",
+//   "${selectedCoatingMass?.trim()}",
+// ],
+// "base_label_filters": [
+//   "brand",
+//   "color",
+//   "thickness",
+//   "coating_mass",
+// ],
+// "base_category_id": 32
 
       "customer_id": UserSession().userId,
-      "product_id": 1590,
+      "product_id": 798,
       "product_name": selectedMaterial,
       "product_base_id": null,
       "product_base_name":
           "$selectedBrands,$selectedColors,$selectedThickness,$selectedCoatingMass,",
-      "category_id": 590,
-      "category_name": "Profile ridge & Arch "
+      "category_id": 32,
+      "category_name": "Profile ridge & Arch"
     };
 
     print("This is a body data: $data");
-    final url = "https://demo.zaron.in:8181/ci4/api/baseproduct";
+    final url = "https://demo.zaron.in:8181/ci4/api/addbag";
     final body = jsonEncode(data);
     try {
       final response = await ioClient.post(
@@ -328,7 +349,8 @@ class _ProfileRidgeAndArchState extends State<ProfileRidgeAndArch> {
       );
 
       debugPrint("This is a response: ${response.body}");
-      if (selectedBrands == null ||
+      if (selectedMaterial == null ||
+          selectedBrands == null ||
           selectedColors == null ||
           selectedThickness == null ||
           selectedCoatingMass == null) return;
@@ -385,10 +407,12 @@ class _ProfileRidgeAndArchState extends State<ProfileRidgeAndArch> {
       selectedColors = null;
       selectedThickness = null;
       selectedCoatingMass = null;
+      materialList = [];
       brandandList = [];
       colorandList = [];
       thickAndList = [];
       coatingAndList = [];
+      _fetchMaterial();
       _fetchBrandData();
     });
 

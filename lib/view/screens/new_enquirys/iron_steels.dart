@@ -28,6 +28,7 @@ class _IronSteelState extends State<IronSteel> {
   String? selectedColor;
   String? selectedThickness;
   String? selectedCoatingMass;
+  String? selectedProductBaseId;
 
   List<String> brandsList = [];
   List<String> colorsList = [];
@@ -96,7 +97,7 @@ class _IronSteelState extends State<IronSteel> {
 
     final client =
         IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
-    final url = Uri.parse('$apiUrl/onchangeinputdata');
+    final url = Uri.parse('$apiUrl/test');
 
     try {
       final response = await client.post(
@@ -104,6 +105,9 @@ class _IronSteelState extends State<IronSteel> {
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           "product_label": "color",
+          "product_filters": null,
+          "product_label_filters": null,
+          "product_category_id": null,
           "base_product_filters": [selectedBrand],
           "base_label_filters": ["brand"],
           "base_category_id": "3",
@@ -142,7 +146,7 @@ class _IronSteelState extends State<IronSteel> {
 
     final client =
         IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
-    final url = Uri.parse('$apiUrl/onchangeinputdata');
+    final url = Uri.parse('$apiUrl/test');
 
     try {
       final response = await client.post(
@@ -150,6 +154,9 @@ class _IronSteelState extends State<IronSteel> {
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           "product_label": "thickness",
+          "product_filters": null,
+          "product_label_filters": null,
+          "product_category_id": null,
           "base_product_filters": [selectedBrand, selectedColor],
           "base_label_filters": ["brand", "color"],
           "base_category_id": "3",
@@ -188,7 +195,7 @@ class _IronSteelState extends State<IronSteel> {
 
     final client =
         IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
-    final url = Uri.parse('$apiUrl/onchangeinputdata');
+    final url = Uri.parse('$apiUrl/test');
 
     try {
       final response = await client.post(
@@ -196,6 +203,9 @@ class _IronSteelState extends State<IronSteel> {
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           "product_label": "coating_mass",
+          "product_filters": null,
+          "product_label_filters": null,
+          "product_category_id": null,
           "base_product_filters": [
             selectedBrand,
             selectedColor,
@@ -208,10 +218,10 @@ class _IronSteelState extends State<IronSteel> {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final coating = data["message"]["message"][0];
-        print("Fetching colors for brand: $selectedBrand");
-        print("API response: ${response.body}");
+        final message = data["message"]["message"];
 
+        // Extract coating_mass list
+        final coating = message[0];
         if (coating is List) {
           setState(() {
             coatingMassList = coating
@@ -221,6 +231,15 @@ class _IronSteelState extends State<IronSteel> {
                 .toList();
           });
         }
+
+        // Extract product_base_id
+        final idData = message.length > 1 ? message[1] : null;
+        if (idData is List && idData.isNotEmpty && idData.first is Map) {
+          selectedProductBaseId = idData.first["id"]?.toString();
+          print("Selected Base Product ID: $selectedProductBaseId");
+        }
+
+        print("API response: ${response.body}");
       }
     } catch (e) {
       print("Exception fetching coating mass: $e");
@@ -254,7 +273,7 @@ class _IronSteelState extends State<IronSteel> {
       "customer_id": UserSession().userId,
       "product_id": null,
       "product_name": null,
-      "product_base_id": null,
+      "product_base_id": selectedProductBaseId,
       "product_base_name":
           "$selectedBrand$selectedColor$selectedThickness$selectedCoatingMass",
       "category_id": 3,
@@ -272,8 +291,7 @@ class _IronSteelState extends State<IronSteel> {
       );
 
       debugPrint("This is a response: ${response.body}");
-      if (selectedBrand == null ||
-          selectedColor == null ||
+      if (selectedColor == null ||
           selectedThickness == null ||
           selectedCoatingMass == null) {
         return;
@@ -293,8 +311,7 @@ class _IronSteelState extends State<IronSteel> {
   }
 
   void _submitData() {
-    if (selectedBrand == null ||
-        selectedColor == null ||
+    if (selectedColor == null ||
         selectedThickness == null ||
         selectedCoatingMass == null) {
 // Show elegant error message

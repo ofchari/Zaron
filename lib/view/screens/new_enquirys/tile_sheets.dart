@@ -7,6 +7,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:gap/gap.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/io_client.dart';
+import 'package:zaron/view/screens/global_user/global_user.dart';
 import 'package:zaron/view/universal_api/api&key.dart';
 import 'package:zaron/view/widgets/subhead.dart';
 import 'package:zaron/view/widgets/text.dart';
@@ -27,6 +28,7 @@ class _TileSheetPageState extends State<TileSheetPage> {
   String? selectedColors;
   String? selectedThickness;
   String? selectedCoatingMass;
+  String? selectedProductBaseId;
 
 // String? selectedBrand;
 
@@ -134,7 +136,7 @@ class _TileSheetPageState extends State<TileSheetPage> {
 
     final client =
         IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
-    final url = Uri.parse('$apiUrl/onchangeinputdata');
+    final url = Uri.parse('$apiUrl/test');
 
     try {
       final response = await client.post(
@@ -147,6 +149,9 @@ class _TileSheetPageState extends State<TileSheetPage> {
 // "label_name": "color",
 
           "product_label": "color",
+          "product_filters": [selectedMaterial],
+          "product_label_filters": ["material_type"],
+          "product_category_id": 26,
           "base_product_filters": [selectedBrands],
           "base_label_filters": ["brand"],
           "base_category_id": 3
@@ -185,7 +190,7 @@ class _TileSheetPageState extends State<TileSheetPage> {
 
     final client =
         IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
-    final url = Uri.parse('$apiUrl/onchangeinputdata');
+    final url = Uri.parse('$apiUrl/test');
 
     try {
       final response = await client.post(
@@ -198,6 +203,9 @@ class _TileSheetPageState extends State<TileSheetPage> {
 // "label_name": "thickness",
 
           "product_label": "thickness",
+          "product_filters": [selectedMaterial],
+          "product_label_filters": ["material_type"],
+          "product_category_id": 26,
           "base_product_filters": [selectedBrands, selectedColors],
           "base_label_filters": ["brand", "color"],
           "base_category_id": 3
@@ -236,19 +244,17 @@ class _TileSheetPageState extends State<TileSheetPage> {
 
     final client =
         IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
-    final url = Uri.parse('$apiUrl/onchangeinputdata');
+    final url = Uri.parse('$apiUrl/test');
 
     try {
       final response = await client.post(
         url,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-// "category_id": "3",
-// "selectedlabel": "thickness",
-// "selectedvalue": selectedThickness,
-// "label_name": "coating_mass",
-
           "product_label": "coating_mass",
+          "product_filters": [selectedMaterial],
+          "product_label_filters": ["material_type"],
+          "product_category_id": 26,
           "base_product_filters": [
             selectedBrands,
             selectedColors,
@@ -261,22 +267,34 @@ class _TileSheetPageState extends State<TileSheetPage> {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final coating = data["message"]["message"][0];
-        print("Fetching colors for brand: $selectedColors");
+        final message = data["message"]["message"];
+        print("Fetching coating_mass for brand: $selectedBrands");
         print("API response: ${response.body}");
 
-        if (coating is List) {
-          setState(() {
-            coatingAndList = coating
-                .whereType<Map>()
-                .map((e) => e["coating_mass"]?.toString())
-                .whereType<String>()
-                .toList();
-          });
+        if (message is List && message.isNotEmpty) {
+          final coatingList = message[0];
+          if (coatingList is List) {
+            setState(() {
+              coatingAndList = coatingList
+                  .whereType<Map>()
+                  .map((e) => e["coating_mass"]?.toString())
+                  .whereType<String>()
+                  .toList();
+            });
+          }
+
+          // Optional: extract product_base_id
+          final baseIdData = message.length > 1 ? message[1] : null;
+          if (baseIdData is List &&
+              baseIdData.isNotEmpty &&
+              baseIdData.first is Map) {
+            selectedProductBaseId = baseIdData.first["id"]?.toString();
+            print("Selected Product Base ID: $selectedProductBaseId");
+          }
         }
       }
     } catch (e) {
-      print("Exception fetching coating mass: $e");
+      print("Exception fetching coating_mass: $e");
     }
   }
 
@@ -288,26 +306,34 @@ class _TileSheetPageState extends State<TileSheetPage> {
     IOClient ioClient = IOClient(client);
     final headers = {"Content-Type": "application/json"};
     final data = {
-      "product_filters": null,
-      "product_label_filters": null,
-      "product_category_id": null,
-      "base_product_filters": [
-        "${selectedBrands?.trim()}",
-        "${selectedColors?.trim()}",
-        "${selectedThickness?.trim()}",
-        "${selectedCoatingMass?.trim()}",
-      ],
-      "base_label_filters": [
-        "brand",
-        "color",
-        "thickness",
-        "coating_mass",
-      ],
-      "base_category_id": 26
+      // "product_filters": 1114,
+      // "product_label_filters": null,
+      // "product_category_id": null,
+      // "base_product_filters": [
+      //   "${selectedBrands?.trim()}",
+      //   "${selectedColors?.trim()}",
+      //   "${selectedThickness?.trim()}",
+      //   "${selectedCoatingMass?.trim()}",
+      // ],
+      // "base_label_filters": [
+      //   "brand",
+      //   "color",
+      //   "thickness",
+      //   "coating_mass",
+      // ],
+      // "base_category_id": 26
+
+      "customer_id": UserSession().userId,
+      "product_id": 1114,
+      "product_name": selectedMaterial,
+      "product_base_id": selectedProductBaseId,
+      "product_base_name": "$selectedBrands,$selectedColors,$selectedThickness",
+      "category_id": 26,
+      "category_name": "Tile sheet"
     };
 
     print("This is a body data: $data");
-    final url = "https://demo.zaron.in:8181/ci4/api/baseproduct";
+    final url = "$apiUrl/addbag";
     final body = jsonEncode(data);
     try {
       final response = await ioClient.post(

@@ -30,6 +30,7 @@ class _GIStiffnerState extends State<GIStiffner> {
   String? selsectedCoat;
   String? selectedyie;
   String? selectedBrand;
+  String? selectedProductBaseId;
 
   List<String> productList = [];
   List<String> meterialList = [];
@@ -134,7 +135,7 @@ class _GIStiffnerState extends State<GIStiffner> {
 
     final client =
         IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
-    final url = Uri.parse('$apiUrl/onchangeinputdata');
+    final url = Uri.parse('$apiUrl/test');
 
     try {
       final response = await client.post(
@@ -142,6 +143,9 @@ class _GIStiffnerState extends State<GIStiffner> {
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           "product_label": "thickness",
+          "product_filters": [selectedProduct],
+          "product_label_filters": ["product_name"],
+          "product_category_id": 627,
           "base_product_filters": [selectedMeterial],
           "base_label_filters": ["material_type"],
           "base_category_id": "34",
@@ -180,7 +184,7 @@ class _GIStiffnerState extends State<GIStiffner> {
 
     final client =
         IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
-    final url = Uri.parse('$apiUrl/onchangeinputdata');
+    final url = Uri.parse('$apiUrl/test');
 
     try {
       final response = await client.post(
@@ -188,6 +192,9 @@ class _GIStiffnerState extends State<GIStiffner> {
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           "product_label": "coating_mass",
+          "product_filters": [selectedProduct],
+          "product_label_filters": ["product_name"],
+          "product_category_id": 627,
           "base_product_filters": [selectedMeterial, selectedThichness],
           "base_label_filters": ["material_type", "thickness"],
           "base_category_id": "34",
@@ -226,7 +233,7 @@ class _GIStiffnerState extends State<GIStiffner> {
 
     final client =
         IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
-    final url = Uri.parse('$apiUrl/onchangeinputdata');
+    final url = Uri.parse('$apiUrl/test');
 
     try {
       final response = await client.post(
@@ -234,6 +241,9 @@ class _GIStiffnerState extends State<GIStiffner> {
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           "product_label": "yield_strength",
+          "product_filters": [selectedProduct],
+          "product_label_filters": ["product_name"],
+          "product_category_id": 627,
           "base_product_filters": [
             selectedMeterial,
             selectedThichness,
@@ -275,7 +285,7 @@ class _GIStiffnerState extends State<GIStiffner> {
 
     final client =
         IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
-    final url = Uri.parse('$apiUrl/onchangeinputdata');
+    final url = Uri.parse('$apiUrl/test');
 
     try {
       final response = await client.post(
@@ -283,6 +293,9 @@ class _GIStiffnerState extends State<GIStiffner> {
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           "product_label": "brand",
+          "product_filters": [selectedProduct],
+          "product_label_filters": ["product_name"],
+          "product_category_id": 627,
           "base_product_filters": [
             selectedMeterial,
             selectedThichness,
@@ -301,22 +314,31 @@ class _GIStiffnerState extends State<GIStiffner> {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final brands = data["message"]["message"][0];
-        print("Fetching colors for brand: $brands");
+        final message = data["message"]["message"];
         print("API response: ${response.body}");
 
-        if (brands is List) {
-          setState(() {
-            brandList = brands
-                .whereType<Map>()
-                .map((e) => e["brand"]?.toString())
-                .whereType<String>()
-                .toList();
-          });
+        if (message is List && message.isNotEmpty) {
+          final brands = message[0];
+          if (brands is List) {
+            setState(() {
+              brandList = brands
+                  .whereType<Map>()
+                  .map((e) => e["brand"]?.toString())
+                  .whereType<String>()
+                  .toList();
+            });
+          }
+
+          // Optional: Extract product_base_id if present in message[1]
+          final idData = message.length > 1 ? message[1] : null;
+          if (idData is List && idData.isNotEmpty && idData.first is Map) {
+            selectedProductBaseId = idData.first["id"]?.toString();
+            print("Selected Product Base ID: $selectedProductBaseId");
+          }
         }
       }
     } catch (e) {
-      print("Exception fetching coating mass: $e");
+      print("Exception fetching brand: $e");
     }
   }
 
@@ -350,7 +372,7 @@ class _GIStiffnerState extends State<GIStiffner> {
       "customer_id": UserSession().userId,
       "product_id": 1330,
       "product_name": selectedProduct,
-      "product_base_id": null,
+      "product_base_id": selectedProductBaseId,
       "product_base_name":
           "$selectedMeterial,$selectedThichness,$selsectedCoat$selectedyie$selectedBrand",
       "category_id": 627,

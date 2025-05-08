@@ -29,6 +29,7 @@ class _RollSheetState extends State<RollSheet> {
   String? selectedColor;
   String? selectedThickness;
   String? selectedCoatingMass;
+  String? selectedBaseProductID;
 
   List<String> productList = [];
   List<String> brandsList = [];
@@ -132,7 +133,7 @@ class _RollSheetState extends State<RollSheet> {
 
     final client =
         IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
-    final url = Uri.parse('$apiUrl/onchangeinputdata');
+    final url = Uri.parse('$apiUrl/test');
 
     try {
       final response = await client.post(
@@ -145,6 +146,9 @@ class _RollSheetState extends State<RollSheet> {
 // "label_name": "color",
 
           "product_label": "color",
+          "product_filters": [selectedProduct],
+          "product_label_filters": ["product_name"],
+          "product_category_id": 591,
           "base_product_filters": [selectedBrand],
           "base_label_filters": ["brand"],
           "base_category_id": 3
@@ -183,7 +187,7 @@ class _RollSheetState extends State<RollSheet> {
 
     final client =
         IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
-    final url = Uri.parse('$apiUrl/onchangeinputdata');
+    final url = Uri.parse('$apiUrl/test');
 
     try {
       final response = await client.post(
@@ -196,6 +200,9 @@ class _RollSheetState extends State<RollSheet> {
 // "label_name": "thickness",
 
           "product_label": "thickness",
+          "product_filters": [selectedProduct],
+          "product_label_filters": ["product_name"],
+          "product_category_id": 591,
           "base_product_filters": [selectedBrand, selectedColor],
           "base_label_filters": ["brand", "color"],
           "base_category_id": 3
@@ -225,7 +232,10 @@ class _RollSheetState extends State<RollSheet> {
 
   /// fetch Thickness Api's ///
   Future<void> _fetchCoatingMass() async {
-    if (selectedBrand == null) return;
+    if (selectedBrand == null ||
+        selectedColor == null ||
+        selectedThickness == null ||
+        !mounted) return;
 
     setState(() {
       coatingMassList = [];
@@ -234,44 +244,56 @@ class _RollSheetState extends State<RollSheet> {
 
     final client =
         IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
-    final url = Uri.parse('$apiUrl/onchangeinputdata');
+    final url = Uri.parse('$apiUrl/test');
 
     try {
       final response = await client.post(
         url,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-// "category_id": "3",
-// "selectedlabel": "thickness",
-// "selectedvalue": selectedThickness,
-// "label_name": "coating_mass",
-
           "product_label": "coating_mass",
+          "product_filters": [selectedProduct],
+          "product_label_filters": ["product_name"],
+          "product_category_id": 591,
           "base_product_filters": [
             selectedBrand,
             selectedColor,
-            selectedThickness
+            selectedThickness,
           ],
           "base_label_filters": ["brand", "color", "thickness"],
-          "base_category_id": 3
+          "base_category_id": "3",
         }),
       );
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final coating = data["message"]["message"][0];
-        print("Fetching colors for brand: $selectedBrand");
-        print("API response: ${response.body}");
+        final message = data["message"]["message"];
 
-        if (coating is List) {
-          setState(() {
-            coatingMassList = coating
-                .whereType<Map>()
-                .map((e) => e["coating_mass"]?.toString())
-                .whereType<String>()
-                .toList();
-          });
+        print("Full API Response: $message");
+
+        if (message is List && message.length >= 2) {
+          final coatingData = message[0];
+          final idData = message[1];
+
+          if (coatingData is List) {
+            setState(() {
+              coatingMassList = coatingData
+                  .whereType<Map>()
+                  .map((e) => e["coating_mass"]?.toString())
+                  .whereType<String>()
+                  .toList();
+            });
+          }
+
+          if (idData is List && idData.isNotEmpty && idData.first is Map) {
+            selectedBaseProductID = idData.first["id"]?.toString();
+            debugPrint("Selected Base Product ID: $selectedBaseProductID");
+          }
+        } else {
+          debugPrint("Unexpected message format for coating mass.");
         }
+      } else {
+        debugPrint("Failed to fetch coating mass: ${response.statusCode}");
       }
     } catch (e) {
       print("Exception fetching coating mass: $e");
@@ -289,32 +311,32 @@ class _RollSheetState extends State<RollSheet> {
       "customer_id": UserSession().userId,
       "product_id": 689,
       "product_name": selectedProduct,
-      "product_base_id": null,
+      "product_base_id": selectedBaseProductID,
       "product_base_name":
           "$selectedBrand,$selectedColor,$selectedThickness,$selectedCoatingMass,",
       "category_id": 591,
       "category_name": "Roll Sheet"
 
-      // "product_filters": null,
-      // "product_label_filters": null,
-      // "product_category_id": null,
-      // "base_product_filters": [
-      //   "${selectedBrand?.trim()}",
-      //   "${selectedColor?.trim()}",
-      //   "${selectedThickness?.trim()}",
-      //   "${selectedCoatingMass?.trim()}",
-      // ],
-      // "base_label_filters": [
-      //   "brand",
-      //   "color",
-      //   "thickness",
-      //   "coating_mass",
-      // ],
-      // "base_category_id": 591
+// "product_filters": null,
+// "product_label_filters": null,
+// "product_category_id": null,
+// "base_product_filters": [
+//   "${selectedBrand?.trim()}",
+//   "${selectedColor?.trim()}",
+//   "${selectedThickness?.trim()}",
+//   "${selectedCoatingMass?.trim()}",
+// ],
+// "base_label_filters": [
+//   "brand",
+//   "color",
+//   "thickness",
+//   "coating_mass",
+// ],
+// "base_category_id": 591
     };
 
     print("This is a body data: $data");
-    final url = "https://demo.zaron.in:8181/ci4/api/addbag";
+    final url = "$apiUrl/addbag";
     final body = jsonEncode(data);
     try {
       final response = await ioClient.post(

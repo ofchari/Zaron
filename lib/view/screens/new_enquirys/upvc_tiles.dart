@@ -32,6 +32,7 @@ class _UpvcTilesState extends State<UpvcTiles> {
   List<String> materialList = [];
   List<String> colorsList = [];
   List<String> thicknessList = [];
+  String? selectedProductBaseId;
 
   List<Map<String, dynamic>> submittedData = [];
 
@@ -95,7 +96,7 @@ class _UpvcTilesState extends State<UpvcTiles> {
 
     final client =
         IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
-    final url = Uri.parse('$apiUrl/onchangeinputdata');
+    final url = Uri.parse('$apiUrl/test');
 
     try {
       final response = await client.post(
@@ -103,6 +104,9 @@ class _UpvcTilesState extends State<UpvcTiles> {
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           "product_label": "color",
+          "product_filters": null,
+          "product_label_filters": null,
+          "product_category_id": null,
           "base_product_filters": [selectMaterial],
           "base_label_filters": ["material_type"],
           "base_category_id": "631",
@@ -132,7 +136,7 @@ class _UpvcTilesState extends State<UpvcTiles> {
 
   /// fetch Thickness Api's ///
   Future<void> _fetchThickness() async {
-    if (selectMaterial == null) return;
+    if (selectMaterial == null || selectedColor == null || !mounted) return;
 
     setState(() {
       thicknessList = [];
@@ -141,7 +145,7 @@ class _UpvcTilesState extends State<UpvcTiles> {
 
     final client =
         IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
-    final url = Uri.parse('$apiUrl/onchangeinputdata');
+    final url = Uri.parse('$apiUrl/test');
 
     try {
       final response = await client.post(
@@ -149,6 +153,9 @@ class _UpvcTilesState extends State<UpvcTiles> {
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           "product_label": "thickness",
+          "product_filters": null,
+          "product_label_filters": null,
+          "product_category_id": null,
           "base_product_filters": [selectMaterial, selectedColor],
           "base_label_filters": ["material_type", "color"],
           "base_category_id": "631",
@@ -157,22 +164,36 @@ class _UpvcTilesState extends State<UpvcTiles> {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final thick = data["message"]["message"][0];
-        print("Fetching colors for brand: $selectedColor");
-        print("API response: ${response.body}");
+        final message = data["message"]["message"];
 
-        if (thick is List) {
-          setState(() {
-            thicknessList = thick
-                .whereType<Map>()
-                .map((e) => e["thickness"]?.toString())
-                .whereType<String>()
-                .toList();
-          });
+        print("Full API Response: $message");
+
+        if (message is List && message.length >= 2) {
+          final thicknessData = message[0];
+          final idData = message[1];
+
+          if (thicknessData is List) {
+            setState(() {
+              thicknessList = thicknessData
+                  .whereType<Map>()
+                  .map((e) => e["thickness"]?.toString())
+                  .whereType<String>()
+                  .toList();
+            });
+          }
+
+          if (idData is List && idData.isNotEmpty && idData.first is Map) {
+            selectedProductBaseId = idData.first["id"]?.toString();
+            debugPrint("Selected Base Product ID: $selectedProductBaseId");
+          }
+        } else {
+          debugPrint("Unexpected message format.");
         }
+      } else {
+        debugPrint("Failed to fetch data: ${response.statusCode}");
       }
     } catch (e) {
-      print("Exception fetching sizes: $e");
+      print("Exception fetching thickness: $e");
     }
   }
 
@@ -183,24 +204,24 @@ class _UpvcTilesState extends State<UpvcTiles> {
     IOClient ioClient = IOClient(client);
     final headers = {"Content-Type": "application/json"};
     final data = {
-      // "product_filters": null,
-      // "product_label_filters": null,
-      // "product_category_id": null,
-      // "base_product_filters": [
-      //   "${selectMaterial?.trim()}",
-      //   "${selectedColor?.trim()}",
-      //   "${selectThickness?.trim()}",
-      // ],
-      // "base_label_filters": [
-      //   "material_type",
-      //   "color",
-      //   "thickness",
-      // ],
-      // "base_category_id": 631
+// "product_filters": null,
+// "product_label_filters": null,
+// "product_category_id": null,
+// "base_product_filters": [
+//   "${selectMaterial?.trim()}",
+//   "${selectedColor?.trim()}",
+//   "${selectThickness?.trim()}",
+// ],
+// "base_label_filters": [
+//   "material_type",
+//   "color",
+//   "thickness",
+// ],
+// "base_category_id": 631
       "customer_id": UserSession().userId,
       "product_id": null,
       "product_name": null,
-      "product_base_id": null,
+      "product_base_id": selectedProductBaseId,
       "product_base_name": "$selectMaterial$selectedColor$selectThickness",
       "category_id": 631,
       "category_name": "UPVC Tiles"

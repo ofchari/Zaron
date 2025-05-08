@@ -7,11 +7,10 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:gap/gap.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/io_client.dart';
+import 'package:zaron/view/screens/global_user/global_user.dart';
 import 'package:zaron/view/universal_api/api&key.dart';
 import 'package:zaron/view/widgets/subhead.dart';
 import 'package:zaron/view/widgets/text.dart';
-
-import '../global_user/global_user.dart';
 
 class CutToLengthSheet extends StatefulWidget {
   const CutToLengthSheet({super.key, required this.data});
@@ -30,6 +29,7 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
   String? selsectedCoat;
   String? selectedyie;
   String? selectedBrand;
+  String? selectedProductBaseId;
 
   List<String> productList = [];
   List<String> meterialList = [];
@@ -134,7 +134,7 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
 
     final client =
         IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
-    final url = Uri.parse('$apiUrl/onchangeinputdata');
+    final url = Uri.parse('$apiUrl/test');
 
     try {
       final response = await client.post(
@@ -147,6 +147,9 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
           // "label_name": "thickness",
 
           "product_label": "thickness",
+          "product_filters": [selectedProduct],
+          "product_label_filters": ["product_name"],
+          "product_category_id": 626,
           "base_product_filters": [selectedMeterial],
           "base_label_filters": ["material_type"],
           "base_category_id": "3",
@@ -185,7 +188,7 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
 
     final client =
         IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
-    final url = Uri.parse('$apiUrl/onchangeinputdata');
+    final url = Uri.parse('$apiUrl/test');
 
     try {
       final response = await client.post(
@@ -198,6 +201,9 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
           // "label_name": "coating_mass",
 
           "product_label": "coating_mass",
+          "product_filters": [selectedProduct],
+          "product_label_filters": ["product_name"],
+          "product_category_id": 626,
           "base_product_filters": [selectedMeterial, selectedThichness],
           "base_label_filters": ["material_type", "thickness"],
           "base_category_id": "3",
@@ -236,7 +242,7 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
 
     final client =
         IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
-    final url = Uri.parse('$apiUrl/onchangeinputdata');
+    final url = Uri.parse('$apiUrl/test');
 
     try {
       final response = await client.post(
@@ -249,6 +255,9 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
           // "label_name": "yield_strength",
 
           "product_label": "yield_strength",
+          "product_filters": [selectedProduct],
+          "product_label_filters": ["product_name"],
+          "product_category_id": 626,
           "base_product_filters": [
             selectedMeterial,
             selectedThichness,
@@ -290,19 +299,17 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
 
     final client =
         IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
-    final url = Uri.parse('$apiUrl/onchangeinputdata');
+    final url = Uri.parse('$apiUrl/test');
 
     try {
       final response = await client.post(
         url,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-          // "category_id": "3",
-          // "selectedlabel": "yield_strength",
-          // "selectedvalue": selectedyie,
-          // "label_name": "brand",
-
           "product_label": "brand",
+          "product_filters": [selectedProduct],
+          "product_label_filters": ["product_name"],
+          "product_category_id": 626,
           "base_product_filters": [
             selectedMeterial,
             selectedThichness,
@@ -321,22 +328,31 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final brands = data["message"]["message"][0];
-        print("Fetching colors for brand: $brands");
+        final message = data["message"]["message"];
         print("API response: ${response.body}");
 
-        if (brands is List) {
-          setState(() {
-            brandList = brands
-                .whereType<Map>()
-                .map((e) => e["brand"]?.toString())
-                .whereType<String>()
-                .toList();
-          });
+        if (message is List && message.isNotEmpty) {
+          final brands = message[0];
+          if (brands is List) {
+            setState(() {
+              brandList = brands
+                  .whereType<Map>()
+                  .map((e) => e["brand"]?.toString())
+                  .whereType<String>()
+                  .toList();
+            });
+          }
+
+          // Optional: extract product_base_id from message[1]
+          final idData = message.length > 1 ? message[1] : null;
+          if (idData is List && idData.isNotEmpty && idData.first is Map) {
+            selectedProductBaseId = idData.first["id"]?.toString();
+            print("Selected Product Base ID: $selectedProductBaseId");
+          }
         }
       }
     } catch (e) {
-      print("Exception fetching coating mass: $e");
+      print("Exception fetching brand: $e");
     }
   }
 
@@ -369,7 +385,7 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
       "customer_id": UserSession().userId,
       "product_id": 2193,
       "product_name": selectedProduct,
-      "product_base_id": 473,
+      "product_base_id": selectedProductBaseId,
       "product_base_name":
           "$selectedMeterial,$selectedThichness,$selsectedCoat$selectedyie$selectedBrand",
       "category_id": 626,

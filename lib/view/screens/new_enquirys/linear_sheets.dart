@@ -29,6 +29,7 @@ class _LinerSheetPageState extends State<LinerSheetPage> {
   String? selectedColors;
   String? selectedThickness;
   String? selectedCoatingMass;
+  String? selectedProductBaseId;
 
   List<String> productList = [];
   List<String> brandandList = [];
@@ -134,7 +135,7 @@ class _LinerSheetPageState extends State<LinerSheetPage> {
 
     final client =
         IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
-    final url = Uri.parse('$apiUrl/onchangeinputdata');
+    final url = Uri.parse('$apiUrl/test');
 
     try {
       final response = await client.post(
@@ -147,6 +148,9 @@ class _LinerSheetPageState extends State<LinerSheetPage> {
 // "label_name": "color",
 
           "product_label": "color",
+          "product_filters": [selectedProduct],
+          "product_label_filters": ["product_name"],
+          "product_category_id": 590,
           "base_product_filters": [selectedBrands],
           "base_label_filters": ["brand"],
           "base_category_id": 3
@@ -185,7 +189,7 @@ class _LinerSheetPageState extends State<LinerSheetPage> {
 
     final client =
         IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
-    final url = Uri.parse('$apiUrl/onchangeinputdata');
+    final url = Uri.parse('$apiUrl/test');
 
     try {
       final response = await client.post(
@@ -198,6 +202,9 @@ class _LinerSheetPageState extends State<LinerSheetPage> {
 // "label_name": "thickness",
 
           "product_label": "thickness",
+          "product_filters": [selectedProduct],
+          "product_label_filters": ["product_name"],
+          "product_category_id": 590,
           "base_product_filters": [selectedBrands, selectedColors],
           "base_label_filters": ["brand", "color"],
           "base_category_id": 3
@@ -236,19 +243,17 @@ class _LinerSheetPageState extends State<LinerSheetPage> {
 
     final client =
         IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
-    final url = Uri.parse('$apiUrl/onchangeinputdata');
+    final url = Uri.parse('$apiUrl/test');
 
     try {
       final response = await client.post(
         url,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-// "category_id": "3",
-// "selectedlabel": "thickness",
-// "selectedvalue": selectedThickness,
-// "label_name": "coating_mass",
-
           "product_label": "coating_mass",
+          "product_filters": [selectedProduct],
+          "product_label_filters": ["product_name"],
+          "product_category_id": 590,
           "base_product_filters": [
             selectedBrands,
             selectedColors,
@@ -261,18 +266,28 @@ class _LinerSheetPageState extends State<LinerSheetPage> {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final coating = data["message"]["message"][0];
-        print("Fetching colors for brand: $selectedColors");
+        final message = data["message"]["message"];
+        print("Fetching coating mass for brand: $selectedBrands");
         print("API response: ${response.body}");
 
-        if (coating is List) {
-          setState(() {
-            coatingAndList = coating
-                .whereType<Map>()
-                .map((e) => e["coating_mass"]?.toString())
-                .whereType<String>()
-                .toList();
-          });
+        if (message is List && message.isNotEmpty) {
+          final coating = message[0];
+          if (coating is List) {
+            setState(() {
+              coatingAndList = coating
+                  .whereType<Map>()
+                  .map((e) => e["coating_mass"]?.toString())
+                  .whereType<String>()
+                  .toList();
+            });
+          }
+
+// Optional: extract product_base_id from message[1]
+          final idData = message.length > 1 ? message[1] : null;
+          if (idData is List && idData.isNotEmpty && idData.first is Map) {
+            selectedProductBaseId = idData.first["id"]?.toString();
+            print("Selected Product Base ID: $selectedProductBaseId");
+          }
         }
       }
     } catch (e) {
@@ -290,7 +305,7 @@ class _LinerSheetPageState extends State<LinerSheetPage> {
 //
 //   final client =
 //       IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
-//   final url = Uri.parse('$apiUrl/onchangeinputdata');
+//   final url = Uri.parse('$apiUrl/test');
 //
 //   try {
 //     final response = await client.post(
@@ -336,7 +351,7 @@ class _LinerSheetPageState extends State<LinerSheetPage> {
       "customer_id": UserSession().userId,
       "product_id": 1590,
       "product_name": selectedProduct,
-      "product_base_id": null,
+      "product_base_id": selectedProductBaseId,
       "product_base_name":
           "$selectedBrands,$selectedColors,$selectedThickness,$selectedCoatingMass,",
       "category_id": 590,
@@ -433,7 +448,7 @@ class _LinerSheetPageState extends State<LinerSheetPage> {
       brandandList = [];
       colorandList = [];
       thickAndList = [];
-      colorandList = [];
+      coatingAndList = [];
       _fetchProductName();
       _fetchBrandData();
     });

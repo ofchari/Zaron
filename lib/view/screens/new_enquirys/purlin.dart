@@ -31,6 +31,7 @@ class _PurlinState extends State<Purlin> {
   String? selectedSize;
   String? selectedThickness;
   String? selectedMaterialType;
+  String? selectedProductBaseId;
 
   List<String> productList = [];
   List<String> brandsList = [];
@@ -100,7 +101,7 @@ class _PurlinState extends State<Purlin> {
 
     final client =
         IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
-    final url = Uri.parse('$apiUrl/onchangeinputdata');
+    final url = Uri.parse('$apiUrl/test');
 
     try {
       final response = await client.post(
@@ -108,6 +109,9 @@ class _PurlinState extends State<Purlin> {
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           "product_label": "size",
+          "product_filters": null,
+          "product_label_filters": null,
+          "product_category_id": null,
           "base_product_filters": [selectProduct],
           "base_label_filters": ["shape_of_product"],
           "base_category_id": "5",
@@ -147,7 +151,7 @@ class _PurlinState extends State<Purlin> {
 
     final client =
         IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
-    final url = Uri.parse('$apiUrl/onchangeinputdata');
+    final url = Uri.parse('$apiUrl/test');
 
     try {
       final response = await client.post(
@@ -155,6 +159,9 @@ class _PurlinState extends State<Purlin> {
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           "product_label": "material_type",
+          "product_filters": null,
+          "product_label_filters": null,
+          "product_category_id": null,
           "base_product_filters": [selectProduct, selectedSize],
           "base_label_filters": ["shape_of_product", "size"],
           "base_category_id": "5",
@@ -194,7 +201,7 @@ class _PurlinState extends State<Purlin> {
 
     final client =
         IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
-    final url = Uri.parse('$apiUrl/onchangeinputdata');
+    final url = Uri.parse('$apiUrl/test');
 
     try {
       final response = await client.post(
@@ -202,6 +209,9 @@ class _PurlinState extends State<Purlin> {
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           "product_label": "thickness",
+          "product_filters": null,
+          "product_label_filters": null,
+          "product_category_id": null,
           "base_product_filters": [
             selectProduct,
             selectedSize,
@@ -245,7 +255,7 @@ class _PurlinState extends State<Purlin> {
 
     final client =
         IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
-    final url = Uri.parse('$apiUrl/onchangeinputdata');
+    final url = Uri.parse('$apiUrl/test');
 
     try {
       final response = await client.post(
@@ -253,6 +263,9 @@ class _PurlinState extends State<Purlin> {
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           "product_label": "brand",
+          "product_filters": null,
+          "product_label_filters": null,
+          "product_category_id": null,
           "base_product_filters": [
             selectProduct,
             selectedSize,
@@ -271,18 +284,29 @@ class _PurlinState extends State<Purlin> {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final brand = data["message"]["message"];
+        final message = data["message"]["message"];
         print("Fetching brand: $selectedThickness");
         print("API response: ${response.body}");
 
-        if (brand is List) {
-          setState(() {
-            brandsList = brand
-                .whereType<Map>()
-                .map((e) => e["brand"]?.toString())
-                .whereType<String>()
-                .toList();
-          });
+        if (message is List && message.isNotEmpty) {
+          // Extract brand names from the first list
+          final brandListRaw = message[0];
+          if (brandListRaw is List) {
+            setState(() {
+              brandsList = brandListRaw
+                  .whereType<Map>()
+                  .map((e) => e["brand"]?.toString())
+                  .whereType<String>()
+                  .toList();
+            });
+          }
+
+          // Extract product_base_id from second list
+          final idData = message.length > 1 ? message[1] : null;
+          if (idData is List && idData.isNotEmpty && idData.first is Map) {
+            selectedProductBaseId = idData.first["id"]?.toString();
+            print("Selected Base Product ID: $selectedProductBaseId");
+          }
         }
       }
     } catch (e) {
@@ -320,7 +344,7 @@ class _PurlinState extends State<Purlin> {
       "customer_id": UserSession().userId,
       "product_id": null,
       "product_name": null,
-      "product_base_id": null,
+      "product_base_id": selectedProductBaseId,
       "product_base_name":
           "$selectProduct,$selectedSize,$selectedMaterialType,$selectedThickness, $selectedBrand",
       "category_id": 5,
@@ -328,7 +352,7 @@ class _PurlinState extends State<Purlin> {
     };
 
     print("This is a body data: $data");
-    final url = "https://demo.zaron.in:8181/ci4/api/baseproduct";
+    final url = "$apiUrl/addbag";
     final body = jsonEncode(data);
     try {
       final response = await ioClient.post(
@@ -360,8 +384,7 @@ class _PurlinState extends State<Purlin> {
 //
 
   void _submitData() {
-    if (selectedBrand == null ||
-        selectedSize == null ||
+    if (selectedSize == null ||
         selectedThickness == null ||
         selectProduct == null ||
         selectedMaterialType == null) {

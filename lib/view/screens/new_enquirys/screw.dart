@@ -28,6 +28,7 @@ class _ScrewState extends State<Screw> {
   String? selectedBrand;
   String? selectedScrew;
   String? selectedThread;
+  String? selectedProductBaseId;
 
   List<String> brandList = [];
   List<String> screwLengthList = [];
@@ -98,7 +99,7 @@ class _ScrewState extends State<Screw> {
 
     final client =
         IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
-    final url = Uri.parse('$apiUrl/onchangeinputdata');
+    final url = Uri.parse('$apiUrl/test');
 
     try {
       final response = await client.post(
@@ -106,6 +107,9 @@ class _ScrewState extends State<Screw> {
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           "product_label": "length_of_screw",
+          "product_filters": null,
+          "product_label_filters": null,
+          "product_category_id": null,
           "base_product_filters": [selectedBrand],
           "base_label_filters": ["brand"],
           "base_category_id": "7",
@@ -147,7 +151,7 @@ class _ScrewState extends State<Screw> {
 
     final client =
         IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
-    final url = Uri.parse('$apiUrl/onchangeinputdata');
+    final url = Uri.parse('$apiUrl/test');
 
     try {
       final response = await client.post(
@@ -155,6 +159,9 @@ class _ScrewState extends State<Screw> {
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           "product_label": "type_of_thread",
+          "product_filters": null,
+          "product_label_filters": null,
+          "product_category_id": null,
           "base_product_filters": [selectedBrand, selectedScrew],
           "base_label_filters": ["brand", "length_of_screw"],
           "base_category_id": "7",
@@ -163,11 +170,14 @@ class _ScrewState extends State<Screw> {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
+        print(response.body);
+        print(response.statusCode);
         final message = data["message"]["message"];
         print("Fetching thread types for screw: $selectedScrew");
         print("API response: ${response.body}");
 
-        if (message is List && message.length > 1) {
+        if (message is List && message.isNotEmpty) {
+          // Extract thread types from first list
           final threadTypes = message[0];
           if (threadTypes is List) {
             setState(() {
@@ -177,6 +187,13 @@ class _ScrewState extends State<Screw> {
                   .whereType<String>()
                   .toList();
             });
+          }
+
+          // Extract product_base_id from second list
+          final idData = message.length > 1 ? message[1] : null;
+          if (idData is List && idData.isNotEmpty && idData.first is Map) {
+            selectedProductBaseId = idData.first["id"]?.toString();
+            print("Selected Base Product ID: $selectedProductBaseId");
           }
         }
       }
@@ -195,7 +212,7 @@ class _ScrewState extends State<Screw> {
       "customer_id": UserSession().userId,
       "product_id": null,
       "product_name": null,
-      "product_base_id": null,
+      "product_base_id": selectedProductBaseId,
       "product_base_name": "$selectedBrand,$selectedScrew,$selectedThread",
       "category_id": 7,
       "category_name": "Screw"
@@ -211,7 +228,9 @@ class _ScrewState extends State<Screw> {
       debugPrint("This is a response: ${response.body}");
       if (selectedBrand == null ||
           selectedScrew == null ||
-          selectedThread == null) return;
+          selectedThread == null) {
+        return;
+      }
       if (response.statusCode == 200) {
 // Get.snackbar(
 //   "Data Added",

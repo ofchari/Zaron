@@ -28,6 +28,7 @@ class _AluminumState extends State<Aluminum> {
   String? selectedColor;
   String? selectedThickness;
   String? selectedMaterialType;
+  String? selectedProductBaseId;
 
   List<String> brandsList = [];
   List<String> colorsList = [];
@@ -96,7 +97,7 @@ class _AluminumState extends State<Aluminum> {
 
     final client =
         IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
-    final url = Uri.parse('$apiUrl/onchangeinputdata');
+    final url = Uri.parse('$apiUrl/test');
 
     try {
       final response = await client.post(
@@ -104,6 +105,9 @@ class _AluminumState extends State<Aluminum> {
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           "product_label": "thickness",
+          "product_filters": null,
+          "product_label_filters": null,
+          "product_category_id": null,
           "base_product_filters": [selectedMaterialType],
           "base_label_filters": ["material_type"],
           "base_category_id": "36",
@@ -142,7 +146,7 @@ class _AluminumState extends State<Aluminum> {
 
     final client =
         IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
-    final url = Uri.parse('$apiUrl/onchangeinputdata');
+    final url = Uri.parse('$apiUrl/test');
 
     try {
       final response = await client.post(
@@ -150,6 +154,9 @@ class _AluminumState extends State<Aluminum> {
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           "product_label": "brand",
+          "product_filters": null,
+          "product_label_filters": null,
+          "product_category_id": null,
           "base_product_filters": [selectedMaterialType, selectedThickness],
           "base_label_filters": ["material_type", "thickness"],
           "base_category_id": "36",
@@ -189,7 +196,7 @@ class _AluminumState extends State<Aluminum> {
 
     final client =
         IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
-    final url = Uri.parse('$apiUrl/onchangeinputdata');
+    final url = Uri.parse('$apiUrl/test');
 
     try {
       final response = await client.post(
@@ -197,6 +204,9 @@ class _AluminumState extends State<Aluminum> {
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           "product_label": "color",
+          "product_filters": null,
+          "product_label_filters": null,
+          "product_category_id": null,
           "base_product_filters": [
             selectedMaterialType,
             selectedThickness,
@@ -213,14 +223,27 @@ class _AluminumState extends State<Aluminum> {
         print("Fetching colors for brand: $selectedBrand");
         print("API response: ${response.body}");
 
-        if (colors is List) {
-          setState(() {
-            colorsList = colors
-                .whereType<Map>()
-                .map((e) => e["color"]?.toString())
-                .whereType<String>()
-                .toList();
-          });
+        if (data["message"]["message"] is List) {
+          final List message = data["message"]["message"];
+
+          // Extract colors
+          final colorData = message[0];
+          if (colorData is List) {
+            setState(() {
+              colorsList = colorData
+                  .whereType<Map>()
+                  .map((e) => e["color"]?.toString())
+                  .whereType<String>()
+                  .toList();
+            });
+          }
+
+          // Extract ID
+          final idData = message.length > 1 ? message[1] : null;
+          if (idData is List && idData.isNotEmpty && idData.first is Map) {
+            selectedProductBaseId = idData.first["id"]?.toString();
+            print("Selected Base Product ID: $selectedProductBaseId");
+          }
         }
       }
     } catch (e) {
@@ -255,7 +278,7 @@ class _AluminumState extends State<Aluminum> {
       "customer_id": UserSession().userId,
       "product_id": null,
       "product_name": null,
-      "product_base_id": null,
+      "product_base_id": selectedProductBaseId,
       "product_base_name":
           "$selectedMaterialType,$selectedThickness,$selectedBrand$selectedColor",
       "category_id": 36,

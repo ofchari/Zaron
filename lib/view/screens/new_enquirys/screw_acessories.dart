@@ -27,6 +27,7 @@ class _ScrewAccessoriesState extends State<ScrewAccessories> {
   String? selectedProduct;
   String? selectedColor;
   String? selsectedBrand;
+  String? selectedProductBaseId;
 
   List<String> productList = [];
   List<String> colorsList = [];
@@ -94,7 +95,7 @@ class _ScrewAccessoriesState extends State<ScrewAccessories> {
 
     final client =
         IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
-    final url = Uri.parse('$apiUrl/onchangeinputdata');
+    final url = Uri.parse('$apiUrl/test');
 
     try {
       final response = await client.post(
@@ -102,6 +103,9 @@ class _ScrewAccessoriesState extends State<ScrewAccessories> {
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           "product_label": "color",
+          "product_filters": null,
+          "product_label_filters": null,
+          "product_category_id": null,
           "base_product_filters": [selectedProduct],
           "base_label_filters": ["product_name"],
           "base_category_id": "9",
@@ -140,7 +144,7 @@ class _ScrewAccessoriesState extends State<ScrewAccessories> {
 
     final client =
         IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
-    final url = Uri.parse('$apiUrl/onchangeinputdata');
+    final url = Uri.parse('$apiUrl/test');
 
     try {
       final response = await client.post(
@@ -149,6 +153,9 @@ class _ScrewAccessoriesState extends State<ScrewAccessories> {
         body: jsonEncode(
           {
             "product_label": "brand",
+            "product_filters": null,
+            "product_label_filters": null,
+            "product_category_id": null,
             "base_product_filters": [selectedProduct, selectedColor],
             "base_label_filters": ["product_name", "color"],
             "base_category_id": "9",
@@ -158,22 +165,33 @@ class _ScrewAccessoriesState extends State<ScrewAccessories> {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final brand = data["message"]["message"][0];
-        print("Fetching colors for brand: $selectedProduct");
+        final message = data["message"]["message"];
+        print("Fetching brand for product: $selectedProduct");
         print("API response: ${response.body}");
 
-        if (brand is List) {
-          setState(() {
-            brandList = brand
-                .whereType<Map>()
-                .map((e) => e["brand"]?.toString())
-                .whereType<String>()
-                .toList();
-          });
+        if (message is List && message.isNotEmpty) {
+          // Extract brand list
+          final brandListData = message[0];
+          if (brandListData is List) {
+            setState(() {
+              brandList = brandListData
+                  .whereType<Map>()
+                  .map((e) => e["brand"]?.toString())
+                  .whereType<String>()
+                  .toList();
+            });
+          }
+
+          // Extract product_base_id from second list
+          final idData = message.length > 1 ? message[1] : null;
+          if (idData is List && idData.isNotEmpty && idData.first is Map) {
+            selectedProductBaseId = idData.first["id"]?.toString();
+            print("Selected Base Product ID: $selectedProductBaseId");
+          }
         }
       }
     } catch (e) {
-      print("Exception fetching thickness: $e");
+      print("Exception fetching brand: $e");
     }
   }
 
@@ -203,13 +221,13 @@ class _ScrewAccessoriesState extends State<ScrewAccessories> {
       "customer_id": 377423,
       "product_id": null,
       "product_name": null,
-      "product_base_id": null,
+      "product_base_id": selectedProductBaseId,
       "product_base_name": "$selectedProduct,$selectedColor,$selsectedBrand",
       "category_id": 9,
       "category_name": "Screw accessories"
     };
     print("User input Data $data");
-    final url = "https://demo.zaron.in:8181/ci4/api/baseproduct";
+    final url = "$apiUrl/addbag";
     final body = jsonEncode(data);
     try {
       final response = await ioClient.post(
@@ -219,9 +237,7 @@ class _ScrewAccessoriesState extends State<ScrewAccessories> {
           headers: headers,
           body: body);
       debugPrint("This is a response: ${response.body}");
-      if (selectedProduct == null ||
-          selectedColor == null ||
-          selsectedBrand == null) return;
+      if (selectedProduct == null || selectedColor == null) return;
 
       if (response.statusCode == 200) {
         print(response.statusCode);
@@ -241,9 +257,7 @@ class _ScrewAccessoriesState extends State<ScrewAccessories> {
   /// fetch Thickness Api's ///
 
   void _submitData() {
-    if (selectedProduct == null ||
-        selectedColor == null ||
-        selsectedBrand == null) {
+    if (selectedProduct == null || selectedColor == null) {
 // Show elegant error message
       showDialog(
         context: context,

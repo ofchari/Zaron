@@ -29,6 +29,7 @@ class _DeckingSheetsState extends State<DeckingSheets> {
   String? selectCoatingMass;
   String? selectedYieldStrength;
   String? selectedBrand;
+  String? selectedProductBaseId;
 
   List<String> materialTypeList = [];
   List<String> thicknessList = [];
@@ -98,7 +99,7 @@ class _DeckingSheetsState extends State<DeckingSheets> {
 
     final client =
         IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
-    final url = Uri.parse('$apiUrl/onchangeinputdata');
+    final url = Uri.parse('$apiUrl/test');
 
     try {
       final response = await client.post(
@@ -106,6 +107,9 @@ class _DeckingSheetsState extends State<DeckingSheets> {
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           "product_label": "thickness",
+          "product_filters": null,
+          "product_label_filters": null,
+          "product_category_id": null,
           "base_product_filters": ["$selectedMaterialType"],
           "base_label_filters": ["material_type"],
           "base_category_id": "34",
@@ -145,7 +149,7 @@ class _DeckingSheetsState extends State<DeckingSheets> {
 
     final client =
         IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
-    final url = Uri.parse('$apiUrl/onchangeinputdata');
+    final url = Uri.parse('$apiUrl/test');
 
     try {
       final response = await client.post(
@@ -153,6 +157,9 @@ class _DeckingSheetsState extends State<DeckingSheets> {
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           "product_label": "coating_mass",
+          "product_filters": null,
+          "product_label_filters": null,
+          "product_category_id": null,
           "base_product_filters": [selectedMaterialType, selectedThickness],
           "base_label_filters": ["material_type", "thickness"],
           "base_category_id": "34",
@@ -192,7 +199,7 @@ class _DeckingSheetsState extends State<DeckingSheets> {
 
     final client =
         IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
-    final url = Uri.parse('$apiUrl/onchangeinputdata');
+    final url = Uri.parse('$apiUrl/test');
 
     try {
       final response = await client.post(
@@ -200,6 +207,9 @@ class _DeckingSheetsState extends State<DeckingSheets> {
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           "product_label": "yield_strength",
+          "product_filters": null,
+          "product_label_filters": null,
+          "product_category_id": null,
           "base_product_filters": [
             selectedMaterialType,
             selectedThickness,
@@ -243,7 +253,7 @@ class _DeckingSheetsState extends State<DeckingSheets> {
 
     final client =
         IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
-    final url = Uri.parse('$apiUrl/onchangeinputdata');
+    final url = Uri.parse('$apiUrl/test');
 
     try {
       final response = await client.post(
@@ -251,6 +261,9 @@ class _DeckingSheetsState extends State<DeckingSheets> {
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           "product_label": "brand",
+          "product_filters": null,
+          "product_label_filters": null,
+          "product_category_id": null,
           "base_product_filters": [
             selectedMaterialType,
             selectedThickness,
@@ -269,11 +282,10 @@ class _DeckingSheetsState extends State<DeckingSheets> {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final brands = data["message"]["message"][0];
-        print("Fetching brands: $brands");
-        print("API response: ${response.body}");
-        debugPrint(response.body);
+        final message = data["message"]["message"];
 
+        // Extract brand names
+        final brands = message[0];
         if (brands is List) {
           setState(() {
             brandList = brands
@@ -283,6 +295,15 @@ class _DeckingSheetsState extends State<DeckingSheets> {
                 .toList();
           });
         }
+
+        // Extract product_base_id
+        final idData = message.length > 1 ? message[1] : null;
+        if (idData is List && idData.isNotEmpty && idData.first is Map) {
+          selectedProductBaseId = idData.first["id"]?.toString();
+          print("Selected Base Product ID: $selectedProductBaseId");
+        }
+
+        print("API response: ${response.body}");
       }
     } catch (e) {
       print("Exception fetching brands: $e");
@@ -318,7 +339,7 @@ class _DeckingSheetsState extends State<DeckingSheets> {
       "customer_id": UserSession().userId,
       "product_id": null,
       "product_name": null,
-      "product_base_id": null,
+      "product_base_id": selectedProductBaseId,
       "product_base_name":
           "$selectedMaterialType,$selectedThickness,$selectCoatingMass$selectedYieldStrength$selectedBrand",
       "category_id": 34,
