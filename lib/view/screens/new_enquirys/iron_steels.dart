@@ -29,6 +29,7 @@ class _IronSteelState extends State<IronSteel> {
   String? selectedThickness;
   String? selectedCoatingMass;
   String? selectedProductBaseId;
+  String? selectedBaseProductName;
 
   List<String> brandsList = [];
   List<String> colorsList = [];
@@ -232,11 +233,15 @@ class _IronSteelState extends State<IronSteel> {
           });
         }
 
-        // Extract product_base_id
+        // Extract product_base_id and base_product_id
         final idData = message.length > 1 ? message[1] : null;
         if (idData is List && idData.isNotEmpty && idData.first is Map) {
           selectedProductBaseId = idData.first["id"]?.toString();
+          selectedBaseProductName =
+              idData.first["base_product_id"]?.toString(); // <-- Add this
           print("Selected Base Product ID: $selectedProductBaseId");
+          print(
+              "Base Product Name: $selectedBaseProductName"); // <-- Optional debug
         }
 
         print("API response: ${response.body}");
@@ -274,8 +279,7 @@ class _IronSteelState extends State<IronSteel> {
       "product_id": null,
       "product_name": null,
       "product_base_id": selectedProductBaseId,
-      "product_base_name":
-          "$selectedBrand$selectedColor$selectedThickness$selectedCoatingMass",
+      "product_base_name": "$selectedBaseProductName",
       "category_id": 3,
       "category_name": "Iron And Steel Corrugated Sheet"
     };

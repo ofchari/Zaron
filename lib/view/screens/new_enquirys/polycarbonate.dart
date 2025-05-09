@@ -11,7 +11,6 @@ import 'package:zaron/view/widgets/subhead.dart';
 import 'package:zaron/view/widgets/text.dart';
 
 import '../../universal_api/api&key.dart';
-import '../global_user/global_user.dart';
 
 class Polycarbonate extends StatefulWidget {
   const Polycarbonate({super.key, required this.data});
@@ -28,6 +27,7 @@ class _PolycarbonateState extends State<Polycarbonate> {
   String? selectedColor;
   String? selectedThickness;
   String? selectedProductBaseId;
+  String? selectedBaseProductName;
 
   List<String> brandsList = [];
   List<String> colorsList = [];
@@ -190,7 +190,11 @@ class _PolycarbonateState extends State<Polycarbonate> {
 
           if (idData is List && idData.isNotEmpty && idData.first is Map) {
             selectedProductBaseId = idData.first["id"]?.toString();
+            selectedBaseProductName =
+                idData.first["base_product_id"]?.toString(); // <-- New line
             debugPrint("Selected Base Product ID: $selectedProductBaseId");
+            debugPrint(
+                "Base Product Name: $selectedBaseProductName"); // <-- Optional print
           }
         }
       } else {
@@ -224,21 +228,21 @@ class _PolycarbonateState extends State<Polycarbonate> {
     final headers = {"Content-Type": "application/json"};
 
     // Get user ID safely
-    final userId = UserSession().userId;
-    if (userId == null) {
-      _showErrorSnackBar("User session not found. Please login again.");
-      setState(() {
-        isLoading = false;
-      });
-      return false;
-    }
+    // final userId = UserSession().userId;
+    // if (userId == null) {
+    //   _showErrorSnackBar("User session not found. Please login again.");
+    //   setState(() {
+    //     isLoading = false;
+    //   });
+    //   return false;
+    // }
 
     final data = {
-      "customer_id": UserSession().userId,
+      "customer_id": 377423,
       "product_id": null,
       "product_name": null,
       "product_base_id": selectedProductBaseId,
-      "product_base_name": "$selectedBrand,$selectedColor,$selectedThickness",
+      "product_base_name": "$selectedBaseProductName",
       "category_id": 19,
       "category_name": "Polycarbonate"
     };

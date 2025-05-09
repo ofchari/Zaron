@@ -28,6 +28,7 @@ class _UpvcTilesState extends State<UpvcTiles> {
   String? selectMaterial;
   String? selectedColor;
   String? selectThickness;
+  String? selectedBaseProductName;
 
   List<String> materialList = [];
   List<String> colorsList = [];
@@ -184,7 +185,11 @@ class _UpvcTilesState extends State<UpvcTiles> {
 
           if (idData is List && idData.isNotEmpty && idData.first is Map) {
             selectedProductBaseId = idData.first["id"]?.toString();
+            selectedBaseProductName =
+                idData.first["base_product_id"]?.toString(); // <-- New line
             debugPrint("Selected Base Product ID: $selectedProductBaseId");
+            debugPrint(
+                "Base Product Name: $selectedBaseProductName"); // <-- Optional
           }
         } else {
           debugPrint("Unexpected message format.");
@@ -222,7 +227,7 @@ class _UpvcTilesState extends State<UpvcTiles> {
       "product_id": null,
       "product_name": null,
       "product_base_id": selectedProductBaseId,
-      "product_base_name": "$selectMaterial$selectedColor$selectThickness",
+      "product_base_name": "$selectedBaseProductName",
       "category_id": 631,
       "category_name": "UPVC Tiles"
     };

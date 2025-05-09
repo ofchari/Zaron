@@ -28,6 +28,7 @@ class _ScrewAccessoriesState extends State<ScrewAccessories> {
   String? selectedColor;
   String? selsectedBrand;
   String? selectedProductBaseId;
+  String? selectedBaseProductName;
 
   List<String> productList = [];
   List<String> colorsList = [];
@@ -150,17 +151,15 @@ class _ScrewAccessoriesState extends State<ScrewAccessories> {
       final response = await client.post(
         url,
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode(
-          {
-            "product_label": "brand",
-            "product_filters": null,
-            "product_label_filters": null,
-            "product_category_id": null,
-            "base_product_filters": [selectedProduct, selectedColor],
-            "base_label_filters": ["product_name", "color"],
-            "base_category_id": "9",
-          },
-        ),
+        body: jsonEncode({
+          "product_label": "brand",
+          "product_filters": null,
+          "product_label_filters": null,
+          "product_category_id": null,
+          "base_product_filters": [selectedProduct, selectedColor],
+          "base_label_filters": ["product_name", "color"],
+          "base_category_id": "9",
+        }),
       );
 
       if (response.statusCode == 200) {
@@ -182,11 +181,15 @@ class _ScrewAccessoriesState extends State<ScrewAccessories> {
             });
           }
 
-          // Extract product_base_id from second list
+          // Extract both id and base_product_id
           final idData = message.length > 1 ? message[1] : null;
           if (idData is List && idData.isNotEmpty && idData.first is Map) {
             selectedProductBaseId = idData.first["id"]?.toString();
+            selectedBaseProductName =
+                idData.first["base_product_id"]?.toString(); // <-- new line
             print("Selected Base Product ID: $selectedProductBaseId");
+            print(
+                "Base Product Name: $selectedBaseProductName"); // <-- optional debug
           }
         }
       }
@@ -222,7 +225,7 @@ class _ScrewAccessoriesState extends State<ScrewAccessories> {
       "product_id": null,
       "product_name": null,
       "product_base_id": selectedProductBaseId,
-      "product_base_name": "$selectedProduct,$selectedColor,$selsectedBrand",
+      "product_base_name": "$selectedBaseProductName",
       "category_id": 9,
       "category_name": "Screw accessories"
     };

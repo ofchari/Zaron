@@ -32,6 +32,7 @@ class _PurlinState extends State<Purlin> {
   String? selectedThickness;
   String? selectedMaterialType;
   String? selectedProductBaseId;
+  String? selectedBaseProductName;
 
   List<String> productList = [];
   List<String> brandsList = [];
@@ -288,24 +289,34 @@ class _PurlinState extends State<Purlin> {
         print("Fetching brand: $selectedThickness");
         print("API response: ${response.body}");
 
-        if (message is List && message.isNotEmpty) {
-          // Extract brand names from the first list
-          final brandListRaw = message[0];
-          if (brandListRaw is List) {
-            setState(() {
-              brandsList = brandListRaw
-                  .whereType<Map>()
-                  .map((e) => e["brand"]?.toString())
-                  .whereType<String>()
-                  .toList();
-            });
-          }
+        if (response.statusCode == 200) {
+          final data = jsonDecode(response.body);
+          final message = data["message"]["message"];
+          print("Fetching brand: $selectedThickness");
+          print("API response: ${response.body}");
 
-          // Extract product_base_id from second list
-          final idData = message.length > 1 ? message[1] : null;
-          if (idData is List && idData.isNotEmpty && idData.first is Map) {
-            selectedProductBaseId = idData.first["id"]?.toString();
-            print("Selected Base Product ID: $selectedProductBaseId");
+          if (message is List && message.isNotEmpty) {
+            // Extract brand names from the first list
+            final brandListRaw = message[0];
+            if (brandListRaw is List) {
+              setState(() {
+                brandsList = brandListRaw
+                    .whereType<Map>()
+                    .map((e) => e["brand"]?.toString())
+                    .whereType<String>()
+                    .toList();
+              });
+            }
+
+            // Extract id and base_product_id from the second list
+            final idData = message.length > 1 ? message[1] : null;
+            if (idData is List && idData.isNotEmpty && idData.first is Map) {
+              selectedProductBaseId = idData.first["id"]?.toString();
+              selectedBaseProductName =
+                  idData.first["base_product_id"]?.toString(); // <-- New
+              print("Selected Base Product ID: $selectedProductBaseId");
+              print("Base Product Name: $selectedBaseProductName"); // <-- New
+            }
           }
         }
       }
@@ -345,8 +356,7 @@ class _PurlinState extends State<Purlin> {
       "product_id": null,
       "product_name": null,
       "product_base_id": selectedProductBaseId,
-      "product_base_name":
-          "$selectProduct,$selectedSize,$selectedMaterialType,$selectedThickness, $selectedBrand",
+      "product_base_name": "$selectedBaseProductName",
       "category_id": 5,
       "category_name": "Purlin"
     };

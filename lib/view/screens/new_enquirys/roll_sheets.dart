@@ -30,6 +30,7 @@ class _RollSheetState extends State<RollSheet> {
   String? selectedThickness;
   String? selectedCoatingMass;
   String? selectedBaseProductID;
+  String? selectedProductBaseId;
 
   List<String> productList = [];
   List<String> brandsList = [];
@@ -287,7 +288,11 @@ class _RollSheetState extends State<RollSheet> {
 
           if (idData is List && idData.isNotEmpty && idData.first is Map) {
             selectedBaseProductID = idData.first["id"]?.toString();
+            selectedProductBaseId =
+                idData.first["base_product_id"]?.toString(); // <-- Added line
             debugPrint("Selected Base Product ID: $selectedBaseProductID");
+            debugPrint(
+                "Base Product ID (base_product_id): $selectedProductBaseId"); // <-- Optional
           }
         } else {
           debugPrint("Unexpected message format for coating mass.");
@@ -312,8 +317,7 @@ class _RollSheetState extends State<RollSheet> {
       "product_id": 689,
       "product_name": selectedProduct,
       "product_base_id": selectedBaseProductID,
-      "product_base_name":
-          "$selectedBrand,$selectedColor,$selectedThickness,$selectedCoatingMass,",
+      "product_base_name": "$selectedProductBaseId",
       "category_id": 591,
       "category_name": "Roll Sheet"
 

@@ -31,6 +31,7 @@ class _GIStiffnerState extends State<GIStiffner> {
   String? selectedyie;
   String? selectedBrand;
   String? selectedProductBaseId;
+  String? selectedBaseProductId;
 
   List<String> productList = [];
   List<String> meterialList = [];
@@ -329,11 +330,15 @@ class _GIStiffnerState extends State<GIStiffner> {
             });
           }
 
-          // Optional: Extract product_base_id if present in message[1]
+          // Extract product_base_id and base_product_id if present in message[1]
           final idData = message.length > 1 ? message[1] : null;
           if (idData is List && idData.isNotEmpty && idData.first is Map) {
             selectedProductBaseId = idData.first["id"]?.toString();
+            selectedBaseProductId =
+                idData.first["base_product_id"]?.toString(); // <-- Added line
             print("Selected Product Base ID: $selectedProductBaseId");
+            print(
+                "Selected Base Product ID: $selectedBaseProductId"); // <-- Optional
           }
         }
       }
@@ -373,8 +378,7 @@ class _GIStiffnerState extends State<GIStiffner> {
       "product_id": 1330,
       "product_name": selectedProduct,
       "product_base_id": selectedProductBaseId,
-      "product_base_name":
-          "$selectedMeterial,$selectedThichness,$selsectedCoat$selectedyie$selectedBrand",
+      "product_base_name": "$selectedBaseProductId",
       "category_id": 627,
       "category_name": "GI Stiffner"
     };

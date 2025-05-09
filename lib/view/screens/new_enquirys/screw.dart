@@ -29,6 +29,7 @@ class _ScrewState extends State<Screw> {
   String? selectedScrew;
   String? selectedThread;
   String? selectedProductBaseId;
+  String? selectedBaseProductName;
 
   List<String> brandList = [];
   List<String> screwLengthList = [];
@@ -189,11 +190,15 @@ class _ScrewState extends State<Screw> {
             });
           }
 
-          // Extract product_base_id from second list
+          // Extract product_base_id and base_product_id from second list
           final idData = message.length > 1 ? message[1] : null;
           if (idData is List && idData.isNotEmpty && idData.first is Map) {
             selectedProductBaseId = idData.first["id"]?.toString();
+            selectedBaseProductName =
+                idData.first["base_product_id"]?.toString(); // <-- Add this
             print("Selected Base Product ID: $selectedProductBaseId");
+            print(
+                "Base Product Name: $selectedBaseProductName"); // <-- Optional debug
           }
         }
       }
@@ -213,7 +218,7 @@ class _ScrewState extends State<Screw> {
       "product_id": null,
       "product_name": null,
       "product_base_id": selectedProductBaseId,
-      "product_base_name": "$selectedBrand,$selectedScrew,$selectedThread",
+      "product_base_name": "$selectedBaseProductName",
       "category_id": 7,
       "category_name": "Screw"
     };

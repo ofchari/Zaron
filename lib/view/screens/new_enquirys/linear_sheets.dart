@@ -30,6 +30,7 @@ class _LinerSheetPageState extends State<LinerSheetPage> {
   String? selectedThickness;
   String? selectedCoatingMass;
   String? selectedProductBaseId;
+  String? selectedBaseProductId;
 
   List<String> productList = [];
   List<String> brandandList = [];
@@ -282,11 +283,15 @@ class _LinerSheetPageState extends State<LinerSheetPage> {
             });
           }
 
-// Optional: extract product_base_id from message[1]
+          // Extract product_base_id and base_product_id from message[1]
           final idData = message.length > 1 ? message[1] : null;
           if (idData is List && idData.isNotEmpty && idData.first is Map) {
             selectedProductBaseId = idData.first["id"]?.toString();
+            selectedBaseProductId =
+                idData.first["base_product_id"]?.toString(); // <-- Added line
             print("Selected Product Base ID: $selectedProductBaseId");
+            print(
+                "Selected Base Product ID: $selectedBaseProductId"); // <-- Optional
           }
         }
       }
@@ -352,8 +357,7 @@ class _LinerSheetPageState extends State<LinerSheetPage> {
       "product_id": 1590,
       "product_name": selectedProduct,
       "product_base_id": selectedProductBaseId,
-      "product_base_name":
-          "$selectedBrands,$selectedColors,$selectedThickness,$selectedCoatingMass,",
+      "product_base_name": "$selectedBaseProductId",
       "category_id": 590,
       "category_name": "Liner Sheets"
 

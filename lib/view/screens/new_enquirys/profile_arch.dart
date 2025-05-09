@@ -30,6 +30,7 @@ class _ProfileRidgeAndArchState extends State<ProfileRidgeAndArch> {
   String? selectedThickness;
   String? selectedCoatingMass;
   String? selectedProductBaseId;
+  String? selectedBaseProductId;
 
 // String? selectedBrand;
 
@@ -287,10 +288,15 @@ class _ProfileRidgeAndArchState extends State<ProfileRidgeAndArch> {
             });
           }
 
+          // ✅ Extract both id and base_product_id
           final idData = message.length > 1 ? message[1] : null;
           if (idData is List && idData.isNotEmpty && idData.first is Map) {
             selectedProductBaseId = idData.first["id"]?.toString();
+            selectedBaseProductId =
+                idData.first["base_product_id"]?.toString(); // <-- NEW
             print("Selected Product Base ID: $selectedProductBaseId");
+            print(
+                "Base Product ID (base_product_id): $selectedBaseProductId"); // <-- Optional
           }
         } else {
           debugPrint("Unexpected message format for coating mass data.");
@@ -332,14 +338,13 @@ class _ProfileRidgeAndArchState extends State<ProfileRidgeAndArch> {
       "product_id": 798,
       "product_name": selectedMaterial,
       "product_base_id": null,
-      "product_base_name":
-          "$selectedBrands,$selectedColors,$selectedThickness,$selectedCoatingMass,",
+      "product_base_name": "$selectedProductBaseId",
       "category_id": 32,
       "category_name": "Profile ridge & Arch"
     };
 
     print("This is a body data: $data");
-    final url = "https://demo.zaron.in:8181/ci4/api/addbag";
+    final url = "$apiUrl/addbag";
     final body = jsonEncode(data);
     try {
       final response = await ioClient.post(

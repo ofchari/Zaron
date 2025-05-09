@@ -31,6 +31,7 @@ class _GIGlutterState extends State<GIGlutter> {
   String? selectedyie;
   String? selectedBrand;
   String? selectedProductBaseId;
+  String? selectedBaseProductName;
 
   List<String> productList = [];
   List<String> meterialList = [];
@@ -332,7 +333,11 @@ class _GIGlutterState extends State<GIGlutter> {
           final idData = message.length > 1 ? message[1] : null;
           if (idData is List && idData.isNotEmpty && idData.first is Map) {
             selectedProductBaseId = idData.first["id"]?.toString();
+            selectedBaseProductName =
+                idData.first["base_product_id"]?.toString(); // <-- New line
             print("Selected Base Product ID: $selectedProductBaseId");
+            print(
+                "Base Product Name: $selectedBaseProductName"); // <-- Optional
           }
         }
       }
@@ -372,8 +377,7 @@ class _GIGlutterState extends State<GIGlutter> {
       "product_id": 1070,
       "product_name": selectedProduct,
       "product_base_id": selectedProductBaseId,
-      "product_base_name":
-          "$selectedMeterial,$selectedThichness,$selsectedCoat$selectedyie$selectedBrand",
+      "product_base_name": "$selectedBaseProductName",
       "category_id": 628,
       "category_name": "GI GUTTER"
     };

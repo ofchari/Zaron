@@ -29,6 +29,7 @@ class _AluminumState extends State<Aluminum> {
   String? selectedThickness;
   String? selectedMaterialType;
   String? selectedProductBaseId;
+  String? selectedBaseProductName;
 
   List<String> brandsList = [];
   List<String> colorsList = [];
@@ -238,11 +239,15 @@ class _AluminumState extends State<Aluminum> {
             });
           }
 
-          // Extract ID
+          // Extract ID and base_product_id
           final idData = message.length > 1 ? message[1] : null;
           if (idData is List && idData.isNotEmpty && idData.first is Map) {
             selectedProductBaseId = idData.first["id"]?.toString();
+            selectedBaseProductName =
+                idData.first["base_product_id"]?.toString(); // <-- New line
             print("Selected Base Product ID: $selectedProductBaseId");
+            print(
+                "Base Product Name: $selectedBaseProductName"); // <-- New line
           }
         }
       }
@@ -279,8 +284,7 @@ class _AluminumState extends State<Aluminum> {
       "product_id": null,
       "product_name": null,
       "product_base_id": selectedProductBaseId,
-      "product_base_name":
-          "$selectedMaterialType,$selectedThickness,$selectedBrand$selectedColor",
+      "product_base_name": "$selectedBaseProductName",
       "category_id": 36,
       "category_name": "Aluminum"
     };

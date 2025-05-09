@@ -31,6 +31,7 @@ class _UpvcAccessoriesState extends State<UpvcAccessories> {
   String? selectedColor;
   String? selectProductNameBase;
   String? selectedSize;
+  String? selectedBaseProductName;
 
   List<String> brandsList = [];
   List<String> colorsList = [];
@@ -254,8 +255,12 @@ class _UpvcAccessoriesState extends State<UpvcAccessories> {
 
           if (idData is List && idData.isNotEmpty && idData.first is Map) {
             selectedProductBaseId = idData.first["id"]?.toString();
+            selectedBaseProductName = idData.first["base_product_id"]
+                ?.toString(); // <-- Add this line
             debugPrint(
                 "Selected Base Product ID (SIZE): $selectedProductBaseId");
+            debugPrint(
+                "Base Product Name (SIZE): $selectedBaseProductName"); // <-- Optional debug
           }
         } else {
           debugPrint("Unexpected message format for SIZE.");
@@ -297,8 +302,7 @@ class _UpvcAccessoriesState extends State<UpvcAccessories> {
       "product_id": null,
       "product_name": null,
       "product_base_id": selectedProductBaseId,
-      "product_base_name":
-          "$selectProductNameBase$selectedBrand$selectedColor$selectedSize",
+      "product_base_name": "$selectedBaseProductName",
       "category_id": 15,
       "category_name": "UPVC Accessories"
     };

@@ -30,6 +30,7 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
   String? selectedyie;
   String? selectedBrand;
   String? selectedProductBaseId;
+  String? selectedBaseProductName;
 
   List<String> productList = [];
   List<String> meterialList = [];
@@ -152,7 +153,7 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
           "product_category_id": 626,
           "base_product_filters": [selectedMeterial],
           "base_label_filters": ["material_type"],
-          "base_category_id": "3",
+          "base_category_id": "34",
         }),
       );
 
@@ -206,7 +207,7 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
           "product_category_id": 626,
           "base_product_filters": [selectedMeterial, selectedThichness],
           "base_label_filters": ["material_type", "thickness"],
-          "base_category_id": "3",
+          "base_category_id": "34",
         }),
       );
 
@@ -264,7 +265,7 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
             selsectedCoat
           ],
           "base_label_filters": ["material_type", "thickness", "coating_mass"],
-          "base_category_id": "3",
+          "base_category_id": "34",
         }),
       );
 
@@ -322,7 +323,7 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
             "coating_mass",
             "yield_strength"
           ],
-          "base_category_id": "3",
+          "base_category_id": "34",
         }),
       );
 
@@ -343,11 +344,20 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
             });
           }
 
-          // Optional: extract product_base_id from message[1]
-          final idData = message.length > 1 ? message[1] : null;
-          if (idData is List && idData.isNotEmpty && idData.first is Map) {
-            selectedProductBaseId = idData.first["id"]?.toString();
-            print("Selected Product Base ID: $selectedProductBaseId");
+          // Extract base_product_id and id from message[1]
+          if (message.length > 1) {
+            final baseProductData = message[1];
+            if (baseProductData is List && baseProductData.isNotEmpty) {
+              final item = baseProductData.first;
+              if (item is Map) {
+                selectedProductBaseId = item["id"]?.toString();
+                selectedBaseProductName =
+                    item["base_product_id"]?.toString(); // <-- New line
+                print("Selected Product Base ID: $selectedProductBaseId");
+                print(
+                    "Base Product Name: $selectedBaseProductName"); // <-- New line
+              }
+            }
           }
         }
       }
@@ -386,8 +396,7 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
       "product_id": 2193,
       "product_name": selectedProduct,
       "product_base_id": selectedProductBaseId,
-      "product_base_name":
-          "$selectedMeterial,$selectedThichness,$selsectedCoat$selectedyie$selectedBrand",
+      "product_base_name": "$selectedBaseProductName",
       "category_id": 626,
       "category_name": "Cut to Length Sheets"
     };
