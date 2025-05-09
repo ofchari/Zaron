@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
-import 'package:zaron/view/screens/dashboard.dart';
+import 'package:zaron/view/screens/login.dart';
 import 'package:zaron/view/widgets/buttons.dart';
 
 class Entry extends StatefulWidget {
@@ -68,10 +68,10 @@ class _EntryState extends State<Entry> {
           ),
           Positioned(
               bottom: 160,
-              right: 60,
+              right: 50,
               child: GestureDetector(
                   onTap: () {
-                    Get.off(Dashboard(userid: '',));
+                    Get.off(Login());
                   },
                   child: Buttons(
                       text: "Get Started here ✈",
