@@ -482,13 +482,15 @@ class _ProfileRidgeAndArchState extends State<ProfileRidgeAndArch> {
                   Padding(
                     padding: const EdgeInsets.only(top: 15),
                     child: SizedBox(
+                      // color: Colors.red,
                       height: 40.h,
                       width: 210.w,
+
                       child: Text(
                         "  ${index + 1}.  ${data["Product"]}" ?? "",
                         overflow: TextOverflow.ellipsis,
                         style: GoogleFonts.figtree(
-                            fontSize: 14,
+                            fontSize: 18,
                             fontWeight: FontWeight.w600,
                             color: Colors.black87),
                       ),
@@ -498,91 +500,68 @@ class _ProfileRidgeAndArchState extends State<ProfileRidgeAndArch> {
                     padding: const EdgeInsets.all(8.0),
                     child: Container(
                       height: 40.h,
-                      width: 90.w,
+                      width: 50.w,
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(10),
                         color: Colors.deepPurple[50],
                       ),
-                      child: Row(
-                        children: [
-                          IconButton(
-                              onPressed: () {
-                                showDialog(
-                                  context: context,
-                                  builder: (context) {
-                                    return AlertDialog(
-                                        title: Text("Edit"),
-                                        content: Column(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            _buildProductDetailInRows(data),
-                                          ],
-                                        ));
-                                  },
+                      child: IconButton(
+                        icon: Icon(
+                          Icons.delete,
+                          color: Colors.redAccent,
+                        ),
+                        onPressed: () {
+                          showDialog(
+                              context: context,
+                              builder: (context) {
+                                return AlertDialog(
+                                  title: Subhead(
+                                      text:
+                                          "Are you Sure to Delete This Item ?",
+                                      weight: FontWeight.w500,
+                                      color: Colors.black),
+                                  actions: [
+                                    ElevatedButton(
+                                      onPressed: () {
+                                        setState(() {
+                                          submittedData.removeAt(index);
+                                        });
+                                        Navigator.pop(context);
+                                      },
+                                      child: Text("Yes"),
+                                    ),
+                                    ElevatedButton(
+                                      onPressed: () {
+                                        Navigator.pop(context);
+                                      },
+                                      child: Text("No"),
+                                    )
+                                  ],
                                 );
-                              },
-                              icon: Icon(
-                                Icons.edit,
-                                color: Colors.blue,
-                              )),
-                          IconButton(
-                            icon: Icon(
-                              Icons.delete,
-                              color: Colors.redAccent,
-                            ),
-                            onPressed: () {
-                              showDialog(
-                                  context: context,
-                                  builder: (context) {
-                                    return AlertDialog(
-                                      title: Subhead(
-                                          text:
-                                              "Are you Sure to Delete This Item ?",
-                                          weight: FontWeight.w500,
-                                          color: Colors.black),
-                                      actions: [
-                                        ElevatedButton(
-                                          onPressed: () {
-                                            setState(() {
-                                              submittedData.removeAt(index);
-                                            });
-                                            Navigator.pop(context);
-                                          },
-                                          child: Text("Yes"),
-                                        ),
-                                        ElevatedButton(
-                                          onPressed: () {
-                                            Navigator.pop(context);
-                                          },
-                                          child: Text("No"),
-                                        )
-                                      ],
-                                    );
-                                  });
-                            },
-                          ),
-                        ],
+                              });
+                        },
                       ),
                     ),
                   )
                 ],
               ),
-              Row(
-                children: [
-                  MyText(
-                      text: "  UOM - ",
-                      weight: FontWeight.w600,
-                      color: Colors.grey.shade600),
-                  MyText(
-                      text: "Length - ",
-                      weight: FontWeight.w600,
-                      color: Colors.grey.shade600),
-                  MyText(
-                      text: "Nos  ",
-                      weight: FontWeight.w600,
-                      color: Colors.grey.shade600),
-                ],
-              ),
+              _buildProductDetailInRows(data),
+              // Row(
+              //   children: [
+              //     MyText(
+              //         text: "  UOM - ",
+              //         weight: FontWeight.w600,
+              //         color: Colors.grey.shade600),
+              //     MyText(
+              //         text: "Length - ",
+              //         weight: FontWeight.w600,
+              //         color: Colors.grey.shade600),
+              //     MyText(
+              //         text: "Nos  ",
+              //         weight: FontWeight.w600,
+              //         color: Colors.grey.shade600),
+              //   ],
+              // ),
               Padding(
                 padding: const EdgeInsets.only(top: 8.0, left: 8),
                 child: Container(
@@ -595,21 +574,21 @@ class _ProfileRidgeAndArchState extends State<ProfileRidgeAndArch> {
 // mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      SizedBox(
-// color: Colors.red,
+                      Container(
+                        // color: Colors.red,
                         height: 40.h,
                         width: 280.w,
                         child: TextField(
                           style: TextStyle(
-                              fontSize: 12,
+                              fontSize: 13.sp,
                               color: Colors.black87,
                               fontWeight: FontWeight.w500),
                           decoration: InputDecoration(
                             enabledBorder: InputBorder.none,
                             focusedBorder: InputBorder.none,
                           ),
-                          controller:
-                              TextEditingController(text: data["Base Product"]),
+                          controller: TextEditingController(
+                              text: " ${data["Base Product"]}"),
                           readOnly: true,
                         ),
                       ),
@@ -627,14 +606,12 @@ class _ProfileRidgeAndArchState extends State<ProfileRidgeAndArch> {
                                     context: context,
                                     builder: (context) {
                                       return AlertDialog(
-                                        title:
-                                            Text("Edit Your Profile and Arch"),
+                                        title: Text("Edit Your Screw"),
                                         content: Column(
                                           mainAxisSize: MainAxisSize.min,
                                           children: [
                                             Container(
-// color: Colors.white,
-                                              height: 45.h,
+                                              height: 40.h,
                                               width: double.infinity.w,
                                               decoration: BoxDecoration(
                                                 borderRadius:
@@ -701,73 +678,77 @@ class _ProfileRidgeAndArchState extends State<ProfileRidgeAndArch> {
   Widget _buildProductDetailInRows(Map<String, dynamic> data) {
     return Column(
       children: [
-        Row(
-          children: [
-            Expanded(
-              child: _buildDetailItem("UOM", _uomDropdown(data)),
-            ),
-            SizedBox(
-              width: 10,
-            ),
-            Expanded(
-              child: _buildDetailItem(
-                  "Length", _editableTextField(data, "Length")),
-            ),
-            SizedBox(width: 10),
-            Expanded(
-              child: _buildDetailItem("Nos", _editableTextField(data, "Nos")),
-            ),
-          ],
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Row(
+            children: [
+              Expanded(
+                child: _buildDetailItem("UOM", _uomDropdown(data)),
+              ),
+              SizedBox(
+                width: 10,
+              ),
+              Expanded(
+                child: _buildDetailItem(
+                    "Length", _editableTextField(data, "Length")),
+              ),
+              SizedBox(width: 10),
+              Expanded(
+                child: _buildDetailItem("Nos", _editableTextField(data, "Nos")),
+              ),
+            ],
+          ),
         ),
-        Gap(35),
+        Gap(5),
 // Row 3: Basic Rate & SQ
-        Row(
-          children: [
-            Expanded(
-              child: _buildDetailItem(
-                  "Basic Rate", _editableTextField(data, "Basic Rate")),
-            ),
-            SizedBox(width: 10),
-            Expanded(
-              child: _buildDetailItem("SQ", _editableTextField(data, "SQ")),
-            ),
-            SizedBox(
-              width: 10,
-            ),
-            Expanded(
-              child: _buildDetailItem(
-                  "Amount", _editableTextField(data, "Amount")),
-            ),
-          ],
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Row(
+            children: [
+              Expanded(
+                child: _buildDetailItem(
+                    "Basic Rate", _editableTextField(data, "Basic Rate")),
+              ),
+              SizedBox(width: 10),
+              Expanded(
+                child: _buildDetailItem("SQ", _editableTextField(data, "SQ")),
+              ),
+              SizedBox(
+                width: 10,
+              ),
+              Expanded(
+                child: _buildDetailItem(
+                    "Amount", _editableTextField(data, "Amount")),
+              ),
+            ],
+          ),
         ),
-        Gap(35),
+        Gap(5.h),
       ],
     );
   }
 
   Widget _buildDetailItem(String label, Widget field) {
-    return Container(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            label,
-            style: TextStyle(
-              fontWeight: FontWeight.w500,
-              color: Colors.grey[700],
-              fontSize: 15,
-            ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            fontWeight: FontWeight.w500,
+            color: Colors.grey[700],
+            fontSize: 15,
           ),
-          SizedBox(height: 6),
-          field,
-        ],
-      ),
+        ),
+        SizedBox(height: 6),
+        field,
+      ],
     );
   }
 
   Widget _editableTextField(Map<String, dynamic> data, String key) {
     return SizedBox(
-      height: 40.h,
+      height: 38.h,
       child: TextField(
         style: GoogleFonts.figtree(
             fontWeight: FontWeight.w500, color: Colors.black, fontSize: 15.sp),

@@ -1,0 +1,2 @@
+C:/Users/Admin/StudioProjects/Zaron/android/app/.cxx/Debug/3q70s6s7/x86/CMakeFiles/edit_cache.dir
+C:/Users/Admin/StudioProjects/Zaron/android/app/.cxx/Debug/3q70s6s7/x86/CMakeFiles/rebuild_cache.dir

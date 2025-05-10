@@ -5,7 +5,6 @@ import 'package:dropdown_search/dropdown_search.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:gap/gap.dart';
-import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/io_client.dart';
 import 'package:zaron/view/screens/global_user/global_user.dart';
@@ -366,16 +365,6 @@ class _DeckingSheetsState extends State<DeckingSheets> {
           selectedBrand == null) {
         return;
       }
-
-      if (response.statusCode == 200) {
-        Get.snackbar(
-          "Data Added",
-          "Successfully",
-          colorText: Colors.white,
-          backgroundColor: Colors.green,
-          snackPosition: SnackPosition.BOTTOM,
-        );
-      }
     } catch (e) {
       throw Exception("Error posting data: $e");
     }
@@ -487,13 +476,15 @@ class _DeckingSheetsState extends State<DeckingSheets> {
                   Padding(
                     padding: const EdgeInsets.only(top: 15),
                     child: SizedBox(
+                      // color: Colors.red,
                       height: 40.h,
                       width: 210.w,
+
                       child: Text(
                         "  ${index + 1}.  ${data["Product"]}" ?? "",
                         overflow: TextOverflow.ellipsis,
                         style: GoogleFonts.figtree(
-                            fontSize: 14,
+                            fontSize: 18,
                             fontWeight: FontWeight.w600,
                             color: Colors.black87),
                       ),
@@ -503,91 +494,68 @@ class _DeckingSheetsState extends State<DeckingSheets> {
                     padding: const EdgeInsets.all(8.0),
                     child: Container(
                       height: 40.h,
-                      width: 90.w,
+                      width: 50.w,
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(10),
                         color: Colors.deepPurple[50],
                       ),
-                      child: Row(
-                        children: [
-                          IconButton(
-                              onPressed: () {
-                                showDialog(
-                                  context: context,
-                                  builder: (context) {
-                                    return AlertDialog(
-                                        title: Text("Edit"),
-                                        content: Column(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            _buildProductDetailInRows(data),
-                                          ],
-                                        ));
-                                  },
+                      child: IconButton(
+                        icon: Icon(
+                          Icons.delete,
+                          color: Colors.redAccent,
+                        ),
+                        onPressed: () {
+                          showDialog(
+                              context: context,
+                              builder: (context) {
+                                return AlertDialog(
+                                  title: Subhead(
+                                      text:
+                                          "Are you Sure to Delete This Item ?",
+                                      weight: FontWeight.w500,
+                                      color: Colors.black),
+                                  actions: [
+                                    ElevatedButton(
+                                      onPressed: () {
+                                        setState(() {
+                                          submittedData.removeAt(index);
+                                        });
+                                        Navigator.pop(context);
+                                      },
+                                      child: Text("Yes"),
+                                    ),
+                                    ElevatedButton(
+                                      onPressed: () {
+                                        Navigator.pop(context);
+                                      },
+                                      child: Text("No"),
+                                    )
+                                  ],
                                 );
-                              },
-                              icon: Icon(
-                                Icons.edit,
-                                color: Colors.blue,
-                              )),
-                          IconButton(
-                            icon: Icon(
-                              Icons.delete,
-                              color: Colors.redAccent,
-                            ),
-                            onPressed: () {
-                              showDialog(
-                                  context: context,
-                                  builder: (context) {
-                                    return AlertDialog(
-                                      title: Subhead(
-                                          text:
-                                              "Are you Sure to Delete This Item ?",
-                                          weight: FontWeight.w500,
-                                          color: Colors.black),
-                                      actions: [
-                                        ElevatedButton(
-                                          onPressed: () {
-                                            setState(() {
-                                              submittedData.removeAt(index);
-                                            });
-                                            Navigator.pop(context);
-                                          },
-                                          child: Text("Yes"),
-                                        ),
-                                        ElevatedButton(
-                                          onPressed: () {
-                                            Navigator.pop(context);
-                                          },
-                                          child: Text("No"),
-                                        )
-                                      ],
-                                    );
-                                  });
-                            },
-                          ),
-                        ],
+                              });
+                        },
                       ),
                     ),
                   )
                 ],
               ),
-              Row(
-                children: [
-                  MyText(
-                      text: "  UOM - ",
-                      weight: FontWeight.w600,
-                      color: Colors.grey.shade600),
-                  MyText(
-                      text: "Length - ",
-                      weight: FontWeight.w600,
-                      color: Colors.grey.shade600),
-                  MyText(
-                      text: "Nos  ",
-                      weight: FontWeight.w600,
-                      color: Colors.grey.shade600),
-                ],
-              ),
+              _buildProductDetailInRows(data),
+              // Row(
+              //   children: [
+              //     MyText(
+              //         text: "  UOM - ",
+              //         weight: FontWeight.w600,
+              //         color: Colors.grey.shade600),
+              //     MyText(
+              //         text: "Length - ",
+              //         weight: FontWeight.w600,
+              //         color: Colors.grey.shade600),
+              //     MyText(
+              //         text: "Nos  ",
+              //         weight: FontWeight.w600,
+              //         color: Colors.grey.shade600),
+              //   ],
+              // ),
               Padding(
                 padding: const EdgeInsets.only(top: 8.0, left: 8),
                 child: Container(
@@ -597,22 +565,24 @@ class _DeckingSheetsState extends State<DeckingSheets> {
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Row(
+// mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      SizedBox(
+                      Container(
+                        // color: Colors.red,
                         height: 40.h,
                         width: 280.w,
                         child: TextField(
                           style: TextStyle(
-                              fontSize: 12,
+                              fontSize: 13.sp,
                               color: Colors.black87,
                               fontWeight: FontWeight.w500),
                           decoration: InputDecoration(
                             enabledBorder: InputBorder.none,
                             focusedBorder: InputBorder.none,
                           ),
-                          controller:
-                              TextEditingController(text: data["Base Product"]),
+                          controller: TextEditingController(
+                              text: " ${data["Base Product"]}"),
                           readOnly: true,
                         ),
                       ),
@@ -630,13 +600,12 @@ class _DeckingSheetsState extends State<DeckingSheets> {
                                     context: context,
                                     builder: (context) {
                                       return AlertDialog(
-                                        title:
-                                            Text("Edit Your Decking  Sheets"),
+                                        title: Text("Edit Your Decking Sheet"),
                                         content: Column(
                                           mainAxisSize: MainAxisSize.min,
                                           children: [
                                             Container(
-                                              height: 45.h,
+                                              height: 40.h,
                                               width: double.infinity.w,
                                               decoration: BoxDecoration(
                                                 borderRadius:
@@ -703,41 +672,47 @@ class _DeckingSheetsState extends State<DeckingSheets> {
   Widget _buildProductDetailInRows(Map<String, dynamic> data) {
     return Column(
       children: [
-        Row(
-          children: [
-            Expanded(
-              child: _buildDetailItem("UOM", _uomDropdown(data)),
-            ),
-            SizedBox(width: 10),
-            Expanded(
-              child: _buildDetailItem(
-                  "Length", _editableTextField(data, "Length")),
-            ),
-            SizedBox(width: 10),
-            Expanded(
-              child: _buildDetailItem("Nos", _editableTextField(data, "Nos")),
-            ),
-          ],
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Row(
+            children: [
+              Expanded(
+                child: _buildDetailItem("UOM", _uomDropdown(data)),
+              ),
+              SizedBox(width: 10),
+              Expanded(
+                child: _buildDetailItem(
+                    "Length", _editableTextField(data, "Length")),
+              ),
+              SizedBox(width: 10),
+              Expanded(
+                child: _buildDetailItem("Nos", _editableTextField(data, "Nos")),
+              ),
+            ],
+          ),
         ),
-        Gap(35),
-        Row(
-          children: [
-            Expanded(
-              child: _buildDetailItem(
-                  "Basic Rate", _editableTextField(data, "Basic Rate")),
-            ),
-            SizedBox(width: 10),
-            Expanded(
-              child: _buildDetailItem("SQ", _editableTextField(data, "SQ")),
-            ),
-            SizedBox(width: 10),
-            Expanded(
-              child: _buildDetailItem(
-                  "Amount", _editableTextField(data, "Amount")),
-            ),
-          ],
+        Gap(5),
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Row(
+            children: [
+              Expanded(
+                child: _buildDetailItem(
+                    "Basic Rate", _editableTextField(data, "Basic Rate")),
+              ),
+              SizedBox(width: 10),
+              Expanded(
+                child: _buildDetailItem("SQ", _editableTextField(data, "SQ")),
+              ),
+              SizedBox(width: 10),
+              Expanded(
+                child: _buildDetailItem(
+                    "Amount", _editableTextField(data, "Amount")),
+              ),
+            ],
+          ),
         ),
-        Gap(35),
+        Gap(10),
       ],
     );
   }
@@ -764,7 +739,7 @@ class _DeckingSheetsState extends State<DeckingSheets> {
 
   Widget _editableTextField(Map<String, dynamic> data, String key) {
     return SizedBox(
-      height: 40.h,
+      height: 38.h,
       child: TextField(
         style: GoogleFonts.figtree(
             fontWeight: FontWeight.w500, color: Colors.black, fontSize: 15.sp),
@@ -795,7 +770,7 @@ class _DeckingSheetsState extends State<DeckingSheets> {
   Widget _uomDropdown(Map<String, dynamic> data) {
     List<String> uomOptions = ["Feet", "mm", "cm"];
     return SizedBox(
-      height: 40.h,
+      height: 38.h,
       child: DropdownButtonFormField<String>(
         value: data["UOM"],
         items: uomOptions
