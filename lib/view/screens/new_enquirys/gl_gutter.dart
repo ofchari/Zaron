@@ -354,25 +354,6 @@ class _GIGlutterState extends State<GIGlutter> {
     IOClient ioClient = IOClient(client);
     final headers = {"Content-Type": "application/json"};
     final data = {
-      // "product_filters": null,
-      // "product_label_filters": null,
-      // "product_category_id": null,
-      // "base_product_filters": [
-      //   "${selectedMeterial?.trim()}",
-      //   "${selectedThichness?.trim()}",
-      //   "${selsectedCoat?.trim()}",
-      //   "${selectedyie?.trim()}",
-      //   "${selectedBrand?.trim()}"
-      // ],
-      // "base_label_filters": [
-      //   "material_type",
-      //   "thickness",
-      //   "coating_mass",
-      //   "yield_strength",
-      //   "brand"
-      // ],
-      // "base_category_id": 34
-
       "customer_id": UserSession().userId,
       "product_id": 1070,
       "product_name": selectedProduct,
