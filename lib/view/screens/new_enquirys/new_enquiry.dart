@@ -6,6 +6,8 @@ import 'package:http/http.dart' as http;
 import 'package:zaron/view/screens/new_enquirys/accessories.dart';
 import 'package:zaron/view/screens/new_enquirys/aluminum.dart';
 import 'package:zaron/view/screens/new_enquirys/decking_sheets.dart';
+import 'package:zaron/view/screens/new_enquirys/gl_gutter.dart';
+import 'package:zaron/view/screens/new_enquirys/gl_stiffner.dart';
 import 'package:zaron/view/screens/new_enquirys/iron_steels.dart';
 import 'package:zaron/view/screens/new_enquirys/length_sheets.dart';
 import 'package:zaron/view/screens/new_enquirys/polycarbonate.dart';
@@ -13,6 +15,7 @@ import 'package:zaron/view/screens/new_enquirys/profile_arch.dart';
 import 'package:zaron/view/screens/new_enquirys/purlin.dart';
 import 'package:zaron/view/screens/new_enquirys/roll_sheets.dart';
 import 'package:zaron/view/screens/new_enquirys/screw.dart';
+import 'package:zaron/view/screens/new_enquirys/screw_acessories.dart';
 import 'package:zaron/view/screens/new_enquirys/tile_sheets.dart';
 import 'package:zaron/view/screens/new_enquirys/upvc_accessories.dart';
 import 'package:zaron/view/screens/new_enquirys/upvc_tiles.dart';
@@ -94,35 +97,41 @@ class _NewEnquiryState extends State<NewEnquiry> {
   }
 
   Widget getCategoryPage(String categoryName, Map<String, dynamic> data) {
-    switch (categoryName.toLowerCase()) {
-      case 'accessories':
+    switch (categoryName) {
+      case 'Accessories':
         return Accessories(data: data);
-      case 'iron & steel':
+      case 'Iron And Steel Corrugated Sheet':
         return IronSteel(data: data);
-      case 'aluminum':
+      case 'Aluminium':
         return Aluminum(data: data);
-      case 'cut to length sheets':
+      case 'Cut To Length Sheets':
         return CutToLengthSheet(data: data);
-      case 'decking sheet':
+      case 'Decking sheet':
         return DeckingSheets(data: data);
-      case 'liner sheets':
+      case 'Liner Sheets':
         return LinerSheetPage(data: data);
-      case 'polycarbonate':
+      case 'Polycarbonate':
         return Polycarbonate(data: data);
-      case 'profile ridge & arch':
+      case 'Profile ridge & Arch':
         return ProfileRidgeAndArch(data: data);
-      case 'purlin':
+      case 'Purlin':
         return Purlin(data: data);
-      case 'roll sheets':
+      case 'Roll Sheet':
         return RollSheet(data: data);
-      case 'screw':
+      case 'Screw':
         return Screw(data: data);
-      case 'tile sheet':
+      case 'Screw accessories':
+        return ScrewAccessories(data: data);
+      case 'Tile sheet':
         return TileSheetPage(data: data);
-      case 'upvc accessories':
+      case 'UPVC Accessories':
         return UpvcAccessories(data: data);
-      case 'upvc tile':
+      case 'UPVC Tile':
         return UpvcTiles(data: data);
+      case 'GI GUTTER':
+        return GIGlutter(data: data);
+      case 'GI Stiffner':
+        return GIStiffner(data: data);
 
       default:
         return Scaffold(

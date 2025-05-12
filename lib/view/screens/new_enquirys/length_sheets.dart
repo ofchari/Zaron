@@ -412,7 +412,8 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
       );
 
       debugPrint("This is a response: ${response.body}");
-      if (selectedMeterial == null ||
+      if (selectedProduct == null ||
+          selectedMeterial == null ||
           selectedThichness == null ||
           selsectedCoat == null ||
           selectedyie == null ||
@@ -432,12 +433,12 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
   }
 
   void _submitData() {
-    if (selectedMeterial == null ||
+    if (selectedProduct == null ||
+        selectedMeterial == null ||
         selectedThichness == null ||
         selsectedCoat == null ||
         selectedyie == null ||
-        selectedBrand == null ||
-        selectedProduct == null) {
+        selectedBrand == null) {
 // Show elegant error message
       showDialog(
         context: context,
@@ -466,12 +467,12 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
         "Base Product":
             "$selectedMeterial ,$selectedThichness, $selsectedCoat, $selectedyie, $selectedBrand, ",
       });
+      selectedProduct = null;
       selectedMeterial = null;
       selectedThichness = null;
       selsectedCoat = null;
       selectedyie = null;
       selectedBrand = null;
-      selectedProduct = null;
     });
 
 // Show success message with a more elegant snackBar

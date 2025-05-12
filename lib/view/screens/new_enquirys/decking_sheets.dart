@@ -484,7 +484,7 @@ class _DeckingSheetsState extends State<DeckingSheets> {
                         "  ${index + 1}.  ${data["Product"]}" ?? "",
                         overflow: TextOverflow.ellipsis,
                         style: GoogleFonts.figtree(
-                            fontSize: 18,
+                            fontSize: 18.sp,
                             fontWeight: FontWeight.w600,
                             color: Colors.black87),
                       ),
