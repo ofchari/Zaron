@@ -865,7 +865,7 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
     );
   }
 
-  String selectedItems() {
+  String _selectedItems() {
     List<String> values = [
       if (selectedMeterial != null) "Material: $selectedMeterial",
       if (selectedThichness != null) "Thickness: $selectedThichness",
@@ -1056,7 +1056,7 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
                                       color: Colors.black),
                                   Gap(5),
                                   MyText(
-                                      text: selectedItems(),
+                                      text: _selectedItems(),
                                       weight: FontWeight.w400,
                                       color: Colors.grey)
                                 ],

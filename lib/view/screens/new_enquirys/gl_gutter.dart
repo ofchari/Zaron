@@ -662,9 +662,11 @@ class _GIGlutterState extends State<GIGlutter> {
                                                 color: Colors.white,
                                               ),
                                               child: Padding(
-                                                padding: const EdgeInsets.only(
-                                                    left: 7.0),
+                                                padding: EdgeInsets.only(
+                                                    left: 7.0.w),
                                                 child: TextField(
+                                                  style: TextStyle(
+                                                      fontSize: 13.sp),
                                                   decoration: InputDecoration(
                                                     enabledBorder:
                                                         InputBorder.none,

@@ -755,7 +755,7 @@ class _AluminumState extends State<Aluminum> {
     );
   }
 
-  String selectedData() {
+  String _selectedItems() {
     List<String> value = [
       if (selectedMaterialType != null) "Material: $selectedMaterialType",
       if (selectedThickness != null) "Thickness: $selectedThickness",
@@ -906,13 +906,14 @@ class _AluminumState extends State<Aluminum> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   MyText(
-                                      text: "Selected Item Details",
+                                      text: "Selected Product Details",
                                       weight: FontWeight.w600,
                                       color: Colors.black),
+                                  Gap(5),
                                   MyText(
-                                      text: selectedData(),
+                                      text: _selectedItems(),
                                       weight: FontWeight.w400,
-                                      color: Colors.black)
+                                      color: Colors.grey)
                                 ],
                               ),
                             ),

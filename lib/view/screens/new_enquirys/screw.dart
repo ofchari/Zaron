@@ -682,7 +682,7 @@ class _ScrewState extends State<Screw> {
   }
 
   ///Preview text///
-  String _previewText() {
+  String _selectedItems() {
     List<String> selectedData = [
       if (selectedBrand != null) "Brand: $selectedBrand",
       if (selectedScrew != null) "Length of Screw: $selectedScrew",
@@ -822,9 +822,9 @@ class _ScrewState extends State<Screw> {
                                       color: Colors.black),
                                   Gap(5),
                                   MyText(
-                                      text: _previewText(),
+                                      text: _selectedItems(),
                                       weight: FontWeight.w400,
-                                      color: Colors.grey),
+                                      color: Colors.grey)
                                 ],
                               ),
                             ),

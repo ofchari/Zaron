@@ -126,7 +126,7 @@ class _LoginState extends State<Login> {
     }
   }
 
-  /// Validate login to check the user and password retun success //
+  /// Validate login to check the user and password return success //
   Future<void> validateLogin(BuildContext context) async {
     HttpClient client = HttpClient();
     client.badCertificateCallback =
@@ -204,7 +204,6 @@ class _LoginState extends State<Login> {
     var size = MediaQuery.of(context).size;
     height = size.height;
     width = size.width;
-
     return LayoutBuilder(
         builder: (BuildContext context, BoxConstraints constraints) {
       height = constraints.maxHeight;

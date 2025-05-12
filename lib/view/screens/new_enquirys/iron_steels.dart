@@ -902,12 +902,13 @@ class _IronSteelState extends State<IronSteel> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   MyText(
-                                      text: "Selected Items Details",
+                                      text: "Selected Product Details",
                                       weight: FontWeight.w600,
                                       color: Colors.black),
+                                  Gap(5),
                                   MyText(
                                       text: selectedItems(),
-                                      weight: FontWeight.w500,
+                                      weight: FontWeight.w400,
                                       color: Colors.grey)
                                 ],
                               ),

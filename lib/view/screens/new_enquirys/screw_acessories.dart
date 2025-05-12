@@ -689,7 +689,7 @@ class _ScrewAccessoriesState extends State<ScrewAccessories> {
     );
   }
 
-  String selectedData() {
+  String _selectedItems() {
     List<String> value = [
       if (selectedProduct != null) "Product: $selectedProduct",
       if (selectedColor != null) "Color: $selectedColor",
@@ -826,7 +826,7 @@ class _ScrewAccessoriesState extends State<ScrewAccessories> {
                                       color: Colors.black),
                                   Gap(5),
                                   MyText(
-                                      text: selectedData(),
+                                      text: _selectedItems(),
                                       weight: FontWeight.w400,
                                       color: Colors.grey)
                                 ],

@@ -806,7 +806,7 @@ class _AccessoriesState extends State<Accessories> {
     );
   }
 
-  String selectedItem() {
+  String _selectedItems() {
     List<String> value = [
       if (selectedAccessories != null) "Product: $selectedAccessories",
       if (selectedBrands != null) "Brand: $selectedBrands",
@@ -974,7 +974,7 @@ class _AccessoriesState extends State<Accessories> {
                                       color: Colors.black),
                                   Gap(5),
                                   MyText(
-                                      text: selectedItem(),
+                                      text: _selectedItems(),
                                       weight: FontWeight.w400,
                                       color: Colors.grey)
                                 ],

@@ -848,7 +848,7 @@ class _LinerSheetPageState extends State<LinerSheetPage> {
     );
   }
 
-  String selectedItem() {
+  String _selectedItems() {
     List<String> value = [
       if (selectedProduct != null) "Product: $selectedProduct",
       if (selectedBrands != null) "Brand: $selectedBrands",
@@ -1017,7 +1017,7 @@ class _LinerSheetPageState extends State<LinerSheetPage> {
                                       color: Colors.black),
                                   Gap(5),
                                   MyText(
-                                      text: selectedItem(),
+                                      text: _selectedItems(),
                                       weight: FontWeight.w400,
                                       color: Colors.grey)
                                 ],

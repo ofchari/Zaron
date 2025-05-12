@@ -772,7 +772,7 @@ class _UpvcAccessoriesState extends State<UpvcAccessories> {
     );
   }
 
-  String postUPVCAccessoriesDetails() {
+  String _selectedItems() {
     List<String> value = [
       if (selectProductNameBase != null) "ProductName: $selectProductNameBase",
       if (selectedBrand != null) "Brand: $selectedBrand",
@@ -921,10 +921,11 @@ class _UpvcAccessoriesState extends State<UpvcAccessories> {
                                       text: "Selected Product Details",
                                       weight: FontWeight.w600,
                                       color: Colors.black),
+                                  Gap(5),
                                   MyText(
-                                      text: postUPVCAccessoriesDetails(),
+                                      text: _selectedItems(),
                                       weight: FontWeight.w400,
-                                      color: Colors.black),
+                                      color: Colors.grey)
                                 ],
                               ),
                             ),

@@ -804,7 +804,7 @@ class _DeckingSheetsState extends State<DeckingSheets> {
   }
 
 // Helper method to format the preview text
-  String _getPreviewText() {
+  String _selectedItems() {
     List<String> selectedValues = [
       if (selectedMaterialType != null) "Material: $selectedMaterialType",
       if (selectedThickness != null) "Thickness: $selectedThickness",
@@ -978,22 +978,15 @@ class _DeckingSheetsState extends State<DeckingSheets> {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text(
-                                    "Selected Product Details",
-                                    style: GoogleFonts.figtree(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w600,
-                                      color: Colors.black87,
-                                    ),
-                                  ),
-                                  SizedBox(height: 8),
-                                  Text(
-                                    _getPreviewText(),
-                                    style: GoogleFonts.figtree(
-                                      fontSize: 12,
-                                      color: Colors.grey[700],
-                                    ),
-                                  ),
+                                  MyText(
+                                      text: "Selected Product Details",
+                                      weight: FontWeight.w600,
+                                      color: Colors.black),
+                                  Gap(5),
+                                  MyText(
+                                      text: _selectedItems(),
+                                      weight: FontWeight.w400,
+                                      color: Colors.grey)
                                 ],
                               ),
                             ),

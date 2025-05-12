@@ -825,7 +825,7 @@ class _UpvcTilesState extends State<UpvcTiles> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   MyText(
-                                      text: "Selected Product Details ",
+                                      text: "Selected Product Details",
                                       weight: FontWeight.w600,
                                       color: Colors.black),
                                   Gap(5),

@@ -496,7 +496,6 @@ class _PurlinState extends State<Purlin> {
                       // color: Colors.red,
                       height: 40.h,
                       width: 210.w,
-
                       child: Text(
                         "  ${index + 1}.  ${data["Product"]}" ?? "",
                         overflow: TextOverflow.ellipsis,
@@ -823,7 +822,7 @@ class _PurlinState extends State<Purlin> {
     );
   }
 
-  String selectProductDetails() {
+  String _selectedItems() {
     List<String> values = [
       if (selectProduct != null) "Product: $selectProduct",
       if (selectedSize != null) "Size: $selectedSize",
@@ -994,7 +993,7 @@ class _PurlinState extends State<Purlin> {
                                       color: Colors.black),
                                   Gap(5),
                                   MyText(
-                                      text: selectProductDetails(),
+                                      text: _selectedItems(),
                                       weight: FontWeight.w400,
                                       color: Colors.grey)
                                 ],

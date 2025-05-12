@@ -735,7 +735,7 @@ class _PolycarbonateState extends State<Polycarbonate> {
     );
   }
 
-  String selectPolycarbonate() {
+  String _selectedItems() {
     List<String> values = [
       if (selectedBrand != null) "Brand: $selectedBrand",
       if (selectedColor != null) "Color: $selectedColor",
@@ -873,7 +873,7 @@ class _PolycarbonateState extends State<Polycarbonate> {
                                       color: Colors.black),
                                   Gap(5),
                                   MyText(
-                                      text: selectPolycarbonate(),
+                                      text: _selectedItems(),
                                       weight: FontWeight.w400,
                                       color: Colors.grey)
                                 ],
