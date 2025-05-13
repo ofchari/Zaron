@@ -3,6 +3,8 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
 import 'package:zaron/view/screens/new_enquirys/new_enquiry.dart';
+import 'package:zaron/view/screens/quotation.dart';
+import 'package:zaron/view/screens/total_enquiry.dart';
 import 'package:zaron/view/widgets/text.dart';
 
 import '../widgets/subhead.dart';
@@ -69,7 +71,7 @@ class _DashboardState extends State<Dashboard> {
         "title": "Total Enquiry",
         "icon": FontAwesomeIcons.list,
         "color": Colors.blue,
-        "route": null
+        "route": TotalEnquiry()
       },
       {
         "title": "Open Enquiry",
@@ -81,7 +83,7 @@ class _DashboardState extends State<Dashboard> {
         "title": "Quotations",
         "icon": FontAwesomeIcons.fileInvoiceDollar,
         "color": Colors.purple,
-        "route": null
+        "route": QuotationEnquiry()
       },
       {
         "title": "Cancelled",
