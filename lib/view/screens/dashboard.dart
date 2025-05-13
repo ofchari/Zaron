@@ -8,6 +8,7 @@ import 'package:zaron/view/screens/total_enquiry.dart';
 import 'package:zaron/view/widgets/text.dart';
 
 import '../widgets/subhead.dart';
+import 'open_enquiry.dart';
 
 class Dashboard extends StatefulWidget {
   const Dashboard({super.key, required this.userid});
@@ -77,7 +78,7 @@ class _DashboardState extends State<Dashboard> {
         "title": "Open Enquiry",
         "icon": FontAwesomeIcons.folderOpen,
         "color": Colors.orange,
-        "route": null
+        "route": OpenEnquiryPage()
       },
       {
         "title": "Quotations",
