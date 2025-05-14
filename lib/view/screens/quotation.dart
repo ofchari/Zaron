@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:gap/gap.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'package:zaron/view/widgets/subhead.dart';
@@ -136,6 +137,7 @@ class _QuotationEnquiryState extends State<QuotationEnquiry> {
 
   @override
   Widget build(BuildContext context) {
+    var size = MediaQuery.sizeOf(context);
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
@@ -159,89 +161,101 @@ class _QuotationEnquiryState extends State<QuotationEnquiry> {
           Container(
             padding: const EdgeInsets.all(
                 16), // Increased padding for better spacing
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // From Date
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.only(right: 12),
-                    child: InkWell(
-                      onTap: () => _selectDate(context, fromDateController),
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // From Date
+                  SizedBox(
+                    height: size.height * 0.06,
+                    width: size.width * 0.40,
+                    child: Padding(
+                      padding: const EdgeInsets.only(top: 5),
                       child: TextField(
                         controller: fromDateController,
-                        enabled: false,
+                        // enabled: false,
+                        readOnly: true,
                         decoration: InputDecoration(
-                          contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 12, vertical: 16),
-                          labelText: 'From Date',
-                          labelStyle: GoogleFonts.outfit(
-                            textStyle: TextStyle(
-                              fontSize: 15.sp,
-                              fontWeight: FontWeight.w500,
-                              color: Colors.black,
-                            ),
+                          labelText: "From Date",
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(5),
+                            borderSide: BorderSide(color: Colors.grey),
                           ),
-                          border: const OutlineInputBorder(),
-                          suffixIcon: const Icon(Icons.calendar_today),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(5),
+                            borderSide:
+                                BorderSide(color: Colors.blue, width: 2),
+                          ),
+                          suffixIcon: InkWell(
+                              onTap: () =>
+                                  _selectDate(context, fromDateController),
+                              child: Icon(Icons.calendar_today, size: 18)),
                         ),
                       ),
                     ),
                   ),
-                ),
+                  Gap(8),
 
-                // To Date
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    child: InkWell(
-                      onTap: () => _selectDate(context, toDateController),
+                  // To Date
+                  SizedBox(
+                    height: size.height * 0.06,
+                    width: size.width * 0.40,
+                    child: Padding(
+                      padding: const EdgeInsets.only(top: 5),
                       child: TextField(
                         controller: toDateController,
-                        enabled: false,
+                        // enabled: false,
+                        readOnly: true,
                         decoration: InputDecoration(
-                          contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 12, vertical: 16),
-                          labelText: 'To Date',
-                          labelStyle: GoogleFonts.outfit(
-                            textStyle: TextStyle(
-                              fontSize: 15.sp,
-                              fontWeight: FontWeight.w500,
-                              color: Colors.black,
+                          labelText: "To Date",
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(5),
+                            borderSide: BorderSide(color: Colors.grey),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(5),
+                            borderSide:
+                                BorderSide(color: Colors.blue, width: 2),
+                          ),
+                          suffixIcon: InkWell(
+                              onTap: () =>
+                                  _selectDate(context, toDateController),
+                              child: Icon(Icons.calendar_today, size: 18)),
+                        ),
+                      ),
+                    ),
+                  ),
+                  Gap(8),
+
+                  // Enquiry No (with auto-filter)
+                  SizedBox(
+                    height: size.height * 0.06,
+                    width: size.width * 0.40,
+                    child: Padding(
+                      padding: const EdgeInsets.only(top: 5),
+                      child: TextField(
+                        controller: enquiryNoController,
+                        decoration: InputDecoration(
+                          labelText: "Enquiry No",
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(5),
+                            borderSide: BorderSide(
+                              color: Colors.grey,
                             ),
                           ),
-                          border: const OutlineInputBorder(),
-                          suffixIcon: const Icon(Icons.calendar_today),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-
-                // Enquiry No (with auto-filter)
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.only(left: 12),
-                    child: TextField(
-                      controller: enquiryNoController,
-                      decoration: InputDecoration(
-                        contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 16),
-                        labelText: 'Enquiry No',
-                        labelStyle: GoogleFonts.outfit(
-                          textStyle: TextStyle(
-                            fontSize: 15.sp,
-                            fontWeight: FontWeight.w500,
-                            color: Colors.black,
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(5),
+                            borderSide:
+                                BorderSide(color: Colors.blue, width: 2),
                           ),
+                          suffixIcon: Icon(Icons.search, size: 25),
                         ),
-                        border: const OutlineInputBorder(),
-                        suffixIcon: const Icon(Icons.search),
                       ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
 
@@ -274,9 +288,12 @@ class _QuotationEnquiryState extends State<QuotationEnquiry> {
                       child: SingleChildScrollView(
                         scrollDirection: Axis.horizontal,
                         child: DataTable(
-                          dataRowHeight: 60, // Increased for better readability
-                          columnSpacing: 22, // Increased spacing
-                          headingRowHeight: 56, // Increased header height
+                          dataRowHeight: 60,
+                          // Increased for better readability
+                          columnSpacing: 22,
+                          // Increased spacing
+                          headingRowHeight: 56,
+                          // Increased header height
                           columns: [
                             DataColumn(
                               label: Text(
@@ -293,30 +310,6 @@ class _QuotationEnquiryState extends State<QuotationEnquiry> {
                             DataColumn(
                               label: Text(
                                 'Enquiry No',
-                                style: GoogleFonts.outfit(
-                                  textStyle: TextStyle(
-                                    fontSize: 16.sp,
-                                    fontWeight: FontWeight.w500,
-                                    color: Colors.black,
-                                  ),
-                                ),
-                              ),
-                            ),
-                            DataColumn(
-                              label: Text(
-                                'Name',
-                                style: GoogleFonts.outfit(
-                                  textStyle: TextStyle(
-                                    fontSize: 16.sp,
-                                    fontWeight: FontWeight.w500,
-                                    color: Colors.black,
-                                  ),
-                                ),
-                              ),
-                            ),
-                            DataColumn(
-                              label: Text(
-                                'Phone',
                                 style: GoogleFonts.outfit(
                                   textStyle: TextStyle(
                                     fontSize: 16.sp,
@@ -388,30 +381,6 @@ class _QuotationEnquiryState extends State<QuotationEnquiry> {
                                 DataCell(
                                   Text(
                                     entry.value['order_no'] ?? '',
-                                    style: GoogleFonts.dmSans(
-                                      textStyle: TextStyle(
-                                        fontSize: 14.2.sp,
-                                        fontWeight: FontWeight.w400,
-                                        color: Colors.black,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                DataCell(
-                                  Text(
-                                    entry.value['name'] ?? '',
-                                    style: GoogleFonts.dmSans(
-                                      textStyle: TextStyle(
-                                        fontSize: 14.2.sp,
-                                        fontWeight: FontWeight.w400,
-                                        color: Colors.black,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                DataCell(
-                                  Text(
-                                    entry.value['phone'] ?? '',
                                     style: GoogleFonts.dmSans(
                                       textStyle: TextStyle(
                                         fontSize: 14.2.sp,
