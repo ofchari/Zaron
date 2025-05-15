@@ -2,9 +2,9 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:gap/gap.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
+import 'package:zaron/view/screens/global_user/global_user.dart';
 import 'package:zaron/view/widgets/subhead.dart';
 
 class TotalEnquiry extends StatefulWidget {
@@ -20,115 +20,91 @@ class _TotalEnquiryState extends State<TotalEnquiry> {
   bool isLoading = true;
   int totalRecords = 0;
 
-  // Controllers for date range
-  final TextEditingController fromDateController = TextEditingController(
-    text: DateTime.now().toString().split(' ')[0],
-  );
-  final TextEditingController toDateController = TextEditingController(
-    text: DateTime.now().toString().split(' ')[0],
-  );
   final TextEditingController enquiryNoController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    fetchPortalActivity();
-
-    // Add listener to enquiryNoController to filter data automatically
+    fetchEnquiryData();
     enquiryNoController.addListener(_onEnquiryNumberChanged);
   }
 
   @override
   void dispose() {
-    // Remove listener when disposing
     enquiryNoController.removeListener(_onEnquiryNumberChanged);
-    fromDateController.dispose();
-    toDateController.dispose();
     enquiryNoController.dispose();
     super.dispose();
   }
 
   void _onEnquiryNumberChanged() {
-    // Debounce could be added here for better performance
-    fetchPortalActivity();
+    filterData();
   }
 
-  Future<void> fetchPortalActivity() async {
+  Future<void> fetchEnquiryData() async {
     setState(() => isLoading = true);
 
-    final String fromDate = fromDateController.text;
-    final String toDate = toDateController.text;
-    final String enquiryNo = enquiryNoController.text;
-
     final String apiUrl =
-        'https://demo.zaron.in:8181/index.php/order/fetch_data_table?page=1&size=100&search=${enquiryNo}&tablename=orders&order_base=121&from_date=$fromDate&to_date=$toDate';
+        'https://demo.zaron.in:8181/ci4/api/totalenquiry/${UserSession().userId}';
 
     try {
-      final response = await http.get(
-        Uri.parse(apiUrl),
-      );
+      final response = await http.get(Uri.parse(apiUrl));
 
       if (response.statusCode == 200) {
-        final dynamic jsonData = jsonDecode(response.body);
+        final jsonData = jsonDecode(response.body);
 
         if (jsonData is Map<String, dynamic> &&
-            jsonData.containsKey("PortalActivity")) {
-          final List<dynamic> activityData = jsonData["PortalActivity"] as List;
-          final int count =
-              jsonData["totalCount"] as int? ?? activityData.length;
+            jsonData.containsKey("total_enquiry")) {
+          final List<dynamic> enquiryList = jsonData["total_enquiry"];
 
-          final List<Map<String, dynamic>> processedData = activityData
+          final List<Map<String, dynamic>> processedData = enquiryList
               .whereType<Map<String, dynamic>>()
               .map((item) => {
-                    'no': item['no']?.toString() ?? '',
-                    'id': item['id']?.toString() ?? '',
-                    'order_no': item['order_no']?.toString() ?? '',
-                    'name': item['name']?.toString() ?? '',
-                    'phone': item['phone']?.toString() ?? '',
-                    'totalamount': item['totalamount']?.toString() ?? '0',
-                    'enquiry_date': item['enquiry_date']?.toString() ?? '',
+                    'no': (enquiryList.indexOf(item) + 1).toString(),
+                    'id': item['id'] ?? '',
+                    'order_no': item['order_no'] ?? '',
+                    'totalamount': item['bill_total'] ?? '0',
+                    'enquiry_date': item['create_date'] ?? '',
                   })
               .toList();
 
           setState(() {
             tableData = processedData;
             filteredData = List.from(tableData);
-            totalRecords = count;
+            totalRecords = processedData.length;
             isLoading = false;
           });
           return;
         }
+
         throw Exception("Invalid API response format");
       } else {
         throw Exception(
             'API Error: ${response.statusCode} - ${response.reasonPhrase}');
       }
     } catch (e) {
-      print('Error fetching data: $e');
+      print('❌ Error fetching enquiry data: $e');
       setState(() => isLoading = false);
     }
   }
 
-  Future<void> _selectDate(
-      BuildContext context, TextEditingController controller) async {
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: DateTime.tryParse(controller.text) ?? DateTime.now(),
-      firstDate: DateTime(2020),
-      lastDate: DateTime(2030),
-    );
-    if (picked != null) {
+  void filterData() {
+    final searchQuery = enquiryNoController.text.trim().toLowerCase();
+    if (searchQuery.isEmpty) {
       setState(() {
-        controller.text = picked.toString().split(' ')[0];
-        // Trigger data fetch when date changes
-        fetchPortalActivity();
+        filteredData = List.from(tableData);
+      });
+    } else {
+      setState(() {
+        filteredData = tableData
+            .where((row) =>
+                (row['order_no'] ?? '').toLowerCase().contains(searchQuery))
+            .toList();
       });
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    var size = MediaQuery.sizeOf(context);
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
@@ -148,112 +124,31 @@ class _TotalEnquiryState extends State<TotalEnquiry> {
       ),
       body: Column(
         children: [
-          // Filters in single row with better spacing
-          Container(
-            padding: const EdgeInsets.all(
-                16), // Increased padding for better spacing
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // From Date
-                  SizedBox(
-                    height: size.height * 0.06,
-                    width: size.width * 0.40,
-                    child: Padding(
-                      padding: const EdgeInsets.only(top: 5),
-                      child: TextField(
-                        controller: fromDateController,
-                        // enabled: false,
-                        readOnly: true,
-                        decoration: InputDecoration(
-                          labelText: "From Date",
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(5),
-                            borderSide: BorderSide(color: Colors.grey),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(5),
-                            borderSide:
-                                BorderSide(color: Colors.blue, width: 2),
-                          ),
-                          suffixIcon: InkWell(
-                              onTap: () =>
-                                  _selectDate(context, fromDateController),
-                              child: Icon(Icons.calendar_today, size: 18)),
-                        ),
-                      ),
-                    ),
+          // Enquiry No (Search)
+          Padding(
+            padding: const EdgeInsets.only(left: 12, right: 12, top: 16),
+            child: TextField(
+              controller: enquiryNoController,
+              decoration: InputDecoration(
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+                labelText: 'Enquiry No',
+                labelStyle: GoogleFonts.outfit(
+                  textStyle: TextStyle(
+                    fontSize: 15.sp,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.black,
                   ),
-                  Gap(8),
-
-                  // To Date
-                  SizedBox(
-                    height: size.height * 0.06,
-                    width: size.width * 0.40,
-                    child: Padding(
-                      padding: const EdgeInsets.only(top: 5),
-                      child: TextField(
-                        readOnly: true,
-                        controller: toDateController,
-                        // enabled: false,
-                        decoration: InputDecoration(
-                          labelText: "To Date",
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(5),
-                            borderSide: BorderSide(color: Colors.grey),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(5),
-                            borderSide:
-                                BorderSide(color: Colors.blue, width: 2),
-                          ),
-                          suffixIcon: InkWell(
-                              onTap: () =>
-                                  _selectDate(context, toDateController),
-                              child: Icon(Icons.calendar_today, size: 18)),
-                        ),
-                      ),
-                    ),
-                  ),
-                  Gap(8),
-
-                  // Enquiry No (with auto-filter)
-                  SizedBox(
-                    height: size.height * 0.06,
-                    width: size.width * 0.40,
-                    child: Padding(
-                      padding: const EdgeInsets.only(top: 5),
-                      child: TextField(
-                        controller: enquiryNoController,
-                        decoration: InputDecoration(
-                          labelText: "Enquiry No",
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(5),
-                            borderSide: BorderSide(
-                              color: Colors.grey,
-                            ),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(5),
-                            borderSide:
-                                BorderSide(color: Colors.blue, width: 2),
-                          ),
-                          suffixIcon: Icon(Icons.search, size: 25),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
+                ),
+                border: const OutlineInputBorder(),
+                suffixIcon: const Icon(Icons.search),
               ),
             ),
           ),
 
           // Total Records Counter
           Container(
-            padding: const EdgeInsets.symmetric(
-                horizontal: 20, vertical: 16), // Increased padding
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
             alignment: Alignment.centerLeft,
             child: Text(
               'Total Records: $totalRecords',
@@ -280,11 +175,8 @@ class _TotalEnquiryState extends State<TotalEnquiry> {
                         scrollDirection: Axis.horizontal,
                         child: DataTable(
                           dataRowHeight: 60,
-                          // Increased for better readability
                           columnSpacing: 22,
-                          // Increased spacing
                           headingRowHeight: 56,
-                          // Increased header height
                           columns: [
                             DataColumn(
                               label: Text(
@@ -362,7 +254,7 @@ class _TotalEnquiryState extends State<TotalEnquiry> {
                                     entry.value['no'] ?? '',
                                     style: GoogleFonts.dmSans(
                                       textStyle: TextStyle(
-                                        fontSize: 14.2.sp,
+                                        fontSize: 14.sp,
                                         fontWeight: FontWeight.w400,
                                         color: Colors.black,
                                       ),
@@ -374,7 +266,7 @@ class _TotalEnquiryState extends State<TotalEnquiry> {
                                     entry.value['order_no'] ?? '',
                                     style: GoogleFonts.dmSans(
                                       textStyle: TextStyle(
-                                        fontSize: 14.2.sp,
+                                        fontSize: 14.sp,
                                         fontWeight: FontWeight.w400,
                                         color: Colors.black,
                                       ),
@@ -386,7 +278,7 @@ class _TotalEnquiryState extends State<TotalEnquiry> {
                                     entry.value['totalamount'] ?? '0',
                                     style: GoogleFonts.dmSans(
                                       textStyle: TextStyle(
-                                        fontSize: 14.2.sp,
+                                        fontSize: 14.sp,
                                         fontWeight: FontWeight.w400,
                                         color: Colors.black,
                                       ),
@@ -412,7 +304,6 @@ class _TotalEnquiryState extends State<TotalEnquiry> {
                                         icon: const Icon(Icons.visibility,
                                             color: Colors.blue),
                                         onPressed: () {
-                                          // View details action
                                           ScaffoldMessenger.of(context)
                                               .showSnackBar(
                                             SnackBar(
@@ -425,7 +316,6 @@ class _TotalEnquiryState extends State<TotalEnquiry> {
                                         icon: const Icon(Icons.edit,
                                             color: Colors.green),
                                         onPressed: () {
-                                          // Edit action
                                           ScaffoldMessenger.of(context)
                                               .showSnackBar(
                                             SnackBar(
