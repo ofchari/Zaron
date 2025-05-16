@@ -135,7 +135,9 @@ class _NewEnquiryState extends State<NewEnquiry> {
 
       default:
         return Scaffold(
-          appBar: AppBar(title: Text("Unknown Category")),
+          backgroundColor: Colors.white,
+          appBar: AppBar(
+              backgroundColor: Colors.white, title: Text("Unknown Category")),
           body: Center(child: Text("No page found for: $categoryName")),
         );
     }
@@ -160,7 +162,9 @@ class _NewEnquiryState extends State<NewEnquiry> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
+        backgroundColor: Colors.white,
         title: const Subhead(
             text: "New Enquiry", weight: FontWeight.w500, color: Colors.black),
         centerTitle: true,

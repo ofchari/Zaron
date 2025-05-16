@@ -2,13 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
+import 'package:zaron/view/screens/cancel_quotation.dart';
 import 'package:zaron/view/screens/new_enquirys/new_enquiry.dart';
 import 'package:zaron/view/screens/quotation.dart';
 import 'package:zaron/view/screens/total_enquiry.dart';
 import 'package:zaron/view/widgets/text.dart';
 
 import '../widgets/subhead.dart';
-import 'open_enquiry.dart';
+import 'cancel_enquiry.dart';
 
 class Dashboard extends StatefulWidget {
   const Dashboard({super.key, required this.userid});
@@ -48,6 +49,7 @@ class _DashboardState extends State<Dashboard> {
   /// Landscape Mode Warning ///
   Widget _landscapeView() {
     return const Scaffold(
+      backgroundColor: Colors.white,
       body: Center(
         child: Text(
           "Please switch to portrait mode for a better experience.",
@@ -72,25 +74,25 @@ class _DashboardState extends State<Dashboard> {
         "title": "Total Enquiry",
         "icon": FontAwesomeIcons.list,
         "color": Colors.blue,
-        "route": TotalEnquiry()
+        "route": TotalEnquiryPage()
       },
       {
-        "title": "Open Enquiry",
-        "icon": FontAwesomeIcons.folderOpen,
-        "color": Colors.orange,
-        "route": OpenEnquiryPage()
-      },
-      {
-        "title": "Quotations",
+        "title": " Total Quotations",
         "icon": FontAwesomeIcons.fileInvoiceDollar,
         "color": Colors.purple,
-        "route": QuotationEnquiry()
+        "route": QuotationPage()
       },
       {
-        "title": "Cancelled",
+        "title": "Cancelled Enquiry",
+        "icon": FontAwesomeIcons.cancel,
+        "color": Colors.redAccent.shade400,
+        "route": CancelEnquiry()
+      },
+      {
+        "title": "Cancelled Quotation",
         "icon": FontAwesomeIcons.times,
-        "color": Colors.redAccent,
-        "route": null
+        "color": Colors.redAccent.shade700,
+        "route": CancelQuotation()
       },
       {
         "title": "Missed Enquiry",

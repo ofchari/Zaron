@@ -7,14 +7,14 @@ import 'package:http/http.dart' as http;
 import 'package:zaron/view/screens/global_user/global_user.dart';
 import 'package:zaron/view/widgets/subhead.dart';
 
-class TotalEnquiryPage extends StatefulWidget {
-  const TotalEnquiryPage({super.key});
+class CancelQuotation extends StatefulWidget {
+  const CancelQuotation({super.key});
 
   @override
-  State<TotalEnquiryPage> createState() => _TotalEnquiryPageState();
+  State<CancelQuotation> createState() => _CancelQuotationPageState();
 }
 
-class _TotalEnquiryPageState extends State<TotalEnquiryPage> {
+class _CancelQuotationPageState extends State<CancelQuotation> {
   List<Map<String, dynamic>> tableData = [];
   List<Map<String, dynamic>> filteredData = [];
   bool isLoading = true;
@@ -36,25 +36,6 @@ class _TotalEnquiryPageState extends State<TotalEnquiryPage> {
     super.dispose();
   }
 
-  // Date Controllers
-  final TextEditingController fromDateController = TextEditingController();
-  final TextEditingController toDateController = TextEditingController();
-
-  Future<void> _selectDate(
-      BuildContext context, TextEditingController controller) async {
-    DateTime? pickedDate = await showDatePicker(
-      context: context,
-      initialDate: DateTime.now(),
-      firstDate: DateTime(2000),
-      lastDate: DateTime(2100),
-    );
-
-    if (pickedDate != null) {
-      controller.text = "${pickedDate.toLocal()}".split(' ')[0];
-      filterData(); // <<== call filter when date changes
-    }
-  }
-
   void _onEnquiryNumberChanged() {
     filterData();
   }
@@ -63,7 +44,7 @@ class _TotalEnquiryPageState extends State<TotalEnquiryPage> {
     setState(() => isLoading = true);
 
     final String apiUrl =
-        'https://demo.zaron.in:8181/ci4/api/totalenquiry/${UserSession().userId}';
+        'https://demo.zaron.in:8181/ci4/api/cancelledquotation/${UserSession().userId}';
 
     try {
       final response = await http.get(Uri.parse(apiUrl));
@@ -72,8 +53,8 @@ class _TotalEnquiryPageState extends State<TotalEnquiryPage> {
         final jsonData = jsonDecode(response.body);
 
         if (jsonData is Map<String, dynamic> &&
-            jsonData.containsKey("total_enquiry")) {
-          final List<dynamic> enquiryList = jsonData["total_enquiry"];
+            jsonData.containsKey("cancelled_quotation")) {
+          final List<dynamic> enquiryList = jsonData["cancelled_quotation"];
 
           final List<Map<String, dynamic>> processedData = enquiryList
               .whereType<Map<String, dynamic>>()
@@ -109,35 +90,18 @@ class _TotalEnquiryPageState extends State<TotalEnquiryPage> {
 
   void filterData() {
     final searchQuery = enquiryNoController.text.trim().toLowerCase();
-
-    DateTime? fromDate;
-    DateTime? toDate;
-
-    if (fromDateController.text.isNotEmpty) {
-      fromDate = DateTime.tryParse(fromDateController.text);
+    if (searchQuery.isEmpty) {
+      setState(() {
+        filteredData = List.from(tableData);
+      });
+    } else {
+      setState(() {
+        filteredData = tableData
+            .where((row) =>
+                (row['order_no'] ?? '').toLowerCase().contains(searchQuery))
+            .toList();
+      });
     }
-    if (toDateController.text.isNotEmpty) {
-      toDate = DateTime.tryParse(toDateController.text);
-    }
-
-    setState(() {
-      filteredData = tableData.where((row) {
-        final orderNo = (row['order_no'] ?? '').toLowerCase();
-        final createDateStr = row['create_date'] ?? '';
-        final createDate = DateTime.tryParse(createDateStr);
-
-        final matchesSearch =
-            searchQuery.isEmpty || orderNo.contains(searchQuery);
-        final matchesDate = (fromDate == null ||
-                createDate == null ||
-                !createDate.isBefore(fromDate)) &&
-            (toDate == null ||
-                createDate == null ||
-                !createDate.isAfter(toDate));
-
-        return matchesSearch && matchesDate;
-      }).toList();
-    });
   }
 
   @override
@@ -148,7 +112,7 @@ class _TotalEnquiryPageState extends State<TotalEnquiryPage> {
         centerTitle: true,
         backgroundColor: Colors.white,
         title: Subhead(
-            text: "Total Enquiry",
+            text: "Cancelled Quotation",
             weight: FontWeight.w500,
             color: Colors.black),
         actions: [
@@ -162,39 +126,6 @@ class _TotalEnquiryPageState extends State<TotalEnquiryPage> {
       ),
       body: Column(
         children: [
-          Padding(
-            padding: const EdgeInsets.only(left: 12, right: 12, top: 16),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: fromDateController,
-                    readOnly: true,
-                    onTap: () => _selectDate(context, fromDateController),
-                    decoration: InputDecoration(
-                      labelText: 'From Date',
-                      prefixIcon: Icon(Icons.calendar_today),
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                ),
-                SizedBox(width: 12),
-                Expanded(
-                  child: TextField(
-                    controller: toDateController,
-                    readOnly: true,
-                    onTap: () => _selectDate(context, toDateController),
-                    decoration: InputDecoration(
-                      labelText: 'To Date',
-                      prefixIcon: Icon(Icons.calendar_today),
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-
           // Enquiry No (Search)
           Padding(
             padding: const EdgeInsets.only(left: 12, right: 12, top: 16),
@@ -203,12 +134,12 @@ class _TotalEnquiryPageState extends State<TotalEnquiryPage> {
               decoration: InputDecoration(
                 contentPadding:
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
-                labelText: 'Enquiry No',
+                labelText: 'Search..',
                 labelStyle: GoogleFonts.outfit(
                   textStyle: TextStyle(
                     fontSize: 15.sp,
-                    fontWeight: FontWeight.w500,
-                    color: Colors.black,
+                    fontWeight: FontWeight.w400,
+                    color: Colors.black54,
                   ),
                 ),
                 border: const OutlineInputBorder(),
@@ -222,7 +153,7 @@ class _TotalEnquiryPageState extends State<TotalEnquiryPage> {
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
             alignment: Alignment.centerLeft,
             child: Text(
-              'Total Records: $totalRecords',
+              'Total Data: $totalRecords',
               style: GoogleFonts.outfit(
                 textStyle: TextStyle(
                   fontSize: 16.sp,
@@ -315,18 +246,6 @@ class _TotalEnquiryPageState extends State<TotalEnquiryPage> {
                               DataColumn(
                                 label: Text(
                                   'Create Time',
-                                  style: GoogleFonts.outfit(
-                                    textStyle: TextStyle(
-                                      fontSize: 16.sp,
-                                      fontWeight: FontWeight.w500,
-                                      color: Colors.black,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              DataColumn(
-                                label: Text(
-                                  'Action',
                                   style: GoogleFonts.outfit(
                                     textStyle: TextStyle(
                                       fontSize: 16.sp,
@@ -448,38 +367,6 @@ class _TotalEnquiryPageState extends State<TotalEnquiryPage> {
                                     //   ],
                                     // ),
                                   ),
-                                  DataCell(
-                                    Row(
-                                      children: [
-                                        IconButton(
-                                          icon: const Icon(Icons.visibility,
-                                              color: Colors.blue),
-                                          onPressed: () {
-                                            // View details action
-                                            ScaffoldMessenger.of(context)
-                                                .showSnackBar(
-                                              SnackBar(
-                                                  content: Text(
-                                                      "View details for ${entry.value['order_no']}")),
-                                            );
-                                          },
-                                        ),
-                                        IconButton(
-                                          icon: const Icon(Icons.edit,
-                                              color: Colors.green),
-                                          onPressed: () {
-                                            // Edit action
-                                            ScaffoldMessenger.of(context)
-                                                .showSnackBar(
-                                              SnackBar(
-                                                  content: Text(
-                                                      "Edit ${entry.value['order_no']}")),
-                                            );
-                                          },
-                                        ),
-                                      ],
-                                    ),
-                                  )
                                 ],
                               );
                             }).toList(),
