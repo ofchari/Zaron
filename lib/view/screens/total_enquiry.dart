@@ -2,9 +2,11 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'package:zaron/view/screens/global_user/global_user.dart';
+import 'package:zaron/view/screens/view_total_enquiry.dart';
 import 'package:zaron/view/widgets/subhead.dart';
 
 class TotalEnquiryPage extends StatefulWidget {
@@ -426,13 +428,9 @@ class _TotalEnquiryPageState extends State<TotalEnquiryPage> {
                                           icon: const Icon(Icons.visibility,
                                               color: Colors.blue),
                                           onPressed: () {
-                                            // View details action
-                                            ScaffoldMessenger.of(context)
-                                                .showSnackBar(
-                                              SnackBar(
-                                                  content: Text(
-                                                      "View details for ${entry.value['order_no']}")),
-                                            );
+                                            Get.to(TotalEnquiryView(
+                                              id: entry.value['id'] ?? '',
+                                            ));
                                           },
                                         ),
                                         // IconButton(
