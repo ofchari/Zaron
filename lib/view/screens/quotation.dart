@@ -6,7 +6,7 @@ import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'package:zaron/view/screens/global_user/global_user.dart';
-import 'package:zaron/view/screens/view_quotation_details.dart';
+import 'package:zaron/view/screens/total_quoation_view.dart';
 import 'package:zaron/view/widgets/subhead.dart';
 
 class QuotationPage extends StatefulWidget {
