@@ -418,35 +418,6 @@ class _TotalEnquiryPageState extends State<TotalEnquiryPage> {
                                         ),
                                       ),
                                     ),
-
-                                    // Row(
-                                    //   children: [
-                                    //     IconButton(
-                                    //       icon: const Icon(Icons.visibility,
-                                    //           color: Colors.blue),
-                                    //       onPressed: () {
-                                    //         ScaffoldMessenger.of(context)
-                                    //             .showSnackBar(
-                                    //           SnackBar(
-                                    //               content: Text(
-                                    //                   "View details for ${entry.value['order_no']}")),
-                                    //         );
-                                    //       },
-                                    //     ),
-                                    //     IconButton(
-                                    //       icon: const Icon(Icons.edit,
-                                    //           color: Colors.green),
-                                    //       onPressed: () {
-                                    //         ScaffoldMessenger.of(context)
-                                    //             .showSnackBar(
-                                    //           SnackBar(
-                                    //               content: Text(
-                                    //                   "Edit ${entry.value['order_no']}")),
-                                    //         );
-                                    //       },
-                                    //     ),
-                                    //   ],
-                                    // ),
                                   ),
                                   DataCell(
                                     Row(
@@ -464,19 +435,19 @@ class _TotalEnquiryPageState extends State<TotalEnquiryPage> {
                                             );
                                           },
                                         ),
-                                        IconButton(
-                                          icon: const Icon(Icons.edit,
-                                              color: Colors.green),
-                                          onPressed: () {
-                                            // Edit action
-                                            ScaffoldMessenger.of(context)
-                                                .showSnackBar(
-                                              SnackBar(
-                                                  content: Text(
-                                                      "Edit ${entry.value['order_no']}")),
-                                            );
-                                          },
-                                        ),
+                                        // IconButton(
+                                        //   icon: const Icon(Icons.edit,
+                                        //       color: Colors.green),
+                                        //   onPressed: () {
+                                        //     // Edit action
+                                        //     ScaffoldMessenger.of(context)
+                                        //         .showSnackBar(
+                                        //       SnackBar(
+                                        //           content: Text(
+                                        //               "Edit ${entry.value['order_no']}")),
+                                        //     );
+                                        //   },
+                                        // ),
                                       ],
                                     ),
                                   )

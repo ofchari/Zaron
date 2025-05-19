@@ -323,6 +323,18 @@ class _QuotationPageState extends State<QuotationPage> {
                                   ),
                                 ),
                               ),
+                              DataColumn(
+                                label: Text(
+                                  'Action',
+                                  style: GoogleFonts.outfit(
+                                    textStyle: TextStyle(
+                                      fontSize: 16.sp,
+                                      fontWeight: FontWeight.w500,
+                                      color: Colors.black,
+                                    ),
+                                  ),
+                                ),
+                              ),
                             ],
                             rows: filteredData.asMap().entries.map((entry) {
                               return DataRow(
@@ -405,36 +417,39 @@ class _QuotationPageState extends State<QuotationPage> {
                                         ),
                                       ),
                                     ),
-
-                                    // Row(
-                                    //   children: [
-                                    //     IconButton(
-                                    //       icon: const Icon(Icons.visibility,
-                                    //           color: Colors.blue),
-                                    //       onPressed: () {
-                                    //         ScaffoldMessenger.of(context)
-                                    //             .showSnackBar(
-                                    //           SnackBar(
-                                    //               content: Text(
-                                    //                   "View details for ${entry.value['order_no']}")),
-                                    //         );
-                                    //       },
-                                    //     ),
-                                    //     IconButton(
-                                    //       icon: const Icon(Icons.edit,
-                                    //           color: Colors.green),
-                                    //       onPressed: () {
-                                    //         ScaffoldMessenger.of(context)
-                                    //             .showSnackBar(
-                                    //           SnackBar(
-                                    //               content: Text(
-                                    //                   "Edit ${entry.value['order_no']}")),
-                                    //         );
-                                    //       },
-                                    //     ),
-                                    //   ],
-                                    // ),
                                   ),
+                                  DataCell(
+                                    Row(
+                                      children: [
+                                        IconButton(
+                                          icon: const Icon(Icons.visibility,
+                                              color: Colors.blue),
+                                          onPressed: () {
+                                            // View details action
+                                            ScaffoldMessenger.of(context)
+                                                .showSnackBar(
+                                              SnackBar(
+                                                  content: Text(
+                                                      "View details for ${entry.value['order_no']}")),
+                                            );
+                                          },
+                                        ),
+                                        // IconButton(
+                                        //   icon: const Icon(Icons.edit,
+                                        //       color: Colors.green),
+                                        //   onPressed: () {
+                                        //     // Edit action
+                                        //     ScaffoldMessenger.of(context)
+                                        //         .showSnackBar(
+                                        //       SnackBar(
+                                        //           content: Text(
+                                        //               "Edit ${entry.value['order_no']}")),
+                                        //     );
+                                        //   },
+                                        // ),
+                                      ],
+                                    ),
+                                  )
                                 ],
                               );
                             }).toList(),
