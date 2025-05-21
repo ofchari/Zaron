@@ -1,4 +1,5 @@
 import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
@@ -17,7 +18,6 @@ class TotalEnquiryPage extends StatefulWidget {
 
 class _TotalEnquiryPageState extends State<TotalEnquiryPage> {
   List<Map<String, dynamic>> tableData = [];
-
 
   List<Map<String, dynamic>> filteredData = [];
   bool isLoading = true;
@@ -73,6 +73,8 @@ class _TotalEnquiryPageState extends State<TotalEnquiryPage> {
 
       if (response.statusCode == 200) {
         final jsonData = jsonDecode(response.body);
+        print(response.body);
+        print(response.statusCode);
 
         if (jsonData is Map<String, dynamic> &&
             jsonData.containsKey("total_enquiry")) {

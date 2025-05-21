@@ -76,6 +76,8 @@ class _TotalEnquiryViewState extends State<TotalEnquiryView> {
     final response = await http.get(Uri.parse("$apiUrl/add_info"));
     if (response.statusCode == 200) {
       final jsonData = json.decode(response.body);
+      print(response.body);
+      print(response.statusCode);
       setState(() {
         additionalInfo = jsonData['data'];
         additionalValues = {
@@ -215,8 +217,6 @@ class _TotalEnquiryViewState extends State<TotalEnquiryView> {
     );
   }
 
-  //// Poscope for delete ///
-
 // Inside your _TotalEnquiryViewState class
 
   Future<void> deleteItem(String itemId) async {
@@ -277,13 +277,119 @@ class _TotalEnquiryViewState extends State<TotalEnquiryView> {
         print(itemId);
       }
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Item deleted successfully.")),
+        const SnackBar(
+            backgroundColor: Colors.green,
+            content: Text("Item deleted successfully.")),
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Failed to delete the item.")),
+        const SnackBar(
+            backgroundColor: Colors.red,
+            content: Text("Failed to delete the item.")),
       );
     }
+  }
+
+  /// Group Post logic in Show dialog //
+  void openGroupDialog(String itemId) {
+    final TextEditingController countController = TextEditingController();
+    final BuildContext rootContext =
+        context; // Capture it from the parent widget
+
+    showDialog(
+      context: rootContext,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(15),
+          ),
+          title: Text("Grouping",
+              style: GoogleFonts.outfit(
+                  fontSize: 17.sp,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.black)),
+          content: TextFormField(
+            controller: countController,
+            keyboardType: TextInputType.number,
+            decoration: InputDecoration(
+              hintText: "Count",
+              filled: true,
+              fillColor: Colors.grey[100],
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: BorderSide.none,
+              ),
+            ),
+          ),
+          actions: [
+            GestureDetector(
+                onTap: () => Navigator.of(context).pop(),
+                child: Buttons(
+                    text: "Cancel",
+                    weight: FontWeight.w500,
+                    color: Colors.grey,
+                    height: height / 18.5,
+                    width: width / 4.2,
+                    radius: BorderRadius.circular(15))),
+            GestureDetector(
+                onTap: () async {
+                  final count = countController.text.trim();
+
+                  if (count.isEmpty) {
+                    Navigator.of(context).pop(); // close first
+                    ScaffoldMessenger.of(rootContext).showSnackBar(
+                        const SnackBar(content: Text("Please enter a count.")));
+                    return;
+                  }
+
+                  Navigator.of(context).pop(); // Close dialog
+
+                  final Map<String, dynamic> payload = {
+                    "id": itemId,
+                    "count": int.parse(count),
+                  };
+
+                  print("🔻 Sending POST data to $apiUrl/grouping");
+                  print("Payload: $payload");
+
+                  final response = await http.post(
+                    Uri.parse("$apiUrl/grouping"),
+                    headers: {"Content-Type": "application/json"},
+                    body: json.encode(payload),
+                  );
+
+                  print("✅ Response status: ${response.statusCode}");
+                  print("✅ Response body: ${response.body}");
+
+                  if (response.statusCode == 200) {
+                    ScaffoldMessenger.of(rootContext).showSnackBar(
+                      const SnackBar(
+                        backgroundColor: Colors.green,
+                        content: Text("Group posted successfully."),
+                      ),
+                    );
+                  } else {
+                    ScaffoldMessenger.of(rootContext).showSnackBar(
+                      const SnackBar(
+                        backgroundColor: Colors.red,
+                        content: Text("Failed to post group."),
+                      ),
+                    );
+                  }
+                },
+                child: Buttons(
+                    text: "Save",
+                    weight: FontWeight.w500,
+                    color: Colors.blue,
+                    height: height / 18.5,
+                    width: width / 4.2,
+                    radius: BorderRadius.circular(15))),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -436,7 +542,12 @@ class _TotalEnquiryViewState extends State<TotalEnquiryView> {
                                           IconButton(
                                             icon: Icon(Icons.groups,
                                                 color: Colors.blue),
-                                            onPressed: () {},
+                                            onPressed: () {
+                                              final itemId = row['id'];
+                                              if (itemId != null) {
+                                                openGroupDialog(itemId);
+                                              }
+                                            },
                                           ),
                                           IconButton(
                                             icon: Icon(Icons.delete,
