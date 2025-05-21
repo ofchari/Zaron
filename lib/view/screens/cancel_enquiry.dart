@@ -115,14 +115,6 @@ class _CancelEnquiryPageState extends State<CancelEnquiry> {
             text: "Cancelled Enquiry",
             weight: FontWeight.w500,
             color: Colors.black),
-        actions: [
-          IconButton(
-            onPressed: () async {
-              // await _downloadExcelFile(filteredData);
-            },
-            icon: const Icon(Icons.download, color: Colors.black),
-          ),
-        ],
       ),
       body: Column(
         children: [

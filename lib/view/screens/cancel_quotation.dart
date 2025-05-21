@@ -115,14 +115,6 @@ class _CancelQuotationPageState extends State<CancelQuotation> {
             text: "Cancelled Quotation",
             weight: FontWeight.w500,
             color: Colors.black),
-        actions: [
-          IconButton(
-            onPressed: () async {
-              // await _downloadExcelFile(filteredData);
-            },
-            icon: const Icon(Icons.download, color: Colors.black),
-          ),
-        ],
       ),
       body: Column(
         children: [
@@ -163,7 +155,6 @@ class _CancelQuotationPageState extends State<CancelQuotation> {
               ),
             ),
           ),
-
           // Table
           isLoading
               ? Expanded(child: Center(child: CircularProgressIndicator()))
