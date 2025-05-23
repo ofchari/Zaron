@@ -39,7 +39,7 @@ class _TotalEnquiryPageState extends State<TotalEnquiryPage> {
     super.dispose();
   }
 
-  // Date Controllers
+// Date Controllers
   final TextEditingController fromDateController = TextEditingController();
   final TextEditingController toDateController = TextEditingController();
 
@@ -83,7 +83,7 @@ class _TotalEnquiryPageState extends State<TotalEnquiryPage> {
           final List<Map<String, dynamic>> processedData = enquiryList
               .whereType<Map<String, dynamic>>()
               .map((item) => {
-                    // 'no': (enquiryList.indexOf(item) + 1).toString(),
+// 'no': (enquiryList.indexOf(item) + 1).toString(),
                     'id': item['id'] ?? '',
                     'order_no': item['order_no'] ?? '',
                     'bill_total': item['bill_total'] ?? '',
@@ -156,14 +156,6 @@ class _TotalEnquiryPageState extends State<TotalEnquiryPage> {
             text: "Total Enquiry",
             weight: FontWeight.w500,
             color: Colors.black),
-        actions: [
-          IconButton(
-            onPressed: () async {
-              // await _downloadExcelFile(filteredData);
-            },
-            icon: const Icon(Icons.download, color: Colors.black),
-          ),
-        ],
       ),
       body: Column(
         children: [
@@ -200,7 +192,7 @@ class _TotalEnquiryPageState extends State<TotalEnquiryPage> {
             ),
           ),
 
-          // Enquiry No (Search)
+// Enquiry No (Search)
           Padding(
             padding: const EdgeInsets.only(left: 12, right: 12, top: 16),
             child: TextField(
@@ -222,7 +214,7 @@ class _TotalEnquiryPageState extends State<TotalEnquiryPage> {
             ),
           ),
 
-          // Total Records Counter
+// Total Records Counter
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
             alignment: Alignment.centerLeft,
@@ -238,7 +230,7 @@ class _TotalEnquiryPageState extends State<TotalEnquiryPage> {
             ),
           ),
 
-          // Table
+// Table
           isLoading
               ? Expanded(child: Center(child: CircularProgressIndicator()))
               : Expanded(
@@ -436,19 +428,19 @@ class _TotalEnquiryPageState extends State<TotalEnquiryPage> {
                                             ));
                                           },
                                         ),
-                                        // IconButton(
-                                        //   icon: const Icon(Icons.edit,
-                                        //       color: Colors.green),
-                                        //   onPressed: () {
-                                        //     // Edit action
-                                        //     ScaffoldMessenger.of(context)
-                                        //         .showSnackBar(
-                                        //       SnackBar(
-                                        //           content: Text(
-                                        //               "Edit ${entry.value['order_no']}")),
-                                        //     );
-                                        //   },
-                                        // ),
+// IconButton(
+//   icon: const Icon(Icons.edit,
+//       color: Colors.green),
+//   onPressed: () {
+//     // Edit action
+//     ScaffoldMessenger.of(context)
+//         .showSnackBar(
+//       SnackBar(
+//           content: Text(
+//               "Edit ${entry.value['order_no']}")),
+//     );
+//   },
+// ),
                                       ],
                                     ),
                                   )

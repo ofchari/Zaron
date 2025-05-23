@@ -10,6 +10,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:zaron/view/screens/dashboard.dart';
 import 'package:zaron/view/widgets/buttons.dart';
 
+import '../universal_api/api&key.dart';
 import 'global_user/global_user.dart';
 
 class Login extends StatefulWidget {
@@ -61,7 +62,7 @@ class _LoginState extends State<Login> {
     IOClient ioClient = IOClient(client);
 
     final message = {"user_id": userController.text};
-    final url = 'https://demo.zaron.in:8181/ci4/api/login';
+    final url = '$apiUrl/login';
     final body = jsonEncode(message);
 
     try {
@@ -101,7 +102,7 @@ class _LoginState extends State<Login> {
         "password": passwordController.text
       };
 
-      final url = 'https://demo.zaron.in:8181/ci4/api/validcustomer';
+      final url = '$apiUrl/validcustomer';
       final body = jsonEncode(message);
 
       try {
@@ -138,7 +139,7 @@ class _LoginState extends State<Login> {
       "password": passwordController.text.trim()
     };
 
-    final String url = 'https://demo.zaron.in:8181/ci4/api/validlogin';
+    final String url = '$apiUrl/validlogin';
     final String body = jsonEncode(message);
 
     try {

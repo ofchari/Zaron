@@ -7,6 +7,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'package:zaron/view/screens/global_user/global_user.dart';
 import 'package:zaron/view/screens/total_quoation_view.dart';
+import 'package:zaron/view/universal_api/api&key.dart';
 import 'package:zaron/view/widgets/subhead.dart';
 
 class QuotationPage extends StatefulWidget {
@@ -64,11 +65,10 @@ class _QuotationPageState extends State<QuotationPage> {
   Future<void> fetchEnquiryData() async {
     setState(() => isLoading = true);
 
-    final String apiUrl =
-        'https://demo.zaron.in:8181/ci4/api/totalquotation/${UserSession().userId}';
+    final String Url = '$apiUrl/totalquotation/${UserSession().userId}';
 
     try {
-      final response = await http.get(Uri.parse(apiUrl));
+      final response = await http.get(Uri.parse(Url));
 
       if (response.statusCode == 200) {
         final jsonData = jsonDecode(response.body);
