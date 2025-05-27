@@ -3,7 +3,6 @@ import 'dart:io';
 
 import 'package:dropdown_search/dropdown_search.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:gap/gap.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/io_client.dart';
@@ -96,7 +95,7 @@ class _ScrewAccessoriesState extends State<ScrewAccessories> {
 
     final client =
         IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
-    final url = Uri.parse('$apiUrl/test');
+    final url = Uri.parse('$apiUrl/labelinputdata');
 
     try {
       final response = await client.post(
@@ -145,7 +144,7 @@ class _ScrewAccessoriesState extends State<ScrewAccessories> {
 
     final client =
         IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
-    final url = Uri.parse('$apiUrl/test');
+    final url = Uri.parse('$apiUrl/labelinputdata');
 
     try {
       final response = await client.post(
@@ -198,29 +197,19 @@ class _ScrewAccessoriesState extends State<ScrewAccessories> {
     }
   }
 
+  Map<String, dynamic>? apiResponse;
+  List<dynamic> responseData = [];
+
   ///postData
+
   Future<void> postAllData() async {
     HttpClient client = HttpClient();
     client.badCertificateCallback =
         ((X509Certificate cert, String host, int port) => true);
     IOClient ioClient = IOClient(client);
+
     final headers = {"Content-Type": "application/json"};
     final data = {
-      // "product_filters": null,
-      // "product_label_filters": null,
-      // "product_category_id": null,
-      // "base_product_filters": [
-      //   "${selectedProduct?.trim()}",
-      //   "${selectedColor?.trim()}",
-      //   "${selsectedBrand?.trim()}",
-      // ],
-      // "base_label_filters": [
-      //   "product_name",
-      //   "color",
-      //   "brand",
-      // ],
-      // "base_category_id": 9
-
       "customer_id": 377423,
       "product_id": null,
       "product_name": null,
@@ -229,31 +218,50 @@ class _ScrewAccessoriesState extends State<ScrewAccessories> {
       "category_id": 9,
       "category_name": "Screw accessories"
     };
+
     print("User input Data $data");
     final url = "$apiUrl/addbag";
     final body = jsonEncode(data);
+
     try {
-      final response = await ioClient.post(
-          Uri.parse(
-            url,
-          ),
-          headers: headers,
-          body: body);
+      final response =
+          await ioClient.post(Uri.parse(url), headers: headers, body: body);
+
       debugPrint("This is a response: ${response.body}");
-      if (selectedProduct == null || selectedColor == null) return;
 
       if (response.statusCode == 200) {
-        print(response.statusCode);
-// Get.snackbar(
-//   "Data Added",
-//   "Successfully",
-//   colorText: Colors.white,
-//   backgroundColor: Colors.green,
-//   snackPosition: SnackPosition.BOTTOM,
-// );
+        final jsonResponse = jsonDecode(response.body);
+        setState(() {
+          apiResponse = jsonResponse;
+          // Extract the data from first category
+          if (jsonResponse['lebels'] != null &&
+              jsonResponse['lebels'].isNotEmpty) {
+            responseData = jsonResponse['lebels'][0]['data'];
+          }
+        });
+
+        // Show success message
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text("Order created successfully!"),
+          backgroundColor: Colors.green,
+        ));
+      } else {
+        // Handle non-200 responses
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text("Failed to create order: ${response.statusCode}"),
+          backgroundColor: Colors.red,
+        ));
       }
+    } on SocketException catch (e) {
+      throw Exception("Network error: $e");
+    } on HttpException catch (e) {
+      throw Exception("HTTP error: $e");
+    } on FormatException catch (e) {
+      throw Exception("Data parsing error: $e");
     } catch (e) {
-      throw Exception("Error posting data: $e");
+      throw Exception("Unexpected error: $e");
+    } finally {
+      client.close();
     }
   }
 
@@ -319,7 +327,7 @@ class _ScrewAccessoriesState extends State<ScrewAccessories> {
   }
 
   Widget _buildSubmittedDataList() {
-    if (submittedData.isEmpty) {
+    if (responseData.isEmpty) {
       return Container(
         padding: EdgeInsets.symmetric(vertical: 40),
         alignment: Alignment.center,
@@ -337,9 +345,9 @@ class _ScrewAccessoriesState extends State<ScrewAccessories> {
     }
 
     return Column(
-      children: submittedData.asMap().entries.map((entry) {
+      children: responseData.asMap().entries.map((entry) {
         int index = entry.key;
-        Map<String, dynamic> data = entry.value;
+        Map<String, dynamic> product = entry.value as Map<String, dynamic>;
 
         return Card(
           margin: EdgeInsets.symmetric(vertical: 10),
@@ -347,260 +355,133 @@ class _ScrewAccessoriesState extends State<ScrewAccessories> {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.only(top: 15),
-                    child: SizedBox(
-                      // color: Colors.red,
-                      height: 40.h,
-                      width: 210.w,
-
+          child: Padding(
+            padding: EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Header Row with Product Name and Delete Button
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
                       child: Text(
-                        "  ${index + 1}.  ${data["Product"]}" ?? "",
-                        overflow: TextOverflow.ellipsis,
+                        "${product['S.No']}. ${product['Products']}",
                         style: GoogleFonts.figtree(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.black87),
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.black87,
+                        ),
                       ),
                     ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Container(
-                      height: 40.h,
-                      width: 50.w,
+                    if (product['id'] != null)
+                      Container(
+                        padding:
+                            EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: Colors.blue[50],
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          "ID: ${product['id']}",
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.blue[700],
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    Container(
+                      height: 40,
+                      width: 50,
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(10),
                         color: Colors.deepPurple[50],
                       ),
                       child: IconButton(
-                        icon: Icon(
-                          Icons.delete,
-                          color: Colors.redAccent,
-                        ),
+                        icon: Icon(Icons.delete, color: Colors.redAccent),
                         onPressed: () {
                           showDialog(
-                              context: context,
-                              builder: (context) {
-                                return AlertDialog(
-                                  title: Subhead(
-                                      text:
-                                          "Are you Sure to Delete This Item ?",
-                                      weight: FontWeight.w500,
-                                      color: Colors.black),
-                                  actions: [
-                                    ElevatedButton(
-                                      onPressed: () {
-                                        setState(() {
-                                          submittedData.removeAt(index);
-                                        });
-                                        Navigator.pop(context);
-                                      },
-                                      child: Text("Yes"),
-                                    ),
-                                    ElevatedButton(
-                                      onPressed: () {
-                                        Navigator.pop(context);
-                                      },
-                                      child: Text("No"),
-                                    )
-                                  ],
-                                );
-                              });
+                            context: context,
+                            builder: (context) => AlertDialog(
+                              title: Text("Delete Product"),
+                              content: Text(
+                                  "Are you sure you want to delete this item?"),
+                              actions: [
+                                TextButton(
+                                  onPressed: () {
+                                    setState(() {
+                                      responseData.removeAt(index);
+                                    });
+                                    Navigator.pop(context);
+                                  },
+                                  child: Text("Yes"),
+                                ),
+                                TextButton(
+                                  onPressed: () => Navigator.pop(context),
+                                  child: Text("No"),
+                                ),
+                              ],
+                            ),
+                          );
                         },
                       ),
                     ),
-                  )
-                ],
-              ),
-              _buildProductDetailInRows(data),
-              // Row(
-              //   children: [
-              //     MyText(
-              //         text: "  UOM - ",
-              //         weight: FontWeight.w600,
-              //         color: Colors.grey.shade600),
-              //     MyText(
-              //         text: "Length - ",
-              //         weight: FontWeight.w600,
-              //         color: Colors.grey.shade600),
-              //     MyText(
-              //         text: "Nos  ",
-              //         weight: FontWeight.w600,
-              //         color: Colors.grey.shade600),
-              //   ],
-              // ),
-              Padding(
-                padding: const EdgeInsets.only(top: 8.0, left: 8),
-                child: Container(
-                  height: 40.h,
-                  width: double.infinity.w,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Row(
-// mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Container(
-                        // color: Colors.red,
-                        height: 40.h,
-                        width: 280.w,
-                        child: TextField(
-                          style: TextStyle(
-                              fontSize: 13.sp,
-                              color: Colors.black87,
-                              fontWeight: FontWeight.w500),
-                          decoration: InputDecoration(
-                            enabledBorder: InputBorder.none,
-                            focusedBorder: InputBorder.none,
-                          ),
-                          controller: TextEditingController(
-                              text: " ${data["Base Product"]}"),
-                          readOnly: true,
-                        ),
-                      ),
-                      Gap(5),
-                      Container(
-                          height: 30.h,
-                          width: 30.w,
-                          decoration: BoxDecoration(
-                              color: Colors.grey[200],
-                              borderRadius: BorderRadius.circular(10)),
-                          child: IconButton(
-                              onPressed: () {
-                                editController.text = data["Base Product"];
-                                showDialog(
-                                    context: context,
-                                    builder: (context) {
-                                      return AlertDialog(
-                                        title:
-                                            Text("Edit Your Screw Accessories"),
-                                        content: Column(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            Container(
-                                              height: 40.h,
-                                              width: double.infinity.w,
-                                              decoration: BoxDecoration(
-                                                borderRadius:
-                                                    BorderRadius.circular(10),
-                                                color: Colors.white,
-                                              ),
-                                              child: Padding(
-                                                padding: const EdgeInsets.only(
-                                                    left: 7.0),
-                                                child: TextField(
-                                                  decoration: InputDecoration(
-                                                    enabledBorder:
-                                                        InputBorder.none,
-                                                    focusedBorder:
-                                                        InputBorder.none,
-                                                  ),
-                                                  controller: editController,
-                                                  onSubmitted: (value) {
-                                                    setState(() {
-                                                      data["Base Product"] =
-                                                          value;
-                                                    });
-                                                    Navigator.pop(context);
-                                                  },
-                                                ),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                        actions: [
-                                          ElevatedButton(
-                                              onPressed: () {
-                                                setState(() {
-                                                  data["Base Product"] =
-                                                      editController.text;
-                                                });
-                                                Navigator.pop(context);
-                                              },
-                                              child: MyText(
-                                                  text: "Save",
-                                                  weight: FontWeight.w500,
-                                                  color: Colors.black))
-                                        ],
-                                      );
-                                    });
-                              },
-                              icon: Icon(
-                                Icons.edit,
-                                size: 15,
-                              )))
-                    ],
-                  ),
+                  ],
                 ),
-              ),
-              Gap(5),
-            ],
+
+                SizedBox(height: 16),
+
+                // Editable Fields in Rows
+                _buildApiProductDetailInRows(product),
+              ],
+            ),
           ),
         );
       }).toList(),
     );
   }
 
-// New method that organizes fields in rows, two fields per row
-  Widget _buildProductDetailInRows(Map<String, dynamic> data) {
+  Widget _buildApiProductDetailInRows(Map<String, dynamic> product) {
     return Column(
       children: [
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Row(
-            children: [
-              Expanded(
-                child: _buildDetailItem("UOM", _uomDropdown(data)),
+        // First Row: Basic Rate & Nos
+        Row(
+          children: [
+            Expanded(
+              child: _buildDetailItem(
+                "Basic Rate",
+                _editableTextField(product, 'Basic Rate'),
               ),
-              SizedBox(
-                width: 10,
+            ),
+            SizedBox(width: 16),
+            Expanded(
+              child: _buildDetailItem(
+                "Nos",
+                _editableTextField(product, 'Nos'),
               ),
-              Expanded(
-                child: _buildDetailItem(
-                    "Length", _editableTextField(data, "Length")),
-              ),
-              SizedBox(width: 10),
-              Expanded(
-                child: _buildDetailItem("Nos", _editableTextField(data, "Nos")),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
-        Gap(5),
-// Row 3: Basic Rate & SQ
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Row(
-            children: [
-              Expanded(
-                child: _buildDetailItem(
-                    "Basic Rate", _editableTextField(data, "Basic Rate")),
+        SizedBox(height: 12),
+
+        // Second Row: Amount
+        Row(
+          children: [
+            Expanded(
+              child: _buildDetailItem(
+                "Amount",
+                Text(
+                  product['Amount']?.toString() ?? '0',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
               ),
-              SizedBox(width: 10),
-              Expanded(
-                child: _buildDetailItem("SQ", _editableTextField(data, "SQ")),
-              ),
-              SizedBox(
-                width: 10,
-              ),
-              Expanded(
-                child: _buildDetailItem(
-                    "Amount", _editableTextField(data, "Amount")),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
-        Gap(5.h),
       ],
     );
   }
@@ -612,78 +493,38 @@ class _ScrewAccessoriesState extends State<ScrewAccessories> {
         Text(
           label,
           style: TextStyle(
-            fontWeight: FontWeight.w500,
+            fontSize: 14,
             color: Colors.grey[700],
-            fontSize: 15,
+            fontWeight: FontWeight.w500,
           ),
         ),
-        SizedBox(height: 6),
+        SizedBox(height: 8),
         field,
       ],
     );
   }
 
-  Widget _editableTextField(Map<String, dynamic> data, String key) {
-    return SizedBox(
-      height: 38.h,
-      child: TextField(
-        style: GoogleFonts.figtree(
-            fontWeight: FontWeight.w500, color: Colors.black, fontSize: 15.sp),
-        controller: TextEditingController(text: data[key]),
-        onChanged: (val) => data[key] = val,
-        decoration: InputDecoration(
-          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 0),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(6),
-            borderSide: BorderSide(color: Colors.grey[300]!),
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(6),
-            borderSide: BorderSide(color: Colors.grey[300]!),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(6),
-            borderSide:
-                BorderSide(color: Theme.of(context).primaryColor, width: 2),
-          ),
-          filled: true,
-          fillColor: Colors.grey[50],
+  Widget _editableTextField(Map<String, dynamic> product, String key) {
+    return TextField(
+      controller: TextEditingController(text: product[key]?.toString() ?? ''),
+      onChanged: (value) {
+        product[key] = value;
+        // Auto-calculate Amount if both Basic Rate and Nos are available
+        if (key == 'Basic Rate' || key == 'Nos') {
+          final rate = double.tryParse(product['Basic Rate'] ?? '0') ?? 0;
+          final nos = double.tryParse(product['Nos'] ?? '0') ?? 0;
+          product['Amount'] = (rate * nos).toStringAsFixed(2);
+        }
+      },
+      decoration: InputDecoration(
+        contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(color: Colors.grey[300]!),
         ),
-      ),
-    );
-  }
-
-  Widget _uomDropdown(Map<String, dynamic> data) {
-    List<String> uomOptions = ["Feet", "mm", "cm"];
-    return SizedBox(
-      height: 40.h,
-      child: DropdownButtonFormField<String>(
-        value: data["UOM"],
-        items: uomOptions
-            .map((uom) => DropdownMenuItem(value: uom, child: Text(uom)))
-            .toList(),
-        onChanged: (val) {
-          setState(() {
-            data["UOM"] = val!;
-          });
-        },
-        decoration: InputDecoration(
-          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 0),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(6),
-            borderSide: BorderSide(color: Colors.grey[300]!),
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(6),
-            borderSide: BorderSide(color: Colors.grey[300]!),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(6),
-            borderSide:
-                BorderSide(color: Theme.of(context).primaryColor, width: 2),
-          ),
-          filled: true,
-          fillColor: Colors.grey[50],
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(color: Colors.grey[300]!),
         ),
       ),
     );

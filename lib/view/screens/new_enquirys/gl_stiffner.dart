@@ -136,7 +136,7 @@ class _GIStiffnerState extends State<GIStiffner> {
 
     final client =
         IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
-    final url = Uri.parse('$apiUrl/test');
+    final url = Uri.parse('$apiUrl/labelinputdata');
 
     try {
       final response = await client.post(
@@ -185,7 +185,7 @@ class _GIStiffnerState extends State<GIStiffner> {
 
     final client =
         IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
-    final url = Uri.parse('$apiUrl/test');
+    final url = Uri.parse('$apiUrl/labelinputdata');
 
     try {
       final response = await client.post(
@@ -234,7 +234,7 @@ class _GIStiffnerState extends State<GIStiffner> {
 
     final client =
         IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
-    final url = Uri.parse('$apiUrl/test');
+    final url = Uri.parse('$apiUrl/labelinputdata');
 
     try {
       final response = await client.post(
@@ -286,7 +286,7 @@ class _GIStiffnerState extends State<GIStiffner> {
 
     final client =
         IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
-    final url = Uri.parse('$apiUrl/test');
+    final url = Uri.parse('$apiUrl/labelinputdata');
 
     try {
       final response = await client.post(

@@ -136,7 +136,7 @@ class _TileSheetPageState extends State<TileSheetPage> {
 
     final client =
         IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
-    final url = Uri.parse('$apiUrl/test');
+    final url = Uri.parse('$apiUrl/labelinputdata');
 
     try {
       final response = await client.post(
@@ -190,7 +190,7 @@ class _TileSheetPageState extends State<TileSheetPage> {
 
     final client =
         IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
-    final url = Uri.parse('$apiUrl/test');
+    final url = Uri.parse('$apiUrl/labelinputdata');
 
     try {
       final response = await client.post(
@@ -233,7 +233,7 @@ class _TileSheetPageState extends State<TileSheetPage> {
     }
   }
 
-  /// fetch Thickness Api's ///
+                /// fetch Thickness Api's ///
   Future<void> _fetchCoatingMassData() async {
     if (selectedBrands == null) return;
 
@@ -244,7 +244,7 @@ class _TileSheetPageState extends State<TileSheetPage> {
 
     final client =
         IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
-    final url = Uri.parse('$apiUrl/test');
+    final url = Uri.parse('$apiUrl/labelinputdata');
 
     try {
       final response = await client.post(
@@ -427,6 +427,7 @@ class _TileSheetPageState extends State<TileSheetPage> {
       ),
     );
   }
+  
 
   Widget _buildSubmittedDataList() {
     if (submittedData.isEmpty) {

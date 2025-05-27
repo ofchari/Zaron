@@ -96,7 +96,7 @@ class _PolycarbonateState extends State<Polycarbonate> {
       final client =
           IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
       final response = await client.post(
-        Uri.parse('$apiUrl/test'),
+        Uri.parse('$apiUrl/labelinputdata'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           "product_label": "color",
@@ -149,7 +149,7 @@ class _PolycarbonateState extends State<Polycarbonate> {
       final client =
           IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
       final response = await client.post(
-        Uri.parse('$apiUrl/test'),
+        Uri.parse('$apiUrl/labelinputdata'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           "product_label": "thickness",
@@ -204,7 +204,31 @@ class _PolycarbonateState extends State<Polycarbonate> {
     }
   }
 
-  /// postData ///
+  void _showErrorSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            Icon(Icons.error_outline, color: Colors.white),
+            SizedBox(width: 12),
+            Expanded(child: Text(message)),
+          ],
+        ),
+        backgroundColor: Colors.red,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+        margin: EdgeInsets.all(16),
+        duration: Duration(seconds: 3),
+      ),
+    );
+  }
+
+  // Add these variables after your existing variables
+  List<Map<String, dynamic>> apiResponseData = [];
+  Map<String, dynamic>? apiResponse;
+
   Future<bool> postPolycarbonateData() async {
     if (selectedBrand == null ||
         selectedColor == null ||
@@ -222,16 +246,6 @@ class _PolycarbonateState extends State<Polycarbonate> {
         ((X509Certificate cert, String host, int port) => true);
     IOClient ioClient = IOClient(client);
     final headers = {"Content-Type": "application/json"};
-
-    // Get user ID safely
-    // final userId = UserSession().userId;
-    // if (userId == null) {
-    //   _showErrorSnackBar("User session not found. Please login again.");
-    //   setState(() {
-    //     isLoading = false;
-    //   });
-    //   return false;
-    // }
 
     final data = {
       "customer_id": 377423,
@@ -260,6 +274,18 @@ class _PolycarbonateState extends State<Polycarbonate> {
       });
 
       if (response.statusCode == 200) {
+        // Parse the API response
+        final responseData = jsonDecode(response.body);
+
+        setState(() {
+          apiResponse = responseData;
+          if (responseData["lebels"] != null &&
+              responseData["lebels"].isNotEmpty) {
+            apiResponseData = List<Map<String, dynamic>>.from(
+                responseData["lebels"][0]["data"] ?? []);
+          }
+        });
+
         return true;
       } else {
         _showErrorSnackBar("Failed to add product. Please try again.");
@@ -277,97 +303,8 @@ class _PolycarbonateState extends State<Polycarbonate> {
     }
   }
 
-  void _showErrorSnackBar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            Icon(Icons.error_outline, color: Colors.white),
-            SizedBox(width: 12),
-            Expanded(child: Text(message)),
-          ],
-        ),
-        backgroundColor: Colors.red,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
-        margin: EdgeInsets.all(16),
-        duration: Duration(seconds: 3),
-      ),
-    );
-  }
-
-  void _submitData() async {
-    if (selectedBrand == null ||
-        selectedColor == null ||
-        selectedThickness == null) {
-      // Show elegant error message
-      showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: Text('Incomplete Form'),
-          content: Text('Please fill all required fields to add a product.'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text('OK'),
-            ),
-          ],
-        ),
-      );
-      return;
-    }
-
-    final success = await postPolycarbonateData();
-
-    if (success && mounted) {
-      setState(() {
-        submittedData.add({
-          "Product": "Polycarbonate",
-          "UOM": "Feet",
-          "Length": "0",
-          "Nos": "1",
-          "Basic Rate": "0",
-          "SQ": "0",
-          "Amount": "0",
-          "Base Product": "$selectedBrand, $selectedColor, $selectedThickness",
-        });
-
-        selectedBrand = null;
-        selectedColor = null;
-        selectedThickness = null;
-        brandsList = [];
-        colorsList = [];
-        thicknessList = [];
-      });
-
-      _fetchBrands();
-
-      // Show success message with a more elegant snackBar
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Row(
-            children: [
-              Icon(Icons.check_circle, color: Colors.white),
-              SizedBox(width: 12),
-              Text("Product added successfully"),
-            ],
-          ),
-          backgroundColor: Colors.green,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
-          margin: EdgeInsets.all(16),
-          duration: Duration(seconds: 2),
-        ),
-      );
-    }
-  }
-
   Widget _buildSubmittedDataList() {
-    if (submittedData.isEmpty) {
+    if (apiResponseData.isEmpty) {
       return Container(
         padding: EdgeInsets.symmetric(vertical: 40),
         alignment: Alignment.center,
@@ -383,8 +320,16 @@ class _PolycarbonateState extends State<Polycarbonate> {
         ),
       );
     }
+
+    List<String> labels = [];
+    if (apiResponse != null &&
+        apiResponse!["lebels"] != null &&
+        apiResponse!["lebels"].isNotEmpty) {
+      labels = List<String>.from(apiResponse!["lebels"][0]["labels"] ?? []);
+    }
+
     return Column(
-      children: submittedData.asMap().entries.map((entry) {
+      children: apiResponseData.asMap().entries.map((entry) {
         int index = entry.key;
         Map<String, dynamic> data = entry.value;
 
@@ -394,34 +339,41 @@ class _PolycarbonateState extends State<Polycarbonate> {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.only(top: 15),
-                    child: SizedBox(
-                      // color: Colors.red,
-                      height: 40.h,
-                      width: 210.w,
-
+          child: Padding(
+            padding: EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Header with product name and delete button
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
                       child: Text(
-                        "  ${index + 1}.  ${data["Product"]}" ?? "",
-                        overflow: TextOverflow.ellipsis,
+                        "${data["S.No"]}. ${data["Products"] ?? ""}",
                         style: GoogleFonts.figtree(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.black87),
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.black87,
+                        ),
                       ),
                     ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Container(
+                    Container(
+                      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.blue[50],
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        "ID: ${data['id']}",
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.blue[700],
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                    Container(
                       height: 40.h,
                       width: 50.w,
                       decoration: BoxDecoration(
@@ -429,229 +381,89 @@ class _PolycarbonateState extends State<Polycarbonate> {
                         color: Colors.deepPurple[50],
                       ),
                       child: IconButton(
-                        icon: Icon(
-                          Icons.delete,
-                          color: Colors.redAccent,
-                        ),
+                        icon: Icon(Icons.delete, color: Colors.redAccent),
                         onPressed: () {
                           showDialog(
-                              context: context,
-                              builder: (context) {
-                                return AlertDialog(
-                                  title: Subhead(
-                                      text:
-                                          "Are you Sure to Delete This Item ?",
-                                      weight: FontWeight.w500,
-                                      color: Colors.black),
-                                  actions: [
-                                    ElevatedButton(
-                                      onPressed: () {
-                                        setState(() {
-                                          submittedData.removeAt(index);
-                                        });
-                                        Navigator.pop(context);
-                                      },
-                                      child: Text("Yes"),
-                                    ),
-                                    ElevatedButton(
-                                      onPressed: () {
-                                        Navigator.pop(context);
-                                      },
-                                      child: Text("No"),
-                                    )
-                                  ],
-                                );
-                              });
+                            context: context,
+                            builder: (context) => AlertDialog(
+                              title: Text("Delete Item"),
+                              content: Text(
+                                  "Are you sure you want to delete this item?"),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.pop(context),
+                                  child: Text("Cancel"),
+                                ),
+                                ElevatedButton(
+                                  onPressed: () {
+                                    setState(() {
+                                      apiResponseData.removeAt(index);
+                                    });
+                                    Navigator.pop(context);
+                                  },
+                                  child: Text("Delete"),
+                                ),
+                              ],
+                            ),
+                          );
                         },
                       ),
                     ),
-                  )
-                ],
-              ),
-              _buildProductDetailInRows(data),
-              // Row(
-              //   children: [
-              //     MyText(
-              //         text: "  UOM - ",
-              //         weight: FontWeight.w600,
-              //         color: Colors.grey.shade600),
-              //     MyText(
-              //         text: "Length - ",
-              //         weight: FontWeight.w600,
-              //         color: Colors.grey.shade600),
-              //     MyText(
-              //         text: "Nos  ",
-              //         weight: FontWeight.w600,
-              //         color: Colors.grey.shade600),
-              //   ],
-              // ),
-              Padding(
-                padding: const EdgeInsets.only(top: 8.0, left: 8),
-                child: Container(
-                  height: 40.h,
-                  width: double.infinity.w,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Row(
-// mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Container(
-                        // color: Colors.red,
-                        height: 40.h,
-                        width: 280.w,
-                        child: TextField(
-                          style: TextStyle(
-                              fontSize: 13.sp,
-                              color: Colors.black87,
-                              fontWeight: FontWeight.w500),
-                          decoration: InputDecoration(
-                            enabledBorder: InputBorder.none,
-                            focusedBorder: InputBorder.none,
-                          ),
-                          controller: TextEditingController(
-                              text: " ${data["Base Product"]}"),
-                          readOnly: true,
-                        ),
-                      ),
-                      Gap(5),
-                      Container(
-                          height: 30.h,
-                          width: 30.w,
-                          decoration: BoxDecoration(
-                              color: Colors.grey[200],
-                              borderRadius: BorderRadius.circular(10)),
-                          child: IconButton(
-                              onPressed: () {
-                                editController.text = data["Base Product"];
-                                showDialog(
-                                    context: context,
-                                    builder: (context) {
-                                      return AlertDialog(
-                                        title: Text("Edit Your Polycarbonate"),
-                                        content: Column(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            Container(
-                                              height: 40.h,
-                                              width: double.infinity.w,
-                                              decoration: BoxDecoration(
-                                                borderRadius:
-                                                    BorderRadius.circular(10),
-                                                color: Colors.white,
-                                              ),
-                                              child: Padding(
-                                                padding: const EdgeInsets.only(
-                                                    left: 7.0),
-                                                child: TextField(
-                                                  decoration: InputDecoration(
-                                                    enabledBorder:
-                                                        InputBorder.none,
-                                                    focusedBorder:
-                                                        InputBorder.none,
-                                                  ),
-                                                  controller: editController,
-                                                  onSubmitted: (value) {
-                                                    setState(() {
-                                                      data["Base Product"] =
-                                                          value;
-                                                    });
-                                                    Navigator.pop(context);
-                                                  },
-                                                ),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                        actions: [
-                                          ElevatedButton(
-                                              onPressed: () {
-                                                setState(() {
-                                                  data["Base Product"] =
-                                                      editController.text;
-                                                });
-                                                Navigator.pop(context);
-                                              },
-                                              child: MyText(
-                                                  text: "Save",
-                                                  weight: FontWeight.w500,
-                                                  color: Colors.black))
-                                        ],
-                                      );
-                                    });
-                              },
-                              icon: Icon(
-                                Icons.edit,
-                                size: 15,
-                              )))
-                    ],
-                  ),
+                  ],
                 ),
-              ),
-              Gap(5),
-            ],
+                SizedBox(height: 16),
+
+                // Product details in rows
+                _buildApiResponseRows(data, labels),
+              ],
+            ),
           ),
         );
       }).toList(),
     );
   }
 
-// New method that organizes fields in rows, two fields per row
-  Widget _buildProductDetailInRows(Map<String, dynamic> data) {
+  Widget _buildApiResponseRows(Map<String, dynamic> data, List<String> labels) {
     return Column(
       children: [
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Row(
-            children: [
-              Expanded(
-                child: _buildDetailItem("UOM", _uomDropdown(data)),
-              ),
-              SizedBox(
-                width: 10,
-              ),
-              Expanded(
-                child: _buildDetailItem(
-                    "Length", _editableTextField(data, "Length")),
-              ),
-              SizedBox(width: 10),
-              Expanded(
-                child: _buildDetailItem("Nos", _editableTextField(data, "Nos")),
-              ),
-            ],
-          ),
+        // Row 1: UOM, Length, Nos
+        Row(
+          children: [
+            Expanded(
+                child: _buildApiDetailItem("UOM", _buildUOMDropdown(data))),
+            SizedBox(width: 10),
+            Expanded(
+                child: _buildApiDetailItem(
+                    "Length", _buildEditableField(data, "Length"))),
+            SizedBox(width: 10),
+            Expanded(
+                child: _buildApiDetailItem(
+                    "Nos", _buildEditableField(data, "Nos"))),
+          ],
         ),
-        Gap(5),
-// Row 3: Basic Rate & SQ
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Row(
-            children: [
-              Expanded(
-                child: _buildDetailItem(
-                    "Basic Rate", _editableTextField(data, "Basic Rate")),
-              ),
-              SizedBox(width: 10),
-              Expanded(
-                child: _buildDetailItem("SQ", _editableTextField(data, "SQ")),
-              ),
-              SizedBox(
-                width: 10,
-              ),
-              Expanded(
-                child: _buildDetailItem(
-                    "Amount", _editableTextField(data, "Amount")),
-              ),
-            ],
-          ),
+        SizedBox(height: 12),
+
+        // Row 2: Basic Rate, Sq.Mtr, Amount
+        Row(
+          children: [
+            Expanded(
+                child: _buildApiDetailItem(
+                    "Basic Rate", _buildEditableField(data, "Basic Rate"))),
+            SizedBox(width: 10),
+            Expanded(
+                child: _buildApiDetailItem(
+                    "Sq.Mtr", _buildEditableField(data, "Sq.Mtr"))),
+            SizedBox(width: 10),
+            Expanded(
+                child: _buildApiDetailItem(
+                    "Amount", _buildEditableField(data, "Amount"))),
+          ],
         ),
-        Gap(5.h),
       ],
     );
   }
 
-  Widget _buildDetailItem(String label, Widget field) {
+  Widget _buildApiDetailItem(String label, Widget field) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -660,7 +472,7 @@ class _PolycarbonateState extends State<Polycarbonate> {
           style: TextStyle(
             fontWeight: FontWeight.w500,
             color: Colors.grey[700],
-            fontSize: 15,
+            fontSize: 14,
           ),
         ),
         SizedBox(height: 6),
@@ -669,13 +481,16 @@ class _PolycarbonateState extends State<Polycarbonate> {
     );
   }
 
-  Widget _editableTextField(Map<String, dynamic> data, String key) {
+  Widget _buildEditableField(Map<String, dynamic> data, String key) {
     return SizedBox(
       height: 38.h,
       child: TextField(
         style: GoogleFonts.figtree(
-            fontWeight: FontWeight.w500, color: Colors.black, fontSize: 15.sp),
-        controller: TextEditingController(text: data[key]),
+          fontWeight: FontWeight.w500,
+          color: Colors.black,
+          fontSize: 14.sp,
+        ),
+        controller: TextEditingController(text: data[key]?.toString() ?? ""),
         onChanged: (val) => data[key] = val,
         decoration: InputDecoration(
           contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 0),
@@ -699,18 +514,24 @@ class _PolycarbonateState extends State<Polycarbonate> {
     );
   }
 
-  Widget _uomDropdown(Map<String, dynamic> data) {
-    List<String> uomOptions = ["Feet", "mm", "cm"];
+  Widget _buildUOMDropdown(Map<String, dynamic> data) {
+    Map<String, dynamic> uomData = data["UOM"] ?? {};
+    String currentValue = uomData["value"]?.toString() ?? "";
+    Map<String, dynamic> options = uomData["options"] ?? {};
+
     return SizedBox(
-      height: 40.h,
+      height: 38.h,
       child: DropdownButtonFormField<String>(
-        value: data["UOM"],
-        items: uomOptions
-            .map((uom) => DropdownMenuItem(value: uom, child: Text(uom)))
+        value: currentValue.isNotEmpty ? currentValue : null,
+        items: options.entries
+            .map((entry) => DropdownMenuItem(
+                  value: entry.key,
+                  child: Text(entry.value.toString()),
+                ))
             .toList(),
         onChanged: (val) {
           setState(() {
-            data["UOM"] = val!;
+            data["UOM"]["value"] = val;
           });
         },
         decoration: InputDecoration(
@@ -733,6 +554,61 @@ class _PolycarbonateState extends State<Polycarbonate> {
         ),
       ),
     );
+  }
+
+  void _submitData() async {
+    if (selectedBrand == null ||
+        selectedColor == null ||
+        selectedThickness == null) {
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text('Incomplete Form'),
+          content: Text('Please fill all required fields to add a product.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text('OK'),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+
+    final success = await postPolycarbonateData();
+
+    if (success && mounted) {
+      setState(() {
+        selectedBrand = null;
+        selectedColor = null;
+        selectedThickness = null;
+        brandsList = [];
+        colorsList = [];
+        thicknessList = [];
+      });
+
+      _fetchBrands();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              Icon(Icons.check_circle, color: Colors.white),
+              SizedBox(width: 12),
+              Text("Product added successfully"),
+            ],
+          ),
+          backgroundColor: Colors.green,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+          ),
+          margin: EdgeInsets.all(16),
+          duration: Duration(seconds: 2),
+        ),
+      );
+    }
   }
 
   String _selectedItems() {

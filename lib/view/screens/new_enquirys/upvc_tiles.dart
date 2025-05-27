@@ -97,7 +97,7 @@ class _UpvcTilesState extends State<UpvcTiles> {
 
     final client =
         IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
-    final url = Uri.parse('$apiUrl/test');
+    final url = Uri.parse('$apiUrl/labelinputdata');
 
     try {
       final response = await client.post(
@@ -146,7 +146,7 @@ class _UpvcTilesState extends State<UpvcTiles> {
 
     final client =
         IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
-    final url = Uri.parse('$apiUrl/test');
+    final url = Uri.parse('$apiUrl/labelinputdata');
 
     try {
       final response = await client.post(
@@ -202,6 +202,11 @@ class _UpvcTilesState extends State<UpvcTiles> {
     }
   }
 
+// 1. ADD THESE VARIABLES after your existing variables (around line 25)
+  List<Map<String, dynamic>> apiResponseData = [];
+  Map<String, dynamic>? apiResponse;
+
+// 2. MODIFY the postUPVCData() method - REPLACE the existing method with this:
   Future<void> postUPVCData() async {
     HttpClient client = HttpClient();
     client.badCertificateCallback =
@@ -209,20 +214,6 @@ class _UpvcTilesState extends State<UpvcTiles> {
     IOClient ioClient = IOClient(client);
     final headers = {"Content-Type": "application/json"};
     final data = {
-// "product_filters": null,
-// "product_label_filters": null,
-// "product_category_id": null,
-// "base_product_filters": [
-//   "${selectMaterial?.trim()}",
-//   "${selectedColor?.trim()}",
-//   "${selectThickness?.trim()}",
-// ],
-// "base_label_filters": [
-//   "material_type",
-//   "color",
-//   "thickness",
-// ],
-// "base_category_id": 631
       "customer_id": UserSession().userId,
       "product_id": null,
       "product_name": null,
@@ -235,35 +226,306 @@ class _UpvcTilesState extends State<UpvcTiles> {
     final url = "$apiUrl/addbag";
     final body = jsonEncode(data);
     try {
-      final response = await ioClient.post(
-          Uri.parse(
-            url,
-          ),
-          headers: headers,
-          body: body);
+      final response =
+          await ioClient.post(Uri.parse(url), headers: headers, body: body);
       debugPrint("This is a response: ${response.body}");
-      if (selectMaterial == null ||
-          selectedColor == null ||
-          selectThickness == null) return;
+
       if (response.statusCode == 200) {
-// Get.snackbar(
-//   "Data Added",
-//   "Successfully",
-//   colorText: Colors.white,
-//   backgroundColor: Colors.green,
-//   snackPosition: SnackPosition.BOTTOM,
-// );
+        // Parse the API response
+        final responseData = jsonDecode(response.body);
+        setState(() {
+          apiResponse = responseData;
+          if (responseData['lebels'] != null &&
+              responseData['lebels'].isNotEmpty) {
+            apiResponseData = List<Map<String, dynamic>>.from(
+                responseData['lebels'][0]['data'] ?? []);
+          }
+        });
       }
     } catch (e) {
       throw Exception("Error posting data: $e");
     }
   }
 
+// 3. REPLACE the _buildSubmittedDataList() method with this:
+  Widget _buildSubmittedDataList() {
+    if (apiResponseData.isEmpty) {
+      return Container(
+        padding: EdgeInsets.symmetric(vertical: 40),
+        alignment: Alignment.center,
+        child: Column(
+          children: [
+            Icon(Icons.inventory_2_outlined, size: 60, color: Colors.grey[400]),
+            SizedBox(height: 16),
+            Text(
+              "No products added yet.",
+              style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return Column(
+      children: apiResponseData.asMap().entries.map((entry) {
+        int index = entry.key;
+        Map<String, dynamic> data = entry.value;
+
+        return Card(
+          margin: EdgeInsets.symmetric(vertical: 10),
+          elevation: 2,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Column(
+            children: [
+              // Header with product name and delete button
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Text(
+                        "${data["S.No"]}. ${data["Products"]}",
+                        style: GoogleFonts.figtree(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.black87),
+                      ),
+                    ),
+                  ),
+                  Container(
+                    padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.blue[50],
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      "ID: ${data['id']}",
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.blue[700],
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: IconButton(
+                      icon: Icon(Icons.delete, color: Colors.redAccent),
+                      onPressed: () {
+                        showDialog(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                            title: Text("Delete Product"),
+                            content: Text(
+                                "Are you sure you want to delete this item?"),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(context),
+                                child: Text("Cancel"),
+                              ),
+                              ElevatedButton(
+                                onPressed: () {
+                                  setState(() {
+                                    apiResponseData.removeAt(index);
+                                  });
+                                  Navigator.pop(context);
+                                },
+                                child: Text("Delete"),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+
+              // Editable fields in rows
+              _buildApiResponseFields(data),
+              SizedBox(height: 16),
+            ],
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+// 4. ADD this new method:
+  Widget _buildApiResponseFields(Map<String, dynamic> data) {
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        children: [
+          // Row 1: UOM and Length
+          Row(
+            children: [
+              Expanded(
+                child: _buildUOMDropdownFromAPI(data),
+              ),
+              SizedBox(width: 12),
+              Expanded(
+                child: _buildEditableFieldFromAPI("Length", data, "Length"),
+              ),
+            ],
+          ),
+          SizedBox(height: 12),
+
+          // Row 2: Nos and Basic Rate
+          Row(
+            children: [
+              Expanded(
+                child: _buildEditableFieldFromAPI("Nos", data, "Nos"),
+              ),
+              SizedBox(width: 12),
+              Expanded(
+                child: _buildEditableFieldFromAPI(
+                    "Basic Rate", data, "Basic Rate"),
+              ),
+            ],
+          ),
+          SizedBox(height: 12),
+
+          // Row 3: Sq.Mtr and Amount
+          Row(
+            children: [
+              Expanded(
+                child: _buildEditableFieldFromAPI("Sq.Mtr", data, "Sq.Mtr"),
+              ),
+              SizedBox(width: 12),
+              Expanded(
+                child: _buildEditableFieldFromAPI("Amount", data, "Amount"),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+// 5. ADD this method for UOM dropdown:
+  Widget _buildUOMDropdownFromAPI(Map<String, dynamic> data) {
+    Map<String, String> uomOptions = {};
+    String? currentValue;
+
+    if (data["UOM"] is Map) {
+      currentValue = data["UOM"]["value"]?.toString();
+      if (data["UOM"]["options"] is Map) {
+        Map<String, dynamic> options = data["UOM"]["options"];
+        options.forEach((key, value) {
+          uomOptions[key] = value.toString();
+        });
+      }
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          "UOM",
+          style: TextStyle(
+            fontWeight: FontWeight.w500,
+            color: Colors.grey[700],
+            fontSize: 15,
+          ),
+        ),
+        SizedBox(height: 6),
+        SizedBox(
+          height: 38.h,
+          child: DropdownButtonFormField<String>(
+            value: currentValue,
+            items: uomOptions.entries
+                .map((entry) => DropdownMenuItem(
+                      value: entry.key,
+                      child: Text(entry.value),
+                    ))
+                .toList(),
+            onChanged: (val) {
+              setState(() {
+                data["UOM"]["value"] = val;
+              });
+            },
+            decoration: InputDecoration(
+              contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 0),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(6),
+                borderSide: BorderSide(color: Colors.grey[300]!),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(6),
+                borderSide: BorderSide(color: Colors.grey[300]!),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(6),
+                borderSide:
+                    BorderSide(color: Theme.of(context).primaryColor, width: 2),
+              ),
+              filled: true,
+              fillColor: Colors.grey[50],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+// 6. ADD this method for editable fields:
+  Widget _buildEditableFieldFromAPI(
+      String label, Map<String, dynamic> data, String key) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            fontWeight: FontWeight.w500,
+            color: Colors.grey[700],
+            fontSize: 15,
+          ),
+        ),
+        SizedBox(height: 6),
+        SizedBox(
+          height: 38.h,
+          child: TextField(
+            style: GoogleFonts.figtree(
+                fontWeight: FontWeight.w500,
+                color: Colors.black,
+                fontSize: 15.sp),
+            controller:
+                TextEditingController(text: data[key]?.toString() ?? ""),
+            onChanged: (val) => data[key] = val,
+            decoration: InputDecoration(
+              contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 0),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(6),
+                borderSide: BorderSide(color: Colors.grey[300]!),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(6),
+                borderSide: BorderSide(color: Colors.grey[300]!),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(6),
+                borderSide:
+                    BorderSide(color: Theme.of(context).primaryColor, width: 2),
+              ),
+              filled: true,
+              fillColor: Colors.grey[50],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+// 7. MODIFY the _submitData() method - REPLACE with this:
   void _submitData() {
     if (selectMaterial == null ||
         selectedColor == null ||
         selectThickness == null) {
-// Show elegant error message
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
@@ -279,18 +541,9 @@ class _UpvcTilesState extends State<UpvcTiles> {
       );
       return;
     }
-    setState(() {
-      submittedData.add({
-        "Product": "UPVC Tiles",
-        "UOM": "Feet",
-        "Length": "0",
-        "Nos": "1",
-        "Basic Rate": "0",
-        "SQ": "0",
-        "Amount": "0",
-        "Base Product": "$selectMaterial, $selectedColor, $selectThickness,",
-      });
 
+    // Reset the form after successful submission
+    setState(() {
       selectMaterial = null;
       selectedColor = null;
       selectThickness = null;
@@ -300,7 +553,7 @@ class _UpvcTilesState extends State<UpvcTiles> {
       _fetchMaterial();
     });
 
-// Show success message with a more elegant snackbar
+    // Show success message
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
@@ -321,292 +574,6 @@ class _UpvcTilesState extends State<UpvcTiles> {
     );
   }
 
-  Widget _buildSubmittedDataList() {
-    if (submittedData.isEmpty) {
-      return Container(
-        padding: EdgeInsets.symmetric(vertical: 40),
-        alignment: Alignment.center,
-        child: Column(
-          children: [
-            Icon(Icons.inventory_2_outlined, size: 60, color: Colors.grey[400]),
-            SizedBox(height: 16),
-            Text(
-              "No products added yet.",
-              style: TextStyle(fontSize: 16, color: Colors.grey[600]),
-            ),
-          ],
-        ),
-      );
-    }
-
-    return Column(
-      children: submittedData.asMap().entries.map((entry) {
-        int index = entry.key;
-        Map<String, dynamic> data = entry.value;
-
-        return Card(
-          margin: EdgeInsets.symmetric(vertical: 10),
-          elevation: 2,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.only(top: 15),
-                    child: SizedBox(
-                      // color: Colors.red,
-                      height: 40.h,
-                      width: 210.w,
-
-                      child: Text(
-                        "  ${index + 1}.  ${data["Product"]}" ?? "",
-                        overflow: TextOverflow.ellipsis,
-                        style: GoogleFonts.figtree(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.black87),
-                      ),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Container(
-                      height: 40.h,
-                      width: 50.w,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(10),
-                        color: Colors.deepPurple[50],
-                      ),
-                      child: IconButton(
-                        icon: Icon(
-                          Icons.delete,
-                          color: Colors.redAccent,
-                        ),
-                        onPressed: () {
-                          showDialog(
-                              context: context,
-                              builder: (context) {
-                                return AlertDialog(
-                                  title: Subhead(
-                                      text:
-                                          "Are you Sure to Delete This Item ?",
-                                      weight: FontWeight.w500,
-                                      color: Colors.black),
-                                  actions: [
-                                    ElevatedButton(
-                                      onPressed: () {
-                                        setState(() {
-                                          submittedData.removeAt(index);
-                                        });
-                                        Navigator.pop(context);
-                                      },
-                                      child: Text("Yes"),
-                                    ),
-                                    ElevatedButton(
-                                      onPressed: () {
-                                        Navigator.pop(context);
-                                      },
-                                      child: Text("No"),
-                                    )
-                                  ],
-                                );
-                              });
-                        },
-                      ),
-                    ),
-                  )
-                ],
-              ),
-              _buildProductDetailInRows(data),
-              // Row(
-              //   children: [
-              //     MyText(
-              //         text: "  UOM - ",
-              //         weight: FontWeight.w600,
-              //         color: Colors.grey.shade600),
-              //     MyText(
-              //         text: "Length - ",
-              //         weight: FontWeight.w600,
-              //         color: Colors.grey.shade600),
-              //     MyText(
-              //         text: "Nos  ",
-              //         weight: FontWeight.w600,
-              //         color: Colors.grey.shade600),
-              //   ],
-              // ),
-              Padding(
-                padding: const EdgeInsets.only(top: 8.0, left: 8),
-                child: Container(
-                  height: 40.h,
-                  width: double.infinity.w,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Row(
-// mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Container(
-                        // color: Colors.red,
-                        height: 40.h,
-                        width: 280.w,
-                        child: TextField(
-                          style: TextStyle(
-                              fontSize: 13.sp,
-                              color: Colors.black87,
-                              fontWeight: FontWeight.w500),
-                          decoration: InputDecoration(
-                            enabledBorder: InputBorder.none,
-                            focusedBorder: InputBorder.none,
-                          ),
-                          controller: TextEditingController(
-                              text: " ${data["Base Product"]}"),
-                          readOnly: true,
-                        ),
-                      ),
-                      Gap(5),
-                      Container(
-                          height: 30.h,
-                          width: 30.w,
-                          decoration: BoxDecoration(
-                              color: Colors.grey[200],
-                              borderRadius: BorderRadius.circular(10)),
-                          child: IconButton(
-                              onPressed: () {
-                                editController.text = data["Base Product"];
-                                showDialog(
-                                    context: context,
-                                    builder: (context) {
-                                      return AlertDialog(
-                                        title: Text("Edit Your UPVC Tiles"),
-                                        content: Column(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            Container(
-                                              height: 40.h,
-                                              width: double.infinity.w,
-                                              decoration: BoxDecoration(
-                                                borderRadius:
-                                                    BorderRadius.circular(10),
-                                                color: Colors.white,
-                                              ),
-                                              child: Padding(
-                                                padding: const EdgeInsets.only(
-                                                    left: 7.0),
-                                                child: TextField(
-                                                  decoration: InputDecoration(
-                                                    enabledBorder:
-                                                        InputBorder.none,
-                                                    focusedBorder:
-                                                        InputBorder.none,
-                                                  ),
-                                                  controller: editController,
-                                                  onSubmitted: (value) {
-                                                    setState(() {
-                                                      data["Base Product"] =
-                                                          value;
-                                                    });
-                                                    Navigator.pop(context);
-                                                  },
-                                                ),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                        actions: [
-                                          ElevatedButton(
-                                              onPressed: () {
-                                                setState(() {
-                                                  data["Base Product"] =
-                                                      editController.text;
-                                                });
-                                                Navigator.pop(context);
-                                              },
-                                              child: MyText(
-                                                  text: "Save",
-                                                  weight: FontWeight.w500,
-                                                  color: Colors.black))
-                                        ],
-                                      );
-                                    });
-                              },
-                              icon: Icon(
-                                Icons.edit,
-                                size: 15,
-                              )))
-                    ],
-                  ),
-                ),
-              ),
-              Gap(5),
-            ],
-          ),
-        );
-      }).toList(),
-    );
-  }
-
-// New method that organizes fields in rows, two fields per row
-  Widget _buildProductDetailInRows(Map<String, dynamic> data) {
-    return Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Row(
-            children: [
-              Expanded(
-                child: _buildDetailItem("UOM", _uomDropdown(data)),
-              ),
-              SizedBox(
-                width: 10,
-              ),
-              Expanded(
-                child: _buildDetailItem(
-                    "Length", _editableTextField(data, "Length")),
-              ),
-              SizedBox(width: 10),
-              Expanded(
-                child: _buildDetailItem("Nos", _editableTextField(data, "Nos")),
-              ),
-            ],
-          ),
-        ),
-        Gap(5),
-// Row 3: Basic Rate & SQ
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Row(
-            children: [
-              Expanded(
-                child: _buildDetailItem(
-                    "Basic Rate", _editableTextField(data, "Basic Rate")),
-              ),
-              SizedBox(width: 10),
-              Expanded(
-                child: _buildDetailItem("SQ", _editableTextField(data, "SQ")),
-              ),
-              SizedBox(
-                width: 10,
-              ),
-              Expanded(
-                child: _buildDetailItem(
-                    "Amount", _editableTextField(data, "Amount")),
-              ),
-            ],
-          ),
-        ),
-        Gap(5.h),
-      ],
-    );
-  }
-
   Widget _buildDetailItem(String label, Widget field) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -622,72 +589,6 @@ class _UpvcTilesState extends State<UpvcTiles> {
         SizedBox(height: 6),
         field,
       ],
-    );
-  }
-
-  Widget _editableTextField(Map<String, dynamic> data, String key) {
-    return SizedBox(
-      height: 38.h,
-      child: TextField(
-        style: GoogleFonts.figtree(
-            fontWeight: FontWeight.w500, color: Colors.black, fontSize: 15.sp),
-        controller: TextEditingController(text: data[key]),
-        onChanged: (val) => data[key] = val,
-        decoration: InputDecoration(
-          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 0),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(6),
-            borderSide: BorderSide(color: Colors.grey[300]!),
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(6),
-            borderSide: BorderSide(color: Colors.grey[300]!),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(6),
-            borderSide:
-                BorderSide(color: Theme.of(context).primaryColor, width: 2),
-          ),
-          filled: true,
-          fillColor: Colors.grey[50],
-        ),
-      ),
-    );
-  }
-
-  Widget _uomDropdown(Map<String, dynamic> data) {
-    List<String> uomOptions = ["Feet", "mm", "cm"];
-    return SizedBox(
-      height: 40.h,
-      child: DropdownButtonFormField<String>(
-        value: data["UOM"],
-        items: uomOptions
-            .map((uom) => DropdownMenuItem(value: uom, child: Text(uom)))
-            .toList(),
-        onChanged: (val) {
-          setState(() {
-            data["UOM"] = val!;
-          });
-        },
-        decoration: InputDecoration(
-          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 0),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(6),
-            borderSide: BorderSide(color: Colors.grey[300]!),
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(6),
-            borderSide: BorderSide(color: Colors.grey[300]!),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(6),
-            borderSide:
-                BorderSide(color: Theme.of(context).primaryColor, width: 2),
-          ),
-          filled: true,
-          fillColor: Colors.grey[50],
-        ),
-      ),
     );
   }
 
@@ -866,7 +767,7 @@ class _UpvcTilesState extends State<UpvcTiles> {
                   ),
                 ),
                 SizedBox(height: 24),
-                if (submittedData.isNotEmpty)
+                if (apiResponseData.isNotEmpty)
                   Subhead(
                       text: "   Added Products",
                       weight: FontWeight.w600,

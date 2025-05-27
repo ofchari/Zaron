@@ -102,7 +102,7 @@ class _PurlinState extends State<Purlin> {
 
     final client =
         IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
-    final url = Uri.parse('$apiUrl/test');
+    final url = Uri.parse('$apiUrl/labelinputdata');
 
     try {
       final response = await client.post(
@@ -152,7 +152,7 @@ class _PurlinState extends State<Purlin> {
 
     final client =
         IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
-    final url = Uri.parse('$apiUrl/test');
+    final url = Uri.parse('$apiUrl/labelinputdata');
 
     try {
       final response = await client.post(
@@ -202,7 +202,7 @@ class _PurlinState extends State<Purlin> {
 
     final client =
         IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
-    final url = Uri.parse('$apiUrl/test');
+    final url = Uri.parse('$apiUrl/labelinputdata');
 
     try {
       final response = await client.post(
@@ -256,7 +256,7 @@ class _PurlinState extends State<Purlin> {
 
     final client =
         IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
-    final url = Uri.parse('$apiUrl/test');
+    final url = Uri.parse('$apiUrl/labelinputdata');
 
     try {
       final response = await client.post(
@@ -317,7 +317,11 @@ class _PurlinState extends State<Purlin> {
     }
   }
 
-  ///postData
+// 1. ADD THESE VARIABLES after your existing variables (around line 25)
+  List<Map<String, dynamic>> apiResponseData = [];
+  Map<String, dynamic>? apiResponse;
+
+// 2. MODIFY the postAllData() method - REPLACE the existing postAllData method with this:
   Future<void> postAllData() async {
     HttpClient client = HttpClient();
     client.badCertificateCallback =
@@ -325,25 +329,6 @@ class _PurlinState extends State<Purlin> {
     IOClient ioClient = IOClient(client);
     final headers = {"Content-Type": "application/json"};
     final data = {
-      // "product_filters": null,
-      // "product_label_filters": null,
-      // "product_category_id": null,
-      // "base_product_filters": [
-      //   "${selectProduct?.trim()}",
-      //   "${selectedSize?.trim()}",
-      //   "${selectedMaterialType?.trim()}",
-      //   "${selectedThickness?.trim()}",
-      //   "${selectedBrand?.trim()}"
-      // ],
-      // "base_label_filters": [
-      //   "shape_of_product",
-      //   "size",
-      //   "material_type",
-      //   "thickness",
-      //   "Brand"
-      // ],
-      // "base_category_id": 5
-
       "customer_id": UserSession().userId,
       "product_id": null,
       "product_name": null,
@@ -364,97 +349,72 @@ class _PurlinState extends State<Purlin> {
       );
 
       debugPrint("This is a response: ${response.body}");
-      if (selectedBrand == null ||
-          selectedSize == null ||
-          selectedThickness == null ||
-          selectProduct == null ||
-          selectedMaterialType == null) return;
       if (response.statusCode == 200) {
+        final responseData = jsonDecode(response.body);
+        if (responseData is Map<String, dynamic> &&
+            responseData['status'] == true) {
+          setState(() {
+            apiResponse = responseData;
+            apiResponseData = [];
+            // Safely parse lebels and data
+            if (responseData['lebels'] is List &&
+                responseData['lebels'].isNotEmpty) {
+              for (var label in responseData['lebels']) {
+                if (label['data'] is List) {
+                  apiResponseData.addAll(
+                    (label['data'] as List).cast<Map<String, dynamic>>(),
+                  );
+                }
+              }
+            }
+            print("Updated apiResponseData: $apiResponseData");
+          });
+          Get.snackbar(
+            "Data Added",
+            "Successfully",
+            colorText: Colors.white,
+            backgroundColor: Colors.green,
+            snackPosition: SnackPosition.BOTTOM,
+          );
+        } else {
+          print("API response status is false or invalid: ${response.body}");
+          Get.snackbar(
+            "Error",
+            "Failed to add product: Invalid response",
+            colorText: Colors.white,
+            backgroundColor: Colors.red,
+            snackPosition: SnackPosition.BOTTOM,
+          );
+        }
+      } else {
+        print(
+            "API request failed with status ${response.statusCode}: ${response.body}");
         Get.snackbar(
-          "Data Added",
-          "Successfully",
+          "Error",
+          "Failed to add product: Server error",
           colorText: Colors.white,
-          backgroundColor: Colors.green,
+          backgroundColor: Colors.red,
           snackPosition: SnackPosition.BOTTOM,
         );
       }
     } catch (e) {
-      throw Exception("Error posting data: $e");
-    }
-  }
-
-//
-
-  void _submitData() {
-    if (selectedSize == null ||
-        selectedThickness == null ||
-        selectProduct == null ||
-        selectedMaterialType == null) {
-// Show elegant error message
-      showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: Text('Incomplete Form'),
-          content: Text('Please fill all required fields to add a product.'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text('OK'),
-            ),
-          ],
-        ),
+      print("Exception posting data: $e");
+      Get.snackbar(
+        "Error",
+        "Error posting data: $e",
+        colorText: Colors.white,
+        backgroundColor: Colors.red,
+        snackPosition: SnackPosition.BOTTOM,
       );
-      return;
     }
-    setState(() {
-      submittedData.add({
-        "Product": "Purlin",
-        "UOM": "Feet",
-        "Length": "0",
-        "Nos": "1",
-        "Basic Rate": "0",
-        "SQ": "0",
-        "Amount": "0",
-        "Base Product":
-            "$selectProduct, $selectedSize, $selectedMaterialType, $selectedThickness, $selectedBrand, ",
-      });
-      selectProduct = null;
-      selectedSize = null;
-      selectedMaterialType = null;
-      selectedThickness = null;
-      selectedBrand = null;
-
-      productList = [];
-      sizeList = [];
-      materialTypeList = [];
-      thicknessList = [];
-      brandsList = [];
-      _fetchShapeProduct();
-    });
-
-// Show success message with a more elegant snackbar
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            Icon(Icons.check_circle, color: Colors.white),
-            SizedBox(width: 12),
-            Text("Product added successfully"),
-          ],
-        ),
-        backgroundColor: Colors.green,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
-        margin: EdgeInsets.all(16),
-        duration: Duration(seconds: 2),
-      ),
-    );
   }
 
+// 3. REPLACE the existing _buildSubmittedDataList() method with this:
+// REPLACE your existing _buildSubmittedDataList() method with this:
   Widget _buildSubmittedDataList() {
-    if (submittedData.isEmpty) {
+    print("apiResponseData length: ${apiResponseData.length}");
+
+    if (apiResponseData.isEmpty) {
       return Container(
         padding: EdgeInsets.symmetric(vertical: 40),
         alignment: Alignment.center,
@@ -472,7 +432,7 @@ class _PurlinState extends State<Purlin> {
     }
 
     return Column(
-      children: submittedData.asMap().entries.map((entry) {
+      children: apiResponseData.asMap().entries.map((entry) {
         int index = entry.key;
         Map<String, dynamic> data = entry.value;
 
@@ -483,200 +443,75 @@ class _PurlinState extends State<Purlin> {
             borderRadius: BorderRadius.circular(12),
           ),
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Header with product name and delete button
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  Padding(
-                    padding: const EdgeInsets.only(top: 15),
-                    child: SizedBox(
-                      // color: Colors.red,
-                      height: 40.h,
-                      width: 210.w,
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
                       child: Text(
-                        "  ${index + 1}.  ${data["Product"]}" ?? "",
-                        overflow: TextOverflow.ellipsis,
+                        "${data["S.No"] ?? (index + 1)}. ${data["Products"] ?? 'Product'}",
                         style: GoogleFonts.figtree(
-                            fontSize: 18,
+                            fontSize: 16,
                             fontWeight: FontWeight.w600,
                             color: Colors.black87),
                       ),
                     ),
                   ),
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Container(
-                      height: 40.h,
-                      width: 50.w,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(10),
-                        color: Colors.deepPurple[50],
-                      ),
-                      child: IconButton(
-                        icon: Icon(
-                          Icons.delete,
-                          color: Colors.redAccent,
-                        ),
-                        onPressed: () {
-                          showDialog(
-                              context: context,
-                              builder: (context) {
-                                return AlertDialog(
-                                  title: Subhead(
-                                      text:
-                                          "Are you Sure to Delete This Item ?",
-                                      weight: FontWeight.w500,
-                                      color: Colors.black),
-                                  actions: [
-                                    ElevatedButton(
-                                      onPressed: () {
-                                        setState(() {
-                                          submittedData.removeAt(index);
-                                        });
-                                        Navigator.pop(context);
-                                      },
-                                      child: Text("Yes"),
-                                    ),
-                                    ElevatedButton(
-                                      onPressed: () {
-                                        Navigator.pop(context);
-                                      },
-                                      child: Text("No"),
-                                    )
-                                  ],
-                                );
-                              });
-                        },
+                  Container(
+                    padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.blue[50],
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      "ID: ${data['id'] ?? 'N/A'}",
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.blue[700],
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
-                  )
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: IconButton(
+                      icon: Icon(Icons.delete, color: Colors.redAccent),
+                      onPressed: () {
+                        showDialog(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                            title: Text("Delete Product"),
+                            content: Text(
+                                "Are you sure you want to delete this item?"),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(context),
+                                child: Text("Cancel"),
+                              ),
+                              ElevatedButton(
+                                onPressed: () {
+                                  setState(() {
+                                    apiResponseData.removeAt(index);
+                                  });
+                                  Navigator.pop(context);
+                                },
+                                child: Text("Delete"),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                  ),
                 ],
               ),
-              _buildProductDetailInRows(data),
-              // Row(
-              //   children: [
-              //     MyText(
-              //         text: "  UOM - ",
-              //         weight: FontWeight.w600,
-              //         color: Colors.grey.shade600),
-              //     MyText(
-              //         text: "Length - ",
-              //         weight: FontWeight.w600,
-              //         color: Colors.grey.shade600),
-              //     MyText(
-              //         text: "Nos  ",
-              //         weight: FontWeight.w600,
-              //         color: Colors.grey.shade600),
-              //   ],
-              // ),
-              Padding(
-                padding: const EdgeInsets.only(top: 8.0, left: 8),
-                child: Container(
-                  height: 40.h,
-                  width: double.infinity.w,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Row(
-// mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Container(
-                        // color: Colors.red,
-                        height: 40.h,
-                        width: 280.w,
-                        child: TextField(
-                          style: TextStyle(
-                              fontSize: 13.sp,
-                              color: Colors.black87,
-                              fontWeight: FontWeight.w500),
-                          decoration: InputDecoration(
-                            enabledBorder: InputBorder.none,
-                            focusedBorder: InputBorder.none,
-                          ),
-                          controller: TextEditingController(
-                              text: " ${data["Base Product"]}"),
-                          readOnly: true,
-                        ),
-                      ),
-                      Gap(5),
-                      Container(
-                          height: 30.h,
-                          width: 30.w,
-                          decoration: BoxDecoration(
-                              color: Colors.grey[200],
-                              borderRadius: BorderRadius.circular(10)),
-                          child: IconButton(
-                              onPressed: () {
-                                editController.text = data["Base Product"];
-                                showDialog(
-                                    context: context,
-                                    builder: (context) {
-                                      return AlertDialog(
-                                        title: Text("Edit Your Purlin"),
-                                        content: Column(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            Container(
-                                              height: 40.h,
-                                              width: double.infinity.w,
-                                              decoration: BoxDecoration(
-                                                borderRadius:
-                                                    BorderRadius.circular(10),
-                                                color: Colors.white,
-                                              ),
-                                              child: Padding(
-                                                padding: const EdgeInsets.only(
-                                                    left: 7.0),
-                                                child: TextField(
-                                                  decoration: InputDecoration(
-                                                    enabledBorder:
-                                                        InputBorder.none,
-                                                    focusedBorder:
-                                                        InputBorder.none,
-                                                  ),
-                                                  controller: editController,
-                                                  onSubmitted: (value) {
-                                                    setState(() {
-                                                      data["Base Product"] =
-                                                          value;
-                                                    });
-                                                    Navigator.pop(context);
-                                                  },
-                                                ),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                        actions: [
-                                          ElevatedButton(
-                                              onPressed: () {
-                                                setState(() {
-                                                  data["Base Product"] =
-                                                      editController.text;
-                                                });
-                                                Navigator.pop(context);
-                                              },
-                                              child: MyText(
-                                                  text: "Save",
-                                                  weight: FontWeight.w500,
-                                                  color: Colors.black))
-                                        ],
-                                      );
-                                    });
-                              },
-                              icon: Icon(
-                                Icons.edit,
-                                size: 15,
-                              )))
-                    ],
-                  ),
-                ),
-              ),
-              Gap(5),
+
+              // Editable fields in rows
+              _buildApiResponseFields(data),
+              SizedBox(height: 16),
             ],
           ),
         );
@@ -684,20 +519,19 @@ class _PurlinState extends State<Purlin> {
     );
   }
 
-// New method that organizes fields in rows, two fields per row
-  Widget _buildProductDetailInRows(Map<String, dynamic> data) {
-    return Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Row(
+// ADD this new method for the editable fields:
+  Widget _buildApiResponseFields(Map<String, dynamic> data) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+      child: Column(
+        children: [
+          // Row 1: UOM, Length, Nos
+          Row(
             children: [
               Expanded(
-                child: _buildDetailItem("UOM", _uomDropdown(data)),
+                child: _buildDetailItem("UOM", _buildUomDropdown(data)),
               ),
-              SizedBox(
-                width: 10,
-              ),
+              SizedBox(width: 10),
               Expanded(
                 child: _buildDetailItem(
                     "Length", _editableTextField(data, "Length")),
@@ -708,12 +542,9 @@ class _PurlinState extends State<Purlin> {
               ),
             ],
           ),
-        ),
-        Gap(5),
-// Row 3: Basic Rate & SQ
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Row(
+          SizedBox(height: 12),
+          // Row 2: Basic Rate, Kg, Amount
+          Row(
             children: [
               Expanded(
                 child: _buildDetailItem(
@@ -721,49 +552,52 @@ class _PurlinState extends State<Purlin> {
               ),
               SizedBox(width: 10),
               Expanded(
-                child: _buildDetailItem("SQ", _editableTextField(data, "SQ")),
+                child: _buildDetailItem(
+                    "Kg",
+                    Text(data['Kg']?.toString() ?? '0',
+                        style: TextStyle(
+                            fontSize: 14, fontWeight: FontWeight.w500))),
               ),
-              SizedBox(
-                width: 10,
-              ),
+              SizedBox(width: 10),
               Expanded(
                 child: _buildDetailItem(
-                    "Amount", _editableTextField(data, "Amount")),
+                    "Amount",
+                    Text(data['Amount']?.toString() ?? '0',
+                        style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.green[600]))),
               ),
             ],
           ),
-        ),
-        Gap(5.h),
-      ],
+        ],
+      ),
     );
   }
 
-  Widget _buildDetailItem(String label, Widget field) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: TextStyle(
-            fontWeight: FontWeight.w500,
-            color: Colors.grey[700],
-            fontSize: 15,
-          ),
-        ),
-        SizedBox(height: 6),
-        field,
-      ],
-    );
-  }
-
+// 5. ADD this new method after _buildApiProductDetailInRows():
   Widget _editableTextField(Map<String, dynamic> data, String key) {
     return SizedBox(
       height: 38.h,
       child: TextField(
         style: GoogleFonts.figtree(
-            fontWeight: FontWeight.w500, color: Colors.black, fontSize: 15.sp),
-        controller: TextEditingController(text: data[key]),
-        onChanged: (val) => data[key] = val,
+          fontWeight: FontWeight.w500,
+          color: Colors.black,
+          fontSize: 14.sp,
+        ),
+        controller: TextEditingController(text: data[key]?.toString() ?? ''),
+        onChanged: (val) {
+          setState(() {
+            data[key] = val.isEmpty ? '0' : val; // Default to '0' if empty
+            // Optional: Calculate Amount client-side
+            double length = double.tryParse(data['Length'] ?? '0') ?? 0;
+            double nos = double.tryParse(data['Nos'] ?? '0') ?? 0;
+            double rate = double.tryParse(data['Basic Rate'] ?? '0') ?? 0;
+            data['Amount'] = (length * nos * rate).toStringAsFixed(2);
+            // Note: Kg calculation requires a formula; left as read-only
+          });
+        },
+        keyboardType: TextInputType.number,
         decoration: InputDecoration(
           contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 0),
           border: OutlineInputBorder(
@@ -786,18 +620,35 @@ class _PurlinState extends State<Purlin> {
     );
   }
 
-  Widget _uomDropdown(Map<String, dynamic> data) {
-    List<String> uomOptions = ["Feet", "mm", "cm"];
+// 6. ADD this new method after _apiEditableTextField():
+  Widget _buildUomDropdown(Map<String, dynamic> data) {
+    List<String> uomOptions = ['FEET', 'MM', 'MTR', 'INCH']; // Fallback options
+    String? selectedValue =
+        data['UOM']?['value'] == '3' ? 'FEET' : data['UOM']?['value'];
+
+    try {
+      if (data['UOM'] != null &&
+          data['UOM']['options'] is Map<String, String>) {
+        uomOptions = (data['UOM']['options'] as Map<String, String>)
+            .entries
+            .map((e) => e.value)
+            .toList();
+      }
+    } catch (e) {
+      print("Error parsing UOM options: $e");
+    }
+
     return SizedBox(
       height: 40.h,
       child: DropdownButtonFormField<String>(
-        value: data["UOM"],
+        value: uomOptions.contains(selectedValue) ? selectedValue : null,
         items: uomOptions
             .map((uom) => DropdownMenuItem(value: uom, child: Text(uom)))
             .toList(),
         onChanged: (val) {
           setState(() {
-            data["UOM"] = val!;
+            data['UOM'] = data['UOM'] ?? {};
+            data['UOM']['value'] = val == 'FEET' ? '3' : val;
           });
         },
         decoration: InputDecoration(
@@ -819,6 +670,92 @@ class _PurlinState extends State<Purlin> {
           fillColor: Colors.grey[50],
         ),
       ),
+    );
+  }
+
+// 7. MODIFY the _submitData() method - REPLACE the existing _submitData method with this:
+  void _submitData() {
+    if (selectedSize == null ||
+        selectedThickness == null ||
+        selectProduct == null ||
+        selectedMaterialType == null) {
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text('Incomplete Form'),
+          content: Text('Please fill all required fields to add a product.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text('OK'),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+
+    // Call postAllData and wait for completion
+    postAllData().then((_) {
+      setState(() {
+        selectProduct = null;
+        selectedSize = null;
+        selectedMaterialType = null;
+        selectedThickness = null;
+        selectedBrand = null;
+        productList = [];
+        sizeList = [];
+        materialTypeList = [];
+        thicknessList = [];
+        brandsList = [];
+        _fetchShapeProduct();
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              Icon(Icons.check_circle, color: Colors.white),
+              SizedBox(width: 12),
+              Text("Product added successfully"),
+            ],
+          ),
+          backgroundColor: Colors.green,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+          ),
+          margin: EdgeInsets.all(16),
+          duration: Duration(seconds: 2),
+        ),
+      );
+    }).catchError((e) {
+      print("Error in submitData: $e");
+      Get.snackbar(
+        "Error",
+        "Failed to add product: $e",
+        colorText: Colors.white,
+        backgroundColor: Colors.red,
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    });
+  }
+
+  Widget _buildDetailItem(String label, Widget field) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            fontWeight: FontWeight.w500,
+            color: Colors.grey[700],
+            fontSize: 15,
+          ),
+        ),
+        SizedBox(height: 6),
+        field,
+      ],
     );
   }
 

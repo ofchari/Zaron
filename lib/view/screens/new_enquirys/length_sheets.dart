@@ -7,10 +7,11 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:gap/gap.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/io_client.dart';
-import 'package:zaron/view/screens/global_user/global_user.dart';
 import 'package:zaron/view/universal_api/api&key.dart';
 import 'package:zaron/view/widgets/subhead.dart';
 import 'package:zaron/view/widgets/text.dart';
+
+import '../global_user/global_user.dart';
 
 class CutToLengthSheet extends StatefulWidget {
   const CutToLengthSheet({super.key, required this.data});
@@ -135,7 +136,7 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
 
     final client =
         IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
-    final url = Uri.parse('$apiUrl/test');
+    final url = Uri.parse('$apiUrl/labelinputdata');
 
     try {
       final response = await client.post(
@@ -189,7 +190,7 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
 
     final client =
         IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
-    final url = Uri.parse('$apiUrl/test');
+    final url = Uri.parse('$apiUrl/labelinputdata');
 
     try {
       final response = await client.post(
@@ -243,7 +244,7 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
 
     final client =
         IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
-    final url = Uri.parse('$apiUrl/test');
+    final url = Uri.parse('$apiUrl/labelinputdata');
 
     try {
       final response = await client.post(
@@ -300,7 +301,7 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
 
     final client =
         IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
-    final url = Uri.parse('$apiUrl/test');
+    final url = Uri.parse('$apiUrl/labelinputdata');
 
     try {
       final response = await client.post(
@@ -366,6 +367,11 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
     }
   }
 
+// 1. ADD THESE VARIABLES at the top of your _CutToLengthSheetState class (around line 30)
+  Map<String, dynamic>? apiResponse;
+  bool showApiResponse = false;
+
+// 2. MODIFY the postAllData() method to store the response (replace your existing postAllData method)
   Future<void> postAllData() async {
     HttpClient client = HttpClient();
     client.badCertificateCallback =
@@ -373,31 +379,12 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
     IOClient ioClient = IOClient(client);
     final headers = {"Content-Type": "application/json"};
     final data = {
-      // "product_filters": null,
-      // "product_label_filters": null,
-      // "product_category_id": null,
-      // "base_product_filters": [
-      //   "${selectedMeterial?.trim()}",
-      //   "${selectedThichness?.trim()}",
-      //   "${selsectedCoat?.trim()}",
-      //   "${selectedyie?.trim()}",
-      //   "${selectedBrand?.trim()}"
-      // ],
-      // "base_label_filters": [
-      //   "material_type",
-      //   "thickness",
-      //   "coating_mass",
-      //   "yield_strength",
-      //   "brand"
-      // ],
-      // "base_category_id": 626
-
       "customer_id": UserSession().userId,
       "product_id": 2193,
       "product_name": selectedProduct,
       "product_base_id": selectedProductBaseId,
       "product_base_name": "$selectedBaseProductName",
-      "category_id": 626,
+      "category_id": 34,
       "category_name": "Cut to Length Sheets"
     };
 
@@ -419,17 +406,262 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
           selectedyie == null ||
           selectedBrand == null) return;
       if (response.statusCode == 200) {
-        // Get.snackbar(
-        //   "Data Added",
-        //   "Successfully",
-        //   colorText: Colors.white,
-        //   backgroundColor: Colors.green,
-        //   snackPosition: SnackPosition.BOTTOM,
-        // );
+        // STORE THE API RESPONSE
+        setState(() {
+          apiResponse = jsonDecode(response.body);
+          showApiResponse = true;
+        });
       }
     } catch (e) {
       throw Exception("Error posting data: $e");
     }
+  }
+
+// 3. ADD THIS NEW METHOD to build the API response UI
+  Widget _buildApiResponseSection() {
+    if (!showApiResponse || apiResponse == null) return SizedBox.shrink();
+
+    final labels = apiResponse!['lebels'] as List;
+    if (labels.isEmpty) return SizedBox.shrink();
+
+    final categoryData = labels[0];
+    final categoryLabels = categoryData['labels'] as List<dynamic>;
+    final categoryDataList = categoryData['data'] as List<dynamic>;
+
+    return Card(
+      elevation: 2,
+      margin: EdgeInsets.symmetric(vertical: 16),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Subhead(
+                  text: "Order Details",
+                  weight: FontWeight.w600,
+                  color: Colors.black,
+                ),
+                Text(
+                  "Order ID: ${apiResponse!['order_id']}",
+                  style: TextStyle(
+                    color: Colors.green,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 16),
+            ...categoryDataList
+                .map((item) => _buildApiResponseItem(item, categoryLabels))
+                .toList(),
+          ],
+        ),
+      ),
+    );
+  }
+
+// 4. ADD THIS NEW METHOD to build individual API response items
+  Widget _buildApiResponseItem(
+      Map<String, dynamic> item, List<dynamic> labels) {
+    return Card(
+      margin: EdgeInsets.symmetric(vertical: 8),
+      elevation: 1,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      child: Padding(
+        padding: EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Product name header
+            Text(
+              "${item['S.No']}. ${item['Products']}",
+              style: GoogleFonts.figtree(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: Colors.black87,
+              ),
+            ),
+            SizedBox(height: 12),
+
+            // First Row: UOM and Billing Option (Dropdowns)
+            Row(
+              children: [
+                Expanded(child: _buildUOMDropdown(item)),
+                SizedBox(width: 10),
+                Expanded(child: _buildBillingOptionDropdown(item)),
+              ],
+            ),
+            SizedBox(height: 12),
+
+            // Second Row: Length and Nos (Editable)
+            Row(
+              children: [
+                Expanded(child: _buildEditableApiField(item, 'Length')),
+                SizedBox(width: 10),
+                Expanded(child: _buildEditableApiField(item, 'Nos')),
+              ],
+            ),
+            SizedBox(height: 12),
+
+            // Third Row: Basic Rate, Qty, Amount
+            Row(
+              children: [
+                Expanded(child: _buildReadOnlyApiField(item, 'Basic Rate')),
+                SizedBox(width: 10),
+                Expanded(child: _buildEditableApiField(item, 'Qty')),
+                SizedBox(width: 10),
+                Expanded(child: _buildReadOnlyApiField(item, 'Amount')),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+// 5. ADD THESE HELPER METHODS for the API response fields
+  Widget _buildUOMDropdown(Map<String, dynamic> item) {
+    final uomData = item['UOM'] as Map<String, dynamic>;
+    final options = uomData['options'] as Map<String, dynamic>;
+    final currentValue = uomData['value'].toString();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('UOM',
+            style: TextStyle(
+                fontWeight: FontWeight.w500, color: Colors.grey[700])),
+        SizedBox(height: 6),
+        SizedBox(
+          height: 40.h,
+          child: DropdownButtonFormField<String>(
+            value: currentValue.isEmpty ? null : currentValue,
+            items: options.entries
+                .map((entry) => DropdownMenuItem(
+                      value: entry.key,
+                      child: Text(entry.value),
+                    ))
+                .toList(),
+            onChanged: (val) {
+              setState(() {
+                item['UOM']['value'] = val!;
+              });
+            },
+            decoration: InputDecoration(
+              contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 0),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(6),
+                borderSide: BorderSide(color: Colors.grey[300]!),
+              ),
+              filled: true,
+              fillColor: Colors.grey[50],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildBillingOptionDropdown(Map<String, dynamic> item) {
+    final billingData = item['Billing Option'] as Map<String, dynamic>;
+    final options = billingData['options'] as Map<String, dynamic>;
+    final currentValue = billingData['value'].toString();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Billing Option',
+            style: TextStyle(
+                fontWeight: FontWeight.w500, color: Colors.grey[700])),
+        SizedBox(height: 6),
+        SizedBox(
+          height: 40.h,
+          child: DropdownButtonFormField<String>(
+            value: currentValue.isEmpty ? null : currentValue,
+            items: options.entries
+                .map((entry) => DropdownMenuItem(
+                      value: entry.key,
+                      child: Text(entry.value),
+                    ))
+                .toList(),
+            onChanged: (val) {
+              setState(() {
+                item['Billing Option']['value'] = val!;
+              });
+            },
+            decoration: InputDecoration(
+              contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 0),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(6),
+                borderSide: BorderSide(color: Colors.grey[300]!),
+              ),
+              filled: true,
+              fillColor: Colors.grey[50],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildEditableApiField(Map<String, dynamic> item, String fieldName) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(fieldName,
+            style: TextStyle(
+                fontWeight: FontWeight.w500, color: Colors.grey[700])),
+        SizedBox(height: 6),
+        SizedBox(
+          height: 38.h,
+          child: TextField(
+            controller: TextEditingController(text: item[fieldName].toString()),
+            onChanged: (val) => item[fieldName] = val,
+            decoration: InputDecoration(
+              contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 0),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(6),
+                borderSide: BorderSide(color: Colors.grey[300]!),
+              ),
+              filled: true,
+              fillColor: Colors.grey[50],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildReadOnlyApiField(Map<String, dynamic> item, String fieldName) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(fieldName,
+            style: TextStyle(
+                fontWeight: FontWeight.w500, color: Colors.grey[700])),
+        SizedBox(height: 6),
+        Container(
+          height: 38.h,
+          padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.grey[300]!),
+            borderRadius: BorderRadius.circular(6),
+            color: Colors.grey[100],
+          ),
+          child: Align(
+            alignment: Alignment.centerLeft,
+            child: Text(
+              item[fieldName].toString(),
+              style: TextStyle(color: Colors.grey[600]),
+            ),
+          ),
+        ),
+      ],
+    );
   }
 
   void _submitData() {
@@ -599,23 +831,7 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
                   )
                 ],
               ),
-              _buildProductDetailInRows(data),
-              // Row(
-              //   children: [
-              //     MyText(
-              //         text: "  UOM - ",
-              //         weight: FontWeight.w600,
-              //         color: Colors.grey.shade600),
-              //     MyText(
-              //         text: "Length - ",
-              //         weight: FontWeight.w600,
-              //         color: Colors.grey.shade600),
-              //     MyText(
-              //         text: "Nos  ",
-              //         weight: FontWeight.w600,
-              //         color: Colors.grey.shade600),
-              //   ],
-              // ),
+              _buildApiResponseSection(),
               Padding(
                 padding: const EdgeInsets.only(top: 8.0, left: 8),
                 child: Container(
@@ -728,144 +944,6 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
     );
   }
 
-// New method that organizes fields in rows, two fields per row
-  Widget _buildProductDetailInRows(Map<String, dynamic> data) {
-    return Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Row(
-            children: [
-              Expanded(
-                child: _buildDetailItem("UOM", _uomDropdown(data)),
-              ),
-              SizedBox(
-                width: 10,
-              ),
-              Expanded(
-                child: _buildDetailItem(
-                    "Length", _editableTextField(data, "Length")),
-              ),
-              SizedBox(width: 10),
-              Expanded(
-                child: _buildDetailItem("Nos", _editableTextField(data, "Nos")),
-              ),
-            ],
-          ),
-        ),
-        Gap(5),
-// Row 3: Basic Rate & SQ
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Row(
-            children: [
-              Expanded(
-                child: _buildDetailItem(
-                    "Basic Rate", _editableTextField(data, "Basic Rate")),
-              ),
-              SizedBox(width: 10),
-              Expanded(
-                child: _buildDetailItem("SQ", _editableTextField(data, "SQ")),
-              ),
-              SizedBox(
-                width: 10,
-              ),
-              Expanded(
-                child: _buildDetailItem(
-                    "Amount", _editableTextField(data, "Amount")),
-              ),
-            ],
-          ),
-        ),
-        Gap(5.h),
-      ],
-    );
-  }
-
-  Widget _buildDetailItem(String label, Widget field) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: TextStyle(
-            fontWeight: FontWeight.w500,
-            color: Colors.grey[700],
-            fontSize: 15,
-          ),
-        ),
-        SizedBox(height: 6),
-        field,
-      ],
-    );
-  }
-
-  Widget _editableTextField(Map<String, dynamic> data, String key) {
-    return SizedBox(
-      height: 38.h,
-      child: TextField(
-        style: GoogleFonts.figtree(
-            fontWeight: FontWeight.w500, color: Colors.black, fontSize: 15.sp),
-        controller: TextEditingController(text: data[key]),
-        onChanged: (val) => data[key] = val,
-        decoration: InputDecoration(
-          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 0),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(6),
-            borderSide: BorderSide(color: Colors.grey[300]!),
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(6),
-            borderSide: BorderSide(color: Colors.grey[300]!),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(6),
-            borderSide:
-                BorderSide(color: Theme.of(context).primaryColor, width: 2),
-          ),
-          filled: true,
-          fillColor: Colors.grey[50],
-        ),
-      ),
-    );
-  }
-
-  Widget _uomDropdown(Map<String, dynamic> data) {
-    List<String> uomOptions = ["Feet", "mm", "cm"];
-    return SizedBox(
-      height: 40.h,
-      child: DropdownButtonFormField<String>(
-        value: data["UOM"],
-        items: uomOptions
-            .map((uom) => DropdownMenuItem(value: uom, child: Text(uom)))
-            .toList(),
-        onChanged: (val) {
-          setState(() {
-            data["UOM"] = val!;
-          });
-        },
-        decoration: InputDecoration(
-          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 0),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(6),
-            borderSide: BorderSide(color: Colors.grey[300]!),
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(6),
-            borderSide: BorderSide(color: Colors.grey[300]!),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(6),
-            borderSide:
-                BorderSide(color: Theme.of(context).primaryColor, width: 2),
-          ),
-          filled: true,
-          fillColor: Colors.grey[50],
-        ),
-      ),
-    );
-  }
-
   String _selectedItems() {
     List<String> values = [
       if (selectedMeterial != null) "Material: $selectedMeterial",
@@ -966,16 +1044,11 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
                             setState(() {
                               selectedProduct = value;
                             });
-// _fetchProductName();
-                          },
-// enabled: productList.isNotEmpty,
-                              label: "Product Name"),
+                          }, label: "Product Name"),
                           _buildDropdown(meterialList, selectedMeterial,
                               (value) {
                             setState(() {
                               selectedMeterial = value;
-
-                              ///clear field
                               selectedThichness = null;
                               selsectedCoat = null;
                               selectedyie = null;
@@ -991,13 +1064,9 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
                               (value) {
                             setState(() {
                               selectedThichness = value;
-
-                              ///clear field
-
                               selsectedCoat = null;
                               selectedyie = null;
                               selectedBrand = null;
-
                               coatMassList = [];
                               yieldsListt = [];
                               brandList = [];
@@ -1009,12 +1078,8 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
                           _buildDropdown(coatMassList, selsectedCoat, (value) {
                             setState(() {
                               selsectedCoat = value;
-
-                              ///clear field
-
                               selectedyie = null;
                               selectedBrand = null;
-
                               yieldsListt = [];
                               brandList = [];
                             });
@@ -1025,11 +1090,7 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
                           _buildDropdown(yieldsListt, selectedyie, (value) {
                             setState(() {
                               selectedyie = value;
-
-                              ///clear field
-
                               selectedBrand = null;
-
                               brandList = [];
                             });
                             _fetchBrandss();
@@ -1092,6 +1153,10 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
                     ),
                   ),
                 ),
+
+                // ADD THIS LINE - API Response Section
+                _buildApiResponseSection(),
+
                 SizedBox(height: 24),
                 if (submittedData.isNotEmpty)
                   Subhead(

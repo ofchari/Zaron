@@ -98,7 +98,7 @@ class _AluminumState extends State<Aluminum> {
 
     final client =
         IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
-    final url = Uri.parse('$apiUrl/test');
+    final url = Uri.parse('$apiUrl/labelinputdata');
 
     try {
       final response = await client.post(
@@ -147,7 +147,7 @@ class _AluminumState extends State<Aluminum> {
 
     final client =
         IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
-    final url = Uri.parse('$apiUrl/test');
+    final url = Uri.parse('$apiUrl/labelinputdata');
 
     try {
       final response = await client.post(
@@ -197,7 +197,7 @@ class _AluminumState extends State<Aluminum> {
 
     final client =
         IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
-    final url = Uri.parse('$apiUrl/test');
+    final url = Uri.parse('$apiUrl/labelinputdata');
 
     try {
       final response = await client.post(
@@ -256,6 +256,11 @@ class _AluminumState extends State<Aluminum> {
     }
   }
 
+  // 1. ADD THESE VARIABLES AT THE TOP OF YOUR CLASS (after existing variables)
+  Map<String, dynamic>? apiResponseData;
+  List<Map<String, dynamic>> apiProductsList = [];
+
+// 2. MODIFY YOUR postAllData() METHOD - Replace the existing method with this:
   Future<void> postAllData() async {
     HttpClient client = HttpClient();
     client.badCertificateCallback =
@@ -263,23 +268,6 @@ class _AluminumState extends State<Aluminum> {
     IOClient ioClient = IOClient(client);
     final headers = {"Content-Type": "application/json"};
     final data = {
-      // "product_filters": null,
-      // "product_label_filters": null,
-      // "product_category_id": null,
-      // "base_product_filters": [
-      //   "${selectedMaterialType?.trim()}",
-      //   "${selectedThickness?.trim()}",
-      //   "${selectedBrand?.trim()}",
-      //   "${selectedColor?.trim()}",
-      // ],
-      // "base_label_filters": [
-      //   "material_type",
-      //   "thickness",
-      //   "brand",
-      //   "color",
-      // ],
-      // "base_category_id": 36
-
       "customer_id": UserSession().userId,
       "product_id": null,
       "product_name": null,
@@ -300,24 +288,324 @@ class _AluminumState extends State<Aluminum> {
       );
 
       debugPrint("This is a response: ${response.body}");
+
+      if (response.statusCode == 200) {
+        // Parse and store the API response
+        final responseData = jsonDecode(response.body);
+        setState(() {
+          apiResponseData = responseData;
+          if (responseData['lebels'] != null &&
+              responseData['lebels'].isNotEmpty) {
+            apiProductsList = List<Map<String, dynamic>>.from(
+                responseData['lebels'][0]['data']);
+          }
+        });
+      }
+
       if (selectedBrand == null ||
           selectedColor == null ||
           selectedThickness == null ||
           selectedMaterialType == null) {
         return;
       }
-      if (response.statusCode == 200) {
-// Get.snackbar(
-//   "Data Added",
-//   "Successfully",
-//   colorText: Colors.white,
-//   backgroundColor: Colors.green,
-//   snackPosition: SnackPosition.BOTTOM,
-// );
-      }
     } catch (e) {
       throw Exception("Error posting data: $e");
     }
+  }
+
+// 3. ADD THIS NEW METHOD to build API response data display:
+  Widget _buildApiResponseDataList() {
+    if (apiProductsList.isEmpty) {
+      return Container(
+        padding: EdgeInsets.symmetric(vertical: 40),
+        alignment: Alignment.center,
+        child: Column(
+          children: [
+            Icon(Icons.inventory_2_outlined, size: 60, color: Colors.grey[400]),
+            SizedBox(height: 16),
+            Text(
+              "No API data available yet.",
+              style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return Column(
+      children: apiProductsList.asMap().entries.map((entry) {
+        int index = entry.key;
+        Map<String, dynamic> data = entry.value;
+
+        return Card(
+          margin: EdgeInsets.symmetric(vertical: 10),
+          elevation: 2,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Padding(
+            padding: EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Header with S.No and Product Name
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        "${data['S.No']}. ${data['Products']}",
+                        style: GoogleFonts.figtree(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.black87,
+                        ),
+                      ),
+                    ),
+                    Container(
+                      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.blue[50],
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        "ID: ${data['id']}",
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.blue[700],
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 16),
+
+                // First Row: UOM, Billing Option, Length
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildApiDetailItem(
+                          "UOM", _buildApiUomDropdown(data)),
+                    ),
+                    SizedBox(width: 10),
+                    Expanded(
+                      child: _buildApiDetailItem(
+                          "Billing Option", _buildApiBillingDropdown(data)),
+                    ),
+                    SizedBox(width: 10),
+                    Expanded(
+                      child: _buildApiDetailItem(
+                          "Length", _buildApiEditableField(data, "Length")),
+                    ),
+                  ],
+                ),
+
+                SizedBox(height: 12),
+
+                // Second Row: Crimp, Nos, Qty
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildApiDetailItem(
+                          "Crimp", _buildApiReadOnlyField(data, "Crimp")),
+                    ),
+                    SizedBox(width: 10),
+                    Expanded(
+                      child: _buildApiDetailItem(
+                          "Nos", _buildApiEditableField(data, "Nos")),
+                    ),
+                    SizedBox(width: 10),
+                    Expanded(
+                      child: _buildApiDetailItem(
+                          "Qty", _buildApiEditableField(data, "Qty")),
+                    ),
+                  ],
+                ),
+
+                SizedBox(height: 12),
+
+                // Third Row: Basic Rate, Amount
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildApiDetailItem("Basic Rate",
+                          _buildApiReadOnlyField(data, "Basic Rate")),
+                    ),
+                    SizedBox(width: 10),
+                    Expanded(
+                      child: _buildApiDetailItem(
+                          "Amount", _buildApiReadOnlyField(data, "Amount")),
+                    ),
+                    Expanded(
+                        child: SizedBox()), // Empty space to balance the row
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+// 4. ADD THESE HELPER METHODS:
+  Widget _buildApiDetailItem(String label, Widget field) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            fontWeight: FontWeight.w500,
+            color: Colors.grey[700],
+            fontSize: 14,
+          ),
+        ),
+        SizedBox(height: 6),
+        field,
+      ],
+    );
+  }
+
+  Widget _buildApiEditableField(Map<String, dynamic> data, String key) {
+    return SizedBox(
+      height: 40,
+      child: TextField(
+        controller: TextEditingController(text: data[key]?.toString() ?? ""),
+        onChanged: (val) => data[key] = val,
+        style: GoogleFonts.figtree(
+          fontWeight: FontWeight.w500,
+          color: Colors.black,
+          fontSize: 14,
+        ),
+        decoration: InputDecoration(
+          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(6),
+            borderSide: BorderSide(color: Colors.grey[300]!),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(6),
+            borderSide: BorderSide(color: Colors.grey[300]!),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(6),
+            borderSide:
+                BorderSide(color: Theme.of(context).primaryColor, width: 2),
+          ),
+          filled: true,
+          fillColor: Colors.white,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildApiReadOnlyField(Map<String, dynamic> data, String key) {
+    return Container(
+      height: 40,
+      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.grey[300]!),
+        borderRadius: BorderRadius.circular(6),
+        color: Colors.grey[50],
+      ),
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: Text(
+          data[key]?.toString() ?? "",
+          style: GoogleFonts.figtree(
+            fontWeight: FontWeight.w500,
+            color: Colors.grey[600],
+            fontSize: 14,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildApiUomDropdown(Map<String, dynamic> data) {
+    Map<String, dynamic> uomData = data['UOM'] ?? {};
+    String currentValue = uomData['value']?.toString() ?? "";
+    Map<String, dynamic> options = uomData['options'] ?? {};
+
+    return SizedBox(
+      height: 40,
+      child: DropdownButtonFormField<String>(
+        value: currentValue.isNotEmpty ? currentValue : null,
+        items: options.entries.map((entry) {
+          return DropdownMenuItem<String>(
+            value: entry.key.toString(),
+            child: Text(entry.value.toString()),
+          );
+        }).toList(),
+        onChanged: (val) {
+          setState(() {
+            data['UOM']['value'] = val;
+          });
+        },
+        decoration: InputDecoration(
+          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(6),
+            borderSide: BorderSide(color: Colors.grey[300]!),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(6),
+            borderSide: BorderSide(color: Colors.grey[300]!),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(6),
+            borderSide:
+                BorderSide(color: Theme.of(context).primaryColor, width: 2),
+          ),
+          filled: true,
+          fillColor: Colors.white,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildApiBillingDropdown(Map<String, dynamic> data) {
+    Map<String, dynamic> billingData = data['Billing Option'] ?? {};
+    String currentValue = billingData['value']?.toString() ?? "";
+    Map<String, dynamic> options = billingData['options'] ?? {};
+
+    return SizedBox(
+      height: 40,
+      child: DropdownButtonFormField<String>(
+        value: currentValue.isNotEmpty ? currentValue : null,
+        items: options.entries.map((entry) {
+          return DropdownMenuItem<String>(
+            value: entry.key.toString(),
+            child: Text(entry.value.toString()),
+          );
+        }).toList(),
+        onChanged: (val) {
+          setState(() {
+            data['Billing Option']['value'] = val;
+          });
+        },
+        decoration: InputDecoration(
+          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(6),
+            borderSide: BorderSide(color: Colors.grey[300]!),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(6),
+            borderSide: BorderSide(color: Colors.grey[300]!),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(6),
+            borderSide:
+                BorderSide(color: Theme.of(context).primaryColor, width: 2),
+          ),
+          filled: true,
+          fillColor: Colors.white,
+        ),
+      ),
+    );
   }
 
   void _submitData() {
@@ -488,7 +776,7 @@ class _AluminumState extends State<Aluminum> {
                   )
                 ],
               ),
-              _buildProductDetailInRows(data),
+              _buildApiResponseDataList(),
               // Row(
               //   children: [
               //     MyText(
@@ -614,144 +902,6 @@ class _AluminumState extends State<Aluminum> {
           ),
         );
       }).toList(),
-    );
-  }
-
-// New method that organizes fields in rows, two fields per row
-  Widget _buildProductDetailInRows(Map<String, dynamic> data) {
-    return Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Row(
-            children: [
-              Expanded(
-                child: _buildDetailItem("UOM", _uomDropdown(data)),
-              ),
-              SizedBox(
-                width: 10,
-              ),
-              Expanded(
-                child: _buildDetailItem(
-                    "Length", _editableTextField(data, "Length")),
-              ),
-              SizedBox(width: 10),
-              Expanded(
-                child: _buildDetailItem("Nos", _editableTextField(data, "Nos")),
-              ),
-            ],
-          ),
-        ),
-        Gap(5),
-// Row 3: Basic Rate & SQ
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Row(
-            children: [
-              Expanded(
-                child: _buildDetailItem(
-                    "Basic Rate", _editableTextField(data, "Basic Rate")),
-              ),
-              SizedBox(width: 10),
-              Expanded(
-                child: _buildDetailItem("SQ", _editableTextField(data, "SQ")),
-              ),
-              SizedBox(
-                width: 10,
-              ),
-              Expanded(
-                child: _buildDetailItem(
-                    "Amount", _editableTextField(data, "Amount")),
-              ),
-            ],
-          ),
-        ),
-        Gap(5.h),
-      ],
-    );
-  }
-
-  Widget _buildDetailItem(String label, Widget field) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: TextStyle(
-            fontWeight: FontWeight.w500,
-            color: Colors.grey[700],
-            fontSize: 15,
-          ),
-        ),
-        SizedBox(height: 6),
-        field,
-      ],
-    );
-  }
-
-  Widget _editableTextField(Map<String, dynamic> data, String key) {
-    return SizedBox(
-      height: 38.h,
-      child: TextField(
-        style: GoogleFonts.figtree(
-            fontWeight: FontWeight.w500, color: Colors.black, fontSize: 15.sp),
-        controller: TextEditingController(text: data[key]),
-        onChanged: (val) => data[key] = val,
-        decoration: InputDecoration(
-          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 0),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(6),
-            borderSide: BorderSide(color: Colors.grey[300]!),
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(6),
-            borderSide: BorderSide(color: Colors.grey[300]!),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(6),
-            borderSide:
-                BorderSide(color: Theme.of(context).primaryColor, width: 2),
-          ),
-          filled: true,
-          fillColor: Colors.grey[50],
-        ),
-      ),
-    );
-  }
-
-  Widget _uomDropdown(Map<String, dynamic> data) {
-    List<String> uomOptions = ["Feet", "mm", "cm"];
-    return SizedBox(
-      height: 40.h,
-      child: DropdownButtonFormField<String>(
-        value: data["UOM"],
-        items: uomOptions
-            .map((uom) => DropdownMenuItem(value: uom, child: Text(uom)))
-            .toList(),
-        onChanged: (val) {
-          setState(() {
-            data["UOM"] = val!;
-          });
-        },
-        decoration: InputDecoration(
-          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 0),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(6),
-            borderSide: BorderSide(color: Colors.grey[300]!),
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(6),
-            borderSide: BorderSide(color: Colors.grey[300]!),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(6),
-            borderSide:
-                BorderSide(color: Theme.of(context).primaryColor, width: 2),
-          ),
-          filled: true,
-          fillColor: Colors.grey[50],
-        ),
-      ),
     );
   }
 
@@ -954,6 +1104,14 @@ class _AluminumState extends State<Aluminum> {
                       color: Colors.black),
                 SizedBox(height: 8),
                 _buildSubmittedDataList(),
+                SizedBox(height: 10),
+                if (apiProductsList.isNotEmpty)
+                  Subhead(
+                      text: "   API Response Data",
+                      weight: FontWeight.w600,
+                      color: Colors.black),
+                SizedBox(height: 8),
+                _buildApiResponseDataList(),
               ],
             ),
           ),

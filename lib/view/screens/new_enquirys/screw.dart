@@ -100,7 +100,7 @@ class _ScrewState extends State<Screw> {
 
     final client =
         IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
-    final url = Uri.parse('$apiUrl/test');
+    final url = Uri.parse('$apiUrl/labelinputdata');
 
     try {
       final response = await client.post(
@@ -152,7 +152,7 @@ class _ScrewState extends State<Screw> {
 
     final client =
         IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
-    final url = Uri.parse('$apiUrl/test');
+    final url = Uri.parse('$apiUrl/labelinputdata');
 
     try {
       final response = await client.post(
@@ -207,6 +207,11 @@ class _ScrewState extends State<Screw> {
     }
   }
 
+// 1. ADD NEW VARIABLES AT THE TOP OF _ScrewState CLASS (after existing variables)
+  List<dynamic> responseData = [];
+  Map<String, dynamic>? apiResponse;
+
+// 2. MODIFY postScrewData() METHOD - Replace the existing method with this:
   Future<void> postScrewData() async {
     HttpClient client = HttpClient();
     client.badCertificateCallback =
@@ -237,24 +242,29 @@ class _ScrewState extends State<Screw> {
         return;
       }
       if (response.statusCode == 200) {
-// Get.snackbar(
-//   "Data Added",
-//   "Successfully",
-//   colorText: Colors.white,
-//   backgroundColor: Colors.green,
-//   snackPosition: SnackPosition.BOTTOM,
-// );
+        // Parse the API response
+        final decodedResponse = jsonDecode(response.body);
+        setState(() {
+          apiResponse = decodedResponse;
+          if (decodedResponse["lebels"] != null &&
+              decodedResponse["lebels"].isNotEmpty) {
+            final categoryData = decodedResponse["lebels"][0];
+            if (categoryData["data"] != null) {
+              responseData = categoryData["data"];
+            }
+          }
+        });
       }
     } catch (e) {
       throw Exception("Error posting data: $e");
     }
   }
 
+// 3. MODIFY _submitData() METHOD - Replace existing method with this:
   void _submitData() {
     if (selectedBrand == null ||
         selectedScrew == null ||
         selectedThread == null) {
-// Show elegant error message
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
@@ -270,18 +280,8 @@ class _ScrewState extends State<Screw> {
       );
       return;
     }
-    setState(() {
-      submittedData.add({
-        "Product": "Screw",
-        "UOM": "Feet",
-        "Length": "0",
-        "Nos": "1",
-        "Basic Rate": "0",
-        "SQ": "0",
-        "Amount": "0",
-        "Base Product": "$selectedBrand, $selectedScrew, $selectedThread,",
-      });
 
+    setState(() {
       selectedBrand = null;
       selectedScrew = null;
       selectedThread = null;
@@ -290,7 +290,7 @@ class _ScrewState extends State<Screw> {
       threadList = [];
       _fetchBrand();
     });
-// Show success message with a more elegant snackBar
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
@@ -311,8 +311,9 @@ class _ScrewState extends State<Screw> {
     );
   }
 
+// 4. REPLACE _buildSubmittedDataList() METHOD with this:
   Widget _buildSubmittedDataList() {
-    if (submittedData.isEmpty) {
+    if (responseData.isEmpty) {
       return Container(
         padding: EdgeInsets.symmetric(vertical: 40),
         alignment: Alignment.center,
@@ -330,298 +331,188 @@ class _ScrewState extends State<Screw> {
     }
 
     return Column(
-      children: submittedData.asMap().entries.map((entry) {
-        int index = entry.key;
-        Map<String, dynamic> data = entry.value;
-
-        return Card(
-          margin: EdgeInsets.symmetric(vertical: 10),
-          elevation: 2,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.only(top: 15),
-                    child: SizedBox(
-                      // color: Colors.red,
-                      height: 40.h,
-                      width: 210.w,
-
-                      child: Text(
-                        "  ${index + 1}.  ${data["Product"]}" ?? "",
-                        overflow: TextOverflow.ellipsis,
-                        style: GoogleFonts.figtree(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.black87),
-                      ),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Container(
-                      height: 40.h,
-                      width: 50.w,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(10),
-                        color: Colors.deepPurple[50],
-                      ),
-                      child: IconButton(
-                        icon: Icon(
-                          Icons.delete,
-                          color: Colors.redAccent,
-                        ),
-                        onPressed: () {
-                          showDialog(
-                              context: context,
-                              builder: (context) {
-                                return AlertDialog(
-                                  title: Subhead(
-                                      text:
-                                          "Are you Sure to Delete This Item ?",
-                                      weight: FontWeight.w500,
-                                      color: Colors.black),
-                                  actions: [
-                                    ElevatedButton(
-                                      onPressed: () {
-                                        setState(() {
-                                          submittedData.removeAt(index);
-                                        });
-                                        Navigator.pop(context);
-                                      },
-                                      child: Text("Yes"),
-                                    ),
-                                    ElevatedButton(
-                                      onPressed: () {
-                                        Navigator.pop(context);
-                                      },
-                                      child: Text("No"),
-                                    )
-                                  ],
-                                );
-                              });
-                        },
-                      ),
-                    ),
-                  )
-                ],
-              ),
-              _buildProductDetailInRows(data),
-              // Row(
-              //   children: [
-              //     MyText(
-              //         text: "  UOM - ",
-              //         weight: FontWeight.w600,
-              //         color: Colors.grey.shade600),
-              //     MyText(
-              //         text: "Length - ",
-              //         weight: FontWeight.w600,
-              //         color: Colors.grey.shade600),
-              //     MyText(
-              //         text: "Nos  ",
-              //         weight: FontWeight.w600,
-              //         color: Colors.grey.shade600),
-              //   ],
-              // ),
-              Padding(
-                padding: const EdgeInsets.only(top: 8.0, left: 8),
-                child: Container(
-                  height: 40.h,
-                  width: double.infinity.w,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Row(
-// mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Container(
-                        // color: Colors.red,
-                        height: 40.h,
-                        width: 280.w,
-                        child: TextField(
-                          style: TextStyle(
-                              fontSize: 13.sp,
-                              color: Colors.black87,
-                              fontWeight: FontWeight.w500),
-                          decoration: InputDecoration(
-                            enabledBorder: InputBorder.none,
-                            focusedBorder: InputBorder.none,
-                          ),
-                          controller: TextEditingController(
-                              text: " ${data["Base Product"]}"),
-                          readOnly: true,
-                        ),
-                      ),
-                      Gap(5),
-                      Container(
-                          height: 30.h,
-                          width: 30.w,
-                          decoration: BoxDecoration(
-                              color: Colors.grey[200],
-                              borderRadius: BorderRadius.circular(10)),
-                          child: IconButton(
-                              onPressed: () {
-                                editController.text = data["Base Product"];
-                                showDialog(
-                                    context: context,
-                                    builder: (context) {
-                                      return AlertDialog(
-                                        title: Text("Edit Your Screw"),
-                                        content: Column(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            Container(
-                                              height: 40.h,
-                                              width: double.infinity.w,
-                                              decoration: BoxDecoration(
-                                                borderRadius:
-                                                    BorderRadius.circular(10),
-                                                color: Colors.white,
-                                              ),
-                                              child: Padding(
-                                                padding: const EdgeInsets.only(
-                                                    left: 7.0),
-                                                child: TextField(
-                                                  decoration: InputDecoration(
-                                                    enabledBorder:
-                                                        InputBorder.none,
-                                                    focusedBorder:
-                                                        InputBorder.none,
-                                                  ),
-                                                  controller: editController,
-                                                  onSubmitted: (value) {
-                                                    setState(() {
-                                                      data["Base Product"] =
-                                                          value;
-                                                    });
-                                                    Navigator.pop(context);
-                                                  },
-                                                ),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                        actions: [
-                                          ElevatedButton(
-                                              onPressed: () {
-                                                setState(() {
-                                                  data["Base Product"] =
-                                                      editController.text;
-                                                });
-                                                Navigator.pop(context);
-                                              },
-                                              child: MyText(
-                                                  text: "Save",
-                                                  weight: FontWeight.w500,
-                                                  color: Colors.black))
-                                        ],
-                                      );
-                                    });
-                              },
-                              icon: Icon(
-                                Icons.edit,
-                                size: 15,
-                              )))
-                    ],
+      children: [
+        if (apiResponse?["order_id"] != null)
+          Container(
+            padding: EdgeInsets.all(12),
+            margin: EdgeInsets.only(bottom: 16),
+            decoration: BoxDecoration(
+              color: Colors.blue[50],
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.blue[200]!),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.receipt_long, color: Colors.blue[700]),
+                SizedBox(width: 8),
+                Text(
+                  "Order ID: ${apiResponse!["order_id"]}",
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    color: Colors.blue[700],
+                    fontSize: 16,
                   ),
                 ),
-              ),
-              Gap(5),
-            ],
+              ],
+            ),
           ),
-        );
-      }).toList(),
-    );
-  }
+        ...responseData.asMap().entries.map((entry) {
+          int index = entry.key;
+          Map<String, dynamic> data = entry.value;
 
-// New method that organizes fields in rows, two fields per row
-  Widget _buildProductDetailInRows(Map<String, dynamic> data) {
-    return Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Row(
-            children: [
-              Expanded(
-                child: _buildDetailItem("UOM", _uomDropdown(data)),
-              ),
-              SizedBox(
-                width: 10,
-              ),
-              Expanded(
-                child: _buildDetailItem(
-                    "Length", _editableTextField(data, "Length")),
-              ),
-              SizedBox(width: 10),
-              Expanded(
-                child: _buildDetailItem("Nos", _editableTextField(data, "Nos")),
-              ),
-            ],
-          ),
-        ),
-        Gap(5),
-// Row 3: Basic Rate & SQ
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Row(
-            children: [
-              Expanded(
-                child: _buildDetailItem(
-                    "Basic Rate", _editableTextField(data, "Basic Rate")),
-              ),
-              SizedBox(width: 10),
-              Expanded(
-                child: _buildDetailItem("SQ", _editableTextField(data, "SQ")),
-              ),
-              SizedBox(
-                width: 10,
-              ),
-              Expanded(
-                child: _buildDetailItem(
-                    "Amount", _editableTextField(data, "Amount")),
-              ),
-            ],
-          ),
-        ),
-        Gap(5.h),
+          return Card(
+            margin: EdgeInsets.symmetric(vertical: 10),
+            elevation: 2,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Column(
+              children: [
+                // Header with product name and delete button
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Text(
+                          "${data["S.No"]}. ${data["Products"] ?? 'N/A'}",
+                          style: GoogleFonts.figtree(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.black87,
+                          ),
+                        ),
+                      ),
+                    ),
+                    Container(
+                      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.blue[50],
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        "ID: ${data['id']}",
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.blue[700],
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Container(
+                        height: 40.h,
+                        width: 50.w,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(10),
+                          color: Colors.deepPurple[50],
+                        ),
+                        child: IconButton(
+                          icon: Icon(Icons.delete, color: Colors.redAccent),
+                          onPressed: () {
+                            showDialog(
+                              context: context,
+                              builder: (context) => AlertDialog(
+                                title: Text("Delete Item"),
+                                content: Text(
+                                    "Are you sure you want to delete this item?"),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(context),
+                                    child: Text("Cancel"),
+                                  ),
+                                  ElevatedButton(
+                                    onPressed: () {
+                                      setState(() {
+                                        responseData.removeAt(index);
+                                      });
+                                      Navigator.pop(context);
+                                    },
+                                    child: Text("Delete"),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+
+                // Editable fields in organized rows
+                _buildApiResponseRows(data),
+              ],
+            ),
+          );
+        }).toList(),
       ],
     );
   }
 
-  Widget _buildDetailItem(String label, Widget field) {
+// 5. ADD NEW METHOD for API response data rows:
+  Widget _buildApiResponseRows(Map<String, dynamic> data) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          label,
-          style: TextStyle(
-            fontWeight: FontWeight.w500,
-            color: Colors.grey[700],
-            fontSize: 15,
+        Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Row(
+            children: [
+              Expanded(
+                child: _buildDetailItem("UOM", _uomDropdownForApi(data)),
+              ),
+              SizedBox(width: 10),
+              Expanded(
+                child: _buildDetailItem(
+                    "Length", _editableTextFieldForApi(data, "Length")),
+              ),
+              SizedBox(width: 10),
+              Expanded(
+                child: _buildDetailItem(
+                    "Qty/Nos", _editableTextFieldForApi(data, "Nos")),
+              ),
+            ],
           ),
         ),
-        SizedBox(height: 6),
-        field,
+        Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Row(
+            children: [
+              Expanded(
+                child: _buildDetailItem(
+                    "Basic Rate", _editableTextFieldForApi(data, "Basic Rate")),
+              ),
+              SizedBox(width: 10),
+              Expanded(
+                child: _buildDetailItem(
+                    "Amount", _editableTextFieldForApi(data, "Amount")),
+              ),
+              SizedBox(width: 10),
+              Expanded(
+                child: _buildDetailItem(
+                    "Billing Options", _billingOptionsDropdown(data)),
+              ),
+            ],
+          ),
+        ),
+        SizedBox(height: 16),
       ],
     );
   }
 
-  Widget _editableTextField(Map<String, dynamic> data, String key) {
+// 6. ADD NEW HELPER METHODS:
+  Widget _editableTextFieldForApi(Map<String, dynamic> data, String key) {
     return SizedBox(
       height: 38.h,
       child: TextField(
         style: GoogleFonts.figtree(
-            fontWeight: FontWeight.w500, color: Colors.black, fontSize: 15.sp),
-        controller: TextEditingController(text: data[key]),
+          fontWeight: FontWeight.w500,
+          color: Colors.black,
+          fontSize: 15.sp,
+        ),
+        controller: TextEditingController(text: data[key]?.toString() ?? "0"),
         onChanged: (val) => data[key] = val,
         decoration: InputDecoration(
           contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 0),
@@ -645,8 +536,11 @@ class _ScrewState extends State<Screw> {
     );
   }
 
-  Widget _uomDropdown(Map<String, dynamic> data) {
-    List<String> uomOptions = ["Feet", "mm", "cm"];
+  Widget _uomDropdownForApi(Map<String, dynamic> data) {
+    List<String> uomOptions = ["Feet", "mm", "cm", "Inches", "Meters"];
+    // Set default UOM if not present
+    if (data["UOM"] == null) data["UOM"] = "Feet";
+
     return SizedBox(
       height: 40.h,
       child: DropdownButtonFormField<String>(
@@ -677,6 +571,72 @@ class _ScrewState extends State<Screw> {
           filled: true,
           fillColor: Colors.grey[50],
         ),
+      ),
+    );
+  }
+
+  Widget _billingOptionsDropdown(Map<String, dynamic> data) {
+    List<String> billingOptions = [
+      "Per Unit",
+      "Per Meter",
+      "Per Foot",
+      "Bulk",
+      "Custom"
+    ];
+    // Set default billing option if not present
+    if (data["BillingOption"] == null) data["BillingOption"] = "Per Unit";
+
+    return SizedBox(
+      height: 40.h,
+      child: DropdownButtonFormField<String>(
+        value: data["BillingOption"],
+        items: billingOptions
+            .map((option) =>
+                DropdownMenuItem(value: option, child: Text(option)))
+            .toList(),
+        onChanged: (val) {
+          setState(() {
+            data["BillingOption"] = val!;
+          });
+        },
+        decoration: InputDecoration(
+          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 0),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(6),
+            borderSide: BorderSide(color: Colors.grey[300]!),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(6),
+            borderSide: BorderSide(color: Colors.grey[300]!),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(6),
+            borderSide:
+                BorderSide(color: Theme.of(context).primaryColor, width: 2),
+          ),
+          filled: true,
+          fillColor: Colors.grey[50],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDetailItem(String label, Widget field) {
+    return Container(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              fontWeight: FontWeight.w500,
+              color: Colors.grey[700],
+              fontSize: 15,
+            ),
+          ),
+          SizedBox(height: 6),
+          field,
+        ],
       ),
     );
   }

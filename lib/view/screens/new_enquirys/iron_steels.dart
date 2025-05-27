@@ -7,10 +7,11 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:gap/gap.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/io_client.dart';
-import 'package:zaron/view/screens/global_user/global_user.dart';
 import 'package:zaron/view/universal_api/api&key.dart';
 import 'package:zaron/view/widgets/subhead.dart';
 import 'package:zaron/view/widgets/text.dart';
+
+import '../global_user/global_user.dart';
 
 class IronSteel extends StatefulWidget {
   const IronSteel({super.key, required this.data});
@@ -98,7 +99,7 @@ class _IronSteelState extends State<IronSteel> {
 
     final client =
         IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
-    final url = Uri.parse('$apiUrl/test');
+    final url = Uri.parse('$apiUrl/labelinputdata');
 
     try {
       final response = await client.post(
@@ -147,7 +148,7 @@ class _IronSteelState extends State<IronSteel> {
 
     final client =
         IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
-    final url = Uri.parse('$apiUrl/test');
+    final url = Uri.parse('$apiUrl/labelinputdata');
 
     try {
       final response = await client.post(
@@ -196,7 +197,7 @@ class _IronSteelState extends State<IronSteel> {
 
     final client =
         IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
-    final url = Uri.parse('$apiUrl/test');
+    final url = Uri.parse('$apiUrl/labelinputdata');
 
     try {
       final response = await client.post(
@@ -251,6 +252,9 @@ class _IronSteelState extends State<IronSteel> {
     }
   }
 
+  List<Map<String, dynamic>> apiResponseData = [];
+  Map<String, dynamic>? apiResponse;
+
   Future<void> postAllData() async {
     HttpClient client = HttpClient();
     client.badCertificateCallback =
@@ -258,23 +262,6 @@ class _IronSteelState extends State<IronSteel> {
     IOClient ioClient = IOClient(client);
     final headers = {"Content-Type": "application/json"};
     final data = {
-      // "product_filters": null,
-      // "product_label_filters": null,
-      // "product_category_id": null,
-      // "base_product_filters": [
-      //   "${selectedBrand?.trim()}",
-      //   "${selectedColor?.trim()}",
-      //   "${selectedThickness?.trim()}",
-      //   "${selectedCoatingMass?.trim()}",
-      // ],
-      // "base_label_filters": [
-      //   "brand",
-      //   "color",
-      //   "thickness",
-      //   "coating_mass",
-      // ],
-      // "base_category_id": 3
-      //
       "customer_id": UserSession().userId,
       "product_id": null,
       "product_name": null,
@@ -301,86 +288,22 @@ class _IronSteelState extends State<IronSteel> {
         return;
       }
       if (response.statusCode == 200) {
-// Get.snackbar(
-//   "Data Added",
-//   "Successfully",
-//   colorText: Colors.white,
-//   backgroundColor: Colors.green,
-//   snackPosition: SnackPosition.BOTTOM,
-// );
+        // Parse the API response and store it
+        final responseData = jsonDecode(response.body);
+        if (responseData['status'] == true && responseData['lebels'] != null) {
+          setState(() {
+            apiResponseData = List<Map<String, dynamic>>.from(
+                responseData['lebels'][0]['data']);
+          });
+        }
       }
     } catch (e) {
       throw Exception("Error posting data: $e");
     }
   }
 
-  void _submitData() {
-    if (selectedColor == null ||
-        selectedThickness == null ||
-        selectedCoatingMass == null) {
-// Show elegant error message
-      showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: Text('Incomplete Form'),
-          content: Text('Please fill all required fields to add a product.'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text('OK'),
-            ),
-          ],
-        ),
-      );
-      return;
-    }
-    setState(() {
-      submittedData.add({
-        "Product": "Iron and Steel",
-        "UOM": "Feet",
-        "Length": "0",
-        "Nos": "1",
-        "Basic Rate": "0",
-        "SQ": "0",
-        "Amount": "0",
-        "Base Product":
-            "$selectedBrand, $selectedColor, $selectedThickness, $selectedCoatingMass",
-      });
-
-      selectedBrand = null;
-      selectedColor = null;
-      selectedThickness = null;
-      selectedCoatingMass = null;
-      brandsList = [];
-      colorsList = [];
-      thicknessList = [];
-      coatingMassList = [];
-      _fetchBrands();
-    });
-
-// Show success message with a more elegant snackbar
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            Icon(Icons.check_circle, color: Colors.white),
-            SizedBox(width: 12),
-            Text("Product added successfully"),
-          ],
-        ),
-        backgroundColor: Colors.green,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
-        margin: EdgeInsets.all(16),
-        duration: Duration(seconds: 2),
-      ),
-    );
-  }
-
-  Widget _buildSubmittedDataList() {
-    if (submittedData.isEmpty) {
+  Widget _buildApiResponseList() {
+    if (apiResponseData.isEmpty) {
       return Container(
         padding: EdgeInsets.symmetric(vertical: 40),
         alignment: Alignment.center,
@@ -398,7 +321,7 @@ class _IronSteelState extends State<IronSteel> {
     }
 
     return Column(
-      children: submittedData.asMap().entries.map((entry) {
+      children: apiResponseData.asMap().entries.map((entry) {
         int index = entry.key;
         Map<String, dynamic> data = entry.value;
 
@@ -409,27 +332,39 @@ class _IronSteelState extends State<IronSteel> {
             borderRadius: BorderRadius.circular(12),
           ),
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.start,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Header with product name and delete button
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  Padding(
-                    padding: const EdgeInsets.only(top: 15),
-                    child: SizedBox(
-                      // color: Colors.red,
-                      height: 40.h,
-                      width: 210.w,
-
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.all(15),
                       child: Text(
-                        "  ${index + 1}.  ${data["Product"]}" ?? "",
-                        overflow: TextOverflow.ellipsis,
+                        "${data["S.No"]}. ${data["Products"]}" ?? "",
                         style: GoogleFonts.figtree(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.black87),
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.black87,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ),
+                  Container(
+                    padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.blue[50],
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      "ID: ${data['id']}",
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.blue[700],
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
                   ),
@@ -443,167 +378,38 @@ class _IronSteelState extends State<IronSteel> {
                         color: Colors.deepPurple[50],
                       ),
                       child: IconButton(
-                        icon: Icon(
-                          Icons.delete,
-                          color: Colors.redAccent,
-                        ),
+                        icon: Icon(Icons.delete, color: Colors.redAccent),
                         onPressed: () {
                           showDialog(
-                              context: context,
-                              builder: (context) {
-                                return AlertDialog(
-                                  title: Subhead(
-                                      text:
-                                          "Are you Sure to Delete This Item ?",
-                                      weight: FontWeight.w500,
-                                      color: Colors.black),
-                                  actions: [
-                                    ElevatedButton(
-                                      onPressed: () {
-                                        setState(() {
-                                          submittedData.removeAt(index);
-                                        });
-                                        Navigator.pop(context);
-                                      },
-                                      child: Text("Yes"),
-                                    ),
-                                    ElevatedButton(
-                                      onPressed: () {
-                                        Navigator.pop(context);
-                                      },
-                                      child: Text("No"),
-                                    )
-                                  ],
-                                );
-                              });
+                            context: context,
+                            builder: (context) => AlertDialog(
+                              title: Text("Are you sure to delete this item?"),
+                              actions: [
+                                TextButton(
+                                  onPressed: () {
+                                    setState(() {
+                                      apiResponseData.removeAt(index);
+                                    });
+                                    Navigator.pop(context);
+                                  },
+                                  child: Text("Yes"),
+                                ),
+                                TextButton(
+                                  onPressed: () => Navigator.pop(context),
+                                  child: Text("No"),
+                                ),
+                              ],
+                            ),
+                          );
                         },
                       ),
                     ),
-                  )
+                  ),
                 ],
               ),
-              _buildProductDetailInRows(data),
-              // Row(
-              //   children: [
-              //     MyText(
-              //         text: "  UOM - ",
-              //         weight: FontWeight.w600,
-              //         color: Colors.grey.shade600),
-              //     MyText(
-              //         text: "Length - ",
-              //         weight: FontWeight.w600,
-              //         color: Colors.grey.shade600),
-              //     MyText(
-              //         text: "Nos  ",
-              //         weight: FontWeight.w600,
-              //         color: Colors.grey.shade600),
-              //   ],
-              // ),
-              Padding(
-                padding: const EdgeInsets.only(top: 8.0, left: 8),
-                child: Container(
-                  height: 40.h,
-                  width: double.infinity.w,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Row(
-// mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Container(
-                        // color: Colors.red,
-                        height: 40.h,
-                        width: 280.w,
-                        child: TextField(
-                          style: TextStyle(
-                              fontSize: 13.sp,
-                              color: Colors.black87,
-                              fontWeight: FontWeight.w500),
-                          decoration: InputDecoration(
-                            enabledBorder: InputBorder.none,
-                            focusedBorder: InputBorder.none,
-                          ),
-                          controller: TextEditingController(
-                              text: " ${data["Base Product"]}"),
-                          readOnly: true,
-                        ),
-                      ),
-                      Gap(5),
-                      Container(
-                          height: 30.h,
-                          width: 30.w,
-                          decoration: BoxDecoration(
-                              color: Colors.grey[200],
-                              borderRadius: BorderRadius.circular(10)),
-                          child: IconButton(
-                              onPressed: () {
-                                editController.text = data["Base Product"];
-                                showDialog(
-                                    context: context,
-                                    builder: (context) {
-                                      return AlertDialog(
-                                        title: Text("Edit Your Iron&Steel"),
-                                        content: Column(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            Container(
-                                              height: 40.h,
-                                              width: double.infinity.w,
-                                              decoration: BoxDecoration(
-                                                borderRadius:
-                                                    BorderRadius.circular(10),
-                                                color: Colors.white,
-                                              ),
-                                              child: Padding(
-                                                padding: const EdgeInsets.only(
-                                                    left: 7.0),
-                                                child: TextField(
-                                                  decoration: InputDecoration(
-                                                    enabledBorder:
-                                                        InputBorder.none,
-                                                    focusedBorder:
-                                                        InputBorder.none,
-                                                  ),
-                                                  controller: editController,
-                                                  onSubmitted: (value) {
-                                                    setState(() {
-                                                      data["Base Product"] =
-                                                          value;
-                                                    });
-                                                    Navigator.pop(context);
-                                                  },
-                                                ),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                        actions: [
-                                          ElevatedButton(
-                                              onPressed: () {
-                                                setState(() {
-                                                  data["Base Product"] =
-                                                      editController.text;
-                                                });
-                                                Navigator.pop(context);
-                                              },
-                                              child: MyText(
-                                                  text: "Save",
-                                                  weight: FontWeight.w500,
-                                                  color: Colors.black))
-                                        ],
-                                      );
-                                    });
-                              },
-                              icon: Icon(
-                                Icons.edit,
-                                size: 15,
-                              )))
-                    ],
-                  ),
-                ),
-              ),
-              Gap(5),
+
+              // Product details in rows
+              _buildApiProductDetails(data, index),
             ],
           ),
         );
@@ -611,56 +417,72 @@ class _IronSteelState extends State<IronSteel> {
     );
   }
 
-// New method that organizes fields in rows, two fields per row
-  Widget _buildProductDetailInRows(Map<String, dynamic> data) {
+  Widget _buildApiProductDetails(Map<String, dynamic> data, int index) {
     return Column(
       children: [
+        // Row 1: UOM, Profile, Crimp
         Padding(
           padding: const EdgeInsets.all(8.0),
           child: Row(
             children: [
               Expanded(
-                child: _buildDetailItem("UOM", _uomDropdown(data)),
-              ),
-              SizedBox(
-                width: 10,
-              ),
-              Expanded(
-                child: _buildDetailItem(
-                    "Length", _editableTextField(data, "Length")),
+                child: _buildDetailItem("UOM", _buildUOMDropdown(data, index)),
               ),
               SizedBox(width: 10),
               Expanded(
-                child: _buildDetailItem("Nos", _editableTextField(data, "Nos")),
+                child: _buildDetailItem(
+                    "Profile", _buildEditableField(data, "Profile", index)),
+              ),
+              SizedBox(width: 10),
+              Expanded(
+                child: _buildDetailItem(
+                    "Crimp", _buildEditableField(data, "Crimp", index)),
               ),
             ],
           ),
         ),
-        Gap(5.h),
-// Row 3: Basic Rate & SQ
+
+        // Row 2: Nos, Basic Rate, Sq.Mtr
         Padding(
           padding: const EdgeInsets.all(8.0),
           child: Row(
             children: [
               Expanded(
                 child: _buildDetailItem(
-                    "Basic Rate", _editableTextField(data, "Basic Rate")),
+                    "Nos", _buildEditableField(data, "Nos", index)),
               ),
               SizedBox(width: 10),
               Expanded(
-                child: _buildDetailItem("SQ", _editableTextField(data, "SQ")),
+                child: _buildDetailItem("Basic Rate",
+                    _buildEditableField(data, "Basic Rate", index)),
               ),
-              SizedBox(
-                width: 10,
-              ),
+              SizedBox(width: 10),
               Expanded(
                 child: _buildDetailItem(
-                    "Amount", _editableTextField(data, "Amount")),
+                    "Sq.Mtr", _buildEditableField(data, "Sq.Mtr", index)),
               ),
             ],
           ),
         ),
-        Gap(5.h),
+
+        // Row 3: Amount
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Row(
+            children: [
+              Expanded(
+                child: _buildDetailItem(
+                    "Amount", _buildEditableField(data, "Amount", index)),
+              ),
+              SizedBox(width: 20),
+              Expanded(child: Container()), // Empty space
+              SizedBox(width: 20),
+              Expanded(child: Container()), // Empty space
+            ],
+          ),
+        ),
+
+        Gap(10),
       ],
     );
   }
@@ -683,14 +505,26 @@ class _IronSteelState extends State<IronSteel> {
     );
   }
 
-  Widget _editableTextField(Map<String, dynamic> data, String key) {
+  Widget _buildUOMDropdown(Map<String, dynamic> data, int index) {
+    Map<String, dynamic> uomData = data["UOM"];
+    String currentValue = uomData["value"];
+    Map<String, dynamic> options = uomData["options"];
+
     return SizedBox(
-      height: 38.h,
-      child: TextField(
-        style: GoogleFonts.figtree(
-            fontWeight: FontWeight.w500, color: Colors.black, fontSize: 15.sp),
-        controller: TextEditingController(text: data[key]),
-        onChanged: (val) => data[key] = val,
+      height: 40.h,
+      child: DropdownButtonFormField<String>(
+        value: currentValue,
+        items: options.entries
+            .map((entry) => DropdownMenuItem(
+                  value: entry.key,
+                  child: Text(entry.value),
+                ))
+            .toList(),
+        onChanged: (val) {
+          setState(() {
+            apiResponseData[index]["UOM"]["value"] = val!;
+          });
+        },
         decoration: InputDecoration(
           contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 0),
           border: OutlineInputBorder(
@@ -713,18 +547,19 @@ class _IronSteelState extends State<IronSteel> {
     );
   }
 
-  Widget _uomDropdown(Map<String, dynamic> data) {
-    List<String> uomOptions = ["Feet", "mm", "cm"];
+  Widget _buildEditableField(Map<String, dynamic> data, String key, int index) {
     return SizedBox(
-      height: 40.h,
-      child: DropdownButtonFormField<String>(
-        value: data["UOM"],
-        items: uomOptions
-            .map((uom) => DropdownMenuItem(value: uom, child: Text(uom)))
-            .toList(),
+      height: 38.h,
+      child: TextField(
+        style: GoogleFonts.figtree(
+          fontWeight: FontWeight.w500,
+          color: Colors.black,
+          fontSize: 15.sp,
+        ),
+        controller: TextEditingController(text: data[key].toString()),
         onChanged: (val) {
           setState(() {
-            data["UOM"] = val!;
+            apiResponseData[index][key] = val;
           });
         },
         decoration: InputDecoration(
@@ -921,7 +756,7 @@ class _IronSteelState extends State<IronSteel> {
                             child: ElevatedButton(
                               onPressed: () async {
                                 await postAllData();
-                                _submitData();
+                                // _submitData();
                               },
                               style: ElevatedButton.styleFrom(
                                 foregroundColor: Colors.white,
@@ -943,13 +778,13 @@ class _IronSteelState extends State<IronSteel> {
                   ),
                 ),
                 SizedBox(height: 24),
-                if (submittedData.isNotEmpty)
+                if (apiResponseData.isNotEmpty)
                   Subhead(
                       text: "   Added Products",
                       weight: FontWeight.w600,
                       color: Colors.black),
                 SizedBox(height: 8),
-                _buildSubmittedDataList(),
+                _buildApiResponseList(),
               ],
             ),
           ),
