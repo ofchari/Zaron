@@ -345,7 +345,13 @@ class _LinerSheetPageState extends State<LinerSheetPage> {
 //   }
 // }
 
+// Add these variables after line 25 (after the existing List declarations)
+  Map<String, dynamic>? apiResponseData;
+  List<dynamic> responseProducts = [];
+  Map<String, Map<String, String>> uomOptions = {};
+
   ///post All Data
+// Replace the existing postAllData() method with this updated version:
   Future<void> postAllData() async {
     HttpClient client = HttpClient();
     client.badCertificateCallback =
@@ -360,23 +366,6 @@ class _LinerSheetPageState extends State<LinerSheetPage> {
       "product_base_name": "$selectedBaseProductId",
       "category_id": 590,
       "category_name": "Liner Sheets"
-
-// "product_filters": null,
-// "product_label_filters": null,
-// "product_category_id": null,
-// "base_product_filters": [
-//   "${selectedBrands?.trim()}",
-//   "${selectedColors?.trim()}",
-//   "${selectedThickness?.trim()}",
-//   "${selectedCoatingMass?.trim()}",
-// ],
-// "base_label_filters": [
-//   "brand",
-//   "color",
-//   "thickness",
-//   "coating_mass",
-// ],
-// "base_category_id": 590
     };
 
     print("This is a body data: $data");
@@ -395,14 +384,26 @@ class _LinerSheetPageState extends State<LinerSheetPage> {
           selectedColors == null ||
           selectedThickness == null ||
           selectedCoatingMass == null) return;
+
       if (response.statusCode == 200) {
-// Get.snackbar(
-//   "Data Added",
-//   "Successfully",
-//   colorText: Colors.white,
-//   backgroundColor: Colors.green,
-//   snackPosition: SnackPosition.BOTTOM,
-// );
+        // Parse and store the API response
+        final responseData = jsonDecode(response.body);
+        setState(() {
+          apiResponseData = responseData;
+          if (responseData["lebels"] != null &&
+              responseData["lebels"].isNotEmpty) {
+            responseProducts = responseData["lebels"][0]["data"] ?? [];
+
+            // Store UOM options for each product
+            for (var product in responseProducts) {
+              if (product["UOM"] != null && product["UOM"]["options"] != null) {
+                uomOptions[product["id"].toString()] = Map<String, String>.from(
+                    product["UOM"]["options"].map((key, value) =>
+                        MapEntry(key.toString(), value.toString())));
+              }
+            }
+          }
+        });
       }
     } catch (e) {
       throw Exception("Error posting data: $e");
@@ -479,7 +480,7 @@ class _LinerSheetPageState extends State<LinerSheetPage> {
   }
 
   Widget _buildSubmittedDataList() {
-    if (submittedData.isEmpty) {
+    if (responseProducts.isEmpty) {
       return Container(
         padding: EdgeInsets.symmetric(vertical: 40),
         alignment: Alignment.center,
@@ -497,9 +498,9 @@ class _LinerSheetPageState extends State<LinerSheetPage> {
     }
 
     return Column(
-      children: submittedData.asMap().entries.map((entry) {
+      children: responseProducts.asMap().entries.map((entry) {
         int index = entry.key;
-        Map<String, dynamic> data = entry.value;
+        Map<String, dynamic> data = Map<String, dynamic>.from(entry.value);
 
         return Card(
           margin: EdgeInsets.symmetric(vertical: 10),
@@ -515,20 +516,35 @@ class _LinerSheetPageState extends State<LinerSheetPage> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  Padding(
-                    padding: const EdgeInsets.only(top: 15),
-                    child: SizedBox(
-                      // color: Colors.red,
-                      height: 40.h,
-                      width: 210.w,
-
-                      child: Text(
-                        "  ${index + 1}.  ${data["Product"]}" ?? "",
-                        overflow: TextOverflow.ellipsis,
-                        style: GoogleFonts.figtree(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.black87),
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.only(top: 15),
+                      child: SizedBox(
+                        height: 40.h,
+                        width: 210.w,
+                        child: Text(
+                          "  ${data["S.No"]}.  ${data["Products"]}" ?? "",
+                          overflow: TextOverflow.ellipsis,
+                          style: GoogleFonts.figtree(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.black87),
+                        ),
+                      ),
+                    ),
+                  ),
+                  Container(
+                    padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.blue[50],
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      "ID: ${data['id']}",
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.blue[700],
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
                   ),
@@ -560,7 +576,7 @@ class _LinerSheetPageState extends State<LinerSheetPage> {
                                     ElevatedButton(
                                       onPressed: () {
                                         setState(() {
-                                          submittedData.removeAt(index);
+                                          responseProducts.removeAt(index);
                                         });
                                         Navigator.pop(context);
                                       },
@@ -582,22 +598,6 @@ class _LinerSheetPageState extends State<LinerSheetPage> {
                 ],
               ),
               _buildProductDetailInRows(data),
-              // Row(
-              //   children: [
-              //     MyText(
-              //         text: "  UOM - ",
-              //         weight: FontWeight.w600,
-              //         color: Colors.grey.shade600),
-              //     MyText(
-              //         text: "Length - ",
-              //         weight: FontWeight.w600,
-              //         color: Colors.grey.shade600),
-              //     MyText(
-              //         text: "Nos  ",
-              //         weight: FontWeight.w600,
-              //         color: Colors.grey.shade600),
-              //   ],
-              // ),
               Padding(
                 padding: const EdgeInsets.only(top: 8.0, left: 8),
                 child: Container(
@@ -607,11 +607,9 @@ class _LinerSheetPageState extends State<LinerSheetPage> {
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Row(
-// mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       Container(
-                        // color: Colors.red,
                         height: 40.h,
                         width: 280.w,
                         child: TextField(
@@ -624,7 +622,7 @@ class _LinerSheetPageState extends State<LinerSheetPage> {
                             focusedBorder: InputBorder.none,
                           ),
                           controller: TextEditingController(
-                              text: " ${data["Base Product"]}"),
+                              text: " ${data["Material Specification"]}"),
                           readOnly: true,
                         ),
                       ),
@@ -637,7 +635,8 @@ class _LinerSheetPageState extends State<LinerSheetPage> {
                               borderRadius: BorderRadius.circular(10)),
                           child: IconButton(
                               onPressed: () {
-                                editController.text = data["Base Product"];
+                                editController.text =
+                                    data["Material Specification"].toString();
                                 showDialog(
                                     context: context,
                                     builder: (context) {
@@ -667,7 +666,7 @@ class _LinerSheetPageState extends State<LinerSheetPage> {
                                                   controller: editController,
                                                   onSubmitted: (value) {
                                                     setState(() {
-                                                      data["Base Product"] =
+                                                      data["Material Specification"] =
                                                           value;
                                                     });
                                                     Navigator.pop(context);
@@ -681,7 +680,7 @@ class _LinerSheetPageState extends State<LinerSheetPage> {
                                           ElevatedButton(
                                               onPressed: () {
                                                 setState(() {
-                                                  data["Base Product"] =
+                                                  data["Material Specification"] =
                                                       editController.text;
                                                 });
                                                 Navigator.pop(context);
@@ -710,7 +709,7 @@ class _LinerSheetPageState extends State<LinerSheetPage> {
     );
   }
 
-// New method that organizes fields in rows, two fields per row
+// Replace the existing _buildProductDetailInRows() method with this:
   Widget _buildProductDetailInRows(Map<String, dynamic> data) {
     return Column(
       children: [
@@ -719,14 +718,12 @@ class _LinerSheetPageState extends State<LinerSheetPage> {
           child: Row(
             children: [
               Expanded(
-                child: _buildDetailItem("UOM", _uomDropdown(data)),
+                child: _buildDetailItem("UOM", _uomDropdownFromApi(data)),
               ),
-              SizedBox(
-                width: 10,
-              ),
+              SizedBox(width: 10),
               Expanded(
                 child: _buildDetailItem(
-                    "Length", _editableTextField(data, "Length")),
+                    "Profile", _editableTextField(data, "Profile")),
               ),
               SizedBox(width: 10),
               Expanded(
@@ -736,7 +733,6 @@ class _LinerSheetPageState extends State<LinerSheetPage> {
           ),
         ),
         Gap(5),
-// Row 3: Basic Rate & SQ
         Padding(
           padding: const EdgeInsets.all(8.0),
           child: Row(
@@ -747,11 +743,10 @@ class _LinerSheetPageState extends State<LinerSheetPage> {
               ),
               SizedBox(width: 10),
               Expanded(
-                child: _buildDetailItem("SQ", _editableTextField(data, "SQ")),
+                child: _buildDetailItem(
+                    "Sq.Mtr", _editableTextField(data, "Sq.Mtr")),
               ),
-              SizedBox(
-                width: 10,
-              ),
+              SizedBox(width: 10),
               Expanded(
                 child: _buildDetailItem(
                     "Amount", _editableTextField(data, "Amount")),
@@ -812,18 +807,34 @@ class _LinerSheetPageState extends State<LinerSheetPage> {
     );
   }
 
-  Widget _uomDropdown(Map<String, dynamic> data) {
-    List<String> uomOptions = ["Feet", "mm", "cm"];
+// Add this new method after the existing _uomDropdown method:
+  Widget _uomDropdownFromApi(Map<String, dynamic> data) {
+    String productId = data["id"].toString();
+    Map<String, String>? options = uomOptions[productId];
+
+    // If no UOM options available, fall back to simple text field
+    if (options == null || options.isEmpty) {
+      return _editableTextField(data, "UOM");
+    }
+
+    String? currentValue;
+    if (data["UOM"] is Map) {
+      currentValue = data["UOM"]["value"]?.toString();
+    } else {
+      currentValue = data["UOM"]?.toString();
+    }
+
     return SizedBox(
       height: 40.h,
       child: DropdownButtonFormField<String>(
-        value: data["UOM"],
-        items: uomOptions
-            .map((uom) => DropdownMenuItem(value: uom, child: Text(uom)))
+        value: currentValue,
+        items: options.entries
+            .map((entry) =>
+                DropdownMenuItem(value: entry.key, child: Text(entry.value)))
             .toList(),
         onChanged: (val) {
           setState(() {
-            data["UOM"] = val!;
+            data["UOM"] = {"value": val, "options": options};
           });
         },
         decoration: InputDecoration(
@@ -1058,7 +1069,7 @@ class _LinerSheetPageState extends State<LinerSheetPage> {
                   ),
                 ),
                 SizedBox(height: 24),
-                if (submittedData.isNotEmpty)
+                if (responseProducts.isNotEmpty)
                   Subhead(
                       text: "   Added Products",
                       weight: FontWeight.w600,

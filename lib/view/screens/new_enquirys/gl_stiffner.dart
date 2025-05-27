@@ -347,7 +347,11 @@ class _GIStiffnerState extends State<GIStiffner> {
     }
   }
 
-  ///post All Data
+// 1. ADD THESE NEW VARIABLES at the top of your _GIStiffnerState class (around line 25)
+  Map<String, dynamic>? apiResponseData;
+  List<dynamic> responseProducts = [];
+
+// 2. MODIFY the postAllData() method - REPLACE the existing method with this:
   Future<void> postAllData() async {
     HttpClient client = HttpClient();
     client.badCertificateCallback =
@@ -355,25 +359,6 @@ class _GIStiffnerState extends State<GIStiffner> {
     IOClient ioClient = IOClient(client);
     final headers = {"Content-Type": "application/json"};
     final data = {
-      // "product_filters": null,
-      // "product_label_filters": null,
-      // "product_category_id": null,
-      // "base_product_filters": [
-      //   "${selectedMeterial?.trim()}",
-      //   "${selectedThichness?.trim()}",
-      //   "${selsectedCoat?.trim()}",
-      //   "${selectedyie?.trim()}",
-      //   "${selectedBrand?.trim()}"
-      // ],
-      // "base_label_filters": [
-      //   "material_type",
-      //   "thickness",
-      //   "coating_mass",
-      //   "yield_strength",
-      //   "brand"
-      // ],
-      // "base_category_id": 34
-
       "customer_id": UserSession().userId,
       "product_id": 1330,
       "product_name": selectedProduct,
@@ -394,26 +379,25 @@ class _GIStiffnerState extends State<GIStiffner> {
       );
 
       debugPrint("This is a response: ${response.body}");
-      if (selectedMeterial == null ||
-          selectedThichness == null ||
-          selsectedCoat == null ||
-          selectedyie == null ||
-          selectedBrand == null) return;
 
       if (response.statusCode == 200) {
-// Get.snackbar(
-//   "Data Added",
-//   "Successfully",
-//   colorText: Colors.white,
-//   backgroundColor: Colors.green,
-//   snackPosition: SnackPosition.BOTTOM,
-// );
+        // PARSE THE API RESPONSE
+        final responseData = jsonDecode(response.body);
+        setState(() {
+          apiResponseData = responseData;
+          // Extract the products from the response
+          if (responseData['lebels'] != null &&
+              responseData['lebels'].isNotEmpty) {
+            responseProducts = responseData['lebels'][0]['data'] ?? [];
+          }
+        });
       }
     } catch (e) {
       throw Exception("Error posting data: $e");
     }
   }
 
+// 3. MODIFY the _submitData() method - REPLACE the existing method with this:
   void _submitData() {
     if (selectedMeterial == null ||
         selectedThichness == null ||
@@ -421,7 +405,6 @@ class _GIStiffnerState extends State<GIStiffner> {
         selectedyie == null ||
         selectedBrand == null ||
         selectedProduct == null) {
-// Show elegant error message
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
@@ -437,18 +420,9 @@ class _GIStiffnerState extends State<GIStiffner> {
       );
       return;
     }
+
+    // Reset form fields
     setState(() {
-      submittedData.add({
-        "Product": "GI Stiffner",
-        "UOM": "Feet",
-        "Length": "0",
-        "Nos": "1",
-        "Basic Rate": "0",
-        "SQ": "0",
-        "Amount": "0",
-        "Base Product":
-            "$selectedProduct, $selectedMeterial, $selectedThichness, $selsectedCoat, $selectedyie, $selectedBrand,",
-      });
       selectedMeterial = null;
       selectedThichness = null;
       selsectedCoat = null;
@@ -463,7 +437,7 @@ class _GIStiffnerState extends State<GIStiffner> {
       _fetchMeterialType();
     });
 
-// Show success message with a more elegant snackBar
+    // Show success message
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
@@ -484,8 +458,9 @@ class _GIStiffnerState extends State<GIStiffner> {
     );
   }
 
+// 4. REPLACE the _buildSubmittedDataList() method with this:
   Widget _buildSubmittedDataList() {
-    if (submittedData.isEmpty) {
+    if (responseProducts.isEmpty) {
       return Container(
         padding: EdgeInsets.symmetric(vertical: 40),
         alignment: Alignment.center,
@@ -503,7 +478,7 @@ class _GIStiffnerState extends State<GIStiffner> {
     }
 
     return Column(
-      children: submittedData.asMap().entries.map((entry) {
+      children: responseProducts.asMap().entries.map((entry) {
         int index = entry.key;
         Map<String, dynamic> data = entry.value;
 
@@ -521,20 +496,35 @@ class _GIStiffnerState extends State<GIStiffner> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  Padding(
-                    padding: const EdgeInsets.only(top: 15),
-                    child: SizedBox(
-                      // color: Colors.red,
-                      height: 40.h,
-                      width: 210.w,
-
-                      child: Text(
-                        "  ${index + 1}.  ${data["Product"]}" ?? "",
-                        overflow: TextOverflow.ellipsis,
-                        style: GoogleFonts.figtree(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.black87),
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.only(top: 15),
+                      child: SizedBox(
+                        height: 40.h,
+                        width: 210.w,
+                        child: Text(
+                          "  ${data["S.No"]}.  ${data["Products"]}" ?? "",
+                          overflow: TextOverflow.ellipsis,
+                          style: GoogleFonts.figtree(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.black87),
+                        ),
+                      ),
+                    ),
+                  ),
+                  Container(
+                    padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.blue[50],
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      "ID: ${data['id']}",
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.blue[700],
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
                   ),
@@ -566,7 +556,7 @@ class _GIStiffnerState extends State<GIStiffner> {
                                     ElevatedButton(
                                       onPressed: () {
                                         setState(() {
-                                          submittedData.removeAt(index);
+                                          responseProducts.removeAt(index);
                                         });
                                         Navigator.pop(context);
                                       },
@@ -588,22 +578,6 @@ class _GIStiffnerState extends State<GIStiffner> {
                 ],
               ),
               _buildProductDetailInRows(data),
-              // Row(
-              //   children: [
-              //     MyText(
-              //         text: "  UOM - ",
-              //         weight: FontWeight.w600,
-              //         color: Colors.grey.shade600),
-              //     MyText(
-              //         text: "Length - ",
-              //         weight: FontWeight.w600,
-              //         color: Colors.grey.shade600),
-              //     MyText(
-              //         text: "Nos  ",
-              //         weight: FontWeight.w600,
-              //         color: Colors.grey.shade600),
-              //   ],
-              // ),
               Padding(
                 padding: const EdgeInsets.only(top: 8.0, left: 8),
                 child: Container(
@@ -613,11 +587,9 @@ class _GIStiffnerState extends State<GIStiffner> {
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Row(
-// mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       Container(
-                        // color: Colors.red,
                         height: 40.h,
                         width: 280.w,
                         child: TextField(
@@ -716,7 +688,7 @@ class _GIStiffnerState extends State<GIStiffner> {
     );
   }
 
-// New method that organizes fields in rows, two fields per row
+// 5. REPLACE the _buildProductDetailInRows method with this:
   Widget _buildProductDetailInRows(Map<String, dynamic> data) {
     return Column(
       children: [
@@ -725,11 +697,10 @@ class _GIStiffnerState extends State<GIStiffner> {
           child: Row(
             children: [
               Expanded(
-                child: _buildDetailItem("UOM", _uomDropdown(data)),
+                child: _buildDetailItem(
+                    "Billing Option", _billingOptionDropdown(data)),
               ),
-              SizedBox(
-                width: 10,
-              ),
+              SizedBox(width: 10),
               Expanded(
                 child: _buildDetailItem(
                     "Length", _editableTextField(data, "Length")),
@@ -742,7 +713,6 @@ class _GIStiffnerState extends State<GIStiffner> {
           ),
         ),
         Gap(5),
-// Row 3: Basic Rate & SQ
         Padding(
           padding: const EdgeInsets.all(8.0),
           child: Row(
@@ -753,11 +723,9 @@ class _GIStiffnerState extends State<GIStiffner> {
               ),
               SizedBox(width: 10),
               Expanded(
-                child: _buildDetailItem("SQ", _editableTextField(data, "SQ")),
+                child: _buildDetailItem("Qty", _editableTextField(data, "Qty")),
               ),
-              SizedBox(
-                width: 10,
-              ),
+              SizedBox(width: 10),
               Expanded(
                 child: _buildDetailItem(
                     "Amount", _editableTextField(data, "Amount")),
@@ -767,6 +735,60 @@ class _GIStiffnerState extends State<GIStiffner> {
         ),
         Gap(5.h),
       ],
+    );
+  }
+
+// 6. ADD this new method for the billing option dropdown:
+  Widget _billingOptionDropdown(Map<String, dynamic> data) {
+    Map<String, String> billingOptions = {};
+    String? currentValue;
+
+    if (data["Billing Option"] is Map) {
+      Map billingData = data["Billing Option"];
+      currentValue = billingData["value"]?.toString();
+      if (billingData["options"] is Map) {
+        Map options = billingData["options"];
+        billingOptions = options
+            .map((key, value) => MapEntry(key.toString(), value.toString()));
+      }
+    }
+
+    return SizedBox(
+      height: 40.h,
+      child: DropdownButtonFormField<String>(
+        value: currentValue?.isEmpty == true ? null : currentValue,
+        items: billingOptions.entries
+            .map((entry) => DropdownMenuItem(
+                  value: entry.key,
+                  child: Text(entry.value),
+                ))
+            .toList(),
+        onChanged: (val) {
+          setState(() {
+            if (data["Billing Option"] is Map) {
+              data["Billing Option"]["value"] = val;
+            }
+          });
+        },
+        decoration: InputDecoration(
+          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 0),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(6),
+            borderSide: BorderSide(color: Colors.grey[300]!),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(6),
+            borderSide: BorderSide(color: Colors.grey[300]!),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(6),
+            borderSide:
+                BorderSide(color: Theme.of(context).primaryColor, width: 2),
+          ),
+          filled: true,
+          fillColor: Colors.grey[50],
+        ),
+      ),
     );
   }
 
@@ -796,42 +818,6 @@ class _GIStiffnerState extends State<GIStiffner> {
             fontWeight: FontWeight.w500, color: Colors.black, fontSize: 15.sp),
         controller: TextEditingController(text: data[key]),
         onChanged: (val) => data[key] = val,
-        decoration: InputDecoration(
-          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 0),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(6),
-            borderSide: BorderSide(color: Colors.grey[300]!),
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(6),
-            borderSide: BorderSide(color: Colors.grey[300]!),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(6),
-            borderSide:
-                BorderSide(color: Theme.of(context).primaryColor, width: 2),
-          ),
-          filled: true,
-          fillColor: Colors.grey[50],
-        ),
-      ),
-    );
-  }
-
-  Widget _uomDropdown(Map<String, dynamic> data) {
-    List<String> uomOptions = ["Feet", "mm", "cm"];
-    return SizedBox(
-      height: 40.h,
-      child: DropdownButtonFormField<String>(
-        value: data["UOM"],
-        items: uomOptions
-            .map((uom) => DropdownMenuItem(value: uom, child: Text(uom)))
-            .toList(),
-        onChanged: (val) {
-          setState(() {
-            data["UOM"] = val!;
-          });
-        },
         decoration: InputDecoration(
           contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 0),
           border: OutlineInputBorder(
@@ -1076,7 +1062,7 @@ class _GIStiffnerState extends State<GIStiffner> {
                   ),
                 ),
                 SizedBox(height: 24),
-                if (submittedData.isNotEmpty)
+                if (responseProducts.isNotEmpty)
                   Subhead(
                       text: "   Added Products",
                       weight: FontWeight.w600,

@@ -346,7 +346,12 @@ class _GIGlutterState extends State<GIGlutter> {
     }
   }
 
+// 1. ADD THESE NEW VARIABLES at the top of your _GIGlutterState class (around line 25)
+  Map<String, dynamic>? apiResponseData;
+  List<dynamic> responseProducts = [];
+
   ///post All Data
+// 2. MODIFY the postAllData() method - REPLACE the existing method with this:
   Future<void> postAllData() async {
     HttpClient client = HttpClient();
     client.badCertificateCallback =
@@ -354,25 +359,6 @@ class _GIGlutterState extends State<GIGlutter> {
     IOClient ioClient = IOClient(client);
     final headers = {"Content-Type": "application/json"};
     final data = {
-      // "product_filters": null,
-      // "product_label_filters": null,
-      // "product_category_id": null,
-      // "base_product_filters": [
-      //   "${selectedMeterial?.trim()}",
-      //   "${selectedThichness?.trim()}",
-      //   "${selsectedCoat?.trim()}",
-      //   "${selectedyie?.trim()}",
-      //   "${selectedBrand?.trim()}"
-      // ],
-      // "base_label_filters": [
-      //   "material_type",
-      //   "thickness",
-      //   "coating_mass",
-      //   "yield_strength",
-      //   "brand"
-      // ],
-      // "base_category_id": 34
-
       "customer_id": UserSession().userId,
       "product_id": 1070,
       "product_name": selectedProduct,
@@ -402,19 +388,22 @@ class _GIGlutterState extends State<GIGlutter> {
       }
 
       if (response.statusCode == 200) {
-// Get.snackbar(
-//   "Data Added",
-//   "Successfully",
-//   colorText: Colors.white,
-//   backgroundColor: Colors.green,
-//   snackPosition: SnackPosition.BOTTOM,
-// );
+        // PARSE THE API RESPONSE
+        final responseData = jsonDecode(response.body);
+        setState(() {
+          apiResponseData = responseData;
+          if (responseData['lebels'] != null &&
+              responseData['lebels'].isNotEmpty) {
+            responseProducts = responseData['lebels'][0]['data'] ?? [];
+          }
+        });
       }
     } catch (e) {
       throw Exception("Error posting data: $e");
     }
   }
 
+// 3. MODIFY the _submitData() method - REPLACE the existing method with this:
   void _submitData() {
     if (selectedMeterial == null ||
         selectedThichness == null ||
@@ -422,7 +411,6 @@ class _GIGlutterState extends State<GIGlutter> {
         selectedyie == null ||
         selectedBrand == null ||
         selectedProduct == null) {
-// Show elegant error message
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
@@ -438,18 +426,9 @@ class _GIGlutterState extends State<GIGlutter> {
       );
       return;
     }
+
+    // RESET FORM FIELDS
     setState(() {
-      submittedData.add({
-        "Product": "GI Glutter",
-        "UOM": "Feet",
-        "Length": "0",
-        "Nos": "1",
-        "Basic Rate": "0",
-        "SQ": "0",
-        "Amount": "0",
-        "Base Product":
-            "$selectedProduct, $selectedMeterial, $selectedThichness, $selsectedCoat, $selectedyie, $selectedBrand,",
-      });
       selectedMeterial = null;
       selectedThichness = null;
       selsectedCoat = null;
@@ -461,10 +440,11 @@ class _GIGlutterState extends State<GIGlutter> {
       coatMassList = [];
       yieldsListt = [];
       brandList = [];
-      _fetchMeterialType();
     });
 
-// Show success message with a more elegant snackBar
+    _fetchMeterialType();
+
+    // Show success message
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
@@ -485,8 +465,9 @@ class _GIGlutterState extends State<GIGlutter> {
     );
   }
 
+// 4. REPLACE the entire _buildSubmittedDataList() method with this:
   Widget _buildSubmittedDataList() {
-    if (submittedData.isEmpty) {
+    if (responseProducts.isEmpty) {
       return Container(
         padding: EdgeInsets.symmetric(vertical: 40),
         alignment: Alignment.center,
@@ -504,7 +485,7 @@ class _GIGlutterState extends State<GIGlutter> {
     }
 
     return Column(
-      children: submittedData.asMap().entries.map((entry) {
+      children: responseProducts.asMap().entries.map((entry) {
         int index = entry.key;
         Map<String, dynamic> data = entry.value;
 
@@ -522,20 +503,35 @@ class _GIGlutterState extends State<GIGlutter> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  Padding(
-                    padding: const EdgeInsets.only(top: 15),
-                    child: SizedBox(
-                      // color: Colors.red,
-                      height: 40.h,
-                      width: 210.w,
-
-                      child: Text(
-                        "  ${index + 1}.  ${data["Product"]}" ?? "",
-                        overflow: TextOverflow.ellipsis,
-                        style: GoogleFonts.figtree(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.black87),
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.only(top: 15),
+                      child: SizedBox(
+                        height: 40.h,
+                        width: 210.w,
+                        child: Text(
+                          "  ${data["S.No"]}.  ${data["Products"]}" ?? "",
+                          overflow: TextOverflow.ellipsis,
+                          style: GoogleFonts.figtree(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.black87),
+                        ),
+                      ),
+                    ),
+                  ),
+                  Container(
+                    padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.blue[50],
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      "ID: ${data['id']}",
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.blue[700],
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
                   ),
@@ -567,7 +563,7 @@ class _GIGlutterState extends State<GIGlutter> {
                                     ElevatedButton(
                                       onPressed: () {
                                         setState(() {
-                                          submittedData.removeAt(index);
+                                          responseProducts.removeAt(index);
                                         });
                                         Navigator.pop(context);
                                       },
@@ -589,22 +585,6 @@ class _GIGlutterState extends State<GIGlutter> {
                 ],
               ),
               _buildProductDetailInRows(data),
-              // Row(
-              //   children: [
-              //     MyText(
-              //         text: "  UOM - ",
-              //         weight: FontWeight.w600,
-              //         color: Colors.grey.shade600),
-              //     MyText(
-              //         text: "Length - ",
-              //         weight: FontWeight.w600,
-              //         color: Colors.grey.shade600),
-              //     MyText(
-              //         text: "Nos  ",
-              //         weight: FontWeight.w600,
-              //         color: Colors.grey.shade600),
-              //   ],
-              // ),
               Padding(
                 padding: const EdgeInsets.only(top: 8.0, left: 8),
                 child: Container(
@@ -614,11 +594,9 @@ class _GIGlutterState extends State<GIGlutter> {
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Row(
-// mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       Container(
-                        // color: Colors.red,
                         height: 40.h,
                         width: 280.w,
                         child: TextField(
@@ -719,7 +697,7 @@ class _GIGlutterState extends State<GIGlutter> {
     );
   }
 
-// New method that organizes fields in rows, two fields per row
+// 5. REPLACE the _buildProductDetailInRows method with this:
   Widget _buildProductDetailInRows(Map<String, dynamic> data) {
     return Column(
       children: [
@@ -728,48 +706,146 @@ class _GIGlutterState extends State<GIGlutter> {
           child: Row(
             children: [
               Expanded(
-                child: _buildDetailItem("UOM", _uomDropdown(data)),
-              ),
-              SizedBox(
-                width: 10,
-              ),
-              Expanded(
-                child: _buildDetailItem(
-                    "Length", _editableTextField(data, "Length")),
+                child: _buildDetailItem("UOM", _uomDropdownFromAPI(data)),
               ),
               SizedBox(width: 10),
               Expanded(
-                child: _buildDetailItem("Nos", _editableTextField(data, "Nos")),
+                child: _buildDetailItem(
+                    "Billing Option", _billingOptionDropdown(data)),
+              ),
+              SizedBox(width: 10),
+              Expanded(
+                child: _buildDetailItem(
+                    "Length", _editableTextField(data, "Length")),
               ),
             ],
           ),
         ),
         Gap(5),
-// Row 3: Basic Rate & SQ
         Padding(
           padding: const EdgeInsets.all(8.0),
           child: Row(
             children: [
+              Expanded(
+                child: _buildDetailItem("Nos", _editableTextField(data, "Nos")),
+              ),
+              SizedBox(width: 10),
               Expanded(
                 child: _buildDetailItem(
                     "Basic Rate", _editableTextField(data, "Basic Rate")),
               ),
               SizedBox(width: 10),
               Expanded(
-                child: _buildDetailItem("SQ", _editableTextField(data, "SQ")),
+                child: _buildDetailItem("Qty", _editableTextField(data, "Qty")),
               ),
-              SizedBox(
-                width: 10,
-              ),
+            ],
+          ),
+        ),
+        Gap(5),
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Row(
+            children: [
               Expanded(
                 child: _buildDetailItem(
                     "Amount", _editableTextField(data, "Amount")),
               ),
+              SizedBox(width: 20),
+              SizedBox(width: 20),
             ],
           ),
         ),
         Gap(5.h),
       ],
+    );
+  }
+
+// 6. ADD THESE NEW METHODS after the existing _uomDropdown method:
+  Widget _uomDropdownFromAPI(Map<String, dynamic> data) {
+    Map<String, dynamic> uomData = data["UOM"] ?? {};
+    String currentValue = uomData["value"]?.toString() ?? "";
+    Map<String, dynamic> options = uomData["options"] ?? {};
+
+    List<DropdownMenuItem<String>> items = options.entries
+        .map((entry) => DropdownMenuItem<String>(
+              value: entry.key,
+              child: Text(entry.value.toString()),
+            ))
+        .toList();
+
+    return SizedBox(
+      height: 40.h,
+      child: DropdownButtonFormField<String>(
+        value: currentValue.isEmpty ? null : currentValue,
+        items: items,
+        onChanged: (val) {
+          setState(() {
+            data["UOM"]["value"] = val!;
+          });
+        },
+        decoration: InputDecoration(
+          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 0),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(6),
+            borderSide: BorderSide(color: Colors.grey[300]!),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(6),
+            borderSide: BorderSide(color: Colors.grey[300]!),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(6),
+            borderSide:
+                BorderSide(color: Theme.of(context).primaryColor, width: 2),
+          ),
+          filled: true,
+          fillColor: Colors.grey[50],
+        ),
+      ),
+    );
+  }
+
+  Widget _billingOptionDropdown(Map<String, dynamic> data) {
+    Map<String, dynamic> billingData = data["Billing Option"] ?? {};
+    String currentValue = billingData["value"]?.toString() ?? "";
+    Map<String, dynamic> options = billingData["options"] ?? {};
+
+    List<DropdownMenuItem<String>> items = options.entries
+        .map((entry) => DropdownMenuItem<String>(
+              value: entry.key,
+              child: Text(entry.value.toString()),
+            ))
+        .toList();
+
+    return SizedBox(
+      height: 40.h,
+      child: DropdownButtonFormField<String>(
+        value: currentValue.isEmpty ? null : currentValue,
+        items: items,
+        onChanged: (val) {
+          setState(() {
+            data["Billing Option"]["value"] = val!;
+          });
+        },
+        decoration: InputDecoration(
+          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 0),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(6),
+            borderSide: BorderSide(color: Colors.grey[300]!),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(6),
+            borderSide: BorderSide(color: Colors.grey[300]!),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(6),
+            borderSide:
+                BorderSide(color: Theme.of(context).primaryColor, width: 2),
+          ),
+          filled: true,
+          fillColor: Colors.grey[50],
+        ),
+      ),
     );
   }
 
@@ -799,42 +875,6 @@ class _GIGlutterState extends State<GIGlutter> {
             fontWeight: FontWeight.w500, color: Colors.black, fontSize: 15.sp),
         controller: TextEditingController(text: data[key]),
         onChanged: (val) => data[key] = val,
-        decoration: InputDecoration(
-          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 0),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(6),
-            borderSide: BorderSide(color: Colors.grey[300]!),
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(6),
-            borderSide: BorderSide(color: Colors.grey[300]!),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(6),
-            borderSide:
-                BorderSide(color: Theme.of(context).primaryColor, width: 2),
-          ),
-          filled: true,
-          fillColor: Colors.grey[50],
-        ),
-      ),
-    );
-  }
-
-  Widget _uomDropdown(Map<String, dynamic> data) {
-    List<String> uomOptions = ["Feet", "mm", "cm"];
-    return SizedBox(
-      height: 40.h,
-      child: DropdownButtonFormField<String>(
-        value: data["UOM"],
-        items: uomOptions
-            .map((uom) => DropdownMenuItem(value: uom, child: Text(uom)))
-            .toList(),
-        onChanged: (val) {
-          setState(() {
-            data["UOM"] = val!;
-          });
-        },
         decoration: InputDecoration(
           contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 0),
           border: OutlineInputBorder(
@@ -1079,7 +1119,7 @@ class _GIGlutterState extends State<GIGlutter> {
                   ),
                 ),
                 SizedBox(height: 24),
-                if (submittedData.isNotEmpty)
+                if (responseProducts.isNotEmpty)
                   Subhead(
                       text: "   Added Products",
                       weight: FontWeight.w600,
