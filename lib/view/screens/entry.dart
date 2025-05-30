@@ -56,7 +56,7 @@ class _EntryState extends State<Entry> {
           ),
           Positioned(
             bottom: 250,
-            right: 125,
+            right: 108,
             child: Container(
               height: height / 4.h,
               width: width / 2.w,

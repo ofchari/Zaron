@@ -124,70 +124,68 @@ class _TotalQuoationViewState extends State<TotalQuoationView> {
                       text: "Additional Information",
                       weight: FontWeight.w500,
                       color: Colors.black),
-                  const SizedBox(height: 16),
-                  Expanded(
-                    child: ListView.builder(
-                      controller: scrollController,
-                      itemCount: additionalInfo.length,
-                      itemBuilder: (context, index) {
-                        final entry = additionalInfo.entries.elementAt(index);
-                        final key = entry.key;
-                        final options =
-                            Map<String, String>.from(entry.value['options']);
-                        final selectedValue = additionalValues[key] ?? '';
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 16.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              MyText(
-                                  text: key,
-                                  weight: FontWeight.w400,
-                                  color: Colors.black),
-                              const SizedBox(height: 6),
-                              DropdownButtonFormField<String>(
-                                isExpanded: true,
-                                value: options.containsKey(selectedValue)
-                                    ? selectedValue
-                                    : null,
-                                decoration: InputDecoration(
-                                  filled: true,
-                                  fillColor: Colors.grey[100],
-                                  contentPadding: const EdgeInsets.symmetric(
-                                      horizontal: 12, vertical: 12),
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(10),
-                                    borderSide: BorderSide.none,
-                                  ),
+                  const SizedBox(height: 10),
+                  ListView.builder(
+                    controller: scrollController,
+                    itemCount: additionalInfo.length,
+                    itemBuilder: (context, index) {
+                      final entry = additionalInfo.entries.elementAt(index);
+                      final key = entry.key;
+                      final options =
+                          Map<String, String>.from(entry.value['options']);
+                      final selectedValue = additionalValues[key] ?? '';
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 16.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            MyText(
+                                text: key,
+                                weight: FontWeight.w400,
+                                color: Colors.black),
+                            const SizedBox(height: 6),
+                            DropdownButtonFormField<String>(
+                              isExpanded: true,
+                              value: options.containsKey(selectedValue)
+                                  ? selectedValue
+                                  : null,
+                              decoration: InputDecoration(
+                                filled: true,
+                                fillColor: Colors.grey[100],
+                                contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 12, vertical: 12),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                  borderSide: BorderSide.none,
                                 ),
-                                hint: Text(
-                                  "Select option",
-                                  style: GoogleFonts.outfit(
-                                      textStyle: TextStyle(
-                                          fontSize: 14.5,
-                                          fontWeight: FontWeight.w400,
-                                          color: Colors.black)),
-                                ),
-                                onChanged: (newValue) {
-                                  setState(() {
-                                    additionalValues[key] = newValue!;
-                                  });
-                                },
-                                items: options.entries.map((entry) {
-                                  return DropdownMenuItem<String>(
-                                    value: entry.key,
-                                    child: MyText(
-                                        text: entry.value,
-                                        weight: FontWeight.w500,
-                                        color: Colors.black),
-                                  );
-                                }).toList(),
                               ),
-                            ],
-                          ),
-                        );
-                      },
-                    ),
+                              hint: Text(
+                                "Select option",
+                                style: GoogleFonts.outfit(
+                                    textStyle: TextStyle(
+                                        fontSize: 14.5,
+                                        fontWeight: FontWeight.w400,
+                                        color: Colors.black)),
+                              ),
+                              onChanged: (newValue) {
+                                setState(() {
+                                  additionalValues[key] = newValue!;
+                                });
+                              },
+                              items: options.entries.map((entry) {
+                                return DropdownMenuItem<String>(
+                                  value: entry.key,
+                                  child: MyText(
+                                      text: entry.value,
+                                      weight: FontWeight.w500,
+                                      color: Colors.black),
+                                );
+                              }).toList(),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
                   ),
                   Gap(7),
                   Center(

@@ -7,7 +7,6 @@ import 'package:zaron/view/screens/new_enquirys/new_enquiry.dart';
 import 'package:zaron/view/screens/quotation.dart';
 import 'package:zaron/view/screens/total_enquiry.dart';
 import 'package:zaron/view/widgets/text.dart';
-
 import '../widgets/subhead.dart';
 import 'cancel_enquiry.dart';
 
