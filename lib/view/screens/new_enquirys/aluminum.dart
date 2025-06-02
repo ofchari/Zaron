@@ -574,6 +574,7 @@ class _AluminumState extends State<Aluminum> {
     return SizedBox(
       height: 40,
       child: DropdownButtonFormField<String>(
+        isExpanded: true,
         value: currentValue.isNotEmpty ? currentValue : null,
         items: options.entries.map((entry) {
           return DropdownMenuItem<String>(
@@ -1097,13 +1098,13 @@ class _AluminumState extends State<Aluminum> {
                   ),
                 ),
                 SizedBox(height: 24),
-                if (submittedData.isNotEmpty)
-                  Subhead(
-                      text: "   Added Products",
-                      weight: FontWeight.w600,
-                      color: Colors.black),
-                SizedBox(height: 8),
-                _buildSubmittedDataList(),
+                // if (submittedData.isNotEmpty)
+                //   Subhead(
+                //       text: "   Added Products",
+                //       weight: FontWeight.w600,
+                //       color: Colors.black),
+                // SizedBox(height: 8),
+                // _buildSubmittedDataList(),
                 SizedBox(height: 10),
                 if (apiProductsList.isNotEmpty)
                   Subhead(
