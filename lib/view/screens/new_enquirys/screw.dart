@@ -452,7 +452,7 @@ class _ScrewState extends State<Screw> {
     );
   }
 
-// 5. ADD NEW METHOD for API response data rows:
+  /// 5. ADD NEW METHOD for API response data rows:
   Widget _buildApiResponseRows(Map<String, dynamic> data) {
     return Column(
       children: [
@@ -502,7 +502,7 @@ class _ScrewState extends State<Screw> {
     );
   }
 
-// 6. ADD NEW HELPER METHODS:
+  /// 6. ADD NEW HELPER METHODS:
   Widget _editableTextFieldForApi(Map<String, dynamic> data, String key) {
     return SizedBox(
       height: 38.h,

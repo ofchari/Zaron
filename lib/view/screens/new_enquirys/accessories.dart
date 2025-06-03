@@ -311,7 +311,7 @@ class _AccessoriesState extends State<Accessories> {
   Map<String, Map<String, String>> uomOptions = {};
 
   ///post All Data
-// Replace the existing postAllData() method with this updated version:
+  // Replace the existing postAllData() method with this updated version:
   Future<void> postAllData() async {
     HttpClient client = HttpClient();
     client.badCertificateCallback =
@@ -959,7 +959,7 @@ class _AccessoriesState extends State<Accessories> {
     });
   }
 
-// Calculation API method - FIXED VERSION
+// Calculation API method - FIXED VERSION with UI Updates
   Future<void> _performCalculation(Map<String, dynamic> data) async {
     print("=== STARTING CALCULATION API ===");
     print("Data received: $data");
@@ -1062,15 +1062,39 @@ class _AccessoriesState extends State<Accessories> {
             // Update the data with calculated values
             if (responseData["Length"] != null) {
               data["Profile"] = responseData["Length"].toString();
+              // Update controller for Profile/Length field
+              if (fieldControllers.containsKey(productId) &&
+                  fieldControllers[productId]!.containsKey("Profile")) {
+                fieldControllers[productId]!["Profile"]!.text =
+                    responseData["Length"].toString();
+              }
             }
             if (responseData["Nos"] != null) {
               data["Nos"] = responseData["Nos"].toString();
+              // Update controller for Nos field
+              if (fieldControllers.containsKey(productId) &&
+                  fieldControllers[productId]!.containsKey("Nos")) {
+                fieldControllers[productId]!["Nos"]!.text =
+                    responseData["Nos"].toString();
+              }
             }
             if (responseData["R.Ft"] != null) {
               data["R.Ft"] = responseData["R.Ft"].toString();
+              // Update controller for R.Ft field
+              if (fieldControllers.containsKey(productId) &&
+                  fieldControllers[productId]!.containsKey("R.Ft")) {
+                fieldControllers[productId]!["R.Ft"]!.text =
+                    responseData["R.Ft"].toString();
+              }
             }
             if (responseData["Amount"] != null) {
               data["Amount"] = responseData["Amount"].toString();
+              // Update controller for Amount field
+              if (fieldControllers.containsKey(productId) &&
+                  fieldControllers[productId]!.containsKey("Amount")) {
+                fieldControllers[productId]!["Amount"]!.text =
+                    responseData["Amount"].toString();
+              }
             }
 
             // Update previous UOM for next calculation
