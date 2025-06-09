@@ -24,6 +24,8 @@ class TotalEnquiryView extends StatefulWidget {
 }
 
 class _TotalEnquiryViewState extends State<TotalEnquiryView> {
+  int? selectedRowIndex;
+
   String categoryName = '';
   final remarkController = TextEditingController();
   List<Map<String, dynamic>> allDataTables = [];
@@ -592,6 +594,7 @@ class _TotalEnquiryViewState extends State<TotalEnquiryView> {
                                       ),
                                       Gap(10),
                                       DataTable(
+                                        showCheckboxColumn: false,
                                         border: TableBorder.all(
                                             color: Colors.purple, width: 0.5),
                                         dataRowHeight: 60,
@@ -606,8 +609,25 @@ class _TotalEnquiryViewState extends State<TotalEnquiryView> {
                                                   ),
                                                 ))
                                             .toList(),
-                                        rows: data.map((row) {
+                                        rows: data.asMap().entries.map((entry) {
+                                          int rowIndex = entry.key;
+                                          Map<String, dynamic> row =
+                                              entry.value;
                                           return DataRow(
+                                            onSelectChanged: (selected) {
+                                              setState(() {
+                                                selectedRowIndex = rowIndex;
+                                              });
+                                            },
+                                            color: MaterialStateProperty
+                                                .resolveWith<Color?>(
+                                                    (Set<MaterialState> state) {
+                                              if (selectedRowIndex ==
+                                                  rowIndex) {
+                                                return Colors.grey.shade200;
+                                              }
+                                              return null;
+                                            }),
                                             cells: labels.map((label) {
                                               var value = row[label];
 

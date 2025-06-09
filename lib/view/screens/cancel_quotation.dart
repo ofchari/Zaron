@@ -7,6 +7,8 @@ import 'package:http/http.dart' as http;
 import 'package:zaron/view/screens/global_user/global_user.dart';
 import 'package:zaron/view/widgets/subhead.dart';
 
+import '../universal_api/api&key.dart';
+
 class CancelQuotation extends StatefulWidget {
   const CancelQuotation({super.key});
 
@@ -43,11 +45,10 @@ class _CancelQuotationPageState extends State<CancelQuotation> {
   Future<void> fetchEnquiryData() async {
     setState(() => isLoading = true);
 
-    final String apiUrl =
-        'https://demo.zaron.in:8181/ci4/api/cancelledquotation/${UserSession().userId}';
+    final String url = '$apiUrl/cancelledquotation/${UserSession().userId}';
 
     try {
-      final response = await http.get(Uri.parse(apiUrl));
+      final response = await http.get(Uri.parse(url));
 
       if (response.statusCode == 200) {
         final jsonData = jsonDecode(response.body);

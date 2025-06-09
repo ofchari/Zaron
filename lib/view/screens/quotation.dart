@@ -18,6 +18,7 @@ class QuotationPage extends StatefulWidget {
 }
 
 class _QuotationPageState extends State<QuotationPage> {
+  int? selectedRowIndex;
   List<Map<String, dynamic>> tableData = [];
   List<Map<String, dynamic>> filteredData = [];
   bool isLoading = true;
@@ -247,6 +248,7 @@ class _QuotationPageState extends State<QuotationPage> {
                         child: Padding(
                           padding: const EdgeInsets.all(8.0),
                           child: DataTable(
+                            showCheckboxColumn: false,
                             border: TableBorder.all(
                                 color: Colors.purple, width: 0.5),
                             dataRowHeight: 60,
@@ -339,12 +341,26 @@ class _QuotationPageState extends State<QuotationPage> {
                               ),
                             ],
                             rows: filteredData.asMap().entries.map((entry) {
+                              int rowIndex = entry.key;
+                              Map<String, dynamic> row = entry.value;
                               return DataRow(
-                                color: WidgetStateProperty.resolveWith<Color?>(
-                                  (Set<WidgetState> states) {
-                                    return entry.key % 2 == 0
-                                        ? Colors.white
-                                        : Colors.grey.shade200;
+                                onSelectChanged: (selected) {
+                                  setState(() {
+                                    selectedRowIndex = rowIndex;
+                                  });
+                                },
+                                color:
+                                    MaterialStateProperty.resolveWith<Color?>(
+                                  (Set<MaterialState> states) {
+                                    if (selectedRowIndex == rowIndex) {
+                                      return Colors.grey.shade200;
+                                    }
+
+                                    return null;
+
+                                    // entry.key % 2 == 0
+                                    //   ? Colors.white
+                                    //   : Colors.grey.shade200;
                                   },
                                 ),
                                 cells: [
@@ -362,7 +378,7 @@ class _QuotationPageState extends State<QuotationPage> {
                                   ),
                                   DataCell(
                                     Text(
-                                      entry.value['id'] ?? '',
+                                      row['id'] ?? '',
                                       style: GoogleFonts.dmSans(
                                         textStyle: TextStyle(
                                           fontSize: 14.sp,
@@ -374,7 +390,7 @@ class _QuotationPageState extends State<QuotationPage> {
                                   ),
                                   DataCell(
                                     Text(
-                                      entry.value['order_no'] ?? '',
+                                      row['order_no'] ?? '',
                                       style: GoogleFonts.dmSans(
                                         textStyle: TextStyle(
                                           fontSize: 14.sp,
@@ -386,7 +402,7 @@ class _QuotationPageState extends State<QuotationPage> {
                                   ),
                                   DataCell(
                                     Text(
-                                      entry.value['bill_total'] ?? '0',
+                                      row['bill_total'] ?? '0',
                                       style: GoogleFonts.dmSans(
                                         textStyle: TextStyle(
                                           fontSize: 14.sp,
@@ -398,7 +414,7 @@ class _QuotationPageState extends State<QuotationPage> {
                                   ),
                                   DataCell(
                                     Text(
-                                      entry.value['create_date'] ?? '',
+                                      row['create_date'] ?? '',
                                       style: GoogleFonts.dmSans(
                                         textStyle: TextStyle(
                                           fontSize: 14.2.sp,
@@ -410,7 +426,7 @@ class _QuotationPageState extends State<QuotationPage> {
                                   ),
                                   DataCell(
                                     Text(
-                                      entry.value['create_time'] ?? '',
+                                      row['create_time'] ?? '',
                                       style: GoogleFonts.dmSans(
                                         textStyle: TextStyle(
                                           fontSize: 14.2.sp,
@@ -428,7 +444,7 @@ class _QuotationPageState extends State<QuotationPage> {
                                               color: Colors.blue),
                                           onPressed: () {
                                             Get.to(() => TotalQuoationView(
-                                                  id: entry.value['id'] ?? '',
+                                                  id: row['id'] ?? '',
                                                 ));
                                           },
                                         ),
@@ -441,7 +457,7 @@ class _QuotationPageState extends State<QuotationPage> {
                                         //         .showSnackBar(
                                         //       SnackBar(
                                         //           content: Text(
-                                        //               "Edit ${entry.value['order_no']}")),
+                                        //               "Edit ${row['order_no']}")),
                                         //     );
                                         //   },
                                         // ),

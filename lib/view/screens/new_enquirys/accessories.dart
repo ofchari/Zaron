@@ -47,7 +47,9 @@ class _AccessoriesState extends State<Accessories> {
   @override
   void initState() {
     super.initState();
-    editController = TextEditingController(text: widget.data["Base Product"]);
+
+    ///inside the textcontroller - text: widget.data["Base Product"]
+    editController = TextEditingController();
     _fetchAccessories();
     _fetchBrandData();
   }
@@ -353,7 +355,7 @@ class _AccessoriesState extends State<Accessories> {
           apiResponseData = responseData;
           if (responseData["lebels"] != null &&
               responseData["lebels"].isNotEmpty) {
-            responseProducts = responseData["lebels"][0]["data"] ?? [];
+            responseProducts.addAll(responseData["lebels"][0]["data"] ?? []);
 
             // Store UOM options for each product
             for (var product in responseProducts) {
@@ -435,7 +437,7 @@ class _AccessoriesState extends State<Accessories> {
           borderRadius: BorderRadius.circular(8),
         ),
         margin: EdgeInsets.all(16),
-        duration: Duration(seconds: 2),
+        duration: Duration(seconds: 3),
       ),
     );
   }
@@ -484,7 +486,7 @@ class _AccessoriesState extends State<Accessories> {
                         height: 40.h,
                         width: 210.w,
                         child: Text(
-                          "  ${data["S.No"]}.  ${data["Products"]}" ?? "",
+                          "  ${index + 1}.  ${data["Products"]}" ?? "",
                           overflow: TextOverflow.ellipsis,
                           style: GoogleFonts.figtree(
                               fontSize: 18,
@@ -559,109 +561,6 @@ class _AccessoriesState extends State<Accessories> {
                 ],
               ),
               _buildProductDetailInRows(data),
-              Padding(
-                padding: const EdgeInsets.only(top: 8.0, left: 8),
-                child: Container(
-                  height: 40.h,
-                  width: double.infinity.w,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Container(
-                        height: 40.h,
-                        width: 280.w,
-                        child: TextField(
-                          style: TextStyle(
-                              fontSize: 13.sp,
-                              color: Colors.black87,
-                              fontWeight: FontWeight.w500),
-                          decoration: InputDecoration(
-                            enabledBorder: InputBorder.none,
-                            focusedBorder: InputBorder.none,
-                          ),
-                          controller: TextEditingController(
-                              text: " ${data["Material Specification"]}"),
-                          readOnly: true,
-                        ),
-                      ),
-                      Gap(5),
-                      Container(
-                          height: 30.h,
-                          width: 30.w,
-                          decoration: BoxDecoration(
-                              color: Colors.grey[200],
-                              borderRadius: BorderRadius.circular(10)),
-                          child: IconButton(
-                              onPressed: () {
-                                editController.text =
-                                    data["Material Specification"].toString();
-                                showDialog(
-                                    context: context,
-                                    builder: (context) {
-                                      return AlertDialog(
-                                        title: Text("Edit Your Liner Sheet"),
-                                        content: Column(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            Container(
-                                              height: 40.h,
-                                              width: double.infinity.w,
-                                              decoration: BoxDecoration(
-                                                borderRadius:
-                                                    BorderRadius.circular(10),
-                                                color: Colors.white,
-                                              ),
-                                              child: Padding(
-                                                padding: const EdgeInsets.only(
-                                                    left: 7.0),
-                                                child: TextField(
-                                                  decoration: InputDecoration(
-                                                    enabledBorder:
-                                                        InputBorder.none,
-                                                    focusedBorder:
-                                                        InputBorder.none,
-                                                  ),
-                                                  controller: editController,
-                                                  onSubmitted: (value) {
-                                                    setState(() {
-                                                      data["Material Specification"] =
-                                                          value;
-                                                    });
-                                                    Navigator.pop(context);
-                                                  },
-                                                ),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                        actions: [
-                                          ElevatedButton(
-                                              onPressed: () {
-                                                setState(() {
-                                                  data["Material Specification"] =
-                                                      editController.text;
-                                                });
-                                                Navigator.pop(context);
-                                              },
-                                              child: MyText(
-                                                  text: "Save",
-                                                  weight: FontWeight.w500,
-                                                  color: Colors.black))
-                                        ],
-                                      );
-                                    });
-                              },
-                              icon: Icon(
-                                Icons.edit,
-                                size: 15,
-                              )))
-                    ],
-                  ),
-                ),
-              ),
               Gap(5),
             ],
           ),
@@ -756,7 +655,10 @@ class _AccessoriesState extends State<Accessories> {
       height: 38.h,
       child: TextField(
         style: GoogleFonts.figtree(
-            fontWeight: FontWeight.w500, color: Colors.black, fontSize: 15.sp),
+          fontWeight: FontWeight.w500,
+          color: Colors.black,
+          fontSize: 15.sp,
+        ),
         controller: controller,
         keyboardType: (key == "Length" ||
                 key == "Nos" ||
@@ -769,24 +671,24 @@ class _AccessoriesState extends State<Accessories> {
           setState(() {
             data[key] = val;
           });
-          print("Field $key changed to: $val"); // Debug print
-          print("Controller text: ${controller.text}"); // Check controller text
-          print("Data after change: ${data[key]}"); // Additional debug print
 
-          // Force sync the controller and data
-          if (controller.text != val) {
-            controller.text = val;
-          }
+          print("Field $key changed to: $val");
+          print("Controller text: ${controller.text}");
+          print("Data after change: ${data[key]}");
 
-          // Trigger calculation for specific fields
+          // 🚫 DO NOT forcefully reset controller.text here!
+          // if (controller.text != val) {
+          //   controller.text = val;
+          // }
+
           if (key == "Length" || key == "Nos" || key == "Basic Rate") {
-            print(
-                "Triggering calculation for $key with value: $val"); // Debug print
+            print("Triggering calculation for $key with value: $val");
             _debounceCalculation(data);
           }
         },
         decoration: InputDecoration(
-          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 0),
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(6),
             borderSide: BorderSide(color: Colors.grey[300]!),
@@ -926,35 +828,39 @@ class _AccessoriesState extends State<Accessories> {
   TextEditingController _getController(Map<String, dynamic> data, String key) {
     String productId = data["id"].toString();
 
-    // Initialize product controllers if not exists
-    if (!fieldControllers.containsKey(productId)) {
-      fieldControllers[productId] = {};
-    }
+    // Initialize controllers map for this product ID
+    fieldControllers.putIfAbsent(productId, () => {});
 
-    // Initialize field controller if not exists
+    // If controller for this key doesn't exist, create it
     if (!fieldControllers[productId]!.containsKey(key)) {
+      String initialValue = (data[key] != null && data[key].toString() != "0")
+          ? data[key].toString()
+          : ""; // Avoid initializing with "0"
+
       fieldControllers[productId]![key] =
-          TextEditingController(text: data[key]?.toString() ?? "");
+          TextEditingController(text: initialValue);
+
+      print("Created controller for [$key] with value: '$initialValue'");
+    } else {
+      // Existing controller: check if it needs sync from data
+      final controller = fieldControllers[productId]![key]!;
+
+      final dataValue = data[key]?.toString() ?? "";
+
+      // If the controller is empty but data has a value, sync it
+      if (controller.text.isEmpty && dataValue.isNotEmpty && dataValue != "0") {
+        controller.text = dataValue;
+        print("Synced controller for [$key] to: '$dataValue'");
+      }
     }
 
-    // FIXED: Only update controller text if it's empty or if it's different from current data
-    // and user is not currently typing (to avoid overwriting user input)
-    String currentValue = data[key]?.toString() ?? "";
-    TextEditingController controller = fieldControllers[productId]![key]!;
-
-    // Only sync if controller is empty or if the data was updated programmatically
-    if (controller.text.isEmpty && currentValue.isNotEmpty) {
-      controller.text = currentValue;
-      print("Synced controller for $key: ${controller.text}");
-    }
-
-    return controller;
+    return fieldControllers[productId]![key]!;
   }
 
 // Add this method for debounced calculation
   void _debounceCalculation(Map<String, dynamic> data) {
     _debounceTimer?.cancel();
-    _debounceTimer = Timer(Duration(seconds: 10), () {
+    _debounceTimer = Timer(Duration(seconds: 1), () {
       _performCalculation(data);
     });
   }
@@ -966,7 +872,7 @@ class _AccessoriesState extends State<Accessories> {
 
     final client =
         IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
-    final url = Uri.parse('https://demo.zaron.in:8181/ci4/api/calculation');
+    final url = Uri.parse('$apiUrl/calculation');
 
     String productId = data["id"].toString();
 
@@ -981,18 +887,16 @@ class _AccessoriesState extends State<Accessories> {
     print("Current UOM: $currentUom");
     print("Previous UOM: ${previousUomValues[productId]}");
 
-    // FIXED: Get Profile/Length value from controller text instead of data map
+    // Get Profile value from controller
     double? profileValue;
     String? profileText;
 
-    // Try to get value from controller first
     if (fieldControllers.containsKey(productId) &&
         fieldControllers[productId]!.containsKey("Profile")) {
       profileText = fieldControllers[productId]!["Profile"]!.text;
       print("Profile from controller: $profileText");
     }
 
-    // Fallback to data map
     if (profileText == null || profileText.isEmpty) {
       profileText = data["Profile"]?.toString();
       print("Profile from data: $profileText");
@@ -1002,18 +906,16 @@ class _AccessoriesState extends State<Accessories> {
       profileValue = double.tryParse(profileText);
     }
 
-    // FIXED: Get Nos value from controller first
-    int nosValue = 1; // default value
+    // Get Nos value from controller
+    int nosValue = 0;
     String? nosText;
 
-    // Try to get value from controller first
     if (fieldControllers.containsKey(productId) &&
         fieldControllers[productId]!.containsKey("Nos")) {
       nosText = fieldControllers[productId]!["Nos"]!.text;
       print("Nos from controller: $nosText");
     }
 
-    // Fallback to data map
     if (nosText == null || nosText.isEmpty) {
       nosText = data["Nos"]?.toString();
       print("Nos from data: $nosText");
@@ -1026,18 +928,17 @@ class _AccessoriesState extends State<Accessories> {
     print("Final Profile Value: $profileValue");
     print("Final Nos Value: $nosValue");
 
-    // Prepare request body - FIXED
     final requestBody = {
       "id": int.tryParse(data["id"].toString()) ?? 0,
       "category_id": 1,
       "product": data["Products"]?.toString() ?? "",
-      "height": null, // Use profileValue instead of null check
+      "height": null,
       "previous_uom": previousUomValues[productId] != null
           ? int.tryParse(previousUomValues[productId]!)
           : null,
       "current_uom": currentUom != null ? int.tryParse(currentUom) : null,
-      "length": profileValue ?? 0, // Use profileValue, default to 0 if null
-      "nos": nosValue, // Use the properly parsed nosValue
+      "length": profileValue ?? 0,
+      "nos": nosValue,
       "basic_rate": double.tryParse(data["Basic Rate"]?.toString() ?? "0") ?? 0,
     };
 
@@ -1055,49 +956,51 @@ class _AccessoriesState extends State<Accessories> {
 
       if (response.statusCode == 200) {
         final responseData = jsonDecode(response.body);
+
         if (responseData["status"] == "success") {
           setState(() {
             calculationResults[productId] = responseData;
 
-            // Update the data with calculated values
             if (responseData["Length"] != null) {
               data["Profile"] = responseData["Length"].toString();
-              // Update controller for Profile/Length field
-              if (fieldControllers.containsKey(productId) &&
-                  fieldControllers[productId]!.containsKey("Profile")) {
+              if (fieldControllers[productId]?["Profile"] != null) {
                 fieldControllers[productId]!["Profile"]!.text =
                     responseData["Length"].toString();
               }
             }
+
             if (responseData["Nos"] != null) {
-              data["Nos"] = responseData["Nos"].toString();
-              // Update controller for Nos field
-              if (fieldControllers.containsKey(productId) &&
-                  fieldControllers[productId]!.containsKey("Nos")) {
-                fieldControllers[productId]!["Nos"]!.text =
-                    responseData["Nos"].toString();
+              String newNos = responseData["Nos"].toString().trim();
+              String currentInput =
+                  fieldControllers[productId]!["Nos"]!.text.trim();
+
+              if (currentInput.isEmpty || currentInput == "0") {
+                data["Nos"] = newNos;
+                if (fieldControllers[productId]?["Nos"] != null) {
+                  fieldControllers[productId]!["Nos"]!.text = newNos;
+                }
+                print("Nos field updated to: $newNos");
+              } else {
+                print("Nos NOT updated because user input = '$currentInput'");
               }
             }
+
             if (responseData["R.Ft"] != null) {
               data["R.Ft"] = responseData["R.Ft"].toString();
-              // Update controller for R.Ft field
-              if (fieldControllers.containsKey(productId) &&
-                  fieldControllers[productId]!.containsKey("R.Ft")) {
+              if (fieldControllers[productId]?["R.Ft"] != null) {
                 fieldControllers[productId]!["R.Ft"]!.text =
                     responseData["R.Ft"].toString();
               }
             }
+
             if (responseData["Amount"] != null) {
               data["Amount"] = responseData["Amount"].toString();
-              // Update controller for Amount field
-              if (fieldControllers.containsKey(productId) &&
-                  fieldControllers[productId]!.containsKey("Amount")) {
+              if (fieldControllers[productId]?["Amount"] != null) {
                 fieldControllers[productId]!["Amount"]!.text =
                     responseData["Amount"].toString();
               }
             }
 
-            // Update previous UOM for next calculation
             previousUomValues[productId] = currentUom;
           });
 
@@ -1155,9 +1058,11 @@ class _AccessoriesState extends State<Accessories> {
                           SizedBox(height: 16),
                           _buildDropdown(accessoriesList, selectedAccessories,
                               (value) {
-                            setState(() {
-                              selectedAccessories = value;
-                            });
+                            setState(
+                              () {
+                                selectedAccessories = value;
+                              },
+                            );
 // _fetchProductName();
                           },
 // enabled: productList.isNotEmpty,
@@ -1273,6 +1178,7 @@ class _AccessoriesState extends State<Accessories> {
                       weight: FontWeight.w600,
                       color: Colors.black),
                 SizedBox(height: 8),
+                Container(),
                 _buildSubmittedDataList(),
               ],
             ),

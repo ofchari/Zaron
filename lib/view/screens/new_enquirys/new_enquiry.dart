@@ -22,6 +22,7 @@ import 'package:zaron/view/screens/new_enquirys/upvc_tiles.dart';
 import 'package:zaron/view/widgets/subhead.dart';
 import 'package:zaron/view/widgets/text.dart';
 
+import '../../universal_api/api&key.dart';
 import 'linear_sheets.dart';
 
 class NewEnquiry extends StatefulWidget {
@@ -42,7 +43,7 @@ class _NewEnquiryState extends State<NewEnquiry> {
   }
 
   Future<void> fetchCategories() async {
-    final url = Uri.parse('https://demo.zaron.in:8181/ci4/api/allcategories');
+    final url = Uri.parse('$apiUrl/allcategories');
     try {
       final response = await http.get(url);
       if (response.statusCode == 200) {
@@ -76,7 +77,7 @@ class _NewEnquiryState extends State<NewEnquiry> {
 
   Future<void> handleCategoryTap(
       BuildContext context, String id, String categoryName) async {
-    final url = Uri.parse('https://demo.zaron.in:8181/ci4/api/showlables/$id');
+    final url = Uri.parse('$apiUrl/showlables/$id');
     try {
       final response = await http.get(url);
       if (response.statusCode == 200) {

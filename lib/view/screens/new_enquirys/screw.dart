@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -211,7 +212,7 @@ class _ScrewState extends State<Screw> {
   List<dynamic> responseData = [];
   Map<String, dynamic>? apiResponse;
 
-// 2. MODIFY postScrewData() METHOD - Replace the existing method with this:
+  // 2. MODIFY postScrewData() METHOD - Replace the existing method with this:
   Future<void> postScrewData() async {
     HttpClient client = HttpClient();
     client.badCertificateCallback =
@@ -250,7 +251,7 @@ class _ScrewState extends State<Screw> {
               decodedResponse["lebels"].isNotEmpty) {
             final categoryData = decodedResponse["lebels"][0];
             if (categoryData["data"] != null) {
-              responseData = categoryData["data"];
+              responseData.addAll(categoryData["data"]);
             }
           }
         });
@@ -306,7 +307,7 @@ class _ScrewState extends State<Screw> {
           borderRadius: BorderRadius.circular(8),
         ),
         margin: EdgeInsets.all(16),
-        duration: Duration(seconds: 2),
+        duration: Duration(seconds: 1),
       ),
     );
   }
@@ -376,7 +377,7 @@ class _ScrewState extends State<Screw> {
                       child: Padding(
                         padding: const EdgeInsets.all(16.0),
                         child: Text(
-                          "${data["S.No"]}. ${data["Products"] ?? 'N/A'}",
+                          "${index + 1}. ${data["Products"] ?? 'N/A'}",
                           style: GoogleFonts.figtree(
                             fontSize: 18,
                             fontWeight: FontWeight.w600,
@@ -460,18 +461,18 @@ class _ScrewState extends State<Screw> {
           padding: const EdgeInsets.all(16.0),
           child: Row(
             children: [
-              Expanded(
-                child: _buildDetailItem("UOM", _uomDropdownForApi(data)),
-              ),
-              SizedBox(width: 10),
-              Expanded(
-                child: _buildDetailItem(
-                    "Length", _editableTextFieldForApi(data, "Length")),
-              ),
-              SizedBox(width: 10),
-              Expanded(
-                child: _buildDetailItem(
-                    "Qty/Nos", _editableTextFieldForApi(data, "Nos")),
+              // Expanded(
+              //   child: _buildDetailItem("UOM", _uomDropdownFromApi(data)),
+              // ),
+              // SizedBox(width: 10),
+              // Expanded(
+              //   child: _buildDetailItem(
+              //       "Length", _editableTextField(data, "Length")),
+              // ),
+              // SizedBox(width: 10),
+              SizedBox(
+                width: 148.w,
+                child: _buildDetailItem("Nos", _editableTextField(data, "Nos")),
               ),
             ],
           ),
@@ -482,18 +483,18 @@ class _ScrewState extends State<Screw> {
             children: [
               Expanded(
                 child: _buildDetailItem(
-                    "Basic Rate", _editableTextFieldForApi(data, "Basic Rate")),
+                    "Basic Rate", _editableTextField(data, "Basic Rate")),
               ),
               SizedBox(width: 10),
               Expanded(
                 child: _buildDetailItem(
-                    "Amount", _editableTextFieldForApi(data, "Amount")),
+                    "Amount", _editableTextField(data, "Amount")),
               ),
               SizedBox(width: 10),
-              Expanded(
-                child: _buildDetailItem(
-                    "Billing Options", _billingOptionsDropdown(data)),
-              ),
+              // Expanded(
+              //   child: _buildDetailItem(
+              //       "Billing Options", _billingOptionsDropdown(data)),
+              // ),
             ],
           ),
         ),
@@ -503,7 +504,10 @@ class _ScrewState extends State<Screw> {
   }
 
   /// 6. ADD NEW HELPER METHODS:
-  Widget _editableTextFieldForApi(Map<String, dynamic> data, String key) {
+  ///
+  Widget _editableTextField(Map<String, dynamic> data, String key) {
+    final controller = _getController(data, key);
+
     return SizedBox(
       height: 38.h,
       child: TextField(
@@ -512,49 +516,36 @@ class _ScrewState extends State<Screw> {
           color: Colors.black,
           fontSize: 15.sp,
         ),
-        controller: TextEditingController(text: data[key]?.toString() ?? "0"),
-        onChanged: (val) => data[key] = val,
-        decoration: InputDecoration(
-          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 0),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(6),
-            borderSide: BorderSide(color: Colors.grey[300]!),
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(6),
-            borderSide: BorderSide(color: Colors.grey[300]!),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(6),
-            borderSide:
-                BorderSide(color: Theme.of(context).primaryColor, width: 2),
-          ),
-          filled: true,
-          fillColor: Colors.grey[50],
-        ),
-      ),
-    );
-  }
-
-  Widget _uomDropdownForApi(Map<String, dynamic> data) {
-    List<String> uomOptions = ["Feet", "mm", "cm", "Inches", "Meters"];
-    // Set default UOM if not present
-    if (data["UOM"] == null) data["UOM"] = "Feet";
-
-    return SizedBox(
-      height: 40.h,
-      child: DropdownButtonFormField<String>(
-        value: data["UOM"],
-        items: uomOptions
-            .map((uom) => DropdownMenuItem(value: uom, child: Text(uom)))
-            .toList(),
+        controller: controller,
+        keyboardType: (key == "Length" ||
+                key == "Nos" ||
+                key == "Basic Rate" ||
+                key == "Amount" ||
+                key == "R.Ft")
+            ? TextInputType.numberWithOptions(decimal: true)
+            : TextInputType.text,
         onChanged: (val) {
           setState(() {
-            data["UOM"] = val!;
+            data[key] = val;
           });
+
+          print("Field $key changed to: $val");
+          print("Controller text: ${controller.text}");
+          print("Data after change: ${data[key]}");
+
+          // 🚫 DO NOT forcefully reset controller.text here!
+          // if (controller.text != val) {
+          //   controller.text = val;
+          // }
+
+          if (key == "Length" || key == "Nos" || key == "Basic Rate") {
+            print("Triggering calculation for $key with value: $val");
+            _debounceCalculation(data);
+          }
         },
         decoration: InputDecoration(
-          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 0),
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(6),
             borderSide: BorderSide(color: Colors.grey[300]!),
@@ -575,51 +566,184 @@ class _ScrewState extends State<Screw> {
     );
   }
 
-  Widget _billingOptionsDropdown(Map<String, dynamic> data) {
-    List<String> billingOptions = [
-      "Per Unit",
-      "Per Meter",
-      "Per Foot",
-      "Bulk",
-      "Custom"
-    ];
-    // Set default billing option if not present
-    if (data["BillingOption"] == null) data["BillingOption"] = "Per Unit";
+  // Widget _editableTextFieldForApi(Map<String, dynamic> data, String key) {
+  //   return SizedBox(
+  //     height: 38.h,
+  //     child: TextField(
+  //       style: GoogleFonts.figtree(
+  //         fontWeight: FontWeight.w500,
+  //         color: Colors.black,
+  //         fontSize: 15.sp,
+  //       ),
+  //       controller: TextEditingController(text: data[key]?.toString() ?? "0"),
+  //       onChanged: (val) => data[key] = val,
+  //       decoration: InputDecoration(
+  //         contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 0),
+  //         border: OutlineInputBorder(
+  //           borderRadius: BorderRadius.circular(6),
+  //           borderSide: BorderSide(color: Colors.grey[300]!),
+  //         ),
+  //         enabledBorder: OutlineInputBorder(
+  //           borderRadius: BorderRadius.circular(6),
+  //           borderSide: BorderSide(color: Colors.grey[300]!),
+  //         ),
+  //         focusedBorder: OutlineInputBorder(
+  //           borderRadius: BorderRadius.circular(6),
+  //           borderSide:
+  //               BorderSide(color: Theme.of(context).primaryColor, width: 2),
+  //         ),
+  //         filled: true,
+  //         fillColor: Colors.grey[50],
+  //       ),
+  //     ),
+  //   );
+  // }
+  /// drop down for UOM 👇
+  Map<String, dynamic>? apiResponseData;
+  List<dynamic> responseProducts = [];
+  Map<String, Map<String, String>> uomOptions = {};
 
-    return SizedBox(
-      height: 40.h,
-      child: DropdownButtonFormField<String>(
-        value: data["BillingOption"],
-        items: billingOptions
-            .map((option) =>
-                DropdownMenuItem(value: option, child: Text(option)))
-            .toList(),
-        onChanged: (val) {
-          setState(() {
-            data["BillingOption"] = val!;
-          });
-        },
-        decoration: InputDecoration(
-          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 0),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(6),
-            borderSide: BorderSide(color: Colors.grey[300]!),
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(6),
-            borderSide: BorderSide(color: Colors.grey[300]!),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(6),
-            borderSide:
-                BorderSide(color: Theme.of(context).primaryColor, width: 2),
-          ),
-          filled: true,
-          fillColor: Colors.grey[50],
-        ),
-      ),
-    );
-  }
+  // Widget _uomDropdownFromApi(Map<String, dynamic> data) {
+  //   String productId = data["id"].toString();
+  //   Map<String, String>? options = uomOptions[productId];
+  //
+  //   if (options == null || options.isEmpty) {
+  //     return _editableTextField(data, "UOM");
+  //   }
+  //
+  //   String? currentValue;
+  //   if (data["UOM"] is Map) {
+  //     currentValue = data["UOM"]["value"]?.toString();
+  //   } else {
+  //     currentValue = data["UOM"]?.toString();
+  //   }
+  //
+  //   return SizedBox(
+  //     height: 40.h,
+  //     child: DropdownButtonFormField<String>(
+  //       value: currentValue,
+  //       items: options.entries
+  //           .map((entry) =>
+  //               DropdownMenuItem(value: entry.key, child: Text(entry.value)))
+  //           .toList(),
+  //       onChanged: (val) {
+  //         setState(() {
+  //           data["UOM"] = {"value": val, "options": options};
+  //         });
+  //         print("UOM changed to: $val"); // Debug print
+  //         print(
+  //             "Product data: ${data["Products"]}, ID: ${data["id"]}"); // Debug print
+  //         // Trigger calculation with debounce
+  //         _debounceCalculation(data);
+  //       },
+  //       decoration: InputDecoration(
+  //         contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 0),
+  //         border: OutlineInputBorder(
+  //           borderRadius: BorderRadius.circular(6),
+  //           borderSide: BorderSide(color: Colors.grey[300]!),
+  //         ),
+  //         enabledBorder: OutlineInputBorder(
+  //           borderRadius: BorderRadius.circular(6),
+  //           borderSide: BorderSide(color: Colors.grey[300]!),
+  //         ),
+  //         focusedBorder: OutlineInputBorder(
+  //           borderRadius: BorderRadius.circular(6),
+  //           borderSide:
+  //               BorderSide(color: Theme.of(context).primaryColor, width: 2),
+  //         ),
+  //         filled: true,
+  //         fillColor: Colors.grey[50],
+  //       ),
+  //     ),
+  //   );
+  // }
+  /// drop down for UOM 👆
+
+  // Widget _uomDropdownForApi(Map<String, dynamic> data) {
+  //   List<String> uomOptions = ["Feet", "mm", "cm", "Inches", "Meters"];
+  //   // Set default UOM if not present
+  //   if (data["UOM"] == null) data["UOM"] = "Feet";
+  //
+  //   return SizedBox(
+  //     height: 40.h,
+  //     child: DropdownButtonFormField<String>(
+  //       value: data["UOM"],
+  //       items: uomOptions
+  //           .map((uom) => DropdownMenuItem(value: uom, child: Text(uom)))
+  //           .toList(),
+  //       onChanged: (val) {
+  //         setState(() {
+  //           data["UOM"] = val!;
+  //         });
+  //       },
+  //       decoration: InputDecoration(
+  //         contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 0),
+  //         border: OutlineInputBorder(
+  //           borderRadius: BorderRadius.circular(6),
+  //           borderSide: BorderSide(color: Colors.grey[300]!),
+  //         ),
+  //         enabledBorder: OutlineInputBorder(
+  //           borderRadius: BorderRadius.circular(6),
+  //           borderSide: BorderSide(color: Colors.grey[300]!),
+  //         ),
+  //         focusedBorder: OutlineInputBorder(
+  //           borderRadius: BorderRadius.circular(6),
+  //           borderSide:
+  //               BorderSide(color: Theme.of(context).primaryColor, width: 2),
+  //         ),
+  //         filled: true,
+  //         fillColor: Colors.grey[50],
+  //       ),
+  //     ),
+  //   );
+  // }
+
+  // Widget _billingOptionsDropdown(Map<String, dynamic> data) {
+  //   List<String> billingOptions = [
+  //     "Per Unit",
+  //     "Per Meter",
+  //     "Per Foot",
+  //     "Bulk",
+  //     "Custom"
+  //   ];
+  //   // Set default billing option if not present
+  //   if (data["BillingOption"] == null) data["BillingOption"] = "Per Unit";
+  //
+  //   return SizedBox(
+  //     height: 40.h,
+  //     child: DropdownButtonFormField<String>(
+  //       isExpanded: true,
+  //       value: data["BillingOption"],
+  //       items: billingOptions
+  //           .map((option) =>
+  //               DropdownMenuItem(value: option, child: Text(option)))
+  //           .toList(),
+  //       onChanged: (val) {
+  //         setState(() {
+  //           data["BillingOption"] = val!;
+  //         });
+  //       },
+  //       decoration: InputDecoration(
+  //         contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 0),
+  //         border: OutlineInputBorder(
+  //           borderRadius: BorderRadius.circular(6),
+  //           borderSide: BorderSide(color: Colors.grey[300]!),
+  //         ),
+  //         enabledBorder: OutlineInputBorder(
+  //           borderRadius: BorderRadius.circular(6),
+  //           borderSide: BorderSide(color: Colors.grey[300]!),
+  //         ),
+  //         focusedBorder: OutlineInputBorder(
+  //           borderRadius: BorderRadius.circular(6),
+  //           borderSide:
+  //               BorderSide(color: Theme.of(context).primaryColor, width: 2),
+  //         ),
+  //         filled: true,
+  //         fillColor: Colors.grey[50],
+  //       ),
+  //     ),
+  //   );
+  // }
 
   Widget _buildDetailItem(String label, Widget field) {
     return Container(
@@ -695,6 +819,198 @@ class _ScrewState extends State<Screw> {
         ),
       ),
     );
+  }
+
+  Timer? _debounceTimer;
+  Map<String, dynamic> calculationResults = {};
+  Map<String, String?> previousUomValues = {}; // Track previous UOM values
+  Map<String, Map<String, TextEditingController>> fieldControllers =
+      {}; // Store controllers
+
+// Method to get or create controller for each field
+  TextEditingController _getController(Map<String, dynamic> data, String key) {
+    String productId = data["id"].toString();
+
+    // Initialize controllers map for this product ID
+    fieldControllers.putIfAbsent(productId, () => {});
+
+    // If controller for this key doesn't exist, create it
+    if (!fieldControllers[productId]!.containsKey(key)) {
+      String initialValue = (data[key] != null && data[key].toString() != "0")
+          ? data[key].toString()
+          : ""; // Avoid initializing with "0"
+
+      fieldControllers[productId]![key] =
+          TextEditingController(text: initialValue);
+
+      print("Created controller for [$key] with value: '$initialValue'");
+    } else {
+      // Existing controller: check if it needs sync from data
+      final controller = fieldControllers[productId]![key]!;
+
+      final dataValue = data[key]?.toString() ?? "";
+
+      // If the controller is empty but data has a value, sync it
+      if (controller.text.isEmpty && dataValue.isNotEmpty && dataValue != "0") {
+        controller.text = dataValue;
+        print("Synced controller for [$key] to: '$dataValue'");
+      }
+    }
+
+    return fieldControllers[productId]![key]!;
+  }
+
+// Add this method for debounced calculation
+  void _debounceCalculation(Map<String, dynamic> data) {
+    _debounceTimer?.cancel();
+    _debounceTimer = Timer(Duration(milliseconds: 1500), () {
+      _performCalculation(data);
+    });
+  }
+
+// Calculation API method - FIXED VERSION with UI Updates
+  Future<void> _performCalculation(Map<String, dynamic> data) async {
+    print("=== STARTING CALCULATION API ===");
+    print("Data received: $data");
+
+    final client =
+        IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
+    final url = Uri.parse('$apiUrl/calculation');
+
+    String productId = data["id"].toString();
+
+    // Get current UOM value
+    String? currentUom;
+    if (data["UOM"] is Map) {
+      currentUom = data["UOM"]["value"]?.toString();
+    } else {
+      currentUom = data["UOM"]?.toString();
+    }
+
+    print("Current UOM: $currentUom");
+    print("Previous UOM: ${previousUomValues[productId]}");
+
+    // Get Profile value from controller
+    String? profileText;
+
+    if (fieldControllers.containsKey(productId) &&
+        fieldControllers[productId]!.containsKey("Profile")) {
+      profileText = fieldControllers[productId]!["Profile"]!.text;
+      print("Profile from controller: $profileText");
+    }
+
+    if (profileText == null || profileText.isEmpty) {
+      profileText = data["Profile"]?.toString();
+      print("Profile from data: $profileText");
+    }
+
+    // Get Nos value from controller
+    int nosValue = 0;
+    String? nosText;
+
+    if (fieldControllers.containsKey(productId) &&
+        fieldControllers[productId]!.containsKey("Nos")) {
+      nosText = fieldControllers[productId]!["Nos"]!.text;
+      print("Nos from controller: $nosText");
+    }
+
+    if (nosText == null || nosText.isEmpty) {
+      nosText = data["Nos"]?.toString();
+      print("Nos from data: $nosText");
+    }
+
+    if (nosText != null && nosText.isNotEmpty) {
+      nosValue = int.tryParse(nosText) ?? 1;
+    }
+
+    print("Final Nos Value: $nosValue");
+
+    final requestBody = {
+      "id": int.tryParse(data["id"].toString()) ?? 0,
+      "category_id": 7,
+      "product": data["Products"]?.toString() ?? "",
+      "height": null,
+      "previous_uom": null,
+      "current_uom": null,
+      "length": null,
+      "nos": nosValue,
+      "basic_rate": double.tryParse(data["Basic Rate"]?.toString() ?? "0") ?? 0,
+    };
+
+    print("Request Body: ${jsonEncode(requestBody)}");
+
+    try {
+      final response = await client.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(requestBody),
+      );
+
+      print("Response Status: ${response.statusCode}");
+      print("Response Body: ${response.body}");
+
+      if (response.statusCode == 200) {
+        final responseData = jsonDecode(response.body);
+
+        if (responseData["status"] == "success") {
+          setState(() {
+            calculationResults[productId] = responseData;
+
+            // if (responseData["Length"] != null) {
+            //   data["Profile"] = responseData["Length"].toString();
+            //   if (fieldControllers[productId]?["Profile"] != null) {
+            //     fieldControllers[productId]!["Profile"]!.text =
+            //         responseData["Length"].toString();
+            //   }
+            // }
+
+            if (responseData["Nos"] != null) {
+              String newNos = responseData["Nos"].toString().trim();
+              String currentInput =
+                  fieldControllers[productId]!["Nos"]!.text.trim();
+
+              if (currentInput.isEmpty || currentInput == "0") {
+                data["Nos"] = newNos;
+                if (fieldControllers[productId]?["Nos"] != null) {
+                  fieldControllers[productId]!["Nos"]!.text = newNos;
+                }
+                print("Nos field updated to: $newNos");
+              } else {
+                print("Nos NOT updated because user input = '$currentInput'");
+              }
+            }
+
+            if (responseData["R.Ft"] != null) {
+              data["R.Ft"] = responseData["R.Ft"].toString();
+              if (fieldControllers[productId]?["R.Ft"] != null) {
+                fieldControllers[productId]!["R.Ft"]!.text =
+                    responseData["R.Ft"].toString();
+              }
+            }
+
+            if (responseData["Amount"] != null) {
+              data["Amount"] = responseData["Amount"].toString();
+              if (fieldControllers[productId]?["Amount"] != null) {
+                fieldControllers[productId]!["Amount"]!.text =
+                    responseData["Amount"].toString();
+              }
+            }
+
+            previousUomValues[productId] = currentUom;
+          });
+
+          print("=== CALCULATION SUCCESS ===");
+          print(
+              "Updated data: Length=${data["Profile"]}, Nos=${data["Nos"]}, R.Ft=${data["R.Ft"]}, Amount=${data["Amount"]}");
+        } else {
+          print("API returned error status: ${responseData["status"]}");
+        }
+      } else {
+        print("HTTP Error: ${response.statusCode}");
+      }
+    } catch (e) {
+      print("Calculation API Error: $e");
+    }
   }
 
   @override

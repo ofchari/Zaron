@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -461,47 +462,47 @@ class _UpvcAccessoriesState extends State<UpvcAccessories> {
   Widget _buildApiProductDetailInRows(Map<String, dynamic> product) {
     return Column(
       children: [
-        // Row 1: UOM, Qty, Length
-        Row(
-          children: [
-            Expanded(
-              child: _buildDetailItem("UOM", _buildUOMDropdown(product)),
-            ),
-            SizedBox(width: 10),
-            Expanded(
-              child:
-                  _buildDetailItem("Qty", _buildEditableField(product, "Nos")),
-            ),
-            SizedBox(width: 10),
-            Expanded(
-              child: _buildDetailItem(
-                  "Length", _buildEditableField(product, "Length")),
-            ),
-          ],
-        ),
-
-        SizedBox(height: 16),
-
-        // Row 2: Basic Rate, Amount, Billing Options
+        // Row 1: Basic Rate, Nos, Amount
         Row(
           children: [
             Expanded(
               child: _buildDetailItem(
-                  "Basic Rate", _buildEditableField(product, "Basic Rate")),
-            ),
-            SizedBox(width: 10),
-            Expanded(
-              child: _buildDetailItem(
-                  "Amount", _buildEditableField(product, "Amount")),
+                  "Basic Rate", _buildReadOnlyField(product, "Basic Rate")),
             ),
             SizedBox(width: 10),
             Expanded(
               child:
-                  _buildDetailItem("Billing", _buildBillingDropdown(product)),
+                  _buildDetailItem("Nos", _buildEditableField(product, "Nos")),
+            ),
+            SizedBox(width: 10),
+            Expanded(
+              child: _buildDetailItem(
+                  "Amount", _buildReadOnlyField(product, "Amount")),
             ),
           ],
         ),
       ],
+    );
+  }
+
+  Widget _buildReadOnlyField(Map<String, dynamic> product, String key) {
+    return Container(
+      height: 38.h,
+      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.grey[300]!),
+        borderRadius: BorderRadius.circular(6),
+        color: Colors.grey[100],
+      ),
+      alignment: Alignment.centerLeft,
+      child: Text(
+        product[key]?.toString() ?? "0",
+        style: GoogleFonts.figtree(
+          fontWeight: FontWeight.w500,
+          color: Colors.black87,
+          fontSize: 15.sp,
+        ),
+      ),
     );
   }
 
@@ -524,81 +525,21 @@ class _UpvcAccessoriesState extends State<UpvcAccessories> {
   }
 
 // 5. ADD THESE NEW HELPER METHODS (place them after _buildApiProductDetailInRows):
-  Widget _buildUOMDropdown(Map<String, dynamic> product) {
-    List<String> uomOptions = ["Feet", "mm", "cm", "Inch", "Meter"];
-    String currentUOM = product["UOM"] ?? "Feet";
-
-    return SizedBox(
-      height: 40.h,
-      child: DropdownButtonFormField<String>(
-        value: uomOptions.contains(currentUOM) ? currentUOM : "Feet",
-        items: uomOptions
-            .map((uom) => DropdownMenuItem(value: uom, child: Text(uom)))
-            .toList(),
-        onChanged: (val) {
-          setState(() {
-            product["UOM"] = val!;
-          });
-        },
-        decoration: InputDecoration(
-          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 0),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(6),
-            borderSide: BorderSide(color: Colors.grey[300]!),
-          ),
-          filled: true,
-          fillColor: Colors.grey[50],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildBillingDropdown(Map<String, dynamic> product) {
-    List<String> billingOptions = [
-      "Per Piece",
-      "Per Foot",
-      "Per Meter",
-      "Per SqFt"
-    ];
-    String currentBilling = product["Billing"] ?? "Per Piece";
-
-    return SizedBox(
-      height: 40.h,
-      child: DropdownButtonFormField<String>(
-        value: billingOptions.contains(currentBilling)
-            ? currentBilling
-            : "Per Piece",
-        items: billingOptions
-            .map((billing) =>
-                DropdownMenuItem(value: billing, child: Text(billing)))
-            .toList(),
-        onChanged: (val) {
-          setState(() {
-            product["Billing"] = val!;
-          });
-        },
-        decoration: InputDecoration(
-          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 0),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(6),
-            borderSide: BorderSide(color: Colors.grey[300]!),
-          ),
-          filled: true,
-          fillColor: Colors.grey[50],
-        ),
-      ),
-    );
-  }
 
   Widget _buildEditableField(Map<String, dynamic> product, String key) {
+    final controller = _getController(product, key);
+
     return SizedBox(
       height: 38.h,
       child: TextField(
-        style: GoogleFonts.figtree(
-            fontWeight: FontWeight.w500, color: Colors.black, fontSize: 15.sp),
-        controller:
-            TextEditingController(text: product[key]?.toString() ?? "0"),
-        onChanged: (val) => product[key] = val,
+        controller: controller,
+        onChanged: (val) {
+          product[key] = val;
+          // Trigger calculation API when Nos changes
+          if (key == "Nos") {
+            _debounceCalculation(product);
+          }
+        },
         keyboardType: TextInputType.number,
         decoration: InputDecoration(
           contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 0),
@@ -723,6 +664,89 @@ class _UpvcAccessoriesState extends State<UpvcAccessories> {
         ),
       ),
     );
+  }
+
+  Timer? _debounceTimer;
+  Map<String, String?> previousUomValues = {}; // Track previous UOM values
+  Map<String, Map<String, TextEditingController>> fieldControllers =
+      {}; // Store controllers
+
+  TextEditingController _getController(Map<String, dynamic> data, String key) {
+    String productId = data["id"].toString();
+
+    fieldControllers.putIfAbsent(productId, () => {});
+
+    if (!fieldControllers[productId]!.containsKey(key)) {
+      String initialValue = (data[key] != null && data[key].toString() != "0")
+          ? data[key].toString()
+          : "";
+      fieldControllers[productId]![key] =
+          TextEditingController(text: initialValue);
+    }
+
+    return fieldControllers[productId]![key]!;
+  }
+
+  void _debounceCalculation(Map<String, dynamic> data) {
+    _debounceTimer?.cancel();
+    _debounceTimer = Timer(Duration(seconds: 1), () {
+      _performCalculation(data);
+    });
+  }
+
+  Future<void> _performCalculation(Map<String, dynamic> data) async {
+    final client =
+        IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
+    final url = Uri.parse('$apiUrl/calculation');
+
+    String productId = data["id"].toString();
+
+    // Get current UOM value
+    String? currentUom = data["UOM"]?.toString();
+
+    final requestBody = {
+      "id": int.tryParse(data["id"].toString()) ?? 0,
+      "category_id": 15,
+      "product": data["Products"]?.toString() ?? "",
+      "height": null,
+      "previous_uom": null,
+      "current_uom": null,
+      "length": null,
+      "nos": int.tryParse(data["Nos"]?.toString() ?? "0") ?? 0,
+      "basic_rate": double.tryParse(data["Basic Rate"]?.toString() ?? "0") ?? 0,
+    };
+
+    try {
+      final response = await client.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(requestBody),
+      );
+
+      if (response.statusCode == 200) {
+        final responseData = jsonDecode(response.body);
+
+        if (responseData["status"] == "success") {
+          setState(() {
+            // Update fields based on API response
+            // if (responseData["Length"] != null) {
+            //   data["Length"] = responseData["Length"].toString();
+            // }
+            if (responseData["Nos"] != null) {
+              data["Nos"] = responseData["Nos"].toString();
+            }
+            if (responseData["Amount"] != null) {
+              data["Amount"] = responseData["Amount"].toString();
+            }
+
+            // Store previous UOM for next call
+            previousUomValues[productId] = currentUom;
+          });
+        }
+      }
+    } catch (e) {
+      print("Calculation API Error: $e");
+    }
   }
 
   @override
