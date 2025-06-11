@@ -431,7 +431,6 @@ class _ScrewAccessoriesState extends State<ScrewAccessories> {
                 ),
 
                 SizedBox(height: 16),
-
                 // Editable Fields in Rows
                 _buildApiProductDetailInRows(product),
               ],

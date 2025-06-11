@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'package:zaron/view/screens/new_enquirys/accessories.dart';
 import 'package:zaron/view/screens/new_enquirys/aluminum.dart';
@@ -19,8 +20,6 @@ import 'package:zaron/view/screens/new_enquirys/screw_acessories.dart';
 import 'package:zaron/view/screens/new_enquirys/tile_sheets.dart';
 import 'package:zaron/view/screens/new_enquirys/upvc_accessories.dart';
 import 'package:zaron/view/screens/new_enquirys/upvc_tiles.dart';
-import 'package:zaron/view/widgets/subhead.dart';
-import 'package:zaron/view/widgets/text.dart';
 
 import '../../universal_api/api&key.dart';
 import 'linear_sheets.dart';
@@ -34,11 +33,11 @@ class NewEnquiry extends StatefulWidget {
 
 class _NewEnquiryState extends State<NewEnquiry> {
   List<Map<String, dynamic>> categories = [];
+  bool isGridView = false; // Track current view mode
 
   @override
   void initState() {
     super.initState();
-    // print("check user id ${widget.userid}");
     fetchCategories();
   }
 
@@ -160,69 +159,364 @@ class _NewEnquiryState extends State<NewEnquiry> {
     );
   }
 
+  // Build filter toggle at the top
+  Widget _buildViewToggleFilter() {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8F9FA),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFE5E7EB), width: 1),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: GestureDetector(
+              onTap: () {
+                setState(() {
+                  isGridView = false;
+                });
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                decoration: BoxDecoration(
+                  color: !isGridView
+                      ? const Color(0xFF4F46E5)
+                      : Colors.transparent,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.list,
+                      color:
+                          !isGridView ? Colors.white : const Color(0xFF6B7280),
+                      size: 20,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      'List View',
+                      style: GoogleFonts.inter(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: !isGridView
+                            ? Colors.white
+                            : const Color(0xFF6B7280),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          Expanded(
+            child: GestureDetector(
+              onTap: () {
+                setState(() {
+                  isGridView = true;
+                });
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                decoration: BoxDecoration(
+                  color:
+                      isGridView ? const Color(0xFF4F46E5) : Colors.transparent,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.grid_view,
+                      color:
+                          isGridView ? Colors.white : const Color(0xFF6B7280),
+                      size: 20,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Grid View',
+                      style: GoogleFonts.inter(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color:
+                            isGridView ? Colors.white : const Color(0xFF6B7280),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Build grid view
+  Widget _buildGridView() {
+    return GridView.builder(
+      padding: const EdgeInsets.symmetric(horizontal: 20.0),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        childAspectRatio: 0.85,
+        crossAxisSpacing: 16,
+        mainAxisSpacing: 16,
+      ),
+      itemCount: categories.length,
+      itemBuilder: (context, index) {
+        final category = categories[index];
+        return _buildCategoryGridItem(
+          category["id"],
+          category["name"],
+          category["imagePath"],
+        );
+      },
+    );
+  }
+
+  // Build list view
+  Widget _buildListView() {
+    return ListView.builder(
+      padding: const EdgeInsets.symmetric(horizontal: 20.0),
+      itemCount: categories.length,
+      itemBuilder: (context, index) {
+        final category = categories[index];
+        return _buildCategoryListItem(
+          category["id"],
+          category["name"],
+          category["imagePath"],
+        );
+      },
+    );
+  }
+
+  Widget _buildCategoryGridItem(String id, String name, String imagePath) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          // Image Section
+          Expanded(
+            flex: 3,
+            child: Container(
+              width: double.infinity,
+              decoration: BoxDecoration(
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(16),
+                  topRight: Radius.circular(16),
+                ),
+                image: DecorationImage(
+                  image: imagePath != "assets/aluminum.png"
+                      ? NetworkImage(imagePath)
+                      : const AssetImage("assets/aluminum.png")
+                          as ImageProvider,
+                  fit: BoxFit.cover,
+                ),
+              ),
+            ),
+          ),
+
+          // Content Section
+          Expanded(
+            flex: 2,
+            child: Padding(
+              padding: const EdgeInsets.all(12.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  // Category Name
+                  Text(
+                    name,
+                    style: GoogleFonts.inter(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xFF2D3748),
+                      letterSpacing: -0.2,
+                    ),
+                    textAlign: TextAlign.center,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  // Button
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: () => handleCategoryTap(context, id, name),
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        backgroundColor: const Color(0xFF4F46E5),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        elevation: 4,
+                      ),
+                      child: Text(
+                        'View',
+                        style: GoogleFonts.inter(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                          letterSpacing: 0.2,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCategoryListItem(String id, String name, String imagePath) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Row(
+          children: [
+            // Image Section
+            Container(
+              width: 72,
+              height: 72,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.08),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+                image: DecorationImage(
+                  image: imagePath != "assets/aluminum.png"
+                      ? NetworkImage(imagePath)
+                      : const AssetImage("assets/aluminum.png")
+                          as ImageProvider,
+                  fit: BoxFit.cover,
+                ),
+              ),
+            ),
+            const SizedBox(width: 20),
+
+            // Text Section
+            Expanded(
+              child: Text(
+                name,
+                style: GoogleFonts.inter(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w500,
+                  color: const Color(0xFF2D3748),
+                  letterSpacing: -0.2,
+                ),
+              ),
+            ),
+
+            const SizedBox(width: 16),
+
+            // Button Section
+            Container(
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF4F46E5), Color(0xFF6366F1)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF4F46E5).withOpacity(0.3),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: () => handleCategoryTap(context, id, name),
+                  borderRadius: BorderRadius.circular(12),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 12,
+                    ),
+                    child: Text(
+                      'Click Here',
+                      style: GoogleFonts.inter(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                        letterSpacing: 0.2,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.white,
-        title: const Subhead(
-            text: "New Enquiry", weight: FontWeight.w500, color: Colors.black),
+        elevation: 0,
+        title: Text(
+          "New Enquiry",
+          style: GoogleFonts.inter(
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
+            color: const Color(0xFF1A1A1A),
+          ),
+        ),
         centerTitle: true,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: categories.isEmpty
-            ? const Center(child: CircularProgressIndicator())
-            : GridView.builder(
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  childAspectRatio: 1.1,
-                  crossAxisSpacing: 12,
-                  mainAxisSpacing: 12,
-                ),
-                itemCount: categories.length,
-                itemBuilder: (context, index) {
-                  final category = categories[index];
-                  return _buildCategoryCard(
-                      category["id"], category["name"], category["imagePath"]);
-                },
-              ),
-      ),
-    );
-  }
+      body: categories.isEmpty
+          ? const Center(child: CircularProgressIndicator())
+          : Column(
+              children: [
+                // Filter toggle at the top
+                _buildViewToggleFilter(),
 
-  Widget _buildCategoryCard(String id, String name, String imagePath) {
-    return GestureDetector(
-      onTap: () => handleCategoryTap(context, id, name),
-      child: Card(
-        elevation: 3,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-        child: Column(
-          children: [
-            Expanded(
-              child: Container(
-                decoration: BoxDecoration(
-                  image: DecorationImage(
-                    image: imagePath != "assets/aluminum.png"
-                        ? NetworkImage(imagePath)
-                        : const AssetImage("assets/aluminum.png")
-                            as ImageProvider,
-                    fit: BoxFit.cover,
-                  ),
-                  borderRadius:
-                      const BorderRadius.vertical(top: Radius.circular(15)),
+                // Content based on selected view
+                Expanded(
+                  child: isGridView ? _buildGridView() : _buildListView(),
                 ),
-              ),
+              ],
             ),
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 10),
-              child: MyText(
-                  text: name, weight: FontWeight.w500, color: Colors.black),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }
