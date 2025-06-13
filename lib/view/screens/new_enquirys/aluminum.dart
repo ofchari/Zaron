@@ -313,7 +313,7 @@ class _AluminumState extends State<Aluminum> {
     }
   }
 
-// 3. ADD THIS NEW METHOD to build API response data display:
+  /// 3. ADD THIS NEW METHOD to build API response data display:
   Widget _buildApiResponseDataList() {
     if (apiProductsList.isEmpty) {
       return Container(
@@ -449,7 +449,7 @@ class _AluminumState extends State<Aluminum> {
     );
   }
 
-// 4. ADD THESE HELPER METHODS:
+  // 4. ADD THESE HELPER METHODS:
   Widget _buildApiDetailItem(String label, Widget field) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

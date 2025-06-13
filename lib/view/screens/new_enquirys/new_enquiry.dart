@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
@@ -20,6 +21,7 @@ import 'package:zaron/view/screens/new_enquirys/screw_acessories.dart';
 import 'package:zaron/view/screens/new_enquirys/tile_sheets.dart';
 import 'package:zaron/view/screens/new_enquirys/upvc_accessories.dart';
 import 'package:zaron/view/screens/new_enquirys/upvc_tiles.dart';
+import 'package:zaron/view/widgets/buttons.dart';
 
 import '../../universal_api/api&key.dart';
 import 'linear_sheets.dart';
@@ -291,8 +293,15 @@ class _NewEnquiryState extends State<NewEnquiry> {
     );
   }
 
+  late double height;
+  late double width;
   Widget _buildCategoryGridItem(String id, String name, String imagePath) {
+    var size = MediaQuery.of(context).size;
+    height = size.height;
+    width = size.width;
     return Container(
+      height: height / 10.h,
+      // margin: const EdgeInsets.only(bottom: 16), // Add margin to avoid clipping
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
@@ -333,6 +342,8 @@ class _NewEnquiryState extends State<NewEnquiry> {
             child: Padding(
               padding: const EdgeInsets.all(12.0),
               child: Column(
+                mainAxisSize: MainAxisSize
+                    .min, // Ensure the column takes only necessary space
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   // Category Name
@@ -348,33 +359,18 @@ class _NewEnquiryState extends State<NewEnquiry> {
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
-
-                  const SizedBox(height: 12),
-
+                  const SizedBox(height: 3), // Spacing between text and button
                   // Button
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: () => handleCategoryTap(context, id, name),
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        backgroundColor: const Color(0xFF4F46E5),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        elevation: 4,
-                      ),
-                      child: Text(
-                        'View',
-                        style: GoogleFonts.inter(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white,
-                          letterSpacing: 0.2,
-                        ),
-                      ),
-                    ),
-                  ),
+                  GestureDetector(
+                      onTap: () => handleCategoryTap(context, id, name),
+                      child: Buttons(
+                        text: "View",
+                        weight: FontWeight.w500,
+                        color: Colors.blueAccent,
+                        height: height / 27.h,
+                        width: width / 2.9.w,
+                        radius: BorderRadius.circular(5),
+                      ))
                 ],
               ),
             ),

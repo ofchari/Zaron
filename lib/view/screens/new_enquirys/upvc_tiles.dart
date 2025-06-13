@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -47,9 +48,17 @@ class _UpvcTilesState extends State<UpvcTiles> {
     _fetchMaterial();
   }
 
+// Add this to your dispose method
   @override
   void dispose() {
     editController.dispose();
+    debounceTimer?.cancel();
+
+    // Dispose all field controllers
+    fieldControllers.values.forEach((controllers) {
+      controllers.values.forEach((controller) => controller.dispose());
+    });
+
     super.dispose();
   }
 
@@ -407,6 +416,7 @@ class _UpvcTilesState extends State<UpvcTiles> {
   }
 
 // 5. ADD this method for UOM dropdown:
+// REPLACE your existing _buildUOMDropdownFromAPI method with this:
   Widget _buildUOMDropdownFromAPI(Map<String, dynamic> data) {
     Map<String, String> uomOptions = {};
     String? currentValue;
@@ -447,6 +457,8 @@ class _UpvcTilesState extends State<UpvcTiles> {
               setState(() {
                 data["UOM"]["value"] = val;
               });
+              // Trigger calculation when UOM changes
+              debounceCalculation(data);
             },
             decoration: InputDecoration(
               contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 0),
@@ -472,9 +484,11 @@ class _UpvcTilesState extends State<UpvcTiles> {
     );
   }
 
-// 6. ADD this method for editable fields:
+// REPLACE your existing _buildEditableFieldFromAPI method with this:
   Widget _buildEditableFieldFromAPI(
       String label, Map<String, dynamic> data, String key) {
+    TextEditingController controller = getController(data, key);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -494,9 +508,15 @@ class _UpvcTilesState extends State<UpvcTiles> {
                 fontWeight: FontWeight.w500,
                 color: Colors.black,
                 fontSize: 15.sp),
-            controller:
-                TextEditingController(text: data[key]?.toString() ?? ""),
-            onChanged: (val) => data[key] = val,
+            controller: controller,
+            onChanged: (val) {
+              data[key] = val;
+              // Trigger calculation for specific fields
+              if (key == "Length" || key == "Nos" || key == "Basic Rate") {
+                debounceCalculation(data);
+              }
+            },
+            keyboardType: _getKeyboardType(key),
             decoration: InputDecoration(
               contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 0),
               border: OutlineInputBorder(
@@ -519,6 +539,20 @@ class _UpvcTilesState extends State<UpvcTiles> {
         ),
       ],
     );
+  }
+
+// Helper method for keyboard types
+  TextInputType _getKeyboardType(String key) {
+    switch (key) {
+      case "Length":
+      case "Nos":
+      case "Basic Rate":
+      case "Sq.Mtr":
+      case "Amount":
+        return TextInputType.numberWithOptions(decimal: true);
+      default:
+        return TextInputType.text;
+    }
   }
 
 // 7. MODIFY the _submitData() method - REPLACE with this:
@@ -646,6 +680,131 @@ class _UpvcTilesState extends State<UpvcTiles> {
         ),
       ),
     );
+  }
+
+  Timer? debounceTimer;
+  Map<String, String?> previousUomValues = {}; // Track previous UOM values
+  Map<String, Map<String, TextEditingController>> fieldControllers =
+      {}; // Store controllers
+
+// Add this helper method to get/create controllers
+  TextEditingController getController(Map<String, dynamic> data, String key) {
+    String productId = data["id"].toString();
+
+    fieldControllers.putIfAbsent(productId, () => {});
+
+    if (!fieldControllers[productId]!.containsKey(key)) {
+      String initialValue = (data[key] != null && data[key].toString() != "0")
+          ? data[key].toString()
+          : "";
+      fieldControllers[productId]![key] =
+          TextEditingController(text: initialValue);
+    }
+
+    return fieldControllers[productId]![key]!;
+  }
+
+// Add debounce method
+  void debounceCalculation(Map<String, dynamic> data) {
+    debounceTimer?.cancel();
+    debounceTimer = Timer(Duration(seconds: 1), () {
+      performCalculation(data);
+    });
+  }
+
+// Add calculation API method
+  Future<void> performCalculation(Map<String, dynamic> data) async {
+    final client =
+        IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
+    final url = Uri.parse('$apiUrl/calculation');
+
+    String productId = data["id"].toString();
+
+    // Get current UOM value - handle both string and Map cases
+    String? currentUom;
+    if (data["UOM"] is Map) {
+      currentUom = data["UOM"]["value"]?.toString();
+    } else {
+      currentUom = data["UOM"]?.toString();
+    }
+
+    // Get previous UOM
+    String? previousUom = previousUomValues[productId];
+
+    final requestBody = {
+      "id": int.tryParse(data["id"].toString()) ?? 0,
+      "category_id": 631, // Your category ID
+      "product": data["Products"]?.toString() ?? "",
+      "height": null,
+      "previous_uom": previousUom,
+      "current_uom": currentUom,
+      "length": data["Length"]?.toString(),
+      "nos": int.tryParse(data["Nos"]?.toString() ?? "0") ?? 0,
+      "basic_rate": double.tryParse(data["Basic Rate"]?.toString() ?? "0") ?? 0,
+    };
+
+    print("Calculation Request: $requestBody");
+
+    try {
+      final response = await client.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(requestBody),
+      );
+
+      print("Raw Response: ${response.body}");
+
+      if (response.statusCode == 200) {
+        // Clean the response body - remove any prefix characters
+        String cleanResponseBody = response.body;
+
+        // Find the first '{' character (start of JSON)
+        int jsonStart = cleanResponseBody.indexOf('{');
+        if (jsonStart > 0) {
+          cleanResponseBody = cleanResponseBody.substring(jsonStart);
+        }
+
+        print("Cleaned Response: $cleanResponseBody");
+
+        try {
+          final responseData = jsonDecode(cleanResponseBody);
+
+          if (responseData["status"] == "success") {
+            setState(() {
+              // Update fields based on API response - match exact field names from API
+              if (responseData["length"] != null) {
+                data["Length"] = responseData["length"].toString();
+                getController(data, "Length").text = data["Length"];
+              }
+              if (responseData["nos"] != null) {
+                data["Nos"] = responseData["nos"].toString();
+                getController(data, "Nos").text = data["Nos"];
+              }
+              if (responseData["sqmtr"] != null) {
+                data["Sq.Mtr"] = responseData["sqmtr"].toString();
+                getController(data, "Sq.Mtr").text = data["Sq.Mtr"];
+              }
+              if (responseData["Amount"] != null) {
+                data["Amount"] = responseData["Amount"].toString();
+                getController(data, "Amount").text = data["Amount"];
+              }
+              if (responseData["rate"] != null) {
+                data["Basic Rate"] = responseData["rate"].toString();
+                getController(data, "Basic Rate").text = data["Basic Rate"];
+              }
+
+              // Store current UOM as previous for next call
+              previousUomValues[productId] = currentUom;
+            });
+          }
+        } catch (jsonError) {
+          print("JSON Parse Error: $jsonError");
+          print("Problematic JSON: $cleanResponseBody");
+        }
+      }
+    } catch (e) {
+      print("Calculation API Error: $e");
+    }
   }
 
   @override
