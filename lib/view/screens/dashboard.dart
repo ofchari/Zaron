@@ -105,7 +105,7 @@ class _DashboardState extends State<Dashboard> {
       appBar: AppBar(
         leading: Icon(Icons.login_sharp),
         title: Subhead(
-            text: "Dashboard", weight: FontWeight.w500, color: Colors.black),
+            text: "Dashboard", weight: FontWeight.w600, color: Colors.black),
         centerTitle: true,
         backgroundColor: Colors.white,
         elevation: 0,
