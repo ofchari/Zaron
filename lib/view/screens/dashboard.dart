@@ -132,23 +132,23 @@ class _DashboardState extends State<Dashboard> {
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
-                  image: DecorationImage(
-                      image: AssetImage("assets/scale_bg.jpg"),
-                      fit: BoxFit.cover),
+                  // image: DecorationImage(
+                  //     image: AssetImage("assets/scale_bg.jpg"),
+                  //     fit: BoxFit.cover),
                   borderRadius: BorderRadius.circular(20.r),
                 ),
                 child: Stack(
                   clipBehavior: Clip.none, // Allows image to overflow
                   children: [
                     Positioned(
-                      right: -50.w, // Adjusted for better positioning
-                      bottom: -70.h, // Position from bottom
+                      right: -28.w, // Adjusted for better positioning
+                      bottom: 10.h, // Position from bottom
                       child: Transform.rotate(
                         angle: 0.03, // Slight rotation for dynamic look
                         child: Image.asset(
                           "assets/roofing-sheets.png",
-                          width: width * 0.6, // Increased width
-                          height: height * 0.27, // Match container height
+                          width: width * 0.60, // Increased width
+                          height: height * 0.20, // Match container height
                           fit: BoxFit.contain,
                         ),
                       ),
