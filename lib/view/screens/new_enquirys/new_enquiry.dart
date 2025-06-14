@@ -341,37 +341,41 @@ class _NewEnquiryState extends State<NewEnquiry> {
             flex: 2,
             child: Padding(
               padding: const EdgeInsets.all(12.0),
-              child: Column(
-                mainAxisSize: MainAxisSize
-                    .min, // Ensure the column takes only necessary space
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  // Category Name
-                  Text(
-                    name,
-                    style: GoogleFonts.inter(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: const Color(0xFF2D3748),
-                      letterSpacing: -0.2,
+              child: SingleChildScrollView(
+                scrollDirection: Axis.vertical,
+                child: Column(
+                  mainAxisSize: MainAxisSize
+                      .min, // Ensure the column takes only necessary space
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    // Category Name
+                    Text(
+                      name,
+                      style: GoogleFonts.inter(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: const Color(0xFF2D3748),
+                        letterSpacing: -0.2,
+                      ),
+                      textAlign: TextAlign.center,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    textAlign: TextAlign.center,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 3), // Spacing between text and button
-                  // Button
-                  GestureDetector(
-                      onTap: () => handleCategoryTap(context, id, name),
-                      child: Buttons(
-                        text: "View",
-                        weight: FontWeight.w500,
-                        color: Colors.blueAccent,
-                        height: height / 27.h,
-                        width: width / 2.9.w,
-                        radius: BorderRadius.circular(5),
-                      ))
-                ],
+                    const SizedBox(
+                        height: 3), // Spacing between text and button
+                    // Button
+                    GestureDetector(
+                        onTap: () => handleCategoryTap(context, id, name),
+                        child: Buttons(
+                          text: "View",
+                          weight: FontWeight.w500,
+                          color: Colors.blueAccent,
+                          height: height / 27.h,
+                          width: width / 2.9.w,
+                          radius: BorderRadius.circular(5),
+                        ))
+                  ],
+                ),
               ),
             ),
           ),

@@ -154,14 +154,6 @@ class _QuotationPageState extends State<QuotationPage> {
             text: "Total Quotation",
             weight: FontWeight.w500,
             color: Colors.black),
-        actions: [
-          IconButton(
-            onPressed: () async {
-              // await _downloadExcelFile(filteredData);
-            },
-            icon: const Icon(Icons.download, color: Colors.black),
-          ),
-        ],
       ),
       body: Column(
         children: [

@@ -36,6 +36,7 @@ class _EntryState extends State<Entry> {
 
   Widget _smallBuildLayout() {
     return Scaffold(
+      backgroundColor: Colors.white,
       body: Stack(
         children: [
           SizedBox(
@@ -47,7 +48,11 @@ class _EntryState extends State<Entry> {
                 height: height / 1.8.h,
                 width: width.w,
                 decoration: BoxDecoration(
-                    color: Colors.teal,
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [Colors.orange, Colors.orange[50]!],
+                    ),
                     borderRadius: BorderRadius.only(
                         bottomRight: Radius.circular(60),
                         bottomLeft: Radius.circular(60))),
@@ -55,8 +60,8 @@ class _EntryState extends State<Entry> {
             ],
           ),
           Positioned(
-            bottom: 250,
-            right: 108,
+            bottom: 300.h,
+            right: 100.w,
             child: Container(
               height: height / 4.h,
               width: width / 2.w,
@@ -76,7 +81,7 @@ class _EntryState extends State<Entry> {
                   child: Buttons(
                       text: "Get Started here ✈",
                       weight: FontWeight.w500,
-                      color: Colors.blueGrey,
+                      color: Colors.grey[500]!,
                       height: height / 16.h,
                       width: width / 1.3.w,
                       radius: BorderRadius.circular(26.r))))
