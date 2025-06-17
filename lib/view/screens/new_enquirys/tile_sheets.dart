@@ -11,7 +11,6 @@ import 'package:http/io_client.dart';
 import 'package:zaron/view/screens/global_user/global_user.dart';
 import 'package:zaron/view/universal_api/api&key.dart';
 import 'package:zaron/view/widgets/subhead.dart';
-import 'package:zaron/view/widgets/text.dart';
 
 class TileSheetPage extends StatefulWidget {
   const TileSheetPage({super.key, required this.data});
@@ -741,8 +740,9 @@ class _TileSheetPageState extends State<TileSheetPage> {
     );
   }
 
-  String selectedItems() {
+  String _selectedItems() {
     List<String> value = [
+      if (selectedMaterial != null) "Material Type: $selectedMaterial",
       if (selectedBrands != null) "Brand: $selectedBrands",
       if (selectedColors != null) "Color: $selectedColors",
       if (selectedThickness != null) "Thickness: $selectedThickness",
@@ -751,46 +751,61 @@ class _TileSheetPageState extends State<TileSheetPage> {
     return value.isEmpty ? "No selection yet" : value.join(",  ");
   }
 
-  Widget _buildDropdown(List<String> items, String? selectedValue,
-      ValueChanged<String?> onChanged,
-      {bool enabled = true, String? label}) {
+  Widget _buildAnimatedDropdown(
+    List<String> items,
+    String? selectedValue,
+    ValueChanged<String?> onChanged, {
+    bool enabled = true,
+    required String label,
+    required IconData icon,
+  }) {
     return Padding(
-      padding: EdgeInsets.symmetric(vertical: 8),
-      child: DropdownSearch<String>(
-        items: items,
-        selectedItem: selectedValue,
-        onChanged: enabled ? onChanged : null,
-        dropdownDecoratorProps: DropDownDecoratorProps(
-          dropdownSearchDecoration: InputDecoration(
-            labelText: label ?? "Select",
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(color: Colors.grey[300]!),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide:
-                  BorderSide(color: Theme.of(context).primaryColor, width: 2),
-            ),
-            filled: true,
-            fillColor: enabled ? Colors.white : Colors.grey[100],
-            contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      padding: EdgeInsets.only(bottom: 16),
+      child: AnimatedContainer(
+        duration: Duration(milliseconds: 200),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(12),
+          color: enabled ? Colors.white : Colors.grey.shade100,
+          border: Border.all(
+            color: enabled ? Colors.grey.shade300 : Colors.grey.shade200,
           ),
+          boxShadow: enabled
+              ? [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.03),
+                    blurRadius: 8,
+                    offset: Offset(0, 2),
+                  ),
+                ]
+              : [],
         ),
-        enabled: enabled,
-        popupProps: PopupProps.menu(
-          showSearchBox: true,
-          searchFieldProps: TextFieldProps(
-            decoration: InputDecoration(
-              hintText: "Search...",
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-              prefixIcon: Icon(Icons.search),
+        child: DropdownSearch<String>(
+          items: items,
+          selectedItem: selectedValue,
+          onChanged: enabled ? onChanged : null,
+          dropdownDecoratorProps: DropDownDecoratorProps(
+            dropdownSearchDecoration: InputDecoration(
+              labelText: label,
+              prefixIcon:
+                  Icon(icon, color: enabled ? Colors.blue : Colors.grey),
+              border: InputBorder.none,
+              contentPadding:
+                  EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             ),
+          ),
+          popupProps: PopupProps.menu(
+            showSearchBox: true,
+            searchFieldProps: TextFieldProps(
+              decoration: InputDecoration(
+                hintText: "Search...",
+                prefixIcon: Icon(Icons.search),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+            ),
+            constraints: BoxConstraints(maxHeight: 300),
+            // borderRadius: BorderRadius.circular(12),
           ),
         ),
       ),
@@ -1025,6 +1040,7 @@ class _TileSheetPageState extends State<TileSheetPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Card(
+                  color: Colors.white,
                   elevation: 2,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -1041,7 +1057,7 @@ class _TileSheetPageState extends State<TileSheetPage> {
                               weight: FontWeight.w600,
                               color: Colors.black),
                           SizedBox(height: 16),
-                          _buildDropdown(materialList, selectedMaterial,
+                          _buildAnimatedDropdown(materialList, selectedMaterial,
                               (value) {
                             setState(() {
                               selectedMaterial = value;
@@ -1049,8 +1065,10 @@ class _TileSheetPageState extends State<TileSheetPage> {
 // _fetchProductName();
                           },
 // enabled: productList.isNotEmpty,
-                              label: "Material Type"),
-                          _buildDropdown(brandandList, selectedBrands, (value) {
+                              label: "Material Type",
+                              icon: Icons.category_outlined),
+                          _buildAnimatedDropdown(brandandList, selectedBrands,
+                              (value) {
                             setState(() {
                               selectedBrands = value;
 
@@ -1063,8 +1081,12 @@ class _TileSheetPageState extends State<TileSheetPage> {
                               coatingAndList = [];
                             });
                             _fetchColorData();
-                          }, enabled: brandandList.isNotEmpty, label: "Brand"),
-                          _buildDropdown(colorandList, selectedColors, (value) {
+                          },
+                              enabled: brandandList.isNotEmpty,
+                              label: "Brand",
+                              icon: Icons.brightness_auto_outlined),
+                          _buildAnimatedDropdown(colorandList, selectedColors,
+                              (value) {
                             setState(() {
                               selectedColors = value;
 
@@ -1075,9 +1097,12 @@ class _TileSheetPageState extends State<TileSheetPage> {
                               coatingAndList = [];
                             });
                             _fetchThicknessData();
-                          }, enabled: colorandList.isNotEmpty, label: "Color"),
-                          _buildDropdown(thickAndList, selectedThickness,
-                              (value) {
+                          },
+                              enabled: colorandList.isNotEmpty,
+                              label: "Color",
+                              icon: Icons.color_lens_outlined),
+                          _buildAnimatedDropdown(
+                              thickAndList, selectedThickness, (value) {
                             setState(() {
                               selectedThickness = value;
 
@@ -1088,65 +1113,84 @@ class _TileSheetPageState extends State<TileSheetPage> {
                             _fetchCoatingMassData();
                           },
                               enabled: thickAndList.isNotEmpty,
-                              label: "Thickness"),
-                          _buildDropdown(coatingAndList, selectedCoatingMass,
-                              (value) {
+                              label: "Thickness",
+                              icon: Icons.straighten_outlined),
+                          _buildAnimatedDropdown(
+                              coatingAndList, selectedCoatingMass, (value) {
                             setState(() {
                               selectedCoatingMass = value;
                             });
                           },
                               enabled: coatingAndList.isNotEmpty,
-                              label: "Coating Mass"),
-
-                          Gap(20),
-                          Card(
-                            shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10)),
-                            elevation: 1,
-                            child: Padding(
-                              padding: const EdgeInsets.all(12),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  MyText(
-                                      text: "Selected Product Details",
-                                      weight: FontWeight.w600,
-                                      color: Colors.black),
-                                  Gap(5),
-                                  MyText(
-                                      text: selectedItems(),
-                                      weight: FontWeight.w400,
-                                      color: Colors.grey)
-                                ],
-                              ),
+                              label: "Coating Mass",
+                              icon: Icons.layers_outlined),
+                          SizedBox(height: 24),
+                          Container(
+                            padding: EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: Colors.grey[100],
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                  color: Colors.deepPurple[400]!, width: 1.5),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  "Selected Product Details",
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.deepPurple[400],
+                                  ),
+                                ),
+                                SizedBox(height: 8),
+                                Text(
+                                  _selectedItems(),
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 13.5,
+                                    color: Colors.black,
+                                    height: 1.5,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
-// _buildDropdown(coatingAndList, selectedBrand, (value) {
-//   setState(() {
-//     selectedBrand = value;
-//   });
-// }, enabled: coatingAndList.isNotEmpty, label: "Brand"),
-                          SizedBox(height: 20),
-                          SizedBox(
+                          SizedBox(height: 24),
+                          AnimatedContainer(
+                            duration: Duration(milliseconds: 300),
                             width: double.infinity,
-                            height: 50,
+                            height: 54.h,
                             child: ElevatedButton(
                               onPressed: () async {
                                 await postAllData();
                                 _submitData();
                               },
                               style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.deepPurple[400],
                                 foregroundColor: Colors.white,
-                                backgroundColor: Colors.blue,
                                 elevation: 0,
                                 shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(8),
+                                  borderRadius: BorderRadius.circular(12),
                                 ),
                               ),
-                              child: MyText(
-                                  text: "Add Product",
-                                  weight: FontWeight.w600,
-                                  color: Colors.white),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.add_shopping_cart_outlined,
+                                    color: Colors.white,
+                                  ),
+                                  SizedBox(width: 10),
+                                  Text(
+                                    "Add Product",
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                         ],

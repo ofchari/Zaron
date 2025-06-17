@@ -840,7 +840,7 @@ class _GIStiffnerState extends State<GIStiffner> {
     );
   }
 
-  String selectedItems() {
+  String _selectedItems() {
     List<String> values = [
       if (selectedMeterial != null) "Material: $selectedMeterial",
       if (selectedThichness != null) "Thickness: $selectedThichness",
@@ -851,46 +851,61 @@ class _GIStiffnerState extends State<GIStiffner> {
     return values.isEmpty ? "No Selections yet" : values.join(", ");
   }
 
-  Widget _buildDropdown(List<String> items, String? selectedValue,
-      ValueChanged<String?> onChanged,
-      {bool enabled = true, String? label}) {
+  Widget _buildAnimatedDropdown(
+    List<String> items,
+    String? selectedValue,
+    ValueChanged<String?> onChanged, {
+    bool enabled = true,
+    required String label,
+    required IconData icon,
+  }) {
     return Padding(
-      padding: EdgeInsets.symmetric(vertical: 8),
-      child: DropdownSearch<String>(
-        items: items,
-        selectedItem: selectedValue,
-        onChanged: enabled ? onChanged : null,
-        dropdownDecoratorProps: DropDownDecoratorProps(
-          dropdownSearchDecoration: InputDecoration(
-            labelText: label ?? "Select",
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(color: Colors.grey[300]!),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide:
-                  BorderSide(color: Theme.of(context).primaryColor, width: 2),
-            ),
-            filled: true,
-            fillColor: enabled ? Colors.white : Colors.grey[100],
-            contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      padding: EdgeInsets.only(bottom: 16),
+      child: AnimatedContainer(
+        duration: Duration(milliseconds: 200),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(12),
+          color: enabled ? Colors.white : Colors.grey.shade100,
+          border: Border.all(
+            color: enabled ? Colors.grey.shade300 : Colors.grey.shade200,
           ),
+          boxShadow: enabled
+              ? [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.03),
+                    blurRadius: 8,
+                    offset: Offset(0, 2),
+                  ),
+                ]
+              : [],
         ),
-        enabled: enabled,
-        popupProps: PopupProps.menu(
-          showSearchBox: true,
-          searchFieldProps: TextFieldProps(
-            decoration: InputDecoration(
-              hintText: "Search...",
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-              prefixIcon: Icon(Icons.search),
+        child: DropdownSearch<String>(
+          items: items,
+          selectedItem: selectedValue,
+          onChanged: enabled ? onChanged : null,
+          dropdownDecoratorProps: DropDownDecoratorProps(
+            dropdownSearchDecoration: InputDecoration(
+              labelText: label,
+              prefixIcon:
+                  Icon(icon, color: enabled ? Colors.blue : Colors.grey),
+              border: InputBorder.none,
+              contentPadding:
+                  EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             ),
+          ),
+          popupProps: PopupProps.menu(
+            showSearchBox: true,
+            searchFieldProps: TextFieldProps(
+              decoration: InputDecoration(
+                hintText: "Search...",
+                prefixIcon: Icon(Icons.search),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+            ),
+            constraints: BoxConstraints(maxHeight: 300),
+            // borderRadius: BorderRadius.circular(12),
           ),
         ),
       ),
@@ -920,6 +935,7 @@ class _GIStiffnerState extends State<GIStiffner> {
               children: [
                 Card(
                   elevation: 2,
+                  color: Colors.white,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -935,15 +951,17 @@ class _GIStiffnerState extends State<GIStiffner> {
                               weight: FontWeight.w600,
                               color: Colors.black),
                           SizedBox(height: 16),
-                          _buildDropdown(productList, selectedProduct, (value) {
+                          _buildAnimatedDropdown(productList, selectedProduct,
+                              (value) {
                             setState(() {
                               selectedProduct = value;
                             });
 // _fetchProductName();
                           },
 // enabled: productList.isNotEmpty,
-                              label: "Product Name"),
-                          _buildDropdown(meterialList, selectedMeterial,
+                              label: "Product Name",
+                              icon: Icons.category_outlined),
+                          _buildAnimatedDropdown(meterialList, selectedMeterial,
                               (value) {
                             setState(() {
                               selectedMeterial = value;
@@ -959,9 +977,11 @@ class _GIStiffnerState extends State<GIStiffner> {
                               brandList = [];
                             });
                             _fetchThickness();
-                          }, label: "Meterial Type"),
-                          _buildDropdown(thichnessLists, selectedThichness,
-                              (value) {
+                          },
+                              label: "Meterial Type",
+                              icon: Icons.difference_outlined),
+                          _buildAnimatedDropdown(
+                              thichnessLists, selectedThichness, (value) {
                             setState(() {
                               selectedThichness = value;
 
@@ -978,8 +998,10 @@ class _GIStiffnerState extends State<GIStiffner> {
                             _fetchCoat();
                           },
                               enabled: thichnessLists.isNotEmpty,
-                              label: "Thickness"),
-                          _buildDropdown(coatMassList, selsectedCoat, (value) {
+                              label: "Thickness",
+                              icon: Icons.straighten_outlined),
+                          _buildAnimatedDropdown(coatMassList, selsectedCoat,
+                              (value) {
                             setState(() {
                               selsectedCoat = value;
 
@@ -992,8 +1014,10 @@ class _GIStiffnerState extends State<GIStiffner> {
                             _fetchYie();
                           },
                               enabled: coatMassList.isNotEmpty,
-                              label: "Coating Mass"),
-                          _buildDropdown(yieldsListt, selectedyie, (value) {
+                              label: "Coating Mass",
+                              icon: Icons.layers_outlined),
+                          _buildAnimatedDropdown(yieldsListt, selectedyie,
+                              (value) {
                             setState(() {
                               selectedyie = value;
 
@@ -1004,56 +1028,84 @@ class _GIStiffnerState extends State<GIStiffner> {
                             _fetchBrandss();
                           },
                               enabled: yieldsListt.isNotEmpty,
-                              label: "Yield Strength"),
-                          _buildDropdown(brandList, selectedBrand, (value) {
+                              label: "Yield Strength",
+                              icon: Icons.radio_button_checked),
+                          _buildAnimatedDropdown(brandList, selectedBrand,
+                              (value) {
                             setState(() {
                               selectedBrand = value;
                             });
-                          }, enabled: brandList.isNotEmpty, label: "Brand"),
-                          Gap(20),
-                          Card(
-                            shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10)),
-                            elevation: 1,
-                            child: Padding(
-                              padding: const EdgeInsets.all(12),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  MyText(
-                                      text: "Selected Product Details",
-                                      weight: FontWeight.w600,
-                                      color: Colors.black),
-                                  Gap(5),
-                                  MyText(
-                                      text: selectedItems(),
-                                      weight: FontWeight.w400,
-                                      color: Colors.grey)
-                                ],
-                              ),
+                          },
+                              enabled: brandList.isNotEmpty,
+                              label: "Brand",
+                              icon: Icons.brightness_auto_outlined),
+                          SizedBox(height: 24),
+                          Container(
+                            padding: EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: Colors.grey[100],
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                  color: Colors.deepPurple[400]!, width: 1.5),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  "Selected Product Details",
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.deepPurple[400],
+                                  ),
+                                ),
+                                SizedBox(height: 8),
+                                Text(
+                                  _selectedItems(),
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 13.5,
+                                    color: Colors.black,
+                                    height: 1.5,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
-                          SizedBox(height: 20),
-                          SizedBox(
+                          SizedBox(height: 24),
+                          AnimatedContainer(
+                            duration: Duration(milliseconds: 300),
                             width: double.infinity,
-                            height: 50,
+                            height: 54.h,
                             child: ElevatedButton(
                               onPressed: () async {
                                 await postAllData();
                                 _submitData();
                               },
                               style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.deepPurple[400],
                                 foregroundColor: Colors.white,
-                                backgroundColor: Colors.blue,
                                 elevation: 0,
                                 shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(8),
+                                  borderRadius: BorderRadius.circular(12),
                                 ),
                               ),
-                              child: MyText(
-                                  text: "Add Product",
-                                  weight: FontWeight.w600,
-                                  color: Colors.white),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.add_shopping_cart_outlined,
+                                    color: Colors.white,
+                                  ),
+                                  SizedBox(width: 10),
+                                  Text(
+                                    "Add Product",
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                         ],

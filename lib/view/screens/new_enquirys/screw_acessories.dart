@@ -3,11 +3,10 @@ import 'dart:io';
 
 import 'package:dropdown_search/dropdown_search.dart';
 import 'package:flutter/material.dart';
-import 'package:gap/gap.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/io_client.dart';
 import 'package:zaron/view/widgets/subhead.dart';
-import 'package:zaron/view/widgets/text.dart';
 
 import '../../universal_api/api&key.dart';
 
@@ -538,46 +537,61 @@ class _ScrewAccessoriesState extends State<ScrewAccessories> {
     return value.isEmpty ? "No selections yet" : value.join(",  ");
   }
 
-  Widget _buildDropdown(List<String> items, String? selectedValue,
-      ValueChanged<String?> onChanged,
-      {bool enabled = true, String? label}) {
+  Widget _buildAnimatedDropdown(
+    List<String> items,
+    String? selectedValue,
+    ValueChanged<String?> onChanged, {
+    bool enabled = true,
+    required String label,
+    required IconData icon,
+  }) {
     return Padding(
-      padding: EdgeInsets.symmetric(vertical: 8),
-      child: DropdownSearch<String>(
-        items: items,
-        selectedItem: selectedValue,
-        onChanged: enabled ? onChanged : null,
-        dropdownDecoratorProps: DropDownDecoratorProps(
-          dropdownSearchDecoration: InputDecoration(
-            labelText: label ?? "Select",
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(color: Colors.grey[300]!),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide:
-                  BorderSide(color: Theme.of(context).primaryColor, width: 2),
-            ),
-            filled: true,
-            fillColor: enabled ? Colors.white : Colors.grey[100],
-            contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      padding: EdgeInsets.only(bottom: 16),
+      child: AnimatedContainer(
+        duration: Duration(milliseconds: 200),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(12),
+          color: enabled ? Colors.white : Colors.grey.shade100,
+          border: Border.all(
+            color: enabled ? Colors.grey.shade300 : Colors.grey.shade200,
           ),
+          boxShadow: enabled
+              ? [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.03),
+                    blurRadius: 8,
+                    offset: Offset(0, 2),
+                  ),
+                ]
+              : [],
         ),
-        enabled: enabled,
-        popupProps: PopupProps.menu(
-          showSearchBox: true,
-          searchFieldProps: TextFieldProps(
-            decoration: InputDecoration(
-              hintText: "Search...",
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-              prefixIcon: Icon(Icons.search),
+        child: DropdownSearch<String>(
+          items: items,
+          selectedItem: selectedValue,
+          onChanged: enabled ? onChanged : null,
+          dropdownDecoratorProps: DropDownDecoratorProps(
+            dropdownSearchDecoration: InputDecoration(
+              labelText: label,
+              prefixIcon:
+                  Icon(icon, color: enabled ? Colors.blue : Colors.grey),
+              border: InputBorder.none,
+              contentPadding:
+                  EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             ),
+          ),
+          popupProps: PopupProps.menu(
+            showSearchBox: true,
+            searchFieldProps: TextFieldProps(
+              decoration: InputDecoration(
+                hintText: "Search...",
+                prefixIcon: Icon(Icons.search),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+            ),
+            constraints: BoxConstraints(maxHeight: 300),
+            // borderRadius: BorderRadius.circular(12),
           ),
         ),
       ),
@@ -607,6 +621,7 @@ class _ScrewAccessoriesState extends State<ScrewAccessories> {
               children: [
                 Card(
                   elevation: 2,
+                  color: Colors.white,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -622,7 +637,8 @@ class _ScrewAccessoriesState extends State<ScrewAccessories> {
                               weight: FontWeight.w600,
                               color: Colors.black),
                           SizedBox(height: 16),
-                          _buildDropdown(productList, selectedProduct, (value) {
+                          _buildAnimatedDropdown(productList, selectedProduct,
+                              (value) {
                             setState(() {
                               selectedProduct = value;
 
@@ -633,8 +649,9 @@ class _ScrewAccessoriesState extends State<ScrewAccessories> {
                               brandList = [];
                             });
                             _fetchColors();
-                          }, label: "Products"),
-                          _buildDropdown(colorsList, selectedColor, (value) {
+                          }, label: "Products", icon: Icons.category_outlined),
+                          _buildAnimatedDropdown(colorsList, selectedColor,
+                              (value) {
                             setState(() {
                               selectedColor = value;
 
@@ -643,57 +660,85 @@ class _ScrewAccessoriesState extends State<ScrewAccessories> {
                               brandList = [];
                             });
                             _fetchBrand();
-                          }, enabled: colorsList.isNotEmpty, label: "Color"),
-                          _buildDropdown(brandList, selsectedBrand, (value) {
+                          },
+                              enabled: colorsList.isNotEmpty,
+                              label: "Color",
+                              icon: Icons.color_lens_outlined),
+                          _buildAnimatedDropdown(brandList, selsectedBrand,
+                              (value) {
                             setState(() {
                               selsectedBrand = value;
                             });
-                          }, enabled: brandList.isNotEmpty, label: "Brand"),
-                          Gap(20),
-                          Card(
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            elevation: 1,
-                            child: Padding(
-                              padding: const EdgeInsets.all(12),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  MyText(
-                                      text: "Selected Product Details",
-                                      weight: FontWeight.w600,
-                                      color: Colors.black),
-                                  Gap(5),
-                                  MyText(
-                                      text: _selectedItems(),
-                                      weight: FontWeight.w400,
-                                      color: Colors.grey)
-                                ],
+                          },
+                              enabled: brandList.isNotEmpty,
+                              label: "Brand",
+                              icon: Icons.brightness_auto_outlined),
+                          SizedBox(height: 24),
+                          Container(
+                            padding: EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: Colors.grey[100],
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: Colors.deepPurple[400]!,
+                                width: 1.5,
                               ),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  "Selected Product Details",
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.deepPurple[400],
+                                  ),
+                                ),
+                                SizedBox(height: 8),
+                                Text(
+                                  _selectedItems(),
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 13.5,
+                                    color: Colors.black,
+                                    height: 1.5,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
-                          SizedBox(height: 20),
-                          SizedBox(
+                          SizedBox(height: 24),
+                          AnimatedContainer(
+                            duration: Duration(milliseconds: 300),
                             width: double.infinity,
-                            height: 50,
+                            height: 54.h,
                             child: ElevatedButton(
-                              onPressed: () async {
-                                await postAllData();
-                                _submitData();
-                              },
+                              onPressed: _submitData,
                               style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.deepPurple[400],
                                 foregroundColor: Colors.white,
-                                backgroundColor: Colors.blue,
                                 elevation: 0,
                                 shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(8),
+                                  borderRadius: BorderRadius.circular(12),
                                 ),
                               ),
-                              child: MyText(
-                                  text: "Add Product",
-                                  weight: FontWeight.w600,
-                                  color: Colors.white),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.add_shopping_cart_outlined,
+                                    color: Colors.white,
+                                  ),
+                                  SizedBox(width: 10),
+                                  Text(
+                                    "Add Product",
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                         ],

@@ -375,7 +375,7 @@ class _LoginState extends State<Login> {
                             gradient: LinearGradient(
                               colors: [
                                 Colors.orange[600]!,
-                                Colors.orange[100]!
+                                Colors.orange[300]!
                               ],
                             ),
                             borderRadius: BorderRadius.circular(15.r),

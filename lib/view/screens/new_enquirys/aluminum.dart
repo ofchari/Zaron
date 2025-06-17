@@ -4,13 +4,10 @@ import 'dart:io';
 import 'package:dropdown_search/dropdown_search.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:gap/gap.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/io_client.dart';
 import 'package:zaron/view/screens/global_user/global_user.dart';
 import 'package:zaron/view/universal_api/api&key.dart';
-import 'package:zaron/view/widgets/subhead.dart';
-import 'package:zaron/view/widgets/text.dart';
 
 class Aluminum extends StatefulWidget {
   const Aluminum({super.key, required this.data});
@@ -36,8 +33,9 @@ class _AluminumState extends State<Aluminum> {
   List<String> thicknessList = [];
   List<String> materialTypeList = [];
   List<Map<String, dynamic>> submittedData = [];
+  Map<String, dynamic>? apiResponseData;
+  List<Map<String, dynamic>> apiProductsList = [];
 
-// Form key for validation
   final _formKey = GlobalKey<FormState>();
 
   @override
@@ -87,7 +85,6 @@ class _AluminumState extends State<Aluminum> {
     }
   }
 
-  /// fetch thickness Api's //
   Future<void> _fetchThickness() async {
     if (selectedMaterialType == null) return;
 
@@ -136,7 +133,6 @@ class _AluminumState extends State<Aluminum> {
     }
   }
 
-  /// fetch Brand Api's ///
   Future<void> _fetchBrand() async {
     if (selectedMaterialType == null) return;
 
@@ -185,8 +181,6 @@ class _AluminumState extends State<Aluminum> {
     }
   }
 
-//
-// /// fetch Color Api's ///
   Future<void> _fetchColor() async {
     if (selectedMaterialType == null) return;
 
@@ -227,7 +221,6 @@ class _AluminumState extends State<Aluminum> {
         if (data["message"]["message"] is List) {
           final List message = data["message"]["message"];
 
-          // Extract colors
           final colorData = message[0];
           if (colorData is List) {
             setState(() {
@@ -239,15 +232,13 @@ class _AluminumState extends State<Aluminum> {
             });
           }
 
-          // Extract ID and base_product_id
           final idData = message.length > 1 ? message[1] : null;
           if (idData is List && idData.isNotEmpty && idData.first is Map) {
             selectedProductBaseId = idData.first["id"]?.toString();
             selectedBaseProductName =
-                idData.first["base_product_id"]?.toString(); // <-- New line
+                idData.first["base_product_id"]?.toString();
             print("Selected Base Product ID: $selectedProductBaseId");
-            print(
-                "Base Product Name: $selectedBaseProductName"); // <-- New line
+            print("Base Product Name: $selectedBaseProductName");
           }
         }
       }
@@ -256,11 +247,6 @@ class _AluminumState extends State<Aluminum> {
     }
   }
 
-  // 1. ADD THESE VARIABLES AT THE TOP OF YOUR CLASS (after existing variables)
-  Map<String, dynamic>? apiResponseData;
-  List<Map<String, dynamic>> apiProductsList = [];
-
-// 2. MODIFY YOUR postAllData() METHOD - Replace the existing method with this:
   Future<void> postAllData() async {
     HttpClient client = HttpClient();
     client.badCertificateCallback =
@@ -290,7 +276,6 @@ class _AluminumState extends State<Aluminum> {
       debugPrint("This is a response: ${response.body}");
 
       if (response.statusCode == 200) {
-        // Parse and store the API response
         final responseData = jsonDecode(response.body);
         setState(() {
           apiResponseData = responseData;
@@ -313,7 +298,6 @@ class _AluminumState extends State<Aluminum> {
     }
   }
 
-  /// 3. ADD THIS NEW METHOD to build API response data display:
   Widget _buildApiResponseDataList() {
     if (apiProductsList.isEmpty) {
       return Container(
@@ -334,7 +318,6 @@ class _AluminumState extends State<Aluminum> {
 
     return Column(
       children: apiProductsList.asMap().entries.map((entry) {
-        int index = entry.key;
         Map<String, dynamic> data = entry.value;
 
         return Card(
@@ -348,14 +331,13 @@ class _AluminumState extends State<Aluminum> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Header with S.No and Product Name
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Expanded(
                       child: Text(
                         "${data['S.No']}. ${data['Products']}",
-                        style: GoogleFonts.figtree(
+                        style: GoogleFonts.poppins(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
                           color: Colors.black87,
@@ -380,65 +362,72 @@ class _AluminumState extends State<Aluminum> {
                   ],
                 ),
                 SizedBox(height: 16),
-
-                // First Row: UOM, Billing Option, Length
                 Row(
                   children: [
                     Expanded(
                       child: _buildApiDetailItem(
-                          "UOM", _buildApiUomDropdown(data)),
+                        "UOM",
+                        _buildApiUomDropdown(data),
+                      ),
                     ),
                     SizedBox(width: 10),
                     Expanded(
                       child: _buildApiDetailItem(
-                          "Billing Option", _buildApiBillingDropdown(data)),
+                        "Billing Option",
+                        _buildApiBillingDropdown(data),
+                      ),
                     ),
                     SizedBox(width: 10),
                     Expanded(
                       child: _buildApiDetailItem(
-                          "Length", _buildApiEditableField(data, "Length")),
+                        "Length",
+                        _buildApiEditableField(data, "Length"),
+                      ),
                     ),
                   ],
                 ),
-
                 SizedBox(height: 12),
-
-                // Second Row: Crimp, Nos, Qty
                 Row(
                   children: [
                     Expanded(
                       child: _buildApiDetailItem(
-                          "Crimp", _buildApiReadOnlyField(data, "Crimp")),
+                        "Crimp",
+                        _buildApiReadOnlyField(data, "Crimp"),
+                      ),
                     ),
                     SizedBox(width: 10),
                     Expanded(
                       child: _buildApiDetailItem(
-                          "Nos", _buildApiEditableField(data, "Nos")),
+                        "Nos",
+                        _buildApiEditableField(data, "Nos"),
+                      ),
                     ),
                     SizedBox(width: 10),
                     Expanded(
                       child: _buildApiDetailItem(
-                          "Qty", _buildApiEditableField(data, "Qty")),
+                        "Qty",
+                        _buildApiEditableField(data, "Qty"),
+                      ),
                     ),
                   ],
                 ),
-
                 SizedBox(height: 12),
-
-                // Third Row: Basic Rate, Amount
                 Row(
                   children: [
                     Expanded(
-                      child: _buildApiDetailItem("Basic Rate",
-                          _buildApiReadOnlyField(data, "Basic Rate")),
+                      child: _buildApiDetailItem(
+                        "Basic Rate",
+                        _buildApiReadOnlyField(data, "Basic Rate"),
+                      ),
                     ),
                     SizedBox(width: 10),
                     Expanded(
                       child: _buildApiDetailItem(
-                          "Amount", _buildApiReadOnlyField(data, "Amount")),
+                        "Amount",
+                        _buildApiReadOnlyField(data, "Amount"),
+                      ),
                     ),
-                    Expanded(
-                        child: SizedBox()), // Empty space to balance the row
+                    Expanded(child: SizedBox()),
                   ],
                 ),
               ],
@@ -449,14 +438,13 @@ class _AluminumState extends State<Aluminum> {
     );
   }
 
-  // 4. ADD THESE HELPER METHODS:
   Widget _buildApiDetailItem(String label, Widget field) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           label,
-          style: TextStyle(
+          style: GoogleFonts.poppins(
             fontWeight: FontWeight.w500,
             color: Colors.grey[700],
             fontSize: 14,
@@ -469,12 +457,12 @@ class _AluminumState extends State<Aluminum> {
   }
 
   Widget _buildApiEditableField(Map<String, dynamic> data, String key) {
-    return SizedBox(
+    return Container(
       height: 40,
       child: TextField(
         controller: TextEditingController(text: data[key]?.toString() ?? ""),
         onChanged: (val) => data[key] = val,
-        style: GoogleFonts.figtree(
+        style: GoogleFonts.poppins(
           fontWeight: FontWeight.w500,
           color: Colors.black,
           fontSize: 14,
@@ -491,8 +479,7 @@ class _AluminumState extends State<Aluminum> {
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(6),
-            borderSide:
-                BorderSide(color: Theme.of(context).primaryColor, width: 2),
+            borderSide: BorderSide(color: Colors.deepPurple[400]!, width: 2),
           ),
           filled: true,
           fillColor: Colors.white,
@@ -514,7 +501,7 @@ class _AluminumState extends State<Aluminum> {
         alignment: Alignment.centerLeft,
         child: Text(
           data[key]?.toString() ?? "",
-          style: GoogleFonts.figtree(
+          style: GoogleFonts.poppins(
             fontWeight: FontWeight.w500,
             color: Colors.grey[600],
             fontSize: 14,
@@ -529,14 +516,17 @@ class _AluminumState extends State<Aluminum> {
     String currentValue = uomData['value']?.toString() ?? "";
     Map<String, dynamic> options = uomData['options'] ?? {};
 
-    return SizedBox(
+    return Container(
       height: 40,
       child: DropdownButtonFormField<String>(
         value: currentValue.isNotEmpty ? currentValue : null,
         items: options.entries.map((entry) {
           return DropdownMenuItem<String>(
             value: entry.key.toString(),
-            child: Text(entry.value.toString()),
+            child: Text(
+              entry.value.toString(),
+              style: GoogleFonts.poppins(fontSize: 14),
+            ),
           );
         }).toList(),
         onChanged: (val) {
@@ -556,8 +546,7 @@ class _AluminumState extends State<Aluminum> {
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(6),
-            borderSide:
-                BorderSide(color: Theme.of(context).primaryColor, width: 2),
+            borderSide: BorderSide(color: Colors.deepPurple[400]!, width: 2),
           ),
           filled: true,
           fillColor: Colors.white,
@@ -571,7 +560,7 @@ class _AluminumState extends State<Aluminum> {
     String currentValue = billingData['value']?.toString() ?? "";
     Map<String, dynamic> options = billingData['options'] ?? {};
 
-    return SizedBox(
+    return Container(
       height: 40,
       child: DropdownButtonFormField<String>(
         isExpanded: true,
@@ -579,7 +568,10 @@ class _AluminumState extends State<Aluminum> {
         items: options.entries.map((entry) {
           return DropdownMenuItem<String>(
             value: entry.key.toString(),
-            child: Text(entry.value.toString()),
+            child: Text(
+              entry.value.toString(),
+              style: GoogleFonts.poppins(fontSize: 14),
+            ),
           );
         }).toList(),
         onChanged: (val) {
@@ -599,8 +591,7 @@ class _AluminumState extends State<Aluminum> {
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(6),
-            borderSide:
-                BorderSide(color: Theme.of(context).primaryColor, width: 2),
+            borderSide: BorderSide(color: Colors.deepPurple[400]!, width: 2),
           ),
           filled: true,
           fillColor: Colors.white,
@@ -614,7 +605,6 @@ class _AluminumState extends State<Aluminum> {
         selectedColor == null ||
         selectedThickness == null ||
         selectedMaterialType == null) {
-// Show elegant error message
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
@@ -630,332 +620,104 @@ class _AluminumState extends State<Aluminum> {
       );
       return;
     }
-    setState(() {
-      submittedData.add({
-        "Product": "Aluminum",
-        "UOM": "Feet",
-        "Length": "0",
-        "Nos": "1",
-        "Basic Rate": "0",
-        "SQ": "0",
-        "Amount": "0",
-        "Base Product":
-            " $selectedMaterialType,  $selectedThickness, $selectedBrand, $selectedColor,",
+    postAllData().then((_) {
+      setState(() {
+        selectedMaterialType = null;
+        selectedThickness = null;
+        selectedBrand = null;
+        selectedColor = null;
+        materialTypeList = [];
+        thicknessList = [];
+        brandsList = [];
+        colorsList = [];
+        _fetchMaterialType();
       });
-      selectedMaterialType = null;
-      selectedThickness = null;
-      selectedBrand = null;
-      selectedColor = null;
-      materialTypeList = [];
-      thicknessList = [];
-      brandsList = [];
-      colorsList = [];
-      _fetchMaterialType();
-    });
 
-// Show success message with a more elegant snackbar
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            Icon(Icons.check_circle, color: Colors.white),
-            SizedBox(width: 12),
-            Text("Product added successfully"),
-          ],
-        ),
-        backgroundColor: Colors.green,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
-        margin: EdgeInsets.all(16),
-        duration: Duration(seconds: 2),
-      ),
-    );
-  }
-
-  Widget _buildSubmittedDataList() {
-    if (submittedData.isEmpty) {
-      return Container(
-        padding: EdgeInsets.symmetric(vertical: 40),
-        alignment: Alignment.center,
-        child: Column(
-          children: [
-            Icon(Icons.inventory_2_outlined, size: 60, color: Colors.grey[400]),
-            SizedBox(height: 16),
-            Text(
-              "No products added yet.",
-              style: TextStyle(fontSize: 16, color: Colors.grey[600]),
-            ),
-          ],
-        ),
-      );
-    }
-
-    return Column(
-      children: submittedData.asMap().entries.map((entry) {
-        int index = entry.key;
-        Map<String, dynamic> data = entry.value;
-
-        return Card(
-          margin: EdgeInsets.symmetric(vertical: 10),
-          elevation: 2,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            crossAxisAlignment: CrossAxisAlignment.start,
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.only(top: 15),
-                    child: SizedBox(
-                      // color: Colors.red,
-                      height: 40.h,
-                      width: 210.w,
-
-                      child: Text(
-                        "  ${index + 1}.  ${data["Product"]}" ?? "",
-                        overflow: TextOverflow.ellipsis,
-                        style: GoogleFonts.figtree(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.black87),
-                      ),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Container(
-                      height: 40.h,
-                      width: 50.w,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(10),
-                        color: Colors.deepPurple[50],
-                      ),
-                      child: IconButton(
-                        icon: Icon(
-                          Icons.delete,
-                          color: Colors.redAccent,
-                        ),
-                        onPressed: () {
-                          showDialog(
-                              context: context,
-                              builder: (context) {
-                                return AlertDialog(
-                                  title: Subhead(
-                                      text:
-                                          "Are you Sure to Delete This Item ?",
-                                      weight: FontWeight.w500,
-                                      color: Colors.black),
-                                  actions: [
-                                    ElevatedButton(
-                                      onPressed: () {
-                                        setState(() {
-                                          submittedData.removeAt(index);
-                                        });
-                                        Navigator.pop(context);
-                                      },
-                                      child: Text("Yes"),
-                                    ),
-                                    ElevatedButton(
-                                      onPressed: () {
-                                        Navigator.pop(context);
-                                      },
-                                      child: Text("No"),
-                                    )
-                                  ],
-                                );
-                              });
-                        },
-                      ),
-                    ),
-                  )
-                ],
-              ),
-              _buildApiResponseDataList(),
-              // Row(
-              //   children: [
-              //     MyText(
-              //         text: "  UOM - ",
-              //         weight: FontWeight.w600,
-              //         color: Colors.grey.shade600),
-              //     MyText(
-              //         text: "Length - ",
-              //         weight: FontWeight.w600,
-              //         color: Colors.grey.shade600),
-              //     MyText(
-              //         text: "Nos  ",
-              //         weight: FontWeight.w600,
-              //         color: Colors.grey.shade600),
-              //   ],
-              // ),
-              Padding(
-                padding: const EdgeInsets.only(top: 8.0, left: 8),
-                child: Container(
-                  height: 40.h,
-                  width: double.infinity.w,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Row(
-// mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Container(
-                        // color: Colors.red,
-                        height: 40.h,
-                        width: 280.w,
-                        child: TextField(
-                          style: TextStyle(
-                              fontSize: 13.sp,
-                              color: Colors.black87,
-                              fontWeight: FontWeight.w500),
-                          decoration: InputDecoration(
-                            enabledBorder: InputBorder.none,
-                            focusedBorder: InputBorder.none,
-                          ),
-                          controller: TextEditingController(
-                              text: " ${data["Base Product"]}"),
-                          readOnly: true,
-                        ),
-                      ),
-                      Gap(5),
-                      Container(
-                          height: 30.h,
-                          width: 30.w,
-                          decoration: BoxDecoration(
-                              color: Colors.grey[200],
-                              borderRadius: BorderRadius.circular(10)),
-                          child: IconButton(
-                              onPressed: () {
-                                editController.text = data["Base Product"];
-                                showDialog(
-                                    context: context,
-                                    builder: (context) {
-                                      return AlertDialog(
-                                        title: Text("Edit Your Aluminum"),
-                                        content: Column(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            Container(
-                                              height: 40.h,
-                                              width: double.infinity.w,
-                                              decoration: BoxDecoration(
-                                                borderRadius:
-                                                    BorderRadius.circular(10),
-                                                color: Colors.white,
-                                              ),
-                                              child: Padding(
-                                                padding: const EdgeInsets.only(
-                                                    left: 7.0),
-                                                child: TextField(
-                                                  decoration: InputDecoration(
-                                                    enabledBorder:
-                                                        InputBorder.none,
-                                                    focusedBorder:
-                                                        InputBorder.none,
-                                                  ),
-                                                  controller: editController,
-                                                  onSubmitted: (value) {
-                                                    setState(() {
-                                                      data["Base Product"] =
-                                                          value;
-                                                    });
-                                                    Navigator.pop(context);
-                                                  },
-                                                ),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                        actions: [
-                                          ElevatedButton(
-                                              onPressed: () {
-                                                setState(() {
-                                                  data["Base Product"] =
-                                                      editController.text;
-                                                });
-                                                Navigator.pop(context);
-                                              },
-                                              child: MyText(
-                                                  text: "Save",
-                                                  weight: FontWeight.w500,
-                                                  color: Colors.black))
-                                        ],
-                                      );
-                                    });
-                              },
-                              icon: Icon(
-                                Icons.edit,
-                                size: 15,
-                              )))
-                    ],
-                  ),
-                ),
-              ),
-              Gap(5),
+              Icon(Icons.check_circle, color: Colors.white),
+              SizedBox(width: 12),
+              Text("Product added successfully"),
             ],
           ),
-        );
-      }).toList(),
-    );
+          backgroundColor: Colors.green,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+          ),
+          margin: EdgeInsets.all(16),
+          duration: Duration(seconds: 2),
+        ),
+      );
+    });
   }
 
   String _selectedItems() {
     List<String> value = [
       if (selectedMaterialType != null) "Material: $selectedMaterialType",
       if (selectedThickness != null) "Thickness: $selectedThickness",
-      if (selectedBrand != null) "brand: $selectedBrand",
+      if (selectedBrand != null) "Brand: $selectedBrand",
       if (selectedColor != null) "Color: $selectedColor",
     ];
     return value.isEmpty ? "No selections yet" : value.join(",  ");
   }
 
-  Widget _buildDropdown(List<String> items, String? selectedValue,
-      ValueChanged<String?> onChanged,
-      {bool enabled = true, String? label}) {
+  Widget _buildAnimatedDropdown(
+    List<String> items,
+    String? selectedValue,
+    ValueChanged<String?> onChanged, {
+    bool enabled = true,
+    required String label,
+    required IconData icon,
+  }) {
     return Padding(
-      padding: EdgeInsets.symmetric(vertical: 8),
-      child: DropdownSearch<String>(
-        items: items,
-        selectedItem: selectedValue,
-        onChanged: enabled ? onChanged : null,
-        dropdownDecoratorProps: DropDownDecoratorProps(
-          dropdownSearchDecoration: InputDecoration(
-            labelText: label ?? "Select",
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(color: Colors.grey[300]!),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide:
-                  BorderSide(color: Theme.of(context).primaryColor, width: 2),
-            ),
-            filled: true,
-            fillColor: enabled ? Colors.white : Colors.grey[100],
-            contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      padding: EdgeInsets.only(bottom: 16),
+      child: AnimatedContainer(
+        duration: Duration(milliseconds: 200),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(12),
+          color: enabled ? Colors.white : Colors.grey.shade100,
+          border: Border.all(
+            color: enabled ? Colors.grey.shade300 : Colors.grey.shade200,
           ),
+          boxShadow: enabled
+              ? [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.03),
+                    blurRadius: 8,
+                    offset: Offset(0, 2),
+                  ),
+                ]
+              : [],
         ),
-        enabled: enabled,
-        popupProps: PopupProps.menu(
-          showSearchBox: true,
-          searchFieldProps: TextFieldProps(
-            decoration: InputDecoration(
-              hintText: "Search...",
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-              prefixIcon: Icon(Icons.search),
+        child: DropdownSearch<String>(
+          items: items,
+          selectedItem: selectedValue,
+          onChanged: enabled ? onChanged : null,
+          dropdownDecoratorProps: DropDownDecoratorProps(
+            dropdownSearchDecoration: InputDecoration(
+              labelText: label,
+              prefixIcon: Icon(icon,
+                  color: enabled ? Colors.deepPurple[400] : Colors.grey),
+              border: InputBorder.none,
+              contentPadding:
+                  EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             ),
+          ),
+          popupProps: PopupProps.menu(
+            showSearchBox: true,
+            searchFieldProps: TextFieldProps(
+              decoration: InputDecoration(
+                hintText: "Search...",
+                prefixIcon: Icon(Icons.search),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+            ),
+            constraints: BoxConstraints(maxHeight: 300),
           ),
         ),
       ),
@@ -966,130 +728,193 @@ class _AluminumState extends State<Aluminum> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Subhead(
-          text: 'Aluminum',
-          weight: FontWeight.w500,
-          color: Colors.black,
+        title: Text(
+          'Aluminum',
+          style: GoogleFonts.poppins(
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
+            color: Colors.black87,
+          ),
         ),
         centerTitle: true,
         elevation: 0,
         backgroundColor: Colors.white,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: Colors.black87),
+          onPressed: () => Navigator.pop(context),
+        ),
       ),
       body: Container(
-        color: Colors.grey[50],
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Colors.white, Colors.grey.shade50],
+          ),
+        ),
         child: Padding(
-          padding: EdgeInsets.all(16),
+          padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
           child: SingleChildScrollView(
+            physics: BouncingScrollPhysics(),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Card(
-                  elevation: 2,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 10,
+                        offset: Offset(0, 5),
+                      ),
+                    ],
                   ),
                   child: Padding(
-                    padding: EdgeInsets.all(16),
+                    padding: EdgeInsets.all(20),
                     child: Form(
                       key: _formKey,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Subhead(
-                              text: "Add New Product",
-                              weight: FontWeight.w600,
-                              color: Colors.black),
-                          SizedBox(height: 16),
-                          _buildDropdown(materialTypeList, selectedMaterialType,
-                              (value) {
-                            setState(() {
-                              selectedMaterialType = value;
-
-                              ///clear fields
-                              selectedThickness = null;
-                              selectedBrand = null;
-                              selectedColor = null;
-                              thicknessList = [];
-                              brandsList = [];
-                              colorsList = [];
-                            });
-                            _fetchThickness();
-                          }, label: "Material Type"),
-                          _buildDropdown(thicknessList, selectedThickness,
-                              (value) {
-                            setState(() {
-                              selectedThickness = value;
-
-                              ///clear fields
-                              selectedBrand = null;
-                              selectedColor = null;
-                              brandsList = [];
-                              colorsList = [];
-                            });
-                            _fetchBrand();
-                          },
-                              enabled: thicknessList.isNotEmpty,
-                              label: "Thickness"),
-                          _buildDropdown(brandsList, selectedBrand, (value) {
-                            setState(() {
-                              selectedBrand = value;
-
-                              ///clear fields
-                              selectedColor = null;
-                              colorsList = [];
-                            });
-                            _fetchColor();
-                          }, enabled: brandsList.isNotEmpty, label: "Brand"),
-                          _buildDropdown(colorsList, selectedColor, (value) {
-                            setState(() {
-                              selectedColor = value;
-                            });
-                          }, enabled: colorsList.isNotEmpty, label: "Color"),
-                          Gap(20.h),
-                          Card(
-                            elevation: 1,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: Padding(
-                              padding: const EdgeInsets.all(12),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  MyText(
-                                      text: "Selected Product Details",
-                                      weight: FontWeight.w600,
-                                      color: Colors.black),
-                                  Gap(5),
-                                  MyText(
-                                      text: _selectedItems(),
-                                      weight: FontWeight.w400,
-                                      color: Colors.grey)
-                                ],
-                              ),
+                          Text(
+                            "Add New Product",
+                            style: GoogleFonts.poppins(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.black87,
                             ),
                           ),
-                          SizedBox(height: 20),
-                          SizedBox(
+                          SizedBox(height: 24),
+                          _buildAnimatedDropdown(
+                            materialTypeList,
+                            selectedMaterialType,
+                            (value) {
+                              setState(() {
+                                selectedMaterialType = value;
+                                selectedThickness = null;
+                                selectedBrand = null;
+                                selectedColor = null;
+                                thicknessList = [];
+                                brandsList = [];
+                                colorsList = [];
+                              });
+                              _fetchThickness();
+                            },
+                            label: "Material Type",
+                            icon: Icons.difference_outlined,
+                          ),
+                          _buildAnimatedDropdown(
+                            thicknessList,
+                            selectedThickness,
+                            (value) {
+                              setState(() {
+                                selectedThickness = value;
+                                selectedBrand = null;
+                                selectedColor = null;
+                                brandsList = [];
+                                colorsList = [];
+                              });
+                              _fetchBrand();
+                            },
+                            enabled: thicknessList.isNotEmpty,
+                            label: "Thickness",
+                            icon: Icons.straighten_outlined,
+                          ),
+                          _buildAnimatedDropdown(
+                            brandsList,
+                            selectedBrand,
+                            (value) {
+                              setState(() {
+                                selectedBrand = value;
+                                selectedColor = null;
+                                colorsList = [];
+                              });
+                              _fetchColor();
+                            },
+                            enabled: brandsList.isNotEmpty,
+                            label: "Brand",
+                            icon: Icons.brightness_auto_outlined,
+                          ),
+                          _buildAnimatedDropdown(
+                            colorsList,
+                            selectedColor,
+                            (value) {
+                              setState(() {
+                                selectedColor = value;
+                              });
+                            },
+                            enabled: colorsList.isNotEmpty,
+                            label: "Color",
+                            icon: Icons.color_lens_outlined,
+                          ),
+                          SizedBox(height: 24),
+                          Container(
+                            padding: EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: Colors.grey[100],
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: Colors.deepPurple[400]!,
+                                width: 1.5,
+                              ),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  "Selected Product Details",
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.deepPurple[400],
+                                  ),
+                                ),
+                                SizedBox(height: 8),
+                                Text(
+                                  _selectedItems(),
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 13.5,
+                                    color: Colors.black,
+                                    height: 1.5,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          SizedBox(height: 24),
+                          AnimatedContainer(
+                            duration: Duration(milliseconds: 300),
                             width: double.infinity,
-                            height: 50,
+                            height: 54.h,
                             child: ElevatedButton(
-                              onPressed: () async {
-                                await postAllData();
-                                _submitData();
-                              },
+                              onPressed: _submitData,
                               style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.deepPurple[400],
                                 foregroundColor: Colors.white,
-                                backgroundColor: Colors.blue,
                                 elevation: 0,
                                 shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(8),
+                                  borderRadius: BorderRadius.circular(12),
                                 ),
                               ),
-                              child: MyText(
-                                  text: "Add Product",
-                                  weight: FontWeight.w600,
-                                  color: Colors.white),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.add_shopping_cart_outlined,
+                                    color: Colors.white,
+                                  ),
+                                  SizedBox(width: 10),
+                                  Text(
+                                    "Add Product",
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                         ],
@@ -1097,22 +922,29 @@ class _AluminumState extends State<Aluminum> {
                     ),
                   ),
                 ),
-                SizedBox(height: 24),
-                // if (submittedData.isNotEmpty)
-                //   Subhead(
-                //       text: "   Added Products",
-                //       weight: FontWeight.w600,
-                //       color: Colors.black),
-                // SizedBox(height: 8),
-                // _buildSubmittedDataList(),
-                SizedBox(height: 10),
-                if (apiProductsList.isNotEmpty)
-                  Subhead(
-                      text: "   API Response Data",
-                      weight: FontWeight.w600,
-                      color: Colors.black),
-                SizedBox(height: 8),
-                _buildApiResponseDataList(),
+                if (apiProductsList.isNotEmpty) ...[
+                  SizedBox(height: 24),
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 4),
+                    child: Row(
+                      children: [
+                        Icon(Icons.shopping_bag_outlined,
+                            color: Colors.grey.shade700),
+                        SizedBox(width: 8),
+                        Text(
+                          "API Response Data",
+                          style: GoogleFonts.poppins(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.grey.shade800,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  SizedBox(height: 12),
+                  _buildApiResponseDataList(),
+                ],
               ],
             ),
           ),

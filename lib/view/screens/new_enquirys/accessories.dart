@@ -10,7 +10,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:http/io_client.dart';
 import 'package:zaron/view/universal_api/api&key.dart';
 import 'package:zaron/view/widgets/subhead.dart';
-import 'package:zaron/view/widgets/text.dart';
 
 import '../global_user/global_user.dart';
 
@@ -442,6 +441,10 @@ class _AccessoriesState extends State<Accessories> {
     );
   }
 
+  // 1. Add this variable after line 25 (with other existing variables)
+  bool isGridView = true; // Add this line
+
+// 2. Replace the existing _buildSubmittedDataList() method with this updated version:
   Widget _buildSubmittedDataList() {
     if (responseProducts.isEmpty) {
       return Container(
@@ -460,6 +463,76 @@ class _AccessoriesState extends State<Accessories> {
       );
     }
 
+    return Column(
+      children: [
+        // Toggle Button Row
+        Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.grey[100],
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        isGridView = true;
+                      });
+                    },
+                    child: Container(
+                      padding:
+                          EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: isGridView ? Colors.blue : Colors.transparent,
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Icon(
+                        Icons.grid_view,
+                        color: isGridView ? Colors.white : Colors.grey[600],
+                        size: 20,
+                      ),
+                    ),
+                  ),
+                  SizedBox(width: 4),
+                  GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        isGridView = false;
+                      });
+                    },
+                    child: Container(
+                      padding:
+                          EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: !isGridView ? Colors.blue : Colors.transparent,
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Icon(
+                        Icons.list,
+                        color: !isGridView ? Colors.white : Colors.grey[600],
+                        size: 20,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        SizedBox(height: 16),
+
+        // Content based on view type
+        isGridView ? _buildGridView() : _buildListView(),
+      ],
+    );
+  }
+
+// 3. Add this new method for Grid View (your existing card layout):
+  Widget _buildGridView() {
     return Column(
       children: responseProducts.asMap().entries.map((entry) {
         int index = entry.key;
@@ -566,6 +639,164 @@ class _AccessoriesState extends State<Accessories> {
           ),
         );
       }).toList(),
+    );
+  }
+
+// 4. Add this new method for List View (compact horizontal layout):
+  Widget _buildListView() {
+    return Column(
+      children: responseProducts.asMap().entries.map((entry) {
+        int index = entry.key;
+        Map<String, dynamic> data = Map<String, dynamic>.from(entry.value);
+
+        return Card(
+          margin: EdgeInsets.symmetric(vertical: 6),
+          elevation: 1,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Padding(
+            padding: EdgeInsets.all(12),
+            child: Column(
+              children: [
+                // Product Header Row
+                Row(
+                  children: [
+                    Expanded(
+                      flex: 3,
+                      child: Text(
+                        "${index + 1}. ${data["Products"]}" ?? "",
+                        style: GoogleFonts.figtree(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.black87),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    Container(
+                      padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: Colors.blue[50],
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(
+                        "ID: ${data['id']}",
+                        style: TextStyle(
+                          fontSize: 10,
+                          color: Colors.blue[700],
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: 8),
+                    Container(
+                      height: 32,
+                      width: 32,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(6),
+                        color: Colors.red[50],
+                      ),
+                      child: IconButton(
+                        padding: EdgeInsets.zero,
+                        icon: Icon(Icons.delete,
+                            color: Colors.redAccent, size: 18),
+                        onPressed: () {
+                          showDialog(
+                              context: context,
+                              builder: (context) {
+                                return AlertDialog(
+                                  title: Subhead(
+                                      text: "Delete This Item?",
+                                      weight: FontWeight.w500,
+                                      color: Colors.black),
+                                  actions: [
+                                    ElevatedButton(
+                                      onPressed: () {
+                                        setState(() {
+                                          responseProducts.removeAt(index);
+                                        });
+                                        Navigator.pop(context);
+                                      },
+                                      child: Text("Yes"),
+                                    ),
+                                    ElevatedButton(
+                                      onPressed: () {
+                                        Navigator.pop(context);
+                                      },
+                                      child: Text("No"),
+                                    )
+                                  ],
+                                );
+                              });
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 12),
+
+                // Compact Data Row
+                Row(
+                  children: [
+                    Expanded(
+                      child:
+                          _buildCompactField("UOM", _uomDropdownFromApi(data)),
+                    ),
+                    SizedBox(width: 8),
+                    Expanded(
+                      child: _buildCompactField(
+                          "Length", _editableTextField(data, "Profile")),
+                    ),
+                    SizedBox(width: 8),
+                    Expanded(
+                      child: _buildCompactField(
+                          "Nos", _editableTextField(data, "Nos")),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 8),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildCompactField(
+                          "Basic Rate", _editableTextField(data, "Basic Rate")),
+                    ),
+                    SizedBox(width: 8),
+                    Expanded(
+                      child: _buildCompactField(
+                          "R.Ft", _editableTextField(data, "R.Ft")),
+                    ),
+                    SizedBox(width: 8),
+                    Expanded(
+                      child: _buildCompactField(
+                          "Amount", _editableTextField(data, "Amount")),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+// 5. Add this helper method for compact fields in list view:
+  Widget _buildCompactField(String label, Widget field) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            fontWeight: FontWeight.w500,
+            color: Colors.grey[600],
+            fontSize: 12,
+          ),
+        ),
+        SizedBox(height: 4),
+        SizedBox(height: 32, child: field),
+      ],
     );
   }
 
@@ -768,52 +999,6 @@ class _AccessoriesState extends State<Accessories> {
       if (selectedCoatingMass != null) "CoatingMass: $selectedCoatingMass",
     ];
     return value.isEmpty ? "No selection yet" : value.join(",  ");
-  }
-
-  Widget _buildDropdown(List<String> items, String? selectedValue,
-      ValueChanged<String?> onChanged,
-      {bool enabled = true, String? label}) {
-    return Padding(
-      padding: EdgeInsets.symmetric(vertical: 8),
-      child: DropdownSearch<String>(
-        items: items,
-        selectedItem: selectedValue,
-        onChanged: enabled ? onChanged : null,
-        dropdownDecoratorProps: DropDownDecoratorProps(
-          dropdownSearchDecoration: InputDecoration(
-            labelText: label ?? "Select",
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(color: Colors.grey[300]!),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide:
-                  BorderSide(color: Theme.of(context).primaryColor, width: 2),
-            ),
-            filled: true,
-            fillColor: enabled ? Colors.white : Colors.grey[100],
-            contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-          ),
-        ),
-        enabled: enabled,
-        popupProps: PopupProps.menu(
-          showSearchBox: true,
-          searchFieldProps: TextFieldProps(
-            decoration: InputDecoration(
-              hintText: "Search...",
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-              prefixIcon: Icon(Icons.search),
-            ),
-          ),
-        ),
-      ),
-    );
   }
 
   // Add these variables after existing declarations
@@ -1022,148 +1207,206 @@ class _AccessoriesState extends State<Accessories> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Subhead(
-          text: 'Accessories',
-          weight: FontWeight.w500,
-          color: Colors.black,
+        title: Text(
+          'Accessories',
+          style: GoogleFonts.poppins(
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
+            color: Colors.black87,
+          ),
         ),
         centerTitle: true,
         elevation: 0,
         backgroundColor: Colors.white,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: Colors.black87),
+          onPressed: () => Navigator.pop(context),
+        ),
       ),
       body: Container(
-        color: Colors.grey[50],
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Colors.white, Colors.grey.shade50],
+          ),
+        ),
         child: Padding(
-          padding: EdgeInsets.all(16),
+          padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
           child: SingleChildScrollView(
+            physics: BouncingScrollPhysics(),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Card(
-                  elevation: 2,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 10,
+                        offset: Offset(0, 5),
+                      ),
+                    ],
                   ),
                   child: Padding(
-                    padding: EdgeInsets.all(16),
+                    padding: EdgeInsets.all(20),
                     child: Form(
                       key: _formKey,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Subhead(
-                              text: "Add New Product",
-                              weight: FontWeight.w600,
-                              color: Colors.black),
-                          SizedBox(height: 16),
-                          _buildDropdown(accessoriesList, selectedAccessories,
-                              (value) {
-                            setState(
-                              () {
-                                selectedAccessories = value;
-                              },
-                            );
-// _fetchProductName();
-                          },
-// enabled: productList.isNotEmpty,
-                              label: "Accessories Name"),
-                          _buildDropdown(brandandList, selectedBrands, (value) {
-                            setState(() {
-                              selectedBrands = value;
-
-                              ///clear fields
-                              selectedColors = null;
-                              selectedThickness = null;
-                              selectedCoatingMass = null;
-                              colorandList = [];
-                              thickAndList = [];
-                              coatingAndList = [];
-                            });
-                            _fetchColorData();
-                          }, label: "Brand"),
-                          _buildDropdown(colorandList, selectedColors, (value) {
-                            setState(() {
-                              selectedColors = value;
-
-                              ///clear fields
-                              selectedThickness = null;
-                              selectedCoatingMass = null;
-                              thickAndList = [];
-                              coatingAndList = [];
-                            });
-                            _fetchThicknessData();
-                          }, enabled: colorandList.isNotEmpty, label: "Color"),
-                          _buildDropdown(thickAndList, selectedThickness,
-                              (value) {
-                            setState(() {
-                              selectedThickness = value;
-
-                              ///clear fields
-                              selectedCoatingMass = null;
-                              coatingAndList = [];
-                            });
-                            _fetchCoatingMassData();
-                          },
-                              enabled: thickAndList.isNotEmpty,
-                              label: "Thickness"),
-                          _buildDropdown(coatingAndList, selectedCoatingMass,
-                              (value) {
-                            setState(() {
-                              selectedCoatingMass = value;
-                            });
-                          },
-                              enabled: coatingAndList.isNotEmpty,
-                              label: "Coating Mass"),
-
-                          Gap(20),
-                          Card(
-                            shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10)),
-                            elevation: 1,
-                            child: Padding(
-                              padding: const EdgeInsets.all(12),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  MyText(
-                                      text: "Selected Product Details",
-                                      weight: FontWeight.w600,
-                                      color: Colors.black),
-                                  Gap(5),
-                                  MyText(
-                                      text: _selectedItems(),
-                                      weight: FontWeight.w400,
-                                      color: Colors.grey)
-                                ],
-                              ),
+                          SizedBox(width: 10),
+                          Text(
+                            "Add New Product",
+                            style: GoogleFonts.poppins(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.black87,
                             ),
                           ),
-// _buildDropdown(coatingAndList, selectedBrand, (value) {
-//   setState(() {
-//     selectedBrand = value;
-//   });
-// }, enabled: coatingAndList.isNotEmpty, label: "Brand"),
-                          SizedBox(height: 20),
-                          SizedBox(
+                          SizedBox(height: 24),
+                          _buildAnimatedDropdown(
+                            accessoriesList,
+                            selectedAccessories,
+                            (value) {
+                              setState(() {
+                                selectedAccessories = value;
+                              });
+                            },
+                            label: "Accessories Name",
+                            icon: Icons.category_outlined,
+                          ),
+                          _buildAnimatedDropdown(
+                            brandandList,
+                            selectedBrands,
+                            (value) {
+                              setState(() {
+                                selectedBrands = value;
+                                selectedColors = null;
+                                selectedThickness = null;
+                                selectedCoatingMass = null;
+                                colorandList = [];
+                                thickAndList = [];
+                                coatingAndList = [];
+                              });
+                              _fetchColorData();
+                            },
+                            label: "Brand",
+                            icon: Icons.brightness_auto_outlined,
+                          ),
+                          _buildAnimatedDropdown(
+                            colorandList,
+                            selectedColors,
+                            (value) {
+                              setState(() {
+                                selectedColors = value;
+                                selectedThickness = null;
+                                selectedCoatingMass = null;
+                                thickAndList = [];
+                                coatingAndList = [];
+                              });
+                              _fetchThicknessData();
+                            },
+                            enabled: colorandList.isNotEmpty,
+                            label: "Color",
+                            icon: Icons.color_lens_outlined,
+                          ),
+                          _buildAnimatedDropdown(
+                            thickAndList,
+                            selectedThickness,
+                            (value) {
+                              setState(() {
+                                selectedThickness = value;
+                                selectedCoatingMass = null;
+                                coatingAndList = [];
+                              });
+                              _fetchCoatingMassData();
+                            },
+                            enabled: thickAndList.isNotEmpty,
+                            label: "Thickness",
+                            icon: Icons.straighten_outlined,
+                          ),
+                          _buildAnimatedDropdown(
+                            coatingAndList,
+                            selectedCoatingMass,
+                            (value) {
+                              setState(() {
+                                selectedCoatingMass = value;
+                              });
+                            },
+                            enabled: coatingAndList.isNotEmpty,
+                            label: "Coating Mass",
+                            icon: Icons.layers_outlined,
+                          ),
+                          SizedBox(height: 24),
+                          Container(
+                            padding: EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: Colors.grey[100],
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                  color: Colors.deepPurple[400]!, width: 1.5),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  "Selected Product Details",
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.deepPurple[400],
+                                  ),
+                                ),
+                                SizedBox(height: 8),
+                                Text(
+                                  _selectedItems(),
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 13.5,
+                                    color: Colors.black,
+                                    height: 1.5,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          SizedBox(height: 24),
+                          AnimatedContainer(
+                            duration: Duration(milliseconds: 300),
                             width: double.infinity,
-                            height: 50,
+                            height: 54.h,
                             child: ElevatedButton(
                               onPressed: () async {
                                 await postAllData();
                                 _submitData();
                               },
                               style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.deepPurple[400],
                                 foregroundColor: Colors.white,
-                                backgroundColor: Colors.blue,
                                 elevation: 0,
                                 shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(8),
+                                  borderRadius: BorderRadius.circular(12),
                                 ),
                               ),
-                              child: MyText(
-                                  text: "Add Product",
-                                  weight: FontWeight.w600,
-                                  color: Colors.white),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.add_shopping_cart_outlined,
+                                    color: Colors.white,
+                                  ),
+                                  SizedBox(width: 10),
+                                  Text(
+                                    "Add Product",
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                         ],
@@ -1171,17 +1414,92 @@ class _AccessoriesState extends State<Accessories> {
                     ),
                   ),
                 ),
-                SizedBox(height: 24),
-                if (responseProducts.isNotEmpty)
-                  Subhead(
-                      text: "   Added Products",
-                      weight: FontWeight.w600,
-                      color: Colors.black),
-                SizedBox(height: 8),
-                Container(),
-                _buildSubmittedDataList(),
+                if (responseProducts.isNotEmpty) ...[
+                  SizedBox(height: 24),
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 4),
+                    child: Row(
+                      children: [
+                        Icon(Icons.shopping_bag_outlined,
+                            color: Colors.grey.shade700),
+                        SizedBox(width: 8),
+                        Text(
+                          "Added Products",
+                          style: GoogleFonts.poppins(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.grey.shade800,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  SizedBox(height: 12),
+                  _buildSubmittedDataList(),
+                ],
               ],
             ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAnimatedDropdown(
+    List<String> items,
+    String? selectedValue,
+    ValueChanged<String?> onChanged, {
+    bool enabled = true,
+    required String label,
+    required IconData icon,
+  }) {
+    return Padding(
+      padding: EdgeInsets.only(bottom: 16),
+      child: AnimatedContainer(
+        duration: Duration(milliseconds: 200),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(12),
+          color: enabled ? Colors.white : Colors.grey.shade100,
+          border: Border.all(
+            color: enabled ? Colors.grey.shade300 : Colors.grey.shade200,
+          ),
+          boxShadow: enabled
+              ? [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.03),
+                    blurRadius: 8,
+                    offset: Offset(0, 2),
+                  ),
+                ]
+              : [],
+        ),
+        child: DropdownSearch<String>(
+          items: items,
+          selectedItem: selectedValue,
+          onChanged: enabled ? onChanged : null,
+          dropdownDecoratorProps: DropDownDecoratorProps(
+            dropdownSearchDecoration: InputDecoration(
+              labelText: label,
+              prefixIcon:
+                  Icon(icon, color: enabled ? Colors.blue : Colors.grey),
+              border: InputBorder.none,
+              contentPadding:
+                  EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            ),
+          ),
+          popupProps: PopupProps.menu(
+            showSearchBox: true,
+            searchFieldProps: TextFieldProps(
+              decoration: InputDecoration(
+                hintText: "Search...",
+                prefixIcon: Icon(Icons.search),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+            ),
+            constraints: BoxConstraints(maxHeight: 300),
+            // borderRadius: BorderRadius.circular(12),
           ),
         ),
       ),
