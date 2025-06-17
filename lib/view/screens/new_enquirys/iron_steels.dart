@@ -59,8 +59,9 @@ class _IronSteelState extends State<IronSteel> {
       selectedBrand = null;
     });
 
-    final client =
-        IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
+    final client = IOClient(
+      HttpClient()..badCertificateCallback = (_, __, ___) => true,
+    );
     final url = Uri.parse('$apiUrl/showlables/3');
 
     try {
@@ -96,8 +97,9 @@ class _IronSteelState extends State<IronSteel> {
       selectedColor = null;
     });
 
-    final client =
-        IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
+    final client = IOClient(
+      HttpClient()..badCertificateCallback = (_, __, ___) => true,
+    );
     final url = Uri.parse('$apiUrl/labelinputdata');
 
     try {
@@ -145,8 +147,9 @@ class _IronSteelState extends State<IronSteel> {
       selectedThickness = null;
     });
 
-    final client =
-        IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
+    final client = IOClient(
+      HttpClient()..badCertificateCallback = (_, __, ___) => true,
+    );
     final url = Uri.parse('$apiUrl/labelinputdata');
 
     try {
@@ -194,8 +197,9 @@ class _IronSteelState extends State<IronSteel> {
       selectedCoatingMass = null;
     });
 
-    final client =
-        IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
+    final client = IOClient(
+      HttpClient()..badCertificateCallback = (_, __, ___) => true,
+    );
     final url = Uri.parse('$apiUrl/labelinputdata');
 
     try {
@@ -210,7 +214,7 @@ class _IronSteelState extends State<IronSteel> {
           "base_product_filters": [
             selectedBrand,
             selectedColor,
-            selectedThickness
+            selectedThickness,
           ],
           "base_label_filters": ["brand", "color", "thickness"],
           "base_category_id": "3",
@@ -241,7 +245,8 @@ class _IronSteelState extends State<IronSteel> {
               idData.first["base_product_id"]?.toString(); // <-- Add this
           print("Selected Base Product ID: $selectedProductBaseId");
           print(
-              "Base Product Name: $selectedBaseProductName"); // <-- Optional debug
+            "Base Product Name: $selectedBaseProductName",
+          ); // <-- Optional debug
         }
 
         print("API response: ${response.body}");
@@ -267,7 +272,7 @@ class _IronSteelState extends State<IronSteel> {
       "product_base_id": selectedProductBaseId,
       "product_base_name": "$selectedBaseProductName",
       "category_id": 3,
-      "category_name": "Iron And Steel Corrugated Sheet"
+      "category_name": "Iron And Steel Corrugated Sheet",
     };
 
     print("This is a body data: $data");
@@ -292,7 +297,8 @@ class _IronSteelState extends State<IronSteel> {
         if (responseData['status'] == true && responseData['lebels'] != null) {
           setState(() {
             apiResponseData = List<Map<String, dynamic>>.from(
-                responseData['lebels'][0]['data']);
+              responseData['lebels'][0]['data'],
+            );
           });
         }
       }
@@ -301,17 +307,246 @@ class _IronSteelState extends State<IronSteel> {
     }
   }
 
+  TextEditingController baseProductController = TextEditingController();
+  List<dynamic> baseProductResults = [];
+  bool isSearchingBaseProduct = false;
+  String? selectedBaseProduct;
+  FocusNode baseProductFocusNode = FocusNode();
+
+  // Add this method for searching base products
+  Future<void> searchBaseProducts(String query) async {
+    if (query.isEmpty) {
+      setState(() {
+        baseProductResults = [];
+      });
+      return;
+    }
+
+    setState(() {
+      isSearchingBaseProduct = true;
+    });
+
+    HttpClient client = HttpClient();
+    client.badCertificateCallback =
+        ((X509Certificate cert, String host, int port) => true);
+    IOClient ioClient = IOClient(client);
+    final headers = {"Content-Type": "application/json"};
+    final data = {"category_id": "3", "searchbase": query};
+
+    try {
+      final response = await ioClient.post(
+        Uri.parse("https://demo.zaron.in:8181/ci4/api/baseproducts_search"),
+        headers: headers,
+        body: jsonEncode(data),
+      );
+
+      if (response.statusCode == 200) {
+        final responseData = jsonDecode(response.body);
+        print("Base product response: $responseData"); // Debug print
+        setState(() {
+          baseProductResults = responseData['base_products'] ?? [];
+          isSearchingBaseProduct = false;
+        });
+      } else {
+        setState(() {
+          baseProductResults = [];
+          isSearchingBaseProduct = false;
+        });
+      }
+    } catch (e) {
+      print("Error searching base products: $e");
+      setState(() {
+        baseProductResults = [];
+        isSearchingBaseProduct = false;
+      });
+    }
+  }
+
+  // Add this method to build the base product search field
+  Widget _buildBaseProductSearchField() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          "Base Product",
+          style: GoogleFonts.figtree(
+            fontSize: 16,
+            fontWeight: FontWeight.w500,
+            color: Colors.black87,
+          ),
+        ),
+        SizedBox(height: 8),
+        Container(
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.grey[300]!),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: TextField(
+            controller: baseProductController,
+            focusNode: baseProductFocusNode,
+            decoration: InputDecoration(
+              hintText: "Search base product...",
+              prefixIcon: Icon(Icons.search),
+              border: InputBorder.none,
+              contentPadding: EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 12,
+              ),
+              suffixIcon: isSearchingBaseProduct
+                  ? Padding(
+                      padding: EdgeInsets.all(12),
+                      child: SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                    )
+                  : null,
+            ),
+            onChanged: (value) {
+              searchBaseProducts(value);
+            },
+            onTap: () {
+              if (baseProductController.text.isNotEmpty) {
+                searchBaseProducts(baseProductController.text);
+              }
+            },
+          ),
+        ),
+
+        // Search Results Display (line by line, not dropdown)
+        if (baseProductResults.isNotEmpty)
+          Container(
+            margin: EdgeInsets.only(top: 8),
+            padding: EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.grey[50],
+              border: Border.all(color: Colors.grey[300]!),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "Search Results:",
+                  style: GoogleFonts.figtree(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black87,
+                  ),
+                ),
+                SizedBox(height: 8),
+                ...baseProductResults.map((product) {
+                  return GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        selectedBaseProduct = product.toString();
+                        baseProductController.text = selectedBaseProduct!;
+                        baseProductResults = [];
+                      });
+                    },
+                    child: Container(
+                      width: double.infinity,
+                      padding: EdgeInsets.symmetric(
+                        vertical: 12,
+                        horizontal: 12,
+                      ),
+                      margin: EdgeInsets.only(bottom: 6),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(color: Colors.grey[300]!),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.grey.withOpacity(0.1),
+                            spreadRadius: 1,
+                            blurRadius: 2,
+                            offset: Offset(0, 1),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(Icons.inventory_2, size: 16, color: Colors.blue),
+                          SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              product.toString(),
+                              style: GoogleFonts.figtree(
+                                fontSize: 14,
+                                color: Colors.black87,
+                                fontWeight: FontWeight.w400,
+                              ),
+                            ),
+                          ),
+                          Icon(
+                            Icons.arrow_forward_ios,
+                            size: 12,
+                            color: Colors.grey[400],
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ],
+            ),
+          ),
+
+        // Selected Base Product Display
+        if (selectedBaseProduct != null)
+          Container(
+            margin: EdgeInsets.only(top: 8),
+            padding: EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.blue[50],
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.blue[200]!),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.check_circle, color: Colors.green, size: 20),
+                SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    "Selected: $selectedBaseProduct",
+                    style: GoogleFonts.figtree(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.black87,
+                    ),
+                  ),
+                ),
+                GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      selectedBaseProduct = null;
+                      baseProductController.clear();
+                      baseProductResults = [];
+                    });
+                  },
+                  child: Icon(Icons.close, color: Colors.grey[600], size: 20),
+                ),
+              ],
+            ),
+          ),
+      ],
+    );
+  }
+
   void _submitData() {
     if (selectedBrand == null ||
         selectedColor == null ||
         selectedThickness == null ||
         selectedCoatingMass == null) {
-// Show elegant error message
+      // Show elegant error message
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
           title: Text('Incomplete Form'),
-          content: Text('Please fill all required fields to add a product.'),
+          content: Text(
+            'Please fill all required fields to add a product.',
+          ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
@@ -345,7 +580,7 @@ class _IronSteelState extends State<IronSteel> {
       _fetchBrands();
     });
 
-// Show success message with a more elegant snackBar
+    // Show success message with a more elegant snackBar
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
@@ -357,9 +592,7 @@ class _IronSteelState extends State<IronSteel> {
         ),
         backgroundColor: Colors.green,
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         margin: EdgeInsets.all(16),
         duration: Duration(seconds: 3),
       ),
@@ -418,7 +651,10 @@ class _IronSteelState extends State<IronSteel> {
                     ),
                   ),
                   Container(
-                    padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.blue[50],
                       borderRadius: BorderRadius.circular(6),
@@ -447,7 +683,9 @@ class _IronSteelState extends State<IronSteel> {
                           showDialog(
                             context: context,
                             builder: (context) => AlertDialog(
-                              title: Text("Are you sure to delete this item?"),
+                              title: Text(
+                                "Are you sure to delete this item?",
+                              ),
                               actions: [
                                 TextButton(
                                   onPressed: () {
@@ -495,12 +733,16 @@ class _IronSteelState extends State<IronSteel> {
               SizedBox(width: 10),
               Expanded(
                 child: _buildDetailItem(
-                    "Profile", _buildEditableField(data, "Profile", index)),
+                  "Profile",
+                  _buildEditableField(data, "Profile", index),
+                ),
               ),
               SizedBox(width: 10),
               Expanded(
                 child: _buildDetailItem(
-                    "Crimp", _buildEditableField(data, "Crimp", index)),
+                  "Crimp",
+                  _buildEditableField(data, "Crimp", index),
+                ),
               ),
             ],
           ),
@@ -513,17 +755,23 @@ class _IronSteelState extends State<IronSteel> {
             children: [
               Expanded(
                 child: _buildDetailItem(
-                    "Nos", _buildEditableField(data, "Nos", index)),
-              ),
-              SizedBox(width: 10),
-              Expanded(
-                child: _buildDetailItem("Basic Rate",
-                    _buildEditableField(data, "Basic Rate", index)),
+                  "Nos",
+                  _buildEditableField(data, "Nos", index),
+                ),
               ),
               SizedBox(width: 10),
               Expanded(
                 child: _buildDetailItem(
-                    "Sq.Mtr", _buildEditableField(data, "Sq.Mtr", index)),
+                  "Basic Rate",
+                  _buildEditableField(data, "Basic Rate", index),
+                ),
+              ),
+              SizedBox(width: 10),
+              Expanded(
+                child: _buildDetailItem(
+                  "Sq.Mtr",
+                  _buildEditableField(data, "Sq.Mtr", index),
+                ),
               ),
             ],
           ),
@@ -536,7 +784,9 @@ class _IronSteelState extends State<IronSteel> {
             children: [
               Expanded(
                 child: _buildDetailItem(
-                    "Amount", _buildEditableField(data, "Amount", index)),
+                  "Amount",
+                  _buildEditableField(data, "Amount", index),
+                ),
               ),
               SizedBox(width: 20),
               Expanded(child: Container()), // Empty space
@@ -579,10 +829,12 @@ class _IronSteelState extends State<IronSteel> {
       child: DropdownButtonFormField<String>(
         value: currentValue,
         items: options.entries
-            .map((entry) => DropdownMenuItem(
-                  value: entry.key,
-                  child: Text(entry.value),
-                ))
+            .map(
+              (entry) => DropdownMenuItem(
+                value: entry.key,
+                child: Text(entry.value),
+              ),
+            )
             .toList(),
         onChanged: (val) {
           setState(() {
@@ -601,8 +853,10 @@ class _IronSteelState extends State<IronSteel> {
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(6),
-            borderSide:
-                BorderSide(color: Theme.of(context).primaryColor, width: 2),
+            borderSide: BorderSide(
+              color: Theme.of(context).primaryColor,
+              width: 2,
+            ),
           ),
           filled: true,
           fillColor: Colors.grey[50],
@@ -638,8 +892,10 @@ class _IronSteelState extends State<IronSteel> {
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(6),
-            borderSide:
-                BorderSide(color: Theme.of(context).primaryColor, width: 2),
+            borderSide: BorderSide(
+              color: Theme.of(context).primaryColor,
+              width: 2,
+            ),
           ),
           filled: true,
           fillColor: Colors.grey[50],
@@ -693,11 +949,15 @@ class _IronSteelState extends State<IronSteel> {
           dropdownDecoratorProps: DropDownDecoratorProps(
             dropdownSearchDecoration: InputDecoration(
               labelText: label,
-              prefixIcon:
-                  Icon(icon, color: enabled ? Colors.blue : Colors.grey),
+              prefixIcon: Icon(
+                icon,
+                color: enabled ? Colors.blue : Colors.grey,
+              ),
               border: InputBorder.none,
-              contentPadding:
-                  EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              contentPadding: EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 12,
+              ),
             ),
           ),
           popupProps: PopupProps.menu(
@@ -737,6 +997,8 @@ class _IronSteelState extends State<IronSteel> {
         child: Padding(
           padding: EdgeInsets.all(16),
           child: SingleChildScrollView(
+            scrollDirection: Axis.vertical,
+            physics: BouncingScrollPhysics(),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -754,74 +1016,91 @@ class _IronSteelState extends State<IronSteel> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Subhead(
-                              text: "Add New Product",
-                              weight: FontWeight.w600,
-                              color: Colors.black),
+                            text: "Add New Product",
+                            weight: FontWeight.w600,
+                            color: Colors.black,
+                          ),
                           SizedBox(height: 16),
-                          _buildAnimatedDropdown(brandsList, selectedBrand,
-                              (value) {
-                            setState(() {
-                              selectedBrand = value;
-
-                              ///clear Data
-                              selectedColor = null;
-                              selectedThickness = null;
-                              selectedCoatingMass = null;
-                              colorsList = [];
-                              thicknessList = [];
-                              coatingMassList = [];
-                            });
-                            _fetchColors();
-                          },
-                              label: "Brand",
-                              icon: Icons.brightness_auto_outlined),
-                          _buildAnimatedDropdown(colorsList, selectedColor,
-                              (value) {
-                            setState(() {
-                              selectedColor = value;
-
-                              ///clear Data
-                              selectedThickness = null;
-                              selectedCoatingMass = null;
-                              thicknessList = [];
-                              coatingMassList = [];
-                            });
-                            _fetchThickness();
-                          },
-                              enabled: colorsList.isNotEmpty,
-                              label: "Color",
-                              icon: Icons.color_lens_outlined),
                           _buildAnimatedDropdown(
-                              thicknessList, selectedThickness, (value) {
-                            setState(() {
-                              selectedThickness = value;
+                            brandsList,
+                            selectedBrand,
+                            (value) {
+                              setState(() {
+                                selectedBrand = value;
 
-                              ///clear Data
-                              selectedCoatingMass = null;
-                              coatingMassList = [];
-                            });
-                            _fetchCoatingMass();
-                          },
-                              enabled: thicknessList.isNotEmpty,
-                              label: "Thickness",
-                              icon: Icons.straighten_outlined),
+                                ///clear Data
+                                selectedColor = null;
+                                selectedThickness = null;
+                                selectedCoatingMass = null;
+                                colorsList = [];
+                                thicknessList = [];
+                                coatingMassList = [];
+                              });
+                              _fetchColors();
+                            },
+                            label: "Brand",
+                            icon: Icons.brightness_auto_outlined,
+                          ),
                           _buildAnimatedDropdown(
-                              coatingMassList, selectedCoatingMass, (value) {
-                            setState(() {
-                              selectedCoatingMass = value;
-                            });
-                          },
-                              enabled: coatingMassList.isNotEmpty,
-                              label: "Coating Mass",
-                              icon: Icons.layers_outlined),
+                            colorsList,
+                            selectedColor,
+                            (value) {
+                              setState(() {
+                                selectedColor = value;
+
+                                ///clear Data
+                                selectedThickness = null;
+                                selectedCoatingMass = null;
+                                thicknessList = [];
+                                coatingMassList = [];
+                              });
+                              _fetchThickness();
+                            },
+                            enabled: colorsList.isNotEmpty,
+                            label: "Color",
+                            icon: Icons.color_lens_outlined,
+                          ),
+                          _buildAnimatedDropdown(
+                            thicknessList,
+                            selectedThickness,
+                            (value) {
+                              setState(() {
+                                selectedThickness = value;
+
+                                ///clear Data
+                                selectedCoatingMass = null;
+                                coatingMassList = [];
+                              });
+                              _fetchCoatingMass();
+                            },
+                            enabled: thicknessList.isNotEmpty,
+                            label: "Thickness",
+                            icon: Icons.straighten_outlined,
+                          ),
+                          _buildAnimatedDropdown(
+                            coatingMassList,
+                            selectedCoatingMass,
+                            (value) {
+                              setState(() {
+                                selectedCoatingMass = value;
+                              });
+                            },
+                            enabled: coatingMassList.isNotEmpty,
+                            label: "Coating Mass",
+                            icon: Icons.layers_outlined,
+                          ),
                           SizedBox(height: 24),
+                          _buildBaseProductSearchField(),
+                          SizedBox(height: 16),
                           Container(
                             padding: EdgeInsets.all(16),
                             decoration: BoxDecoration(
                               color: Colors.grey[100],
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(
-                                  color: Colors.deepPurple[400]!, width: 1.5),
+                                color: Colors.deepPurple[400]!,
+                                width: 1.5,
+                              ),
                             ),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -891,9 +1170,10 @@ class _IronSteelState extends State<IronSteel> {
                 SizedBox(height: 24),
                 if (apiResponseData.isNotEmpty)
                   Subhead(
-                      text: "   Added Products",
-                      weight: FontWeight.w600,
-                      color: Colors.black),
+                    text: "   Added Products",
+                    weight: FontWeight.w600,
+                    color: Colors.black,
+                  ),
                 SizedBox(height: 8),
                 _buildApiResponseList(),
               ],

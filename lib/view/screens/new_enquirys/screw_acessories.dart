@@ -33,7 +33,7 @@ class _ScrewAccessoriesState extends State<ScrewAccessories> {
   List<String> brandList = [];
   List<Map<String, dynamic>> submittedData = [];
 
-// Form key for validation
+  // Form key for validation
   final _formKey = GlobalKey<FormState>();
 
   @override
@@ -55,8 +55,9 @@ class _ScrewAccessoriesState extends State<ScrewAccessories> {
       selectedProduct = null;
     });
 
-    final client =
-        IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
+    final client = IOClient(
+      HttpClient()..badCertificateCallback = (_, __, ___) => true,
+    );
     final url = Uri.parse('$apiUrl/showlables/9');
 
     try {
@@ -70,11 +71,12 @@ class _ScrewAccessoriesState extends State<ScrewAccessories> {
 
         if (products is List) {
           setState(() {
-            productList = products
-                .whereType<Map>()
-                .map((e) => e["product_name"]?.toString())
-                .whereType<String>()
-                .toList();
+            productList =
+                products
+                    .whereType<Map>()
+                    .map((e) => e["product_name"]?.toString())
+                    .whereType<String>()
+                    .toList();
           });
         }
       }
@@ -92,8 +94,9 @@ class _ScrewAccessoriesState extends State<ScrewAccessories> {
       selectedColor = null;
     });
 
-    final client =
-        IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
+    final client = IOClient(
+      HttpClient()..badCertificateCallback = (_, __, ___) => true,
+    );
     final url = Uri.parse('$apiUrl/labelinputdata');
 
     try {
@@ -119,11 +122,12 @@ class _ScrewAccessoriesState extends State<ScrewAccessories> {
 
         if (colors is List) {
           setState(() {
-            colorsList = colors
-                .whereType<Map>()
-                .map((e) => e["color"]?.toString())
-                .whereType<String>()
-                .toList();
+            colorsList =
+                colors
+                    .whereType<Map>()
+                    .map((e) => e["color"]?.toString())
+                    .whereType<String>()
+                    .toList();
           });
         }
       }
@@ -141,8 +145,9 @@ class _ScrewAccessoriesState extends State<ScrewAccessories> {
       selsectedBrand = null;
     });
 
-    final client =
-        IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
+    final client = IOClient(
+      HttpClient()..badCertificateCallback = (_, __, ___) => true,
+    );
     final url = Uri.parse('$apiUrl/labelinputdata');
 
     try {
@@ -171,11 +176,12 @@ class _ScrewAccessoriesState extends State<ScrewAccessories> {
           final brandListData = message[0];
           if (brandListData is List) {
             setState(() {
-              brandList = brandListData
-                  .whereType<Map>()
-                  .map((e) => e["brand"]?.toString())
-                  .whereType<String>()
-                  .toList();
+              brandList =
+                  brandListData
+                      .whereType<Map>()
+                      .map((e) => e["brand"]?.toString())
+                      .whereType<String>()
+                      .toList();
             });
           }
 
@@ -187,7 +193,8 @@ class _ScrewAccessoriesState extends State<ScrewAccessories> {
                 idData.first["base_product_id"]?.toString(); // <-- new line
             print("Selected Base Product ID: $selectedProductBaseId");
             print(
-                "Base Product Name: $selectedBaseProductName"); // <-- optional debug
+              "Base Product Name: $selectedBaseProductName",
+            ); // <-- optional debug
           }
         }
       }
@@ -215,7 +222,7 @@ class _ScrewAccessoriesState extends State<ScrewAccessories> {
       "product_base_id": selectedProductBaseId,
       "product_base_name": "$selectedBaseProductName",
       "category_id": 9,
-      "category_name": "Screw accessories"
+      "category_name": "Screw accessories",
     };
 
     print("User input Data $data");
@@ -223,8 +230,11 @@ class _ScrewAccessoriesState extends State<ScrewAccessories> {
     final body = jsonEncode(data);
 
     try {
-      final response =
-          await ioClient.post(Uri.parse(url), headers: headers, body: body);
+      final response = await ioClient.post(
+        Uri.parse(url),
+        headers: headers,
+        body: body,
+      );
 
       debugPrint("This is a response: ${response.body}");
 
@@ -240,16 +250,20 @@ class _ScrewAccessoriesState extends State<ScrewAccessories> {
         });
 
         // Show success message
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text("Order created successfully!"),
-          backgroundColor: Colors.green,
-        ));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Order created successfully!"),
+            backgroundColor: Colors.green,
+          ),
+        );
       } else {
         // Handle non-200 responses
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text("Failed to create order: ${response.statusCode}"),
-          backgroundColor: Colors.red,
-        ));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Failed to create order: ${response.statusCode}"),
+            backgroundColor: Colors.red,
+          ),
+        );
       }
     } on SocketException catch (e) {
       throw Exception("Network error: $e");
@@ -264,23 +278,252 @@ class _ScrewAccessoriesState extends State<ScrewAccessories> {
     }
   }
 
-  /// fetch Thickness Api's ///
+  TextEditingController baseProductController = TextEditingController();
+  List<dynamic> baseProductResults = [];
+  bool isSearchingBaseProduct = false;
+  String? selectedBaseProduct;
+  FocusNode baseProductFocusNode = FocusNode();
+
+  // Add this method for searching base products
+  Future<void> searchBaseProducts(String query) async {
+    if (query.isEmpty) {
+      setState(() {
+        baseProductResults = [];
+      });
+      return;
+    }
+
+    setState(() {
+      isSearchingBaseProduct = true;
+    });
+
+    HttpClient client = HttpClient();
+    client.badCertificateCallback =
+        ((X509Certificate cert, String host, int port) => true);
+    IOClient ioClient = IOClient(client);
+    final headers = {"Content-Type": "application/json"};
+    final data = {"category_id": "9", "searchbase": query};
+
+    try {
+      final response = await ioClient.post(
+        Uri.parse("https://demo.zaron.in:8181/ci4/api/baseproducts_search"),
+        headers: headers,
+        body: jsonEncode(data),
+      );
+
+      if (response.statusCode == 200) {
+        final responseData = jsonDecode(response.body);
+        print("Base product response: $responseData"); // Debug print
+        setState(() {
+          baseProductResults = responseData['base_products'] ?? [];
+          isSearchingBaseProduct = false;
+        });
+      } else {
+        setState(() {
+          baseProductResults = [];
+          isSearchingBaseProduct = false;
+        });
+      }
+    } catch (e) {
+      print("Error searching base products: $e");
+      setState(() {
+        baseProductResults = [];
+        isSearchingBaseProduct = false;
+      });
+    }
+  }
+
+  // Add this method to build the base product search field
+  Widget _buildBaseProductSearchField() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          "Base Product",
+          style: GoogleFonts.figtree(
+            fontSize: 16,
+            fontWeight: FontWeight.w500,
+            color: Colors.black87,
+          ),
+        ),
+        SizedBox(height: 8),
+        Container(
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.grey[300]!),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: TextField(
+            controller: baseProductController,
+            focusNode: baseProductFocusNode,
+            decoration: InputDecoration(
+              hintText: "Search base product...",
+              prefixIcon: Icon(Icons.search),
+              border: InputBorder.none,
+              contentPadding: EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 12,
+              ),
+              suffixIcon:
+                  isSearchingBaseProduct
+                      ? Padding(
+                        padding: EdgeInsets.all(12),
+                        child: SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                      )
+                      : null,
+            ),
+            onChanged: (value) {
+              searchBaseProducts(value);
+            },
+            onTap: () {
+              if (baseProductController.text.isNotEmpty) {
+                searchBaseProducts(baseProductController.text);
+              }
+            },
+          ),
+        ),
+
+        // Search Results Display (line by line, not dropdown)
+        if (baseProductResults.isNotEmpty)
+          Container(
+            margin: EdgeInsets.only(top: 8),
+            padding: EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.grey[50],
+              border: Border.all(color: Colors.grey[300]!),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "Search Results:",
+                  style: GoogleFonts.figtree(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black87,
+                  ),
+                ),
+                SizedBox(height: 8),
+                ...baseProductResults.map((product) {
+                  return GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        selectedBaseProduct = product.toString();
+                        baseProductController.text = selectedBaseProduct!;
+                        baseProductResults = [];
+                      });
+                    },
+                    child: Container(
+                      width: double.infinity,
+                      padding: EdgeInsets.symmetric(
+                        vertical: 12,
+                        horizontal: 12,
+                      ),
+                      margin: EdgeInsets.only(bottom: 6),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(color: Colors.grey[300]!),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.grey.withOpacity(0.1),
+                            spreadRadius: 1,
+                            blurRadius: 2,
+                            offset: Offset(0, 1),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(Icons.inventory_2, size: 16, color: Colors.blue),
+                          SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              product.toString(),
+                              style: GoogleFonts.figtree(
+                                fontSize: 14,
+                                color: Colors.black87,
+                                fontWeight: FontWeight.w400,
+                              ),
+                            ),
+                          ),
+                          Icon(
+                            Icons.arrow_forward_ios,
+                            size: 12,
+                            color: Colors.grey[400],
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ],
+            ),
+          ),
+
+        // Selected Base Product Display
+        if (selectedBaseProduct != null)
+          Container(
+            margin: EdgeInsets.only(top: 8),
+            padding: EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.blue[50],
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.blue[200]!),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.check_circle, color: Colors.green, size: 20),
+                SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    "Selected: $selectedBaseProduct",
+                    style: GoogleFonts.figtree(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.black87,
+                    ),
+                  ),
+                ),
+                GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      selectedBaseProduct = null;
+                      baseProductController.clear();
+                      baseProductResults = [];
+                    });
+                  },
+                  child: Icon(Icons.close, color: Colors.grey[600], size: 20),
+                ),
+              ],
+            ),
+          ),
+      ],
+    );
+  }
 
   void _submitData() {
     if (selectedProduct == null || selectedColor == null) {
-// Show elegant error message
+      // Show elegant error message
       showDialog(
         context: context,
-        builder: (context) => AlertDialog(
-          title: Text('Incomplete Form'),
-          content: Text('Please fill all required fields to add a product.'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text('OK'),
+        builder:
+            (context) => AlertDialog(
+              title: Text('Incomplete Form'),
+              content: Text(
+                'Please fill all required fields to add a product.',
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: Text('OK'),
+                ),
+              ],
             ),
-          ],
-        ),
       );
       return;
     }
@@ -304,7 +547,7 @@ class _ScrewAccessoriesState extends State<ScrewAccessories> {
       _fetchBrands();
     });
 
-// Show success message with a more elegant snackbar
+    // Show success message with a more elegant snackbar
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
@@ -316,9 +559,7 @@ class _ScrewAccessoriesState extends State<ScrewAccessories> {
         ),
         backgroundColor: Colors.green,
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         margin: EdgeInsets.all(16),
         duration: Duration(seconds: 2),
       ),
@@ -344,99 +585,105 @@ class _ScrewAccessoriesState extends State<ScrewAccessories> {
     }
 
     return Column(
-      children: responseData.asMap().entries.map((entry) {
-        int index = entry.key;
-        Map<String, dynamic> product = entry.value as Map<String, dynamic>;
+      children:
+          responseData.asMap().entries.map((entry) {
+            int index = entry.key;
+            Map<String, dynamic> product = entry.value as Map<String, dynamic>;
 
-        return Card(
-          margin: EdgeInsets.symmetric(vertical: 10),
-          elevation: 2,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Padding(
-            padding: EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Header Row with Product Name and Delete Button
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            return Card(
+              margin: EdgeInsets.symmetric(vertical: 10),
+              elevation: 2,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Padding(
+                padding: EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Expanded(
-                      child: Text(
-                        "${product['S.No']}. ${product['Products']}",
-                        style: GoogleFonts.figtree(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.black87,
-                        ),
-                      ),
-                    ),
-                    if (product['id'] != null)
-                      Container(
-                        padding:
-                            EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: Colors.blue[50],
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Text(
-                          "ID: ${product['id']}",
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.blue[700],
-                            fontWeight: FontWeight.w500,
+                    // Header Row with Product Name and Delete Button
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            "${product['S.No']}. ${product['Products']}",
+                            style: GoogleFonts.figtree(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.black87,
+                            ),
                           ),
                         ),
-                      ),
-                    Container(
-                      height: 40,
-                      width: 50,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(10),
-                        color: Colors.deepPurple[50],
-                      ),
-                      child: IconButton(
-                        icon: Icon(Icons.delete, color: Colors.redAccent),
-                        onPressed: () {
-                          showDialog(
-                            context: context,
-                            builder: (context) => AlertDialog(
-                              title: Text("Delete Product"),
-                              content: Text(
-                                  "Are you sure you want to delete this item?"),
-                              actions: [
-                                TextButton(
-                                  onPressed: () {
-                                    setState(() {
-                                      responseData.removeAt(index);
-                                    });
-                                    Navigator.pop(context);
-                                  },
-                                  child: Text("Yes"),
-                                ),
-                                TextButton(
-                                  onPressed: () => Navigator.pop(context),
-                                  child: Text("No"),
-                                ),
-                              ],
+                        if (product['id'] != null)
+                          Container(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
                             ),
-                          );
-                        },
-                      ),
+                            decoration: BoxDecoration(
+                              color: Colors.blue[50],
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              "ID: ${product['id']}",
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.blue[700],
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                        Container(
+                          height: 40,
+                          width: 50,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(10),
+                            color: Colors.deepPurple[50],
+                          ),
+                          child: IconButton(
+                            icon: Icon(Icons.delete, color: Colors.redAccent),
+                            onPressed: () {
+                              showDialog(
+                                context: context,
+                                builder:
+                                    (context) => AlertDialog(
+                                      title: Text("Delete Product"),
+                                      content: Text(
+                                        "Are you sure you want to delete this item?",
+                                      ),
+                                      actions: [
+                                        TextButton(
+                                          onPressed: () {
+                                            setState(() {
+                                              responseData.removeAt(index);
+                                            });
+                                            Navigator.pop(context);
+                                          },
+                                          child: Text("Yes"),
+                                        ),
+                                        TextButton(
+                                          onPressed:
+                                              () => Navigator.pop(context),
+                                          child: Text("No"),
+                                        ),
+                                      ],
+                                    ),
+                              );
+                            },
+                          ),
+                        ),
+                      ],
                     ),
+
+                    SizedBox(height: 16),
+                    // Editable Fields in Rows
+                    _buildApiProductDetailInRows(product),
                   ],
                 ),
-
-                SizedBox(height: 16),
-                // Editable Fields in Rows
-                _buildApiProductDetailInRows(product),
-              ],
-            ),
-          ),
-        );
-      }).toList(),
+              ),
+            );
+          }).toList(),
     );
   }
 
@@ -471,10 +718,7 @@ class _ScrewAccessoriesState extends State<ScrewAccessories> {
                 "Amount",
                 Text(
                   product['Amount']?.toString() ?? '0',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                  ),
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
                 ),
               ),
             ),
@@ -555,15 +799,16 @@ class _ScrewAccessoriesState extends State<ScrewAccessories> {
           border: Border.all(
             color: enabled ? Colors.grey.shade300 : Colors.grey.shade200,
           ),
-          boxShadow: enabled
-              ? [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.03),
-                    blurRadius: 8,
-                    offset: Offset(0, 2),
-                  ),
-                ]
-              : [],
+          boxShadow:
+              enabled
+                  ? [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.03),
+                      blurRadius: 8,
+                      offset: Offset(0, 2),
+                    ),
+                  ]
+                  : [],
         ),
         child: DropdownSearch<String>(
           items: items,
@@ -572,11 +817,15 @@ class _ScrewAccessoriesState extends State<ScrewAccessories> {
           dropdownDecoratorProps: DropDownDecoratorProps(
             dropdownSearchDecoration: InputDecoration(
               labelText: label,
-              prefixIcon:
-                  Icon(icon, color: enabled ? Colors.blue : Colors.grey),
+              prefixIcon: Icon(
+                icon,
+                color: enabled ? Colors.blue : Colors.grey,
+              ),
               border: InputBorder.none,
-              contentPadding:
-                  EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              contentPadding: EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 12,
+              ),
             ),
           ),
           popupProps: PopupProps.menu(
@@ -633,47 +882,61 @@ class _ScrewAccessoriesState extends State<ScrewAccessories> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Subhead(
-                              text: "Add New Product",
-                              weight: FontWeight.w600,
-                              color: Colors.black),
+                            text: "Add New Product",
+                            weight: FontWeight.w600,
+                            color: Colors.black,
+                          ),
                           SizedBox(height: 16),
-                          _buildAnimatedDropdown(productList, selectedProduct,
-                              (value) {
-                            setState(() {
-                              selectedProduct = value;
+                          _buildAnimatedDropdown(
+                            productList,
+                            selectedProduct,
+                            (value) {
+                              setState(() {
+                                selectedProduct = value;
 
-                              ///clear fields
-                              selectedColor = null;
-                              selsectedBrand = null;
-                              colorsList = [];
-                              brandList = [];
-                            });
-                            _fetchColors();
-                          }, label: "Products", icon: Icons.category_outlined),
-                          _buildAnimatedDropdown(colorsList, selectedColor,
-                              (value) {
-                            setState(() {
-                              selectedColor = value;
+                                ///clear fields
+                                selectedColor = null;
+                                selsectedBrand = null;
+                                colorsList = [];
+                                brandList = [];
+                              });
+                              _fetchColors();
+                            },
+                            label: "Products",
+                            icon: Icons.category_outlined,
+                          ),
+                          _buildAnimatedDropdown(
+                            colorsList,
+                            selectedColor,
+                            (value) {
+                              setState(() {
+                                selectedColor = value;
 
-                              ///clear fields
-                              selsectedBrand = null;
-                              brandList = [];
-                            });
-                            _fetchBrand();
-                          },
-                              enabled: colorsList.isNotEmpty,
-                              label: "Color",
-                              icon: Icons.color_lens_outlined),
-                          _buildAnimatedDropdown(brandList, selsectedBrand,
-                              (value) {
-                            setState(() {
-                              selsectedBrand = value;
-                            });
-                          },
-                              enabled: brandList.isNotEmpty,
-                              label: "Brand",
-                              icon: Icons.brightness_auto_outlined),
+                                ///clear fields
+                                selsectedBrand = null;
+                                brandList = [];
+                              });
+                              _fetchBrand();
+                            },
+                            enabled: colorsList.isNotEmpty,
+                            label: "Color",
+                            icon: Icons.color_lens_outlined,
+                          ),
+                          _buildAnimatedDropdown(
+                            brandList,
+                            selsectedBrand,
+                            (value) {
+                              setState(() {
+                                selsectedBrand = value;
+                              });
+                            },
+                            enabled: brandList.isNotEmpty,
+                            label: "Brand",
+                            icon: Icons.brightness_auto_outlined,
+                          ),
                           SizedBox(height: 24),
+                          _buildBaseProductSearchField(),
+                          SizedBox(height: 16),
                           Container(
                             padding: EdgeInsets.all(16),
                             decoration: BoxDecoration(
@@ -749,9 +1012,10 @@ class _ScrewAccessoriesState extends State<ScrewAccessories> {
                 SizedBox(height: 24),
                 if (submittedData.isNotEmpty)
                   Subhead(
-                      text: "   Added Products",
-                      weight: FontWeight.w600,
-                      color: Colors.black),
+                    text: "   Added Products",
+                    weight: FontWeight.w600,
+                    color: Colors.black,
+                  ),
                 SizedBox(height: 8),
                 _buildSubmittedDataList(),
               ],

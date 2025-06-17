@@ -98,7 +98,7 @@ class _LoginState extends State<Login> {
 
       final message = {
         "user_id": userController.text,
-        "password": passwordController.text
+        "password": passwordController.text,
       };
 
       final url = '$apiUrl/validcustomer';
@@ -135,7 +135,7 @@ class _LoginState extends State<Login> {
 
     final Map<String, dynamic> message = {
       "user_id": userController.text.trim(),
-      "password": passwordController.text.trim()
+      "password": passwordController.text.trim(),
     };
 
     final String url = '$apiUrl/validlogin';
@@ -146,7 +146,7 @@ class _LoginState extends State<Login> {
         Uri.parse(url),
         headers: {
           "Content-Type": "application/json",
-          "Accept": "application/json"
+          "Accept": "application/json",
         },
         body: body,
       );
@@ -162,12 +162,12 @@ class _LoginState extends State<Login> {
 
         if (messageData != null && messageData["success"] == true) {
           UserSession().userId = userController.text;
-          Get.offAll(() => Dashboard(
-                userid: userController.text,
-              ));
+          Get.offAll(() => Dashboard(userid: userController.text));
         } else {
           showErrorDialog(
-              context, messageData?["message"] ?? "Invalid credentials");
+            context,
+            messageData?["message"] ?? "Invalid credentials",
+          );
         }
       } else {
         showErrorDialog(context, "Failed to login. Please try again.");
@@ -186,16 +186,17 @@ class _LoginState extends State<Login> {
   void showErrorDialog(BuildContext context, String message) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text('Error'),
-        content: Text(message),
-        actions: [
-          ElevatedButton(
-            child: Text('OK'),
-            onPressed: () => Navigator.of(context).pop(),
+      builder:
+          (context) => AlertDialog(
+            title: Text('Error'),
+            content: Text(message),
+            actions: [
+              ElevatedButton(
+                child: Text('OK'),
+                onPressed: () => Navigator.of(context).pop(),
+              ),
+            ],
           ),
-        ],
-      ),
     );
   }
 
@@ -205,15 +206,16 @@ class _LoginState extends State<Login> {
     height = size.height;
     width = size.width;
     return LayoutBuilder(
-        builder: (BuildContext context, BoxConstraints constraints) {
-      height = constraints.maxHeight;
-      width = constraints.maxWidth;
-      if (width <= 450) {
-        return _smallBuildLayout();
-      } else {
-        return Text("Please make sure your device is in portrait view");
-      }
-    });
+      builder: (BuildContext context, BoxConstraints constraints) {
+        height = constraints.maxHeight;
+        width = constraints.maxWidth;
+        if (width <= 450) {
+          return _smallBuildLayout();
+        } else {
+          return Text("Please make sure your device is in portrait view");
+        }
+      },
+    );
   }
 
   Widget _smallBuildLayout() {
@@ -245,8 +247,10 @@ class _LoginState extends State<Login> {
                 ),
                 SizedBox(height: 30.h),
                 Container(
-                  padding:
-                      EdgeInsets.symmetric(horizontal: 20.w, vertical: 30.h),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 20.w,
+                    vertical: 30.h,
+                  ),
                   margin: EdgeInsets.symmetric(horizontal: 20.w),
                   decoration: BoxDecoration(
                     color: Colors.white,
@@ -273,8 +277,10 @@ class _LoginState extends State<Login> {
                               color: Colors.blueGrey,
                             ),
                           ),
-                          prefixIcon: Icon(Icons.person_outline,
-                              color: Colors.blueGrey),
+                          prefixIcon: Icon(
+                            Icons.person_outline,
+                            color: Colors.blueGrey,
+                          ),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(15.r),
                             borderSide: BorderSide(color: Colors.blueGrey),
@@ -282,12 +288,15 @@ class _LoginState extends State<Login> {
                           enabledBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(15.r),
                             borderSide: BorderSide(
-                                color: Colors.blueGrey.withOpacity(0.5)),
+                              color: Colors.blueGrey.withOpacity(0.5),
+                            ),
                           ),
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(15.r),
-                            borderSide:
-                                BorderSide(color: Colors.blueGrey, width: 2),
+                            borderSide: BorderSide(
+                              color: Colors.blueGrey,
+                              width: 2,
+                            ),
                           ),
                         ),
                       ),
@@ -304,8 +313,10 @@ class _LoginState extends State<Login> {
                                 color: Colors.blueGrey,
                               ),
                             ),
-                            prefixIcon: Icon(Icons.lock_clock_outlined,
-                                color: Colors.blueGrey),
+                            prefixIcon: Icon(
+                              Icons.lock_clock_outlined,
+                              color: Colors.blueGrey,
+                            ),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(15.r),
                             ),
@@ -318,8 +329,10 @@ class _LoginState extends State<Login> {
                           controller: passwordController,
                           decoration: InputDecoration(
                             labelText: "New Password",
-                            prefixIcon: Icon(Icons.lock_outline,
-                                color: Colors.blueGrey),
+                            prefixIcon: Icon(
+                              Icons.lock_outline,
+                              color: Colors.blueGrey,
+                            ),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(15.r),
                             ),
@@ -331,8 +344,10 @@ class _LoginState extends State<Login> {
                           controller: confirmPasswordController,
                           decoration: InputDecoration(
                             labelText: "Confirm Password",
-                            prefixIcon: Icon(Icons.lock_outline,
-                                color: Colors.blueGrey),
+                            prefixIcon: Icon(
+                              Icons.lock_outline,
+                              color: Colors.blueGrey,
+                            ),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(15.r),
                             ),
@@ -346,8 +361,10 @@ class _LoginState extends State<Login> {
                           controller: passwordController,
                           decoration: InputDecoration(
                             labelText: "Password",
-                            prefixIcon: Icon(Icons.lock_outline,
-                                color: Colors.blueGrey),
+                            prefixIcon: Icon(
+                              Icons.lock_outline,
+                              color: Colors.blueGrey,
+                            ),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(15.r),
                             ),
@@ -375,7 +392,7 @@ class _LoginState extends State<Login> {
                             gradient: LinearGradient(
                               colors: [
                                 Colors.orange[600]!,
-                                Colors.orange[300]!
+                                Colors.orange[300]!,
                               ],
                             ),
                             borderRadius: BorderRadius.circular(15.r),

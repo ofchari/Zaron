@@ -37,10 +37,10 @@ class _AccessoriesState extends State<Accessories> {
   List<String> thickAndList = [];
   List<String> coatingAndList = [];
 
-// List<String> brandList = [];
+  // List<String> brandList = [];
   List<Map<String, dynamic>> submittedData = [];
 
-// Form key for validation
+  // Form key for validation
   final _formKey = GlobalKey<FormState>();
 
   @override
@@ -66,8 +66,9 @@ class _AccessoriesState extends State<Accessories> {
       selectedAccessories = null;
     });
 
-    final client =
-        IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
+    final client = IOClient(
+      HttpClient()..badCertificateCallback = (_, __, ___) => true,
+    );
     final url = Uri.parse('$apiUrl/showlables/1');
 
     try {
@@ -81,11 +82,12 @@ class _AccessoriesState extends State<Accessories> {
 
         if (accessories is List) {
           setState(() {
-            accessoriesList = accessories
-                .whereType<Map>()
-                .map((e) => e["accessories_name"]?.toString())
-                .whereType<String>()
-                .toList();
+            accessoriesList =
+                accessories
+                    .whereType<Map>()
+                    .map((e) => e["accessories_name"]?.toString())
+                    .whereType<String>()
+                    .toList();
           });
         }
       }
@@ -100,8 +102,9 @@ class _AccessoriesState extends State<Accessories> {
       selectedBrands;
     });
 
-    final client =
-        IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
+    final client = IOClient(
+      HttpClient()..badCertificateCallback = (_, __, ___) => true,
+    );
     final url = Uri.parse('$apiUrl/showlables/1');
 
     try {
@@ -114,11 +117,12 @@ class _AccessoriesState extends State<Accessories> {
 
         if (brandData is List) {
           setState(() {
-            brandandList = brandData
-                .whereType<Map>()
-                .map((e) => e["brand"]?.toString())
-                .whereType<String>()
-                .toList();
+            brandandList =
+                brandData
+                    .whereType<Map>()
+                    .map((e) => e["brand"]?.toString())
+                    .whereType<String>()
+                    .toList();
           });
         }
       }
@@ -136,8 +140,9 @@ class _AccessoriesState extends State<Accessories> {
       selectedColors = null;
     });
 
-    final client =
-        IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
+    final client = IOClient(
+      HttpClient()..badCertificateCallback = (_, __, ___) => true,
+    );
     final url = Uri.parse('$apiUrl/labelinputdata');
 
     try {
@@ -145,18 +150,17 @@ class _AccessoriesState extends State<Accessories> {
         url,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-// "category_id": "3",
-// "selectedlabel": "brand",
-// "selectedvalue": selectedBrands,
-// "label_name": "color",
-
+          // "category_id": "3",
+          // "selectedlabel": "brand",
+          // "selectedvalue": selectedBrands,
+          // "label_name": "color",
           "product_label": "color",
           "product_filters": [selectedAccessories],
           "product_label_filters": ["accessories_name"],
           "product_category_id": 1,
           "base_product_filters": [selectedBrands],
           "base_label_filters": ["brand"],
-          "base_category_id": 3
+          "base_category_id": 3,
         }),
       );
 
@@ -168,11 +172,12 @@ class _AccessoriesState extends State<Accessories> {
 
         if (selectedThickness is List) {
           setState(() {
-            colorandList = selectedThickness
-                .whereType<Map>()
-                .map((e) => e["color"]?.toString())
-                .whereType<String>()
-                .toList();
+            colorandList =
+                selectedThickness
+                    .whereType<Map>()
+                    .map((e) => e["color"]?.toString())
+                    .whereType<String>()
+                    .toList();
           });
         }
       }
@@ -190,8 +195,9 @@ class _AccessoriesState extends State<Accessories> {
       selectedThickness = null;
     });
 
-    final client =
-        IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
+    final client = IOClient(
+      HttpClient()..badCertificateCallback = (_, __, ___) => true,
+    );
     final url = Uri.parse('$apiUrl/labelinputdata');
 
     try {
@@ -199,18 +205,17 @@ class _AccessoriesState extends State<Accessories> {
         url,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-// "category_id": "3",
-// "selectedlabel": "color",
-// "selectedvalue": selectedColors,
-// "label_name": "thickness",
-
+          // "category_id": "3",
+          // "selectedlabel": "color",
+          // "selectedvalue": selectedColors,
+          // "label_name": "thickness",
           "product_label": "thickness",
           "product_filters": [selectedAccessories],
           "product_label_filters": ["accessories_name"],
           "product_category_id": 1,
           "base_product_filters": [selectedBrands, selectedColors],
           "base_label_filters": ["brand", "color"],
-          "base_category_id": 3
+          "base_category_id": 3,
         }),
       );
 
@@ -222,11 +227,12 @@ class _AccessoriesState extends State<Accessories> {
 
         if (thickness is List) {
           setState(() {
-            thickAndList = thickness
-                .whereType<Map>()
-                .map((e) => e["thickness"]?.toString())
-                .whereType<String>()
-                .toList();
+            thickAndList =
+                thickness
+                    .whereType<Map>()
+                    .map((e) => e["thickness"]?.toString())
+                    .whereType<String>()
+                    .toList();
           });
         }
       }
@@ -240,15 +246,17 @@ class _AccessoriesState extends State<Accessories> {
     if (selectedBrands == null ||
         selectedColors == null ||
         selectedThickness == null ||
-        !mounted) return;
+        !mounted)
+      return;
 
     setState(() {
       coatingAndList = [];
       selectedCoatingMass = null;
     });
 
-    final client =
-        IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
+    final client = IOClient(
+      HttpClient()..badCertificateCallback = (_, __, ___) => true,
+    );
     final url = Uri.parse('$apiUrl/labelinputdata');
 
     try {
@@ -263,7 +271,7 @@ class _AccessoriesState extends State<Accessories> {
           "base_product_filters": [
             selectedBrands,
             selectedColors,
-            selectedThickness
+            selectedThickness,
           ],
           "base_label_filters": ["brand", "color", "thickness"],
           "base_category_id": 3,
@@ -282,11 +290,12 @@ class _AccessoriesState extends State<Accessories> {
 
           if (coatingData is List) {
             setState(() {
-              coatingAndList = coatingData
-                  .whereType<Map>()
-                  .map((e) => e["coating_mass"]?.toString())
-                  .whereType<String>()
-                  .toList();
+              coatingAndList =
+                  coatingData
+                      .whereType<Map>()
+                      .map((e) => e["coating_mass"]?.toString())
+                      .whereType<String>()
+                      .toList();
             });
           }
 
@@ -306,13 +315,13 @@ class _AccessoriesState extends State<Accessories> {
   }
 
   ///post All Data
-// Add these variables after line 25 (after the existing List declarations)
+  // Add these variables after line 25 (after the existing List declarations)
   Map<String, dynamic>? apiResponseData;
   List<dynamic> responseProducts = [];
   Map<String, Map<String, String>> uomOptions = {};
 
   ///post All Data
-// Replace the existing postAllData() method with this updated version:
+  // Replace the existing postAllData() method with this updated version:
   Future<void> postAllData() async {
     HttpClient client = HttpClient();
     client.badCertificateCallback =
@@ -327,7 +336,7 @@ class _AccessoriesState extends State<Accessories> {
       "product_base_name":
           "$selectedBrands,$selectedColors,$selectedThickness,$selectedCoatingMass,",
       "category_id": 1,
-      "category_name": "accessories_name"
+      "category_name": "accessories_name",
     };
 
     print("This is a body data: $data");
@@ -345,10 +354,11 @@ class _AccessoriesState extends State<Accessories> {
           selectedBrands == null ||
           selectedColors == null ||
           selectedThickness == null ||
-          selectedCoatingMass == null) return;
+          selectedCoatingMass == null)
+        return;
 
       if (response.statusCode == 200) {
-// Parse and store the API response
+        // Parse and store the API response
         final responseData = jsonDecode(response.body);
         setState(() {
           apiResponseData = responseData;
@@ -356,12 +366,14 @@ class _AccessoriesState extends State<Accessories> {
               responseData["lebels"].isNotEmpty) {
             responseProducts.addAll(responseData["lebels"][0]["data"] ?? []);
 
-// Store UOM options for each product
+            // Store UOM options for each product
             for (var product in responseProducts) {
               if (product["UOM"] != null && product["UOM"]["options"] != null) {
                 uomOptions[product["id"].toString()] = Map<String, String>.from(
-                    product["UOM"]["options"].map((key, value) =>
-                        MapEntry(key.toString(), value.toString())));
+                  product["UOM"]["options"].map(
+                    (key, value) => MapEntry(key.toString(), value.toString()),
+                  ),
+                );
               }
             }
           }
@@ -373,14 +385,14 @@ class _AccessoriesState extends State<Accessories> {
   }
 
   /// Base View Products data //
-// Add these variables with your existing variables
+  // Add these variables with your existing variables
   TextEditingController baseProductController = TextEditingController();
   List<dynamic> baseProductResults = [];
   bool isSearchingBaseProduct = false;
   String? selectedBaseProduct;
   FocusNode baseProductFocusNode = FocusNode();
 
-// Add this method for searching base products
+  // Add this method for searching base products
   Future<void> searchBaseProducts(String query) async {
     if (query.isEmpty) {
       setState(() {
@@ -429,7 +441,7 @@ class _AccessoriesState extends State<Accessories> {
     }
   }
 
-// Add this method to build the base product search field
+  // Add this method to build the base product search field
   Widget _buildBaseProductSearchField() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -455,18 +467,21 @@ class _AccessoriesState extends State<Accessories> {
               hintText: "Search base product...",
               prefixIcon: Icon(Icons.search),
               border: InputBorder.none,
-              contentPadding:
-                  EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              suffixIcon: isSearchingBaseProduct
-                  ? Padding(
-                      padding: EdgeInsets.all(12),
-                      child: SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      ),
-                    )
-                  : null,
+              contentPadding: EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 12,
+              ),
+              suffixIcon:
+                  isSearchingBaseProduct
+                      ? Padding(
+                        padding: EdgeInsets.all(12),
+                        child: SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                      )
+                      : null,
             ),
             onChanged: (value) {
               searchBaseProducts(value);
@@ -512,8 +527,10 @@ class _AccessoriesState extends State<Accessories> {
                     },
                     child: Container(
                       width: double.infinity,
-                      padding:
-                          EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+                      padding: EdgeInsets.symmetric(
+                        vertical: 12,
+                        horizontal: 12,
+                      ),
                       margin: EdgeInsets.only(bottom: 6),
                       decoration: BoxDecoration(
                         color: Colors.white,
@@ -542,8 +559,11 @@ class _AccessoriesState extends State<Accessories> {
                               ),
                             ),
                           ),
-                          Icon(Icons.arrow_forward_ios,
-                              size: 12, color: Colors.grey[400]),
+                          Icon(
+                            Icons.arrow_forward_ios,
+                            size: 12,
+                            color: Colors.grey[400],
+                          ),
                         ],
                       ),
                     ),
@@ -600,19 +620,22 @@ class _AccessoriesState extends State<Accessories> {
         selectedColors == null ||
         selectedThickness == null ||
         selectedCoatingMass == null) {
-// Show elegant error message
+      // Show elegant error message
       showDialog(
         context: context,
-        builder: (context) => AlertDialog(
-          title: Text('Incomplete Form'),
-          content: Text('Please fill all required fields to add a product.'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text('OK'),
+        builder:
+            (context) => AlertDialog(
+              title: Text('Incomplete Form'),
+              content: Text(
+                'Please fill all required fields to add a product.',
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: Text('OK'),
+                ),
+              ],
             ),
-          ],
-        ),
       );
       return;
     }
@@ -642,7 +665,7 @@ class _AccessoriesState extends State<Accessories> {
       _fetchBrandData();
     });
 
-// Show success message with a more elegant snackBar
+    // Show success message with a more elegant snackBar
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
@@ -654,19 +677,17 @@ class _AccessoriesState extends State<Accessories> {
         ),
         backgroundColor: Colors.green,
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         margin: EdgeInsets.all(16),
         duration: Duration(seconds: 3),
       ),
     );
   }
 
-// 1. Add this variable after line 25 (with other existing variables)
+  // 1. Add this variable after line 25 (with other existing variables)
   bool isGridView = true; // Add this line
 
-// 2. Replace the existing _buildSubmittedDataList() method with this updated version:
+  // 2. Replace the existing _buildSubmittedDataList() method with this updated version:
   Widget _buildSubmittedDataList() {
     if (responseProducts.isEmpty) {
       return Container(
@@ -687,7 +708,7 @@ class _AccessoriesState extends State<Accessories> {
 
     return Column(
       children: [
-// Toggle Button Row
+        // Toggle Button Row
         Row(
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
@@ -706,8 +727,10 @@ class _AccessoriesState extends State<Accessories> {
                       });
                     },
                     child: Container(
-                      padding:
-                          EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
                       decoration: BoxDecoration(
                         color: isGridView ? Colors.blue : Colors.transparent,
                         borderRadius: BorderRadius.circular(6),
@@ -727,8 +750,10 @@ class _AccessoriesState extends State<Accessories> {
                       });
                     },
                     child: Container(
-                      padding:
-                          EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
                       decoration: BoxDecoration(
                         color: !isGridView ? Colors.blue : Colors.transparent,
                         borderRadius: BorderRadius.circular(6),
@@ -747,263 +772,289 @@ class _AccessoriesState extends State<Accessories> {
         ),
         SizedBox(height: 16),
 
-// Content based on view type
+        // Content based on view type
         isGridView ? _buildGridView() : _buildListView(),
       ],
     );
   }
 
-// 3. Add this new method for Grid View (your existing card layout):
+  // 3. Add this new method for Grid View (your existing card layout):
   Widget _buildGridView() {
     return Column(
-      children: responseProducts.asMap().entries.map((entry) {
-        int index = entry.key;
-        Map<String, dynamic> data = Map<String, dynamic>.from(entry.value);
+      children:
+          responseProducts.asMap().entries.map((entry) {
+            int index = entry.key;
+            Map<String, dynamic> data = Map<String, dynamic>.from(entry.value);
 
-        return Card(
-          margin: EdgeInsets.symmetric(vertical: 10),
-          elevation: 2,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                crossAxisAlignment: CrossAxisAlignment.center,
+            return Card(
+              margin: EdgeInsets.symmetric(vertical: 10),
+              elevation: 2,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.only(top: 15),
-                      child: SizedBox(
-                        height: 40.h,
-                        width: 210.w,
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.only(top: 15),
+                          child: SizedBox(
+                            height: 40.h,
+                            width: 210.w,
+                            child: Text(
+                              "  ${index + 1}.  ${data["Products"]}" ?? "",
+                              overflow: TextOverflow.ellipsis,
+                              style: GoogleFonts.figtree(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.black87,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      Container(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.blue[50],
+                          borderRadius: BorderRadius.circular(6),
+                        ),
                         child: Text(
-                          "  ${index + 1}.  ${data["Products"]}" ?? "",
-                          overflow: TextOverflow.ellipsis,
-                          style: GoogleFonts.figtree(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.black87),
+                          "ID: ${data['id']}",
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.blue[700],
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
                       ),
-                    ),
-                  ),
-                  Container(
-                    padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: Colors.blue[50],
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Text(
-                      "ID: ${data['id']}",
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.blue[700],
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Container(
-                      height: 40.h,
-                      width: 50.w,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(10),
-                        color: Colors.deepPurple[50],
-                      ),
-                      child: IconButton(
-                        icon: Icon(
-                          Icons.delete,
-                          color: Colors.redAccent,
-                        ),
-                        onPressed: () {
-                          showDialog(
-                              context: context,
-                              builder: (context) {
-                                return AlertDialog(
-                                  title: Subhead(
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Container(
+                          height: 40.h,
+                          width: 50.w,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(10),
+                            color: Colors.deepPurple[50],
+                          ),
+                          child: IconButton(
+                            icon: Icon(Icons.delete, color: Colors.redAccent),
+                            onPressed: () {
+                              showDialog(
+                                context: context,
+                                builder: (context) {
+                                  return AlertDialog(
+                                    title: Subhead(
                                       text:
                                           "Are you Sure to Delete This Item ?",
                                       weight: FontWeight.w500,
-                                      color: Colors.black),
-                                  actions: [
-                                    ElevatedButton(
-                                      onPressed: () {
-                                        setState(() {
-                                          responseProducts.removeAt(index);
-                                        });
-                                        Navigator.pop(context);
-                                      },
-                                      child: Text("Yes"),
+                                      color: Colors.black,
                                     ),
-                                    ElevatedButton(
-                                      onPressed: () {
-                                        Navigator.pop(context);
-                                      },
-                                      child: Text("No"),
-                                    )
-                                  ],
-                                );
-                              });
-                        },
-                      ),
-                    ),
-                  )
-                ],
-              ),
-              _buildProductDetailInRows(data),
-              Gap(5),
-            ],
-          ),
-        );
-      }).toList(),
-    );
-  }
-
-// 4. Add this new method for List View (compact horizontal layout):
-  Widget _buildListView() {
-    return Column(
-      children: responseProducts.asMap().entries.map((entry) {
-        int index = entry.key;
-        Map<String, dynamic> data = Map<String, dynamic>.from(entry.value);
-
-        return Card(
-          margin: EdgeInsets.symmetric(vertical: 6),
-          elevation: 1,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Padding(
-            padding: EdgeInsets.all(12),
-            child: Column(
-              children: [
-// Product Header Row
-                Row(
-                  children: [
-                    Expanded(
-                      flex: 3,
-                      child: Text(
-                        "${index + 1}. ${data["Products"]}" ?? "",
-                        style: GoogleFonts.figtree(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.black87),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    Container(
-                      padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: Colors.blue[50],
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: Text(
-                        "ID: ${data['id']}",
-                        style: TextStyle(
-                          fontSize: 10,
-                          color: Colors.blue[700],
-                          fontWeight: FontWeight.w500,
+                                    actions: [
+                                      ElevatedButton(
+                                        onPressed: () {
+                                          setState(() {
+                                            responseProducts.removeAt(index);
+                                          });
+                                          Navigator.pop(context);
+                                        },
+                                        child: Text("Yes"),
+                                      ),
+                                      ElevatedButton(
+                                        onPressed: () {
+                                          Navigator.pop(context);
+                                        },
+                                        child: Text("No"),
+                                      ),
+                                    ],
+                                  );
+                                },
+                              );
+                            },
+                          ),
                         ),
                       ),
-                    ),
-                    SizedBox(width: 8),
-                    Container(
-                      height: 32,
-                      width: 32,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(6),
-                        color: Colors.red[50],
-                      ),
-                      child: IconButton(
-                        padding: EdgeInsets.zero,
-                        icon: Icon(Icons.delete,
-                            color: Colors.redAccent, size: 18),
-                        onPressed: () {
-                          showDialog(
-                              context: context,
-                              builder: (context) {
-                                return AlertDialog(
-                                  title: Subhead(
-                                      text: "Delete This Item?",
-                                      weight: FontWeight.w500,
-                                      color: Colors.black),
-                                  actions: [
-                                    ElevatedButton(
-                                      onPressed: () {
-                                        setState(() {
-                                          responseProducts.removeAt(index);
-                                        });
-                                        Navigator.pop(context);
-                                      },
-                                      child: Text("Yes"),
-                                    ),
-                                    ElevatedButton(
-                                      onPressed: () {
-                                        Navigator.pop(context);
-                                      },
-                                      child: Text("No"),
-                                    )
-                                  ],
-                                );
-                              });
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 12),
-
-// Compact Data Row
-                Row(
-                  children: [
-                    Expanded(
-                      child:
-                          _buildCompactField("UOM", _uomDropdownFromApi(data)),
-                    ),
-                    SizedBox(width: 8),
-                    Expanded(
-                      child: _buildCompactField(
-                          "Length", _editableTextField(data, "Profile")),
-                    ),
-                    SizedBox(width: 8),
-                    Expanded(
-                      child: _buildCompactField(
-                          "Nos", _editableTextField(data, "Nos")),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 8),
-                Row(
-                  children: [
-                    Expanded(
-                      child: _buildCompactField(
-                          "Basic Rate", _editableTextField(data, "Basic Rate")),
-                    ),
-                    SizedBox(width: 8),
-                    Expanded(
-                      child: _buildCompactField(
-                          "R.Ft", _editableTextField(data, "R.Ft")),
-                    ),
-                    SizedBox(width: 8),
-                    Expanded(
-                      child: _buildCompactField(
-                          "Amount", _editableTextField(data, "Amount")),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        );
-      }).toList(),
+                    ],
+                  ),
+                  _buildProductDetailInRows(data),
+                  Gap(5),
+                ],
+              ),
+            );
+          }).toList(),
     );
   }
 
-// 5. Add this helper method for compact fields in list view:
+  // 4. Add this new method for List View (compact horizontal layout):
+  Widget _buildListView() {
+    return Column(
+      children:
+          responseProducts.asMap().entries.map((entry) {
+            int index = entry.key;
+            Map<String, dynamic> data = Map<String, dynamic>.from(entry.value);
+
+            return Card(
+              margin: EdgeInsets.symmetric(vertical: 6),
+              elevation: 1,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Padding(
+                padding: EdgeInsets.all(12),
+                child: Column(
+                  children: [
+                    // Product Header Row
+                    Row(
+                      children: [
+                        Expanded(
+                          flex: 3,
+                          child: Text(
+                            "${index + 1}. ${data["Products"]}" ?? "",
+                            style: GoogleFonts.figtree(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.black87,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        Container(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.blue[50],
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            "ID: ${data['id']}",
+                            style: TextStyle(
+                              fontSize: 10,
+                              color: Colors.blue[700],
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                        SizedBox(width: 8),
+                        Container(
+                          height: 32,
+                          width: 32,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(6),
+                            color: Colors.red[50],
+                          ),
+                          child: IconButton(
+                            padding: EdgeInsets.zero,
+                            icon: Icon(
+                              Icons.delete,
+                              color: Colors.redAccent,
+                              size: 18,
+                            ),
+                            onPressed: () {
+                              showDialog(
+                                context: context,
+                                builder: (context) {
+                                  return AlertDialog(
+                                    title: Subhead(
+                                      text: "Delete This Item?",
+                                      weight: FontWeight.w500,
+                                      color: Colors.black,
+                                    ),
+                                    actions: [
+                                      ElevatedButton(
+                                        onPressed: () {
+                                          setState(() {
+                                            responseProducts.removeAt(index);
+                                          });
+                                          Navigator.pop(context);
+                                        },
+                                        child: Text("Yes"),
+                                      ),
+                                      ElevatedButton(
+                                        onPressed: () {
+                                          Navigator.pop(context);
+                                        },
+                                        child: Text("No"),
+                                      ),
+                                    ],
+                                  );
+                                },
+                              );
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 12),
+
+                    // Compact Data Row
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildCompactField(
+                            "UOM",
+                            _uomDropdownFromApi(data),
+                          ),
+                        ),
+                        SizedBox(width: 8),
+                        Expanded(
+                          child: _buildCompactField(
+                            "Length",
+                            _editableTextField(data, "Profile"),
+                          ),
+                        ),
+                        SizedBox(width: 8),
+                        Expanded(
+                          child: _buildCompactField(
+                            "Nos",
+                            _editableTextField(data, "Nos"),
+                          ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildCompactField(
+                            "Basic Rate",
+                            _editableTextField(data, "Basic Rate"),
+                          ),
+                        ),
+                        SizedBox(width: 8),
+                        Expanded(
+                          child: _buildCompactField(
+                            "R.Ft",
+                            _editableTextField(data, "R.Ft"),
+                          ),
+                        ),
+                        SizedBox(width: 8),
+                        Expanded(
+                          child: _buildCompactField(
+                            "Amount",
+                            _editableTextField(data, "Amount"),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }).toList(),
+    );
+  }
+
+  // 5. Add this helper method for compact fields in list view:
   Widget _buildCompactField(String label, Widget field) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1022,7 +1073,7 @@ class _AccessoriesState extends State<Accessories> {
     );
   }
 
-// Replace the existing _buildProductDetailInRows() method with this:
+  // Replace the existing _buildProductDetailInRows() method with this:
 
   Widget _buildDetailItem(String label, Widget field) {
     return Column(
@@ -1042,9 +1093,9 @@ class _AccessoriesState extends State<Accessories> {
     );
   }
 
-// Modified UOM dropdown with calculation trigger
+  // Modified UOM dropdown with calculation trigger
 
-// Modified UOM dropdown with calculation trigger
+  // Modified UOM dropdown with calculation trigger
   Widget _uomDropdownFromApi(Map<String, dynamic> data) {
     String productId = data["id"].toString();
     Map<String, String>? options = uomOptions[productId];
@@ -1064,18 +1115,24 @@ class _AccessoriesState extends State<Accessories> {
       height: 40.h,
       child: DropdownButtonFormField<String>(
         value: currentValue,
-        items: options.entries
-            .map((entry) =>
-                DropdownMenuItem(value: entry.key, child: Text(entry.value)))
-            .toList(),
+        items:
+            options.entries
+                .map(
+                  (entry) => DropdownMenuItem(
+                    value: entry.key,
+                    child: Text(entry.value),
+                  ),
+                )
+                .toList(),
         onChanged: (val) {
           setState(() {
             data["UOM"] = {"value": val, "options": options};
           });
           print("UOM changed to: $val"); // Debug print
           print(
-              "Product data: ${data["Products"]}, ID: ${data["id"]}"); // Debug print
-// Trigger calculation with debounce
+            "Product data: ${data["Products"]}, ID: ${data["id"]}",
+          ); // Debug print
+          // Trigger calculation with debounce
           _debounceCalculation(data);
         },
         decoration: InputDecoration(
@@ -1090,8 +1147,10 @@ class _AccessoriesState extends State<Accessories> {
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(6),
-            borderSide:
-                BorderSide(color: Theme.of(context).primaryColor, width: 2),
+            borderSide: BorderSide(
+              color: Theme.of(context).primaryColor,
+              width: 2,
+            ),
           ),
           filled: true,
           fillColor: Colors.grey[50],
@@ -1100,7 +1159,7 @@ class _AccessoriesState extends State<Accessories> {
     );
   }
 
-// Modified editable text field with proper controller management
+  // Modified editable text field with proper controller management
   Widget _editableTextField(Map<String, dynamic> data, String key) {
     final controller = _getController(data, key);
 
@@ -1113,13 +1172,14 @@ class _AccessoriesState extends State<Accessories> {
           fontSize: 15.sp,
         ),
         controller: controller,
-        keyboardType: (key == "Length" ||
-                key == "Nos" ||
-                key == "Basic Rate" ||
-                key == "Amount" ||
-                key == "R.Ft")
-            ? TextInputType.numberWithOptions(decimal: true)
-            : TextInputType.text,
+        keyboardType:
+            (key == "Length" ||
+                    key == "Nos" ||
+                    key == "Basic Rate" ||
+                    key == "Amount" ||
+                    key == "R.Ft")
+                ? TextInputType.numberWithOptions(decimal: true)
+                : TextInputType.text,
         onChanged: (val) {
           setState(() {
             data[key] = val;
@@ -1129,10 +1189,10 @@ class _AccessoriesState extends State<Accessories> {
           print("Controller text: ${controller.text}");
           print("Data after change: ${data[key]}");
 
-// 🚫 DO NOT forcefully reset controller.text here!
-// if (controller.text != val) {
-//   controller.text = val;
-// }
+          // 🚫 DO NOT forcefully reset controller.text here!
+          // if (controller.text != val) {
+          //   controller.text = val;
+          // }
 
           if (key == "Length" || key == "Nos" || key == "Basic Rate") {
             print("Triggering calculation for $key with value: $val");
@@ -1140,8 +1200,10 @@ class _AccessoriesState extends State<Accessories> {
           }
         },
         decoration: InputDecoration(
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 12,
+            vertical: 0,
+          ),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(6),
             borderSide: BorderSide(color: Colors.grey[300]!),
@@ -1152,8 +1214,10 @@ class _AccessoriesState extends State<Accessories> {
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(6),
-            borderSide:
-                BorderSide(color: Theme.of(context).primaryColor, width: 2),
+            borderSide: BorderSide(
+              color: Theme.of(context).primaryColor,
+              width: 2,
+            ),
           ),
           filled: true,
           fillColor: Colors.grey[50],
@@ -1162,7 +1226,7 @@ class _AccessoriesState extends State<Accessories> {
     );
   }
 
-// Modified product detail rows to include R.Ft
+  // Modified product detail rows to include R.Ft
   Widget _buildProductDetailInRows(Map<String, dynamic> data) {
     return Column(
       children: [
@@ -1176,7 +1240,9 @@ class _AccessoriesState extends State<Accessories> {
               SizedBox(width: 10),
               Expanded(
                 child: _buildDetailItem(
-                    "Length", _editableTextField(data, "Profile")),
+                  "Length",
+                  _editableTextField(data, "Profile"),
+                ),
               ),
               SizedBox(width: 10),
               Expanded(
@@ -1192,17 +1258,23 @@ class _AccessoriesState extends State<Accessories> {
             children: [
               Expanded(
                 child: _buildDetailItem(
-                    "Basic Rate", _editableTextField(data, "Basic Rate")),
-              ),
-              SizedBox(width: 10),
-              Expanded(
-                child:
-                    _buildDetailItem("R.Ft", _editableTextField(data, "R.Ft")),
+                  "Basic Rate",
+                  _editableTextField(data, "Basic Rate"),
+                ),
               ),
               SizedBox(width: 10),
               Expanded(
                 child: _buildDetailItem(
-                    "Amount", _editableTextField(data, "Amount")),
+                  "R.Ft",
+                  _editableTextField(data, "R.Ft"),
+                ),
+              ),
+              SizedBox(width: 10),
+              Expanded(
+                child: _buildDetailItem(
+                  "Amount",
+                  _editableTextField(data, "Amount"),
+                ),
               ),
             ],
           ),
@@ -1223,7 +1295,7 @@ class _AccessoriesState extends State<Accessories> {
     return value.isEmpty ? "No selection yet" : value.join(",  ");
   }
 
-// Add these variables after existing declarations
+  // Add these variables after existing declarations
 
   Timer? _debounceTimer;
   Map<String, dynamic> calculationResults = {};
@@ -1231,30 +1303,32 @@ class _AccessoriesState extends State<Accessories> {
   Map<String, Map<String, TextEditingController>> fieldControllers =
       {}; // Store controllers
 
-// Method to get or create controller for each field
+  // Method to get or create controller for each field
   TextEditingController _getController(Map<String, dynamic> data, String key) {
     String productId = data["id"].toString();
 
-// Initialize controllers map for this product ID
+    // Initialize controllers map for this product ID
     fieldControllers.putIfAbsent(productId, () => {});
 
-// If controller for this key doesn't exist, create it
+    // If controller for this key doesn't exist, create it
     if (!fieldControllers[productId]!.containsKey(key)) {
-      String initialValue = (data[key] != null && data[key].toString() != "0")
-          ? data[key].toString()
-          : ""; // Avoid initializing with "0"
+      String initialValue =
+          (data[key] != null && data[key].toString() != "0")
+              ? data[key].toString()
+              : ""; // Avoid initializing with "0"
 
-      fieldControllers[productId]![key] =
-          TextEditingController(text: initialValue);
+      fieldControllers[productId]![key] = TextEditingController(
+        text: initialValue,
+      );
 
       print("Created controller for [$key] with value: '$initialValue'");
     } else {
-// Existing controller: check if it needs sync from data
+      // Existing controller: check if it needs sync from data
       final controller = fieldControllers[productId]![key]!;
 
       final dataValue = data[key]?.toString() ?? "";
 
-// If the controller is empty but data has a value, sync it
+      // If the controller is empty but data has a value, sync it
       if (controller.text.isEmpty && dataValue.isNotEmpty && dataValue != "0") {
         controller.text = dataValue;
         print("Synced controller for [$key] to: '$dataValue'");
@@ -1264,7 +1338,7 @@ class _AccessoriesState extends State<Accessories> {
     return fieldControllers[productId]![key]!;
   }
 
-// Add this method for debounced calculation
+  // Add this method for debounced calculation
   void _debounceCalculation(Map<String, dynamic> data) {
     _debounceTimer?.cancel();
     _debounceTimer = Timer(Duration(seconds: 1), () {
@@ -1272,18 +1346,19 @@ class _AccessoriesState extends State<Accessories> {
     });
   }
 
-// Calculation API method - FIXED VERSION with UI Updates
+  // Calculation API method - FIXED VERSION with UI Updates
   Future<void> _performCalculation(Map<String, dynamic> data) async {
     print("=== STARTING CALCULATION API ===");
     print("Data received: $data");
 
-    final client =
-        IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
+    final client = IOClient(
+      HttpClient()..badCertificateCallback = (_, __, ___) => true,
+    );
     final url = Uri.parse('$apiUrl/calculation');
 
     String productId = data["id"].toString();
 
-// Get current UOM value
+    // Get current UOM value
     String? currentUom;
     if (data["UOM"] is Map) {
       currentUom = data["UOM"]["value"]?.toString();
@@ -1294,7 +1369,7 @@ class _AccessoriesState extends State<Accessories> {
     print("Current UOM: $currentUom");
     print("Previous UOM: ${previousUomValues[productId]}");
 
-// Get Profile value from controller
+    // Get Profile value from controller
     double? profileValue;
     String? profileText;
 
@@ -1313,7 +1388,7 @@ class _AccessoriesState extends State<Accessories> {
       profileValue = double.tryParse(profileText);
     }
 
-// Get Nos value from controller
+    // Get Nos value from controller
     int nosValue = 0;
     String? nosText;
 
@@ -1340,9 +1415,10 @@ class _AccessoriesState extends State<Accessories> {
       "category_id": 1,
       "product": data["Products"]?.toString() ?? "",
       "height": null,
-      "previous_uom": previousUomValues[productId] != null
-          ? int.tryParse(previousUomValues[productId]!)
-          : null,
+      "previous_uom":
+          previousUomValues[productId] != null
+              ? int.tryParse(previousUomValues[productId]!)
+              : null,
       "current_uom": currentUom != null ? int.tryParse(currentUom) : null,
       "length": profileValue ?? 0,
       "nos": nosValue,
@@ -1413,7 +1489,8 @@ class _AccessoriesState extends State<Accessories> {
 
           print("=== CALCULATION SUCCESS ===");
           print(
-              "Updated data: Length=${data["Profile"]}, Nos=${data["Nos"]}, R.Ft=${data["R.Ft"]}, Amount=${data["Amount"]}");
+            "Updated data: Length=${data["Profile"]}, Nos=${data["Nos"]}, R.Ft=${data["R.Ft"]}, Amount=${data["Amount"]}",
+          );
         } else {
           print("API returned error status: ${responseData["status"]}");
         }
@@ -1571,7 +1648,9 @@ class _AccessoriesState extends State<Accessories> {
                               color: Colors.grey[100],
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(
-                                  color: Colors.deepPurple[400]!, width: 1.5),
+                                color: Colors.deepPurple[400]!,
+                                width: 1.5,
+                              ),
                             ),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1644,8 +1723,10 @@ class _AccessoriesState extends State<Accessories> {
                     padding: EdgeInsets.symmetric(horizontal: 4),
                     child: Row(
                       children: [
-                        Icon(Icons.shopping_bag_outlined,
-                            color: Colors.grey.shade700),
+                        Icon(
+                          Icons.shopping_bag_outlined,
+                          color: Colors.grey.shade700,
+                        ),
                         SizedBox(width: 8),
                         Text(
                           "Added Products",
@@ -1687,15 +1768,16 @@ class _AccessoriesState extends State<Accessories> {
           border: Border.all(
             color: enabled ? Colors.grey.shade300 : Colors.grey.shade200,
           ),
-          boxShadow: enabled
-              ? [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.03),
-                    blurRadius: 8,
-                    offset: Offset(0, 2),
-                  ),
-                ]
-              : [],
+          boxShadow:
+              enabled
+                  ? [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.03),
+                      blurRadius: 8,
+                      offset: Offset(0, 2),
+                    ),
+                  ]
+                  : [],
         ),
         child: DropdownSearch<String>(
           items: items,
@@ -1704,11 +1786,15 @@ class _AccessoriesState extends State<Accessories> {
           dropdownDecoratorProps: DropDownDecoratorProps(
             dropdownSearchDecoration: InputDecoration(
               labelText: label,
-              prefixIcon:
-                  Icon(icon, color: enabled ? Colors.blue : Colors.grey),
+              prefixIcon: Icon(
+                icon,
+                color: enabled ? Colors.blue : Colors.grey,
+              ),
               border: InputBorder.none,
-              contentPadding:
-                  EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              contentPadding: EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 12,
+              ),
             ),
           ),
           popupProps: PopupProps.menu(
@@ -1723,7 +1809,7 @@ class _AccessoriesState extends State<Accessories> {
               ),
             ),
             constraints: BoxConstraints(maxHeight: 300),
-// borderRadius: BorderRadius.circular(12),
+            // borderRadius: BorderRadius.circular(12),
           ),
         ),
       ),

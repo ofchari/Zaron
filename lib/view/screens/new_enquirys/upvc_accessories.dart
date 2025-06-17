@@ -37,7 +37,7 @@ class _UpvcAccessoriesState extends State<UpvcAccessories> {
   List<String> sizeList = [];
   List<Map<String, dynamic>> submittedData = [];
 
-// Form key for validation
+  // Form key for validation
   final _formKey = GlobalKey<FormState>();
 
   @override
@@ -59,8 +59,9 @@ class _UpvcAccessoriesState extends State<UpvcAccessories> {
       selectProductNameBase = null;
     });
 
-    final client =
-        IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
+    final client = IOClient(
+      HttpClient()..badCertificateCallback = (_, __, ___) => true,
+    );
     final url = Uri.parse('$apiUrl/showlables/15');
 
     try {
@@ -73,11 +74,12 @@ class _UpvcAccessoriesState extends State<UpvcAccessories> {
 
         if (product is List) {
           setState(() {
-            productList = product
-                .whereType<Map>()
-                .map((e) => e["product_name_base"]?.toString())
-                .whereType<String>()
-                .toList();
+            productList =
+                product
+                    .whereType<Map>()
+                    .map((e) => e["product_name_base"]?.toString())
+                    .whereType<String>()
+                    .toList();
           });
         }
       }
@@ -95,8 +97,9 @@ class _UpvcAccessoriesState extends State<UpvcAccessories> {
       selectedBrand = null;
     });
 
-    final client =
-        IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
+    final client = IOClient(
+      HttpClient()..badCertificateCallback = (_, __, ___) => true,
+    );
     final url = Uri.parse('$apiUrl/labelinputdata');
 
     try {
@@ -104,11 +107,10 @@ class _UpvcAccessoriesState extends State<UpvcAccessories> {
         url,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-// "category_id": "15",
-// "selectedlabel": "product_name_base",
-// "selectedvalue": selectProductNameBase,
-// "label_name": "brand",
-
+          // "category_id": "15",
+          // "selectedlabel": "product_name_base",
+          // "selectedvalue": selectProductNameBase,
+          // "label_name": "brand",
           "base_category_id": "15",
           "product_filters": null,
           "product_label_filters": null,
@@ -127,11 +129,12 @@ class _UpvcAccessoriesState extends State<UpvcAccessories> {
 
         if (brands is List) {
           setState(() {
-            brandsList = brands
-                .whereType<Map>()
-                .map((e) => e["brand"]?.toString())
-                .whereType<String>()
-                .toList();
+            brandsList =
+                brands
+                    .whereType<Map>()
+                    .map((e) => e["brand"]?.toString())
+                    .whereType<String>()
+                    .toList();
           });
         }
       }
@@ -140,7 +143,7 @@ class _UpvcAccessoriesState extends State<UpvcAccessories> {
     }
   }
 
-// /// fetch Color Api's ///
+  // /// fetch Color Api's ///
   Future<void> _fetchColor() async {
     if (selectProductNameBase == null) return;
 
@@ -149,8 +152,9 @@ class _UpvcAccessoriesState extends State<UpvcAccessories> {
       selectedColor = null;
     });
 
-    final client =
-        IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
+    final client = IOClient(
+      HttpClient()..badCertificateCallback = (_, __, ___) => true,
+    );
     final url = Uri.parse('$apiUrl/labelinputdata');
 
     try {
@@ -158,11 +162,10 @@ class _UpvcAccessoriesState extends State<UpvcAccessories> {
         url,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-// "category_id": "15",
-// "selectedlabel": "brand",
-// "selectedvalue": selectedBrand,
-// "label_name": "color",
-
+          // "category_id": "15",
+          // "selectedlabel": "brand",
+          // "selectedvalue": selectedBrand,
+          // "label_name": "color",
           "base_category_id": "15",
           "product_filters": null,
           "product_label_filters": null,
@@ -181,11 +184,12 @@ class _UpvcAccessoriesState extends State<UpvcAccessories> {
 
         if (color is List) {
           setState(() {
-            colorsList = color
-                .whereType<Map>()
-                .map((e) => e["color"]?.toString())
-                .whereType<String>()
-                .toList();
+            colorsList =
+                color
+                    .whereType<Map>()
+                    .map((e) => e["color"]?.toString())
+                    .whereType<String>()
+                    .toList();
           });
         }
       }
@@ -199,15 +203,17 @@ class _UpvcAccessoriesState extends State<UpvcAccessories> {
     if (selectProductNameBase == null ||
         selectedBrand == null ||
         selectedColor == null ||
-        !mounted) return;
+        !mounted)
+      return;
 
     setState(() {
       sizeList = [];
       selectedSize = null;
     });
 
-    final client =
-        IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
+    final client = IOClient(
+      HttpClient()..badCertificateCallback = (_, __, ___) => true,
+    );
     final url = Uri.parse('$apiUrl/labelinputdata');
 
     try {
@@ -243,22 +249,26 @@ class _UpvcAccessoriesState extends State<UpvcAccessories> {
 
           if (sizeData is List) {
             setState(() {
-              sizeList = sizeData
-                  .whereType<Map>()
-                  .map((e) => e["SIZE"]?.toString())
-                  .whereType<String>()
-                  .toList();
+              sizeList =
+                  sizeData
+                      .whereType<Map>()
+                      .map((e) => e["SIZE"]?.toString())
+                      .whereType<String>()
+                      .toList();
             });
           }
 
           if (idData is List && idData.isNotEmpty && idData.first is Map) {
             selectedProductBaseId = idData.first["id"]?.toString();
-            selectedBaseProductName = idData.first["base_product_id"]
-                ?.toString(); // <-- Add this line
+            selectedBaseProductName =
+                idData.first["base_product_id"]
+                    ?.toString(); // <-- Add this line
             debugPrint(
-                "Selected Base Product ID (SIZE): $selectedProductBaseId");
+              "Selected Base Product ID (SIZE): $selectedProductBaseId",
+            );
             debugPrint(
-                "Base Product Name (SIZE): $selectedBaseProductName"); // <-- Optional debug
+              "Base Product Name (SIZE): $selectedBaseProductName",
+            ); // <-- Optional debug
           }
         } else {
           debugPrint("Unexpected message format for SIZE.");
@@ -271,11 +281,11 @@ class _UpvcAccessoriesState extends State<UpvcAccessories> {
     }
   }
 
-// 1. ADD THESE NEW VARIABLES at the top of your _UpvcAccessoriesState class (around line 25)
+  // 1. ADD THESE NEW VARIABLES at the top of your _UpvcAccessoriesState class (around line 25)
   Map<String, dynamic>? apiResponseData;
   List<dynamic> responseProducts = [];
 
-// 2. MODIFY the postAllData() method - REPLACE the existing method with this:
+  // 2. MODIFY the postAllData() method - REPLACE the existing method with this:
   Future<void> postAllData() async {
     HttpClient client = HttpClient();
     client.badCertificateCallback =
@@ -289,7 +299,7 @@ class _UpvcAccessoriesState extends State<UpvcAccessories> {
       "product_base_id": selectedProductBaseId,
       "product_base_name": "$selectedBaseProductName",
       "category_id": 15,
-      "category_name": "UPVC Accessories"
+      "category_name": "UPVC Accessories",
     };
 
     print("This is a body data: $data");
@@ -306,7 +316,8 @@ class _UpvcAccessoriesState extends State<UpvcAccessories> {
       if (selectedBrand == null ||
           selectedColor == null ||
           selectProductNameBase == null ||
-          selectedSize == null) return;
+          selectedSize == null)
+        return;
 
       if (response.statusCode == 200) {
         // NEW CODE: Parse and store the API response
@@ -332,7 +343,236 @@ class _UpvcAccessoriesState extends State<UpvcAccessories> {
     }
   }
 
-// 3. REPLACE the existing _buildSubmittedDataList() method with this:
+  /// Base Product Search Functionality ///
+  TextEditingController baseProductController = TextEditingController();
+  List<dynamic> baseProductResults = [];
+  bool isSearchingBaseProduct = false;
+  String? selectedBaseProduct;
+  FocusNode baseProductFocusNode = FocusNode();
+
+  // Add this method for searching base products
+  Future<void> searchBaseProducts(String query) async {
+    if (query.isEmpty) {
+      setState(() {
+        baseProductResults = [];
+      });
+      return;
+    }
+
+    setState(() {
+      isSearchingBaseProduct = true;
+    });
+
+    HttpClient client = HttpClient();
+    client.badCertificateCallback =
+        ((X509Certificate cert, String host, int port) => true);
+    IOClient ioClient = IOClient(client);
+    final headers = {"Content-Type": "application/json"};
+    final data = {"category_id": "15", "searchbase": query};
+
+    try {
+      final response = await ioClient.post(
+        Uri.parse("https://demo.zaron.in:8181/ci4/api/baseproducts_search"),
+        headers: headers,
+        body: jsonEncode(data),
+      );
+
+      if (response.statusCode == 200) {
+        final responseData = jsonDecode(response.body);
+        print("Base product response: $responseData"); // Debug print
+        setState(() {
+          baseProductResults = responseData['base_products'] ?? [];
+          isSearchingBaseProduct = false;
+        });
+      } else {
+        setState(() {
+          baseProductResults = [];
+          isSearchingBaseProduct = false;
+        });
+      }
+    } catch (e) {
+      print("Error searching base products: $e");
+      setState(() {
+        baseProductResults = [];
+        isSearchingBaseProduct = false;
+      });
+    }
+  }
+
+  // Add this method to build the base product search field
+  Widget _buildBaseProductSearchField() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          "Base Product",
+          style: GoogleFonts.figtree(
+            fontSize: 16,
+            fontWeight: FontWeight.w500,
+            color: Colors.black87,
+          ),
+        ),
+        SizedBox(height: 8),
+        Container(
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.grey[300]!),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: TextField(
+            controller: baseProductController,
+            focusNode: baseProductFocusNode,
+            decoration: InputDecoration(
+              hintText: "Search base product...",
+              prefixIcon: Icon(Icons.search),
+              border: InputBorder.none,
+              contentPadding: EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 12,
+              ),
+              suffixIcon:
+                  isSearchingBaseProduct
+                      ? Padding(
+                        padding: EdgeInsets.all(12),
+                        child: SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                      )
+                      : null,
+            ),
+            onChanged: (value) {
+              searchBaseProducts(value);
+            },
+            onTap: () {
+              if (baseProductController.text.isNotEmpty) {
+                searchBaseProducts(baseProductController.text);
+              }
+            },
+          ),
+        ),
+
+        // Search Results Display (line by line, not dropdown)
+        if (baseProductResults.isNotEmpty)
+          Container(
+            margin: EdgeInsets.only(top: 8),
+            padding: EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.grey[50],
+              border: Border.all(color: Colors.grey[300]!),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "Search Results:",
+                  style: GoogleFonts.figtree(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black87,
+                  ),
+                ),
+                SizedBox(height: 8),
+                ...baseProductResults.map((product) {
+                  return GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        selectedBaseProduct = product.toString();
+                        baseProductController.text = selectedBaseProduct!;
+                        baseProductResults = [];
+                      });
+                    },
+                    child: Container(
+                      width: double.infinity,
+                      padding: EdgeInsets.symmetric(
+                        vertical: 12,
+                        horizontal: 12,
+                      ),
+                      margin: EdgeInsets.only(bottom: 6),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(color: Colors.grey[300]!),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.grey.withOpacity(0.1),
+                            spreadRadius: 1,
+                            blurRadius: 2,
+                            offset: Offset(0, 1),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(Icons.inventory_2, size: 16, color: Colors.blue),
+                          SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              product.toString(),
+                              style: GoogleFonts.figtree(
+                                fontSize: 14,
+                                color: Colors.black87,
+                                fontWeight: FontWeight.w400,
+                              ),
+                            ),
+                          ),
+                          Icon(
+                            Icons.arrow_forward_ios,
+                            size: 12,
+                            color: Colors.grey[400],
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ],
+            ),
+          ),
+
+        // Selected Base Product Display
+        if (selectedBaseProduct != null)
+          Container(
+            margin: EdgeInsets.only(top: 8),
+            padding: EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.blue[50],
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.blue[200]!),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.check_circle, color: Colors.green, size: 20),
+                SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    "Selected: $selectedBaseProduct",
+                    style: GoogleFonts.figtree(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.black87,
+                    ),
+                  ),
+                ),
+                GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      selectedBaseProduct = null;
+                      baseProductController.clear();
+                      baseProductResults = [];
+                    });
+                  },
+                  child: Icon(Icons.close, color: Colors.grey[600], size: 20),
+                ),
+              ],
+            ),
+          ),
+      ],
+    );
+  }
+
+  // 3. REPLACE the existing _buildSubmittedDataList() method with this:
   Widget _buildSubmittedDataList() {
     if (responseProducts.isEmpty) {
       return Container(
@@ -360,102 +600,109 @@ class _UpvcAccessoriesState extends State<UpvcAccessories> {
     }
 
     return Column(
-      children: responseProducts.asMap().entries.map((entry) {
-        int index = entry.key;
-        Map<String, dynamic> product = entry.value;
+      children:
+          responseProducts.asMap().entries.map((entry) {
+            int index = entry.key;
+            Map<String, dynamic> product = entry.value;
 
-        return Card(
-          margin: EdgeInsets.symmetric(vertical: 10),
-          elevation: 2,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Padding(
-            padding: EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Header Row with Product Name and Delete Button
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            return Card(
+              margin: EdgeInsets.symmetric(vertical: 10),
+              elevation: 2,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Padding(
+                padding: EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Expanded(
-                      child: Text(
-                        "${product['S.No']}. ${product['Products']}",
-                        style: GoogleFonts.figtree(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.black87,
-                        ),
-                      ),
-                    ),
-                    Container(
-                      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: Colors.blue[50],
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Text(
-                        "ID: ${product['id']}",
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.blue[700],
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ),
-                    Container(
-                      height: 40.h,
-                      width: 50.w,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(10),
-                        color: Colors.deepPurple[50],
-                      ),
-                      child: IconButton(
-                        icon: Icon(Icons.delete, color: Colors.redAccent),
-                        onPressed: () {
-                          showDialog(
-                            context: context,
-                            builder: (context) => AlertDialog(
-                              title: Text("Delete Product"),
-                              content: Text(
-                                  "Are you sure you want to delete this item?"),
-                              actions: [
-                                TextButton(
-                                  onPressed: () {
-                                    setState(() {
-                                      responseProducts.removeAt(index);
-                                    });
-                                    Navigator.pop(context);
-                                  },
-                                  child: Text("Yes"),
-                                ),
-                                TextButton(
-                                  onPressed: () => Navigator.pop(context),
-                                  child: Text("No"),
-                                ),
-                              ],
+                    // Header Row with Product Name and Delete Button
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            "${product['S.No']}. ${product['Products']}",
+                            style: GoogleFonts.figtree(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.black87,
                             ),
-                          );
-                        },
-                      ),
+                          ),
+                        ),
+                        Container(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.blue[50],
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            "ID: ${product['id']}",
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.blue[700],
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                        Container(
+                          height: 40.h,
+                          width: 50.w,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(10),
+                            color: Colors.deepPurple[50],
+                          ),
+                          child: IconButton(
+                            icon: Icon(Icons.delete, color: Colors.redAccent),
+                            onPressed: () {
+                              showDialog(
+                                context: context,
+                                builder:
+                                    (context) => AlertDialog(
+                                      title: Text("Delete Product"),
+                                      content: Text(
+                                        "Are you sure you want to delete this item?",
+                                      ),
+                                      actions: [
+                                        TextButton(
+                                          onPressed: () {
+                                            setState(() {
+                                              responseProducts.removeAt(index);
+                                            });
+                                            Navigator.pop(context);
+                                          },
+                                          child: Text("Yes"),
+                                        ),
+                                        TextButton(
+                                          onPressed:
+                                              () => Navigator.pop(context),
+                                          child: Text("No"),
+                                        ),
+                                      ],
+                                    ),
+                              );
+                            },
+                          ),
+                        ),
+                      ],
                     ),
+
+                    SizedBox(height: 16),
+
+                    // Editable Fields in Rows
+                    _buildApiProductDetailInRows(product),
                   ],
                 ),
-
-                SizedBox(height: 16),
-
-                // Editable Fields in Rows
-                _buildApiProductDetailInRows(product),
-              ],
-            ),
-          ),
-        );
-      }).toList(),
+              ),
+            );
+          }).toList(),
     );
   }
 
-// 4. ADD THIS NEW METHOD (place it after _buildSubmittedDataList method):
+  // 4. ADD THIS NEW METHOD (place it after _buildSubmittedDataList method):
   Widget _buildApiProductDetailInRows(Map<String, dynamic> product) {
     return Column(
       children: [
@@ -464,17 +711,23 @@ class _UpvcAccessoriesState extends State<UpvcAccessories> {
           children: [
             Expanded(
               child: _buildDetailItem(
-                  "Basic Rate", _buildReadOnlyField(product, "Basic Rate")),
-            ),
-            SizedBox(width: 10),
-            Expanded(
-              child:
-                  _buildDetailItem("Nos", _buildEditableField(product, "Nos")),
+                "Basic Rate",
+                _buildReadOnlyField(product, "Basic Rate"),
+              ),
             ),
             SizedBox(width: 10),
             Expanded(
               child: _buildDetailItem(
-                  "Amount", _buildReadOnlyField(product, "Amount")),
+                "Nos",
+                _buildEditableField(product, "Nos"),
+              ),
+            ),
+            SizedBox(width: 10),
+            Expanded(
+              child: _buildDetailItem(
+                "Amount",
+                _buildReadOnlyField(product, "Amount"),
+              ),
             ),
           ],
         ),
@@ -521,7 +774,7 @@ class _UpvcAccessoriesState extends State<UpvcAccessories> {
     );
   }
 
-// 5. ADD THESE NEW HELPER METHODS (place them after _buildApiProductDetailInRows):
+  // 5. ADD THESE NEW HELPER METHODS (place them after _buildApiProductDetailInRows):
 
   Widget _buildEditableField(Map<String, dynamic> product, String key) {
     final controller = _getController(product, key);
@@ -551,7 +804,7 @@ class _UpvcAccessoriesState extends State<UpvcAccessories> {
     );
   }
 
-// 6. MODIFY the _submitData() method - REPLACE the existing method with this:
+  // 6. MODIFY the _submitData() method - REPLACE the existing method with this:
   void _submitData() {
     if (selectedBrand == null ||
         selectedColor == null ||
@@ -559,16 +812,19 @@ class _UpvcAccessoriesState extends State<UpvcAccessories> {
         selectedSize == null) {
       showDialog(
         context: context,
-        builder: (context) => AlertDialog(
-          title: Text('Incomplete Form'),
-          content: Text('Please fill all required fields to add a product.'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text('OK'),
+        builder:
+            (context) => AlertDialog(
+              title: Text('Incomplete Form'),
+              content: Text(
+                'Please fill all required fields to add a product.',
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: Text('OK'),
+                ),
+              ],
             ),
-          ],
-        ),
       );
       return;
     }
@@ -598,9 +854,7 @@ class _UpvcAccessoriesState extends State<UpvcAccessories> {
         ),
         backgroundColor: Colors.green,
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         margin: EdgeInsets.all(16),
         duration: Duration(seconds: 2),
       ),
@@ -628,11 +882,13 @@ class _UpvcAccessoriesState extends State<UpvcAccessories> {
     fieldControllers.putIfAbsent(productId, () => {});
 
     if (!fieldControllers[productId]!.containsKey(key)) {
-      String initialValue = (data[key] != null && data[key].toString() != "0")
-          ? data[key].toString()
-          : "";
-      fieldControllers[productId]![key] =
-          TextEditingController(text: initialValue);
+      String initialValue =
+          (data[key] != null && data[key].toString() != "0")
+              ? data[key].toString()
+              : "";
+      fieldControllers[productId]![key] = TextEditingController(
+        text: initialValue,
+      );
     }
 
     return fieldControllers[productId]![key]!;
@@ -646,8 +902,9 @@ class _UpvcAccessoriesState extends State<UpvcAccessories> {
   }
 
   Future<void> _performCalculation(Map<String, dynamic> data) async {
-    final client =
-        IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
+    final client = IOClient(
+      HttpClient()..badCertificateCallback = (_, __, ___) => true,
+    );
     final url = Uri.parse('$apiUrl/calculation');
 
     String productId = data["id"].toString();
@@ -826,13 +1083,17 @@ class _UpvcAccessoriesState extends State<UpvcAccessories> {
                             icon: Icons.format_size_sharp,
                           ),
                           SizedBox(height: 24),
+                          _buildBaseProductSearchField(),
+                          SizedBox(height: 16),
                           Container(
                             padding: EdgeInsets.all(16),
                             decoration: BoxDecoration(
                               color: Colors.grey[100],
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(
-                                  color: Colors.deepPurple[400]!, width: 1.5),
+                                color: Colors.deepPurple[400]!,
+                                width: 1.5,
+                              ),
                             ),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -878,8 +1139,10 @@ class _UpvcAccessoriesState extends State<UpvcAccessories> {
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  Icon(Icons.add_shopping_cart_outlined,
-                                      color: Colors.white),
+                                  Icon(
+                                    Icons.add_shopping_cart_outlined,
+                                    color: Colors.white,
+                                  ),
                                   SizedBox(width: 10),
                                   Text(
                                     "Add Product",
@@ -903,8 +1166,10 @@ class _UpvcAccessoriesState extends State<UpvcAccessories> {
                     padding: EdgeInsets.symmetric(horizontal: 4),
                     child: Row(
                       children: [
-                        Icon(Icons.shopping_bag_outlined,
-                            color: Colors.grey.shade700),
+                        Icon(
+                          Icons.shopping_bag_outlined,
+                          color: Colors.grey.shade700,
+                        ),
                         SizedBox(width: 8),
                         Text(
                           "Added Products",
@@ -946,15 +1211,16 @@ class _UpvcAccessoriesState extends State<UpvcAccessories> {
           border: Border.all(
             color: enabled ? Colors.grey.shade300 : Colors.grey.shade200,
           ),
-          boxShadow: enabled
-              ? [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.03),
-                    blurRadius: 8,
-                    offset: Offset(0, 2),
-                  ),
-                ]
-              : [],
+          boxShadow:
+              enabled
+                  ? [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.03),
+                      blurRadius: 8,
+                      offset: Offset(0, 2),
+                    ),
+                  ]
+                  : [],
         ),
         child: DropdownSearch<String>(
           items: items,
@@ -963,11 +1229,15 @@ class _UpvcAccessoriesState extends State<UpvcAccessories> {
           dropdownDecoratorProps: DropDownDecoratorProps(
             dropdownSearchDecoration: InputDecoration(
               labelText: label,
-              prefixIcon:
-                  Icon(icon, color: enabled ? Colors.blue : Colors.grey),
+              prefixIcon: Icon(
+                icon,
+                color: enabled ? Colors.blue : Colors.grey,
+              ),
               border: InputBorder.none,
-              contentPadding:
-                  EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              contentPadding: EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 12,
+              ),
             ),
           ),
           popupProps: PopupProps.menu(

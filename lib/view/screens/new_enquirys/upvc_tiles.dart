@@ -35,7 +35,7 @@ class _UpvcTilesState extends State<UpvcTiles> {
 
   List<Map<String, dynamic>> submittedData = [];
 
-// Form key for validation
+  // Form key for validation
   final _formKey = GlobalKey<FormState>();
 
   @override
@@ -45,7 +45,7 @@ class _UpvcTilesState extends State<UpvcTiles> {
     _fetchMaterial();
   }
 
-// Add this to your dispose method
+  // Add this to your dispose method
   @override
   void dispose() {
     editController.dispose();
@@ -65,8 +65,9 @@ class _UpvcTilesState extends State<UpvcTiles> {
       selectMaterial = null;
     });
 
-    final client =
-        IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
+    final client = IOClient(
+      HttpClient()..badCertificateCallback = (_, __, ___) => true,
+    );
     final url = Uri.parse('$apiUrl/showlables/631');
 
     try {
@@ -79,11 +80,12 @@ class _UpvcTilesState extends State<UpvcTiles> {
 
         if (material is List) {
           setState(() {
-            materialList = material
-                .whereType<Map>()
-                .map((e) => e["material_type"]?.toString())
-                .whereType<String>()
-                .toList();
+            materialList =
+                material
+                    .whereType<Map>()
+                    .map((e) => e["material_type"]?.toString())
+                    .whereType<String>()
+                    .toList();
           });
         }
       }
@@ -101,8 +103,9 @@ class _UpvcTilesState extends State<UpvcTiles> {
       selectedColor = null;
     });
 
-    final client =
-        IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
+    final client = IOClient(
+      HttpClient()..badCertificateCallback = (_, __, ___) => true,
+    );
     final url = Uri.parse('$apiUrl/labelinputdata');
 
     try {
@@ -128,11 +131,12 @@ class _UpvcTilesState extends State<UpvcTiles> {
 
         if (color is List) {
           setState(() {
-            colorsList = color
-                .whereType<Map>()
-                .map((e) => e["color"]?.toString())
-                .whereType<String>()
-                .toList();
+            colorsList =
+                color
+                    .whereType<Map>()
+                    .map((e) => e["color"]?.toString())
+                    .whereType<String>()
+                    .toList();
           });
         }
       }
@@ -150,8 +154,9 @@ class _UpvcTilesState extends State<UpvcTiles> {
       selectThickness = null;
     });
 
-    final client =
-        IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
+    final client = IOClient(
+      HttpClient()..badCertificateCallback = (_, __, ___) => true,
+    );
     final url = Uri.parse('$apiUrl/labelinputdata');
 
     try {
@@ -181,11 +186,12 @@ class _UpvcTilesState extends State<UpvcTiles> {
 
           if (thicknessData is List) {
             setState(() {
-              thicknessList = thicknessData
-                  .whereType<Map>()
-                  .map((e) => e["thickness"]?.toString())
-                  .whereType<String>()
-                  .toList();
+              thicknessList =
+                  thicknessData
+                      .whereType<Map>()
+                      .map((e) => e["thickness"]?.toString())
+                      .whereType<String>()
+                      .toList();
             });
           }
 
@@ -195,7 +201,8 @@ class _UpvcTilesState extends State<UpvcTiles> {
                 idData.first["base_product_id"]?.toString(); // <-- New line
             debugPrint("Selected Base Product ID: $selectedProductBaseId");
             debugPrint(
-                "Base Product Name: $selectedBaseProductName"); // <-- Optional
+              "Base Product Name: $selectedBaseProductName",
+            ); // <-- Optional
           }
         } else {
           debugPrint("Unexpected message format.");
@@ -208,11 +215,11 @@ class _UpvcTilesState extends State<UpvcTiles> {
     }
   }
 
-// 1. ADD THESE VARIABLES after your existing variables (around line 25)
+  // 1. ADD THESE VARIABLES after your existing variables (around line 25)
   List<Map<String, dynamic>> apiResponseData = [];
   Map<String, dynamic>? apiResponse;
 
-// 2. MODIFY the postUPVCData() method - REPLACE the existing method with this:
+  // 2. MODIFY the postUPVCData() method - REPLACE the existing method with this:
   Future<void> postUPVCData() async {
     HttpClient client = HttpClient();
     client.badCertificateCallback =
@@ -226,14 +233,17 @@ class _UpvcTilesState extends State<UpvcTiles> {
       "product_base_id": selectedProductBaseId,
       "product_base_name": "$selectedBaseProductName",
       "category_id": 631,
-      "category_name": "UPVC Tiles"
+      "category_name": "UPVC Tiles",
     };
     print("User input Data $data");
     final url = "$apiUrl/addbag";
     final body = jsonEncode(data);
     try {
-      final response =
-          await ioClient.post(Uri.parse(url), headers: headers, body: body);
+      final response = await ioClient.post(
+        Uri.parse(url),
+        headers: headers,
+        body: body,
+      );
       debugPrint("This is a response: ${response.body}");
 
       if (response.statusCode == 200) {
@@ -244,7 +254,8 @@ class _UpvcTilesState extends State<UpvcTiles> {
           if (responseData['lebels'] != null &&
               responseData['lebels'].isNotEmpty) {
             apiResponseData = List<Map<String, dynamic>>.from(
-                responseData['lebels'][0]['data'] ?? []);
+              responseData['lebels'][0]['data'] ?? [],
+            );
           }
         });
       }
@@ -253,7 +264,235 @@ class _UpvcTilesState extends State<UpvcTiles> {
     }
   }
 
-// 3. REPLACE the _buildSubmittedDataList() method with this:
+  TextEditingController baseProductController = TextEditingController();
+  List<dynamic> baseProductResults = [];
+  bool isSearchingBaseProduct = false;
+  String? selectedBaseProduct;
+  FocusNode baseProductFocusNode = FocusNode();
+
+  // Add this method for searching base products
+  Future<void> searchBaseProducts(String query) async {
+    if (query.isEmpty) {
+      setState(() {
+        baseProductResults = [];
+      });
+      return;
+    }
+
+    setState(() {
+      isSearchingBaseProduct = true;
+    });
+
+    HttpClient client = HttpClient();
+    client.badCertificateCallback =
+        ((X509Certificate cert, String host, int port) => true);
+    IOClient ioClient = IOClient(client);
+    final headers = {"Content-Type": "application/json"};
+    final data = {"category_id": "631", "searchbase": query};
+
+    try {
+      final response = await ioClient.post(
+        Uri.parse("https://demo.zaron.in:8181/ci4/api/baseproducts_search"),
+        headers: headers,
+        body: jsonEncode(data),
+      );
+
+      if (response.statusCode == 200) {
+        final responseData = jsonDecode(response.body);
+        print("Base product response: $responseData"); // Debug print
+        setState(() {
+          baseProductResults = responseData['base_products'] ?? [];
+          isSearchingBaseProduct = false;
+        });
+      } else {
+        setState(() {
+          baseProductResults = [];
+          isSearchingBaseProduct = false;
+        });
+      }
+    } catch (e) {
+      print("Error searching base products: $e");
+      setState(() {
+        baseProductResults = [];
+        isSearchingBaseProduct = false;
+      });
+    }
+  }
+
+  // Add this method to build the base product search field
+  Widget _buildBaseProductSearchField() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          "Base Product",
+          style: GoogleFonts.figtree(
+            fontSize: 16,
+            fontWeight: FontWeight.w500,
+            color: Colors.black87,
+          ),
+        ),
+        SizedBox(height: 8),
+        Container(
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.grey[300]!),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: TextField(
+            controller: baseProductController,
+            focusNode: baseProductFocusNode,
+            decoration: InputDecoration(
+              hintText: "Search base product...",
+              prefixIcon: Icon(Icons.search),
+              border: InputBorder.none,
+              contentPadding: EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 12,
+              ),
+              suffixIcon:
+                  isSearchingBaseProduct
+                      ? Padding(
+                        padding: EdgeInsets.all(12),
+                        child: SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                      )
+                      : null,
+            ),
+            onChanged: (value) {
+              searchBaseProducts(value);
+            },
+            onTap: () {
+              if (baseProductController.text.isNotEmpty) {
+                searchBaseProducts(baseProductController.text);
+              }
+            },
+          ),
+        ),
+
+        // Search Results Display (line by line, not dropdown)
+        if (baseProductResults.isNotEmpty)
+          Container(
+            margin: EdgeInsets.only(top: 8),
+            padding: EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.grey[50],
+              border: Border.all(color: Colors.grey[300]!),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "Search Results:",
+                  style: GoogleFonts.figtree(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black87,
+                  ),
+                ),
+                SizedBox(height: 8),
+                ...baseProductResults.map((product) {
+                  return GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        selectedBaseProduct = product.toString();
+                        baseProductController.text = selectedBaseProduct!;
+                        baseProductResults = [];
+                      });
+                    },
+                    child: Container(
+                      width: double.infinity,
+                      padding: EdgeInsets.symmetric(
+                        vertical: 12,
+                        horizontal: 12,
+                      ),
+                      margin: EdgeInsets.only(bottom: 6),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(color: Colors.grey[300]!),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.grey.withOpacity(0.1),
+                            spreadRadius: 1,
+                            blurRadius: 2,
+                            offset: Offset(0, 1),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(Icons.inventory_2, size: 16, color: Colors.blue),
+                          SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              product.toString(),
+                              style: GoogleFonts.figtree(
+                                fontSize: 14,
+                                color: Colors.black87,
+                                fontWeight: FontWeight.w400,
+                              ),
+                            ),
+                          ),
+                          Icon(
+                            Icons.arrow_forward_ios,
+                            size: 12,
+                            color: Colors.grey[400],
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ],
+            ),
+          ),
+
+        // Selected Base Product Display
+        if (selectedBaseProduct != null)
+          Container(
+            margin: EdgeInsets.only(top: 8),
+            padding: EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.blue[50],
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.blue[200]!),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.check_circle, color: Colors.green, size: 20),
+                SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    "Selected: $selectedBaseProduct",
+                    style: GoogleFonts.figtree(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.black87,
+                    ),
+                  ),
+                ),
+                GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      selectedBaseProduct = null;
+                      baseProductController.clear();
+                      baseProductResults = [];
+                    });
+                  },
+                  child: Icon(Icons.close, color: Colors.grey[600], size: 20),
+                ),
+              ],
+            ),
+          ),
+      ],
+    );
+  }
+
+  // 3. REPLACE the _buildSubmittedDataList() method with this:
   Widget _buildSubmittedDataList() {
     if (apiResponseData.isEmpty) {
       return Container(
@@ -273,94 +512,101 @@ class _UpvcTilesState extends State<UpvcTiles> {
     }
 
     return Column(
-      children: apiResponseData.asMap().entries.map((entry) {
-        int index = entry.key;
-        Map<String, dynamic> data = entry.value;
+      children:
+          apiResponseData.asMap().entries.map((entry) {
+            int index = entry.key;
+            Map<String, dynamic> data = entry.value;
 
-        return Card(
-          margin: EdgeInsets.symmetric(vertical: 10),
-          elevation: 2,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Column(
-            children: [
-              // Header with product name and delete button
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            return Card(
+              margin: EdgeInsets.symmetric(vertical: 10),
+              elevation: 2,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Column(
                 children: [
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Text(
-                        "${data["S.No"]}. ${data["Products"]}",
-                        style: GoogleFonts.figtree(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.black87),
-                      ),
-                    ),
-                  ),
-                  Container(
-                    padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: Colors.blue[50],
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Text(
-                      "ID: ${data['id']}",
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.blue[700],
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: IconButton(
-                      icon: Icon(Icons.delete, color: Colors.redAccent),
-                      onPressed: () {
-                        showDialog(
-                          context: context,
-                          builder: (context) => AlertDialog(
-                            title: Text("Delete Product"),
-                            content: Text(
-                                "Are you sure you want to delete this item?"),
-                            actions: [
-                              TextButton(
-                                onPressed: () => Navigator.pop(context),
-                                child: Text("Cancel"),
-                              ),
-                              ElevatedButton(
-                                onPressed: () {
-                                  setState(() {
-                                    apiResponseData.removeAt(index);
-                                  });
-                                  Navigator.pop(context);
-                                },
-                                child: Text("Delete"),
-                              ),
-                            ],
+                  // Header with product name and delete button
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Text(
+                            "${data["S.No"]}. ${data["Products"]}",
+                            style: GoogleFonts.figtree(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.black87,
+                            ),
                           ),
-                        );
-                      },
-                    ),
+                        ),
+                      ),
+                      Container(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.blue[50],
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          "ID: ${data['id']}",
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.blue[700],
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: IconButton(
+                          icon: Icon(Icons.delete, color: Colors.redAccent),
+                          onPressed: () {
+                            showDialog(
+                              context: context,
+                              builder:
+                                  (context) => AlertDialog(
+                                    title: Text("Delete Product"),
+                                    content: Text(
+                                      "Are you sure you want to delete this item?",
+                                    ),
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () => Navigator.pop(context),
+                                        child: Text("Cancel"),
+                                      ),
+                                      ElevatedButton(
+                                        onPressed: () {
+                                          setState(() {
+                                            apiResponseData.removeAt(index);
+                                          });
+                                          Navigator.pop(context);
+                                        },
+                                        child: Text("Delete"),
+                                      ),
+                                    ],
+                                  ),
+                            );
+                          },
+                        ),
+                      ),
+                    ],
                   ),
+
+                  // Editable fields in rows
+                  _buildApiResponseFields(data),
+                  SizedBox(height: 16),
                 ],
               ),
-
-              // Editable fields in rows
-              _buildApiResponseFields(data),
-              SizedBox(height: 16),
-            ],
-          ),
-        );
-      }).toList(),
+            );
+          }).toList(),
     );
   }
 
-// 4. ADD this new method:
+  // 4. ADD this new method:
   Widget _buildApiResponseFields(Map<String, dynamic> data) {
     return Padding(
       padding: const EdgeInsets.all(16.0),
@@ -369,9 +615,7 @@ class _UpvcTilesState extends State<UpvcTiles> {
           // Row 1: UOM and Length
           Row(
             children: [
-              Expanded(
-                child: _buildUOMDropdownFromAPI(data),
-              ),
+              Expanded(child: _buildUOMDropdownFromAPI(data)),
               SizedBox(width: 12),
               Expanded(
                 child: _buildEditableFieldFromAPI("Length", data, "Length"),
@@ -383,13 +627,14 @@ class _UpvcTilesState extends State<UpvcTiles> {
           // Row 2: Nos and Basic Rate
           Row(
             children: [
-              Expanded(
-                child: _buildEditableFieldFromAPI("Nos", data, "Nos"),
-              ),
+              Expanded(child: _buildEditableFieldFromAPI("Nos", data, "Nos")),
               SizedBox(width: 12),
               Expanded(
                 child: _buildEditableFieldFromAPI(
-                    "Basic Rate", data, "Basic Rate"),
+                  "Basic Rate",
+                  data,
+                  "Basic Rate",
+                ),
               ),
             ],
           ),
@@ -412,8 +657,8 @@ class _UpvcTilesState extends State<UpvcTiles> {
     );
   }
 
-// 5. ADD this method for UOM dropdown:
-// REPLACE your existing _buildUOMDropdownFromAPI method with this:
+  // 5. ADD this method for UOM dropdown:
+  // REPLACE your existing _buildUOMDropdownFromAPI method with this:
   Widget _buildUOMDropdownFromAPI(Map<String, dynamic> data) {
     Map<String, String> uomOptions = {};
     String? currentValue;
@@ -444,12 +689,15 @@ class _UpvcTilesState extends State<UpvcTiles> {
           height: 38.h,
           child: DropdownButtonFormField<String>(
             value: currentValue,
-            items: uomOptions.entries
-                .map((entry) => DropdownMenuItem(
-                      value: entry.key,
-                      child: Text(entry.value),
-                    ))
-                .toList(),
+            items:
+                uomOptions.entries
+                    .map(
+                      (entry) => DropdownMenuItem(
+                        value: entry.key,
+                        child: Text(entry.value),
+                      ),
+                    )
+                    .toList(),
             onChanged: (val) {
               setState(() {
                 data["UOM"]["value"] = val;
@@ -469,8 +717,10 @@ class _UpvcTilesState extends State<UpvcTiles> {
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(6),
-                borderSide:
-                    BorderSide(color: Theme.of(context).primaryColor, width: 2),
+                borderSide: BorderSide(
+                  color: Theme.of(context).primaryColor,
+                  width: 2,
+                ),
               ),
               filled: true,
               fillColor: Colors.grey[50],
@@ -481,9 +731,12 @@ class _UpvcTilesState extends State<UpvcTiles> {
     );
   }
 
-// REPLACE your existing _buildEditableFieldFromAPI method with this:
+  // REPLACE your existing _buildEditableFieldFromAPI method with this:
   Widget _buildEditableFieldFromAPI(
-      String label, Map<String, dynamic> data, String key) {
+    String label,
+    Map<String, dynamic> data,
+    String key,
+  ) {
     TextEditingController controller = getController(data, key);
 
     return Column(
@@ -502,9 +755,10 @@ class _UpvcTilesState extends State<UpvcTiles> {
           height: 38.h,
           child: TextField(
             style: GoogleFonts.figtree(
-                fontWeight: FontWeight.w500,
-                color: Colors.black,
-                fontSize: 15.sp),
+              fontWeight: FontWeight.w500,
+              color: Colors.black,
+              fontSize: 15.sp,
+            ),
             controller: controller,
             onChanged: (val) {
               data[key] = val;
@@ -526,8 +780,10 @@ class _UpvcTilesState extends State<UpvcTiles> {
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(6),
-                borderSide:
-                    BorderSide(color: Theme.of(context).primaryColor, width: 2),
+                borderSide: BorderSide(
+                  color: Theme.of(context).primaryColor,
+                  width: 2,
+                ),
               ),
               filled: true,
               fillColor: Colors.grey[50],
@@ -538,7 +794,7 @@ class _UpvcTilesState extends State<UpvcTiles> {
     );
   }
 
-// Helper method for keyboard types
+  // Helper method for keyboard types
   TextInputType _getKeyboardType(String key) {
     switch (key) {
       case "Length":
@@ -552,23 +808,26 @@ class _UpvcTilesState extends State<UpvcTiles> {
     }
   }
 
-// 7. MODIFY the _submitData() method - REPLACE with this:
+  // 7. MODIFY the _submitData() method - REPLACE with this:
   void _submitData() {
     if (selectMaterial == null ||
         selectedColor == null ||
         selectThickness == null) {
       showDialog(
         context: context,
-        builder: (context) => AlertDialog(
-          title: Text('Incomplete Form'),
-          content: Text('Please fill all required fields to add a product.'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text('OK'),
+        builder:
+            (context) => AlertDialog(
+              title: Text('Incomplete Form'),
+              content: Text(
+                'Please fill all required fields to add a product.',
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: Text('OK'),
+                ),
+              ],
             ),
-          ],
-        ),
       );
       return; // Return early without proceeding further
     }
@@ -598,9 +857,7 @@ class _UpvcTilesState extends State<UpvcTiles> {
           ),
           backgroundColor: Colors.green,
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
           margin: EdgeInsets.all(16),
           duration: Duration(seconds: 2),
         ),
@@ -612,7 +869,7 @@ class _UpvcTilesState extends State<UpvcTiles> {
     List<String> values = [
       if (selectMaterial != null) "Material Type:  $selectMaterial",
       if (selectedColor != null) "Color:  $selectedColor",
-      if (selectThickness != null) "Thickness:  $selectThickness"
+      if (selectThickness != null) "Thickness:  $selectThickness",
     ];
 
     return values.isEmpty ? "No selections yet" : values.join(",  ");
@@ -623,24 +880,26 @@ class _UpvcTilesState extends State<UpvcTiles> {
   Map<String, Map<String, TextEditingController>> fieldControllers =
       {}; // Store controllers
 
-// Add this helper method to get/create controllers
+  // Add this helper method to get/create controllers
   TextEditingController getController(Map<String, dynamic> data, String key) {
     String productId = data["id"].toString();
 
     fieldControllers.putIfAbsent(productId, () => {});
 
     if (!fieldControllers[productId]!.containsKey(key)) {
-      String initialValue = (data[key] != null && data[key].toString() != "0")
-          ? data[key].toString()
-          : "";
-      fieldControllers[productId]![key] =
-          TextEditingController(text: initialValue);
+      String initialValue =
+          (data[key] != null && data[key].toString() != "0")
+              ? data[key].toString()
+              : "";
+      fieldControllers[productId]![key] = TextEditingController(
+        text: initialValue,
+      );
     }
 
     return fieldControllers[productId]![key]!;
   }
 
-// Add debounce method
+  // Add debounce method
   void debounceCalculation(Map<String, dynamic> data) {
     debounceTimer?.cancel();
     debounceTimer = Timer(Duration(seconds: 1), () {
@@ -648,10 +907,11 @@ class _UpvcTilesState extends State<UpvcTiles> {
     });
   }
 
-// Add calculation API method
+  // Add calculation API method
   Future<void> performCalculation(Map<String, dynamic> data) async {
-    final client =
-        IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
+    final client = IOClient(
+      HttpClient()..badCertificateCallback = (_, __, ___) => true,
+    );
     final url = Uri.parse('$apiUrl/calculation');
 
     String productId = data["id"].toString();
@@ -851,13 +1111,17 @@ class _UpvcTilesState extends State<UpvcTiles> {
                             icon: Icons.straighten_outlined,
                           ),
                           SizedBox(height: 24),
+                          _buildBaseProductSearchField(),
+                          SizedBox(height: 16),
                           Container(
                             padding: EdgeInsets.all(16),
                             decoration: BoxDecoration(
                               color: Colors.grey[100],
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(
-                                  color: Colors.deepPurple[400]!, width: 1.5),
+                                color: Colors.deepPurple[400]!,
+                                width: 1.5,
+                              ),
                             ),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -927,8 +1191,10 @@ class _UpvcTilesState extends State<UpvcTiles> {
                     padding: EdgeInsets.symmetric(horizontal: 4),
                     child: Row(
                       children: [
-                        Icon(Icons.shopping_bag_outlined,
-                            color: Colors.grey.shade700),
+                        Icon(
+                          Icons.shopping_bag_outlined,
+                          color: Colors.grey.shade700,
+                        ),
                         SizedBox(width: 8),
                         Text(
                           "Added Products",
@@ -970,15 +1236,16 @@ class _UpvcTilesState extends State<UpvcTiles> {
           border: Border.all(
             color: enabled ? Colors.grey.shade300 : Colors.grey.shade200,
           ),
-          boxShadow: enabled
-              ? [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.03),
-                    blurRadius: 8,
-                    offset: Offset(0, 2),
-                  ),
-                ]
-              : [],
+          boxShadow:
+              enabled
+                  ? [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.03),
+                      blurRadius: 8,
+                      offset: Offset(0, 2),
+                    ),
+                  ]
+                  : [],
         ),
         child: DropdownSearch<String>(
           items: items,
@@ -987,11 +1254,15 @@ class _UpvcTilesState extends State<UpvcTiles> {
           dropdownDecoratorProps: DropDownDecoratorProps(
             dropdownSearchDecoration: InputDecoration(
               labelText: label,
-              prefixIcon:
-                  Icon(icon, color: enabled ? Colors.deepPurple : Colors.grey),
+              prefixIcon: Icon(
+                icon,
+                color: enabled ? Colors.deepPurple : Colors.grey,
+              ),
               border: InputBorder.none,
-              contentPadding:
-                  EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              contentPadding: EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 12,
+              ),
             ),
           ),
           popupProps: PopupProps.menu(

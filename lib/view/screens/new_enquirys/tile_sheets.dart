@@ -30,7 +30,7 @@ class _TileSheetPageState extends State<TileSheetPage> {
   String? selectedCoatingMass;
   String? selectedProductBaseId;
 
-// String? selectedBrand;
+  // String? selectedBrand;
 
   List<String> materialList = [];
   List<String> brandandList = [];
@@ -38,10 +38,10 @@ class _TileSheetPageState extends State<TileSheetPage> {
   List<String> thickAndList = [];
   List<String> coatingAndList = [];
 
-// List<String> brandList = [];
+  // List<String> brandList = [];
   List<Map<String, dynamic>> submittedData = [];
 
-// Form key for validation
+  // Form key for validation
   final _formKey = GlobalKey<FormState>();
 
   @override
@@ -64,8 +64,9 @@ class _TileSheetPageState extends State<TileSheetPage> {
       selectedMaterial = null;
     });
 
-    final client =
-        IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
+    final client = IOClient(
+      HttpClient()..badCertificateCallback = (_, __, ___) => true,
+    );
     final url = Uri.parse('$apiUrl/showlables/26');
 
     try {
@@ -79,11 +80,12 @@ class _TileSheetPageState extends State<TileSheetPage> {
 
         if (materials is List) {
           setState(() {
-            materialList = materials
-                .whereType<Map>()
-                .map((e) => e["material_type"]?.toString())
-                .whereType<String>()
-                .toList();
+            materialList =
+                materials
+                    .whereType<Map>()
+                    .map((e) => e["material_type"]?.toString())
+                    .whereType<String>()
+                    .toList();
           });
         }
       }
@@ -98,8 +100,9 @@ class _TileSheetPageState extends State<TileSheetPage> {
       selectedBrands;
     });
 
-    final client =
-        IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
+    final client = IOClient(
+      HttpClient()..badCertificateCallback = (_, __, ___) => true,
+    );
     final url = Uri.parse('$apiUrl/showlables/26');
 
     try {
@@ -112,11 +115,12 @@ class _TileSheetPageState extends State<TileSheetPage> {
 
         if (brandData is List) {
           setState(() {
-            brandandList = brandData
-                .whereType<Map>()
-                .map((e) => e["brand"]?.toString())
-                .whereType<String>()
-                .toList();
+            brandandList =
+                brandData
+                    .whereType<Map>()
+                    .map((e) => e["brand"]?.toString())
+                    .whereType<String>()
+                    .toList();
           });
         }
       }
@@ -134,8 +138,9 @@ class _TileSheetPageState extends State<TileSheetPage> {
       selectedColors = null;
     });
 
-    final client =
-        IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
+    final client = IOClient(
+      HttpClient()..badCertificateCallback = (_, __, ___) => true,
+    );
     final url = Uri.parse('$apiUrl/labelinputdata');
 
     try {
@@ -143,18 +148,17 @@ class _TileSheetPageState extends State<TileSheetPage> {
         url,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-// "category_id": "3",
-// "selectedlabel": "brand",
-// "selectedvalue": selectedBrands,
-// "label_name": "color",
-
+          // "category_id": "3",
+          // "selectedlabel": "brand",
+          // "selectedvalue": selectedBrands,
+          // "label_name": "color",
           "product_label": "color",
           "product_filters": [selectedMaterial],
           "product_label_filters": ["material_type"],
           "product_category_id": 26,
           "base_product_filters": [selectedBrands],
           "base_label_filters": ["brand"],
-          "base_category_id": 3
+          "base_category_id": 3,
         }),
       );
 
@@ -166,11 +170,12 @@ class _TileSheetPageState extends State<TileSheetPage> {
 
         if (selectedThickness is List) {
           setState(() {
-            colorandList = selectedThickness
-                .whereType<Map>()
-                .map((e) => e["color"]?.toString())
-                .whereType<String>()
-                .toList();
+            colorandList =
+                selectedThickness
+                    .whereType<Map>()
+                    .map((e) => e["color"]?.toString())
+                    .whereType<String>()
+                    .toList();
           });
         }
       }
@@ -188,8 +193,9 @@ class _TileSheetPageState extends State<TileSheetPage> {
       selectedThickness = null;
     });
 
-    final client =
-        IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
+    final client = IOClient(
+      HttpClient()..badCertificateCallback = (_, __, ___) => true,
+    );
     final url = Uri.parse('$apiUrl/labelinputdata');
 
     try {
@@ -197,18 +203,17 @@ class _TileSheetPageState extends State<TileSheetPage> {
         url,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-// "category_id": "3",
-// "selectedlabel": "color",
-// "selectedvalue": selectedColors,
-// "label_name": "thickness",
-
+          // "category_id": "3",
+          // "selectedlabel": "color",
+          // "selectedvalue": selectedColors,
+          // "label_name": "thickness",
           "product_label": "thickness",
           "product_filters": [selectedMaterial],
           "product_label_filters": ["material_type"],
           "product_category_id": 26,
           "base_product_filters": [selectedBrands, selectedColors],
           "base_label_filters": ["brand", "color"],
-          "base_category_id": 3
+          "base_category_id": 3,
         }),
       );
 
@@ -220,11 +225,12 @@ class _TileSheetPageState extends State<TileSheetPage> {
 
         if (thickness is List) {
           setState(() {
-            thickAndList = thickness
-                .whereType<Map>()
-                .map((e) => e["thickness"]?.toString())
-                .whereType<String>()
-                .toList();
+            thickAndList =
+                thickness
+                    .whereType<Map>()
+                    .map((e) => e["thickness"]?.toString())
+                    .whereType<String>()
+                    .toList();
           });
         }
       }
@@ -242,8 +248,9 @@ class _TileSheetPageState extends State<TileSheetPage> {
       selectedCoatingMass = null;
     });
 
-    final client =
-        IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
+    final client = IOClient(
+      HttpClient()..badCertificateCallback = (_, __, ___) => true,
+    );
     final url = Uri.parse('$apiUrl/labelinputdata');
 
     try {
@@ -258,10 +265,10 @@ class _TileSheetPageState extends State<TileSheetPage> {
           "base_product_filters": [
             selectedBrands,
             selectedColors,
-            selectedThickness
+            selectedThickness,
           ],
           "base_label_filters": ["brand", "color", "thickness"],
-          "base_category_id": 3
+          "base_category_id": 3,
         }),
       );
 
@@ -275,11 +282,12 @@ class _TileSheetPageState extends State<TileSheetPage> {
           final coatingList = message[0];
           if (coatingList is List) {
             setState(() {
-              coatingAndList = coatingList
-                  .whereType<Map>()
-                  .map((e) => e["coating_mass"]?.toString())
-                  .whereType<String>()
-                  .toList();
+              coatingAndList =
+                  coatingList
+                      .whereType<Map>()
+                      .map((e) => e["coating_mass"]?.toString())
+                      .whereType<String>()
+                      .toList();
             });
           }
 
@@ -312,7 +320,7 @@ class _TileSheetPageState extends State<TileSheetPage> {
       "product_base_id": selectedProductBaseId,
       "product_base_name": "$selectedBrands,$selectedColors,$selectedThickness",
       "category_id": 26,
-      "category_name": "Tile sheet"
+      "category_name": "Tile sheet",
     };
 
     print("This is a body data: $data");
@@ -330,7 +338,8 @@ class _TileSheetPageState extends State<TileSheetPage> {
           selectedBrands == null ||
           selectedColors == null ||
           selectedThickness == null ||
-          selectedCoatingMass == null) return;
+          selectedCoatingMass == null)
+        return;
 
       if (response.statusCode == 200) {
         // Parse and store the API response
@@ -345,8 +354,10 @@ class _TileSheetPageState extends State<TileSheetPage> {
             for (var product in responseProducts) {
               if (product["UOM"] != null && product["UOM"]["options"] != null) {
                 uomOptions[product["id"].toString()] = Map<String, String>.from(
-                    product["UOM"]["options"].map((key, value) =>
-                        MapEntry(key.toString(), value.toString())));
+                  product["UOM"]["options"].map(
+                    (key, value) => MapEntry(key.toString(), value.toString()),
+                  ),
+                );
               }
             }
           }
@@ -357,25 +368,256 @@ class _TileSheetPageState extends State<TileSheetPage> {
     }
   }
 
+  TextEditingController baseProductController = TextEditingController();
+  List<dynamic> baseProductResults = [];
+  bool isSearchingBaseProduct = false;
+  String? selectedBaseProduct;
+  FocusNode baseProductFocusNode = FocusNode();
+
+  // Add this method for searching base products
+  Future<void> searchBaseProducts(String query) async {
+    if (query.isEmpty) {
+      setState(() {
+        baseProductResults = [];
+      });
+      return;
+    }
+
+    setState(() {
+      isSearchingBaseProduct = true;
+    });
+
+    HttpClient client = HttpClient();
+    client.badCertificateCallback =
+        ((X509Certificate cert, String host, int port) => true);
+    IOClient ioClient = IOClient(client);
+    final headers = {"Content-Type": "application/json"};
+    final data = {"category_id": "26", "searchbase": query};
+
+    try {
+      final response = await ioClient.post(
+        Uri.parse("https://demo.zaron.in:8181/ci4/api/baseproducts_search"),
+        headers: headers,
+        body: jsonEncode(data),
+      );
+
+      if (response.statusCode == 200) {
+        final responseData = jsonDecode(response.body);
+        print("Base product response: $responseData"); // Debug print
+        setState(() {
+          baseProductResults = responseData['base_products'] ?? [];
+          isSearchingBaseProduct = false;
+        });
+      } else {
+        setState(() {
+          baseProductResults = [];
+          isSearchingBaseProduct = false;
+        });
+      }
+    } catch (e) {
+      print("Error searching base products: $e");
+      setState(() {
+        baseProductResults = [];
+        isSearchingBaseProduct = false;
+      });
+    }
+  }
+
+  // Add this method to build the base product search field
+  Widget _buildBaseProductSearchField() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          "Base Product",
+          style: GoogleFonts.figtree(
+            fontSize: 16,
+            fontWeight: FontWeight.w500,
+            color: Colors.black87,
+          ),
+        ),
+        SizedBox(height: 8),
+        Container(
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.grey[300]!),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: TextField(
+            controller: baseProductController,
+            focusNode: baseProductFocusNode,
+            decoration: InputDecoration(
+              hintText: "Search base product...",
+              prefixIcon: Icon(Icons.search),
+              border: InputBorder.none,
+              contentPadding: EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 12,
+              ),
+              suffixIcon:
+                  isSearchingBaseProduct
+                      ? Padding(
+                        padding: EdgeInsets.all(12),
+                        child: SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                      )
+                      : null,
+            ),
+            onChanged: (value) {
+              searchBaseProducts(value);
+            },
+            onTap: () {
+              if (baseProductController.text.isNotEmpty) {
+                searchBaseProducts(baseProductController.text);
+              }
+            },
+          ),
+        ),
+
+        // Search Results Display (line by line, not dropdown)
+        if (baseProductResults.isNotEmpty)
+          Container(
+            margin: EdgeInsets.only(top: 8),
+            padding: EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.grey[50],
+              border: Border.all(color: Colors.grey[300]!),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "Search Results:",
+                  style: GoogleFonts.figtree(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black87,
+                  ),
+                ),
+                SizedBox(height: 8),
+                ...baseProductResults.map((product) {
+                  return GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        selectedBaseProduct = product.toString();
+                        baseProductController.text = selectedBaseProduct!;
+                        baseProductResults = [];
+                      });
+                    },
+                    child: Container(
+                      width: double.infinity,
+                      padding: EdgeInsets.symmetric(
+                        vertical: 12,
+                        horizontal: 12,
+                      ),
+                      margin: EdgeInsets.only(bottom: 6),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(color: Colors.grey[300]!),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.grey.withOpacity(0.1),
+                            spreadRadius: 1,
+                            blurRadius: 2,
+                            offset: Offset(0, 1),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(Icons.inventory_2, size: 16, color: Colors.blue),
+                          SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              product.toString(),
+                              style: GoogleFonts.figtree(
+                                fontSize: 14,
+                                color: Colors.black87,
+                                fontWeight: FontWeight.w400,
+                              ),
+                            ),
+                          ),
+                          Icon(
+                            Icons.arrow_forward_ios,
+                            size: 12,
+                            color: Colors.grey[400],
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ],
+            ),
+          ),
+
+        // Selected Base Product Display
+        if (selectedBaseProduct != null)
+          Container(
+            margin: EdgeInsets.only(top: 8),
+            padding: EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.blue[50],
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.blue[200]!),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.check_circle, color: Colors.green, size: 20),
+                SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    "Selected: $selectedBaseProduct",
+                    style: GoogleFonts.figtree(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.black87,
+                    ),
+                  ),
+                ),
+                GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      selectedBaseProduct = null;
+                      baseProductController.clear();
+                      baseProductResults = [];
+                    });
+                  },
+                  child: Icon(Icons.close, color: Colors.grey[600], size: 20),
+                ),
+              ],
+            ),
+          ),
+      ],
+    );
+  }
+
   void _submitData() {
     if (selectedMaterial == null ||
         selectedBrands == null ||
         selectedColors == null ||
         selectedThickness == null ||
         selectedCoatingMass == null) {
-// Show elegant error message
+      // Show elegant error message
       showDialog(
         context: context,
-        builder: (context) => AlertDialog(
-          title: Text('Incomplete Form'),
-          content: Text('Please fill all required fields to add a product.'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text('OK'),
+        builder:
+            (context) => AlertDialog(
+              title: Text('Incomplete Form'),
+              content: Text(
+                'Please fill all required fields to add a product.',
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: Text('OK'),
+                ),
+              ],
             ),
-          ],
-        ),
       );
       return;
     }
@@ -403,7 +645,7 @@ class _TileSheetPageState extends State<TileSheetPage> {
       _fetchBrandData();
     });
 
-// Show success message with a more elegant snackBar
+    // Show success message with a more elegant snackBar
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
@@ -415,9 +657,7 @@ class _TileSheetPageState extends State<TileSheetPage> {
         ),
         backgroundColor: Colors.green,
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         margin: EdgeInsets.all(16),
         duration: Duration(seconds: 2),
       ),
@@ -448,115 +688,119 @@ class _TileSheetPageState extends State<TileSheetPage> {
     }
 
     return Column(
-      children: responseProducts.asMap().entries.map((entry) {
-        int index = entry.key;
-        Map<String, dynamic> data = Map<String, dynamic>.from(entry.value);
+      children:
+          responseProducts.asMap().entries.map((entry) {
+            int index = entry.key;
+            Map<String, dynamic> data = Map<String, dynamic>.from(entry.value);
 
-        return Card(
-          margin: EdgeInsets.symmetric(vertical: 10),
-          elevation: 2,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                crossAxisAlignment: CrossAxisAlignment.center,
+            return Card(
+              margin: EdgeInsets.symmetric(vertical: 10),
+              elevation: 2,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.only(top: 15),
-                      child: SizedBox(
-                        height: 40.h,
-                        width: 210.w,
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.only(top: 15),
+                          child: SizedBox(
+                            height: 40.h,
+                            width: 210.w,
+                            child: Text(
+                              "  ${index + 1}.  ${data["Products"]}" ?? "",
+                              overflow: TextOverflow.ellipsis,
+                              style: GoogleFonts.figtree(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.black87,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      Container(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.blue[50],
+                          borderRadius: BorderRadius.circular(6),
+                        ),
                         child: Text(
-                          "  ${index + 1}.  ${data["Products"]}" ?? "",
-                          overflow: TextOverflow.ellipsis,
-                          style: GoogleFonts.figtree(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.black87),
+                          "ID: ${data['id']}",
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.blue[700],
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
                       ),
-                    ),
-                  ),
-                  Container(
-                    padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: Colors.blue[50],
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Text(
-                      "ID: ${data['id']}",
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.blue[700],
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Container(
-                      height: 40.h,
-                      width: 50.w,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(10),
-                        color: Colors.deepPurple[50],
-                      ),
-                      child: IconButton(
-                        icon: Icon(
-                          Icons.delete,
-                          color: Colors.redAccent,
-                        ),
-                        onPressed: () {
-                          showDialog(
-                              context: context,
-                              builder: (context) {
-                                return AlertDialog(
-                                  title: Subhead(
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Container(
+                          height: 40.h,
+                          width: 50.w,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(10),
+                            color: Colors.deepPurple[50],
+                          ),
+                          child: IconButton(
+                            icon: Icon(Icons.delete, color: Colors.redAccent),
+                            onPressed: () {
+                              showDialog(
+                                context: context,
+                                builder: (context) {
+                                  return AlertDialog(
+                                    title: Subhead(
                                       text:
                                           "Are you Sure to Delete This Item ?",
                                       weight: FontWeight.w500,
-                                      color: Colors.black),
-                                  actions: [
-                                    ElevatedButton(
-                                      onPressed: () {
-                                        setState(() {
-                                          responseProducts.removeAt(index);
-                                        });
-                                        Navigator.pop(context);
-                                      },
-                                      child: Text("Yes"),
+                                      color: Colors.black,
                                     ),
-                                    ElevatedButton(
-                                      onPressed: () {
-                                        Navigator.pop(context);
-                                      },
-                                      child: Text("No"),
-                                    )
-                                  ],
-                                );
-                              });
-                        },
+                                    actions: [
+                                      ElevatedButton(
+                                        onPressed: () {
+                                          setState(() {
+                                            responseProducts.removeAt(index);
+                                          });
+                                          Navigator.pop(context);
+                                        },
+                                        child: Text("Yes"),
+                                      ),
+                                      ElevatedButton(
+                                        onPressed: () {
+                                          Navigator.pop(context);
+                                        },
+                                        child: Text("No"),
+                                      ),
+                                    ],
+                                  );
+                                },
+                              );
+                            },
+                          ),
+                        ),
                       ),
-                    ),
-                  )
+                    ],
+                  ),
+                  _buildProductDetailInRows(data),
+                  Gap(5),
                 ],
               ),
-              _buildProductDetailInRows(data),
-              Gap(5),
-            ],
-          ),
-        );
-      }).toList(),
+            );
+          }).toList(),
     );
   }
 
-// New method that organizes fields in rows, two fields per row
+  // New method that organizes fields in rows, two fields per row
   Widget _buildProductDetailInRows(Map<String, dynamic> data) {
     return Column(
       children: [
@@ -570,7 +814,9 @@ class _TileSheetPageState extends State<TileSheetPage> {
               SizedBox(width: 10),
               Expanded(
                 child: _buildDetailItem(
-                    "Length", _editableTextField(data, "Profile")),
+                  "Length",
+                  _editableTextField(data, "Profile"),
+                ),
               ),
               SizedBox(width: 10),
               Expanded(
@@ -586,17 +832,23 @@ class _TileSheetPageState extends State<TileSheetPage> {
             children: [
               Expanded(
                 child: _buildDetailItem(
-                    "Basic Rate", _editableTextField(data, "Basic Rate")),
+                  "Basic Rate",
+                  _editableTextField(data, "Basic Rate"),
+                ),
               ),
               SizedBox(width: 10),
               Expanded(
                 child: _buildDetailItem(
-                    "SQMtr", _editableTextField(data, "SQMtr")),
+                  "SQMtr",
+                  _editableTextField(data, "SQMtr"),
+                ),
               ),
               SizedBox(width: 10),
               Expanded(
                 child: _buildDetailItem(
-                    "Amount", _editableTextField(data, "Amount")),
+                  "Amount",
+                  _editableTextField(data, "Amount"),
+                ),
               ),
             ],
           ),
@@ -636,13 +888,14 @@ class _TileSheetPageState extends State<TileSheetPage> {
           fontSize: 15.sp,
         ),
         controller: controller,
-        keyboardType: (key == "Length" ||
-                key == "Nos" ||
-                key == "Basic Rate" ||
-                key == "Amount" ||
-                key == "sqmtr")
-            ? TextInputType.numberWithOptions(decimal: true)
-            : TextInputType.text,
+        keyboardType:
+            (key == "Length" ||
+                    key == "Nos" ||
+                    key == "Basic Rate" ||
+                    key == "Amount" ||
+                    key == "sqmtr")
+                ? TextInputType.numberWithOptions(decimal: true)
+                : TextInputType.text,
         onChanged: (val) {
           setState(() {
             data[key] = val;
@@ -663,8 +916,10 @@ class _TileSheetPageState extends State<TileSheetPage> {
           }
         },
         decoration: InputDecoration(
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 12,
+            vertical: 0,
+          ),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(6),
             borderSide: BorderSide(color: Colors.grey[300]!),
@@ -675,8 +930,10 @@ class _TileSheetPageState extends State<TileSheetPage> {
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(6),
-            borderSide:
-                BorderSide(color: Theme.of(context).primaryColor, width: 2),
+            borderSide: BorderSide(
+              color: Theme.of(context).primaryColor,
+              width: 2,
+            ),
           ),
           filled: true,
           fillColor: Colors.grey[50],
@@ -704,17 +961,23 @@ class _TileSheetPageState extends State<TileSheetPage> {
       height: 40.h,
       child: DropdownButtonFormField<String>(
         value: currentValue,
-        items: options.entries
-            .map((entry) =>
-                DropdownMenuItem(value: entry.key, child: Text(entry.value)))
-            .toList(),
+        items:
+            options.entries
+                .map(
+                  (entry) => DropdownMenuItem(
+                    value: entry.key,
+                    child: Text(entry.value),
+                  ),
+                )
+                .toList(),
         onChanged: (val) {
           setState(() {
             data["UOM"] = {"value": val, "options": options};
           });
           print("UOM changed to: $val"); // Debug print
           print(
-              "Product data: ${data["Products"]}, ID: ${data["id"]}"); // Debug print
+            "Product data: ${data["Products"]}, ID: ${data["id"]}",
+          ); // Debug print
           // Trigger calculation with debounce
           _debounceCalculation(data);
         },
@@ -730,8 +993,10 @@ class _TileSheetPageState extends State<TileSheetPage> {
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(6),
-            borderSide:
-                BorderSide(color: Theme.of(context).primaryColor, width: 2),
+            borderSide: BorderSide(
+              color: Theme.of(context).primaryColor,
+              width: 2,
+            ),
           ),
           filled: true,
           fillColor: Colors.grey[50],
@@ -769,15 +1034,16 @@ class _TileSheetPageState extends State<TileSheetPage> {
           border: Border.all(
             color: enabled ? Colors.grey.shade300 : Colors.grey.shade200,
           ),
-          boxShadow: enabled
-              ? [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.03),
-                    blurRadius: 8,
-                    offset: Offset(0, 2),
-                  ),
-                ]
-              : [],
+          boxShadow:
+              enabled
+                  ? [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.03),
+                      blurRadius: 8,
+                      offset: Offset(0, 2),
+                    ),
+                  ]
+                  : [],
         ),
         child: DropdownSearch<String>(
           items: items,
@@ -786,11 +1052,15 @@ class _TileSheetPageState extends State<TileSheetPage> {
           dropdownDecoratorProps: DropDownDecoratorProps(
             dropdownSearchDecoration: InputDecoration(
               labelText: label,
-              prefixIcon:
-                  Icon(icon, color: enabled ? Colors.blue : Colors.grey),
+              prefixIcon: Icon(
+                icon,
+                color: enabled ? Colors.blue : Colors.grey,
+              ),
               border: InputBorder.none,
-              contentPadding:
-                  EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              contentPadding: EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 12,
+              ),
             ),
           ),
           popupProps: PopupProps.menu(
@@ -818,7 +1088,7 @@ class _TileSheetPageState extends State<TileSheetPage> {
   Map<String, Map<String, TextEditingController>> fieldControllers =
       {}; // Store controllers
 
-// Method to get or create controller for each field
+  // Method to get or create controller for each field
   TextEditingController _getController(Map<String, dynamic> data, String key) {
     String productId = data["id"].toString();
 
@@ -827,12 +1097,14 @@ class _TileSheetPageState extends State<TileSheetPage> {
 
     // If controller for this key doesn't exist, create it
     if (!fieldControllers[productId]!.containsKey(key)) {
-      String initialValue = (data[key] != null && data[key].toString() != "0")
-          ? data[key].toString()
-          : ""; // Avoid initializing with "0"
+      String initialValue =
+          (data[key] != null && data[key].toString() != "0")
+              ? data[key].toString()
+              : ""; // Avoid initializing with "0"
 
-      fieldControllers[productId]![key] =
-          TextEditingController(text: initialValue);
+      fieldControllers[productId]![key] = TextEditingController(
+        text: initialValue,
+      );
 
       print("Created controller for [$key] with value: '$initialValue'");
     } else {
@@ -851,7 +1123,7 @@ class _TileSheetPageState extends State<TileSheetPage> {
     return fieldControllers[productId]![key]!;
   }
 
-// Add this method for debounced calculation
+  // Add this method for debounced calculation
   void _debounceCalculation(Map<String, dynamic> data) {
     _debounceTimer?.cancel();
     _debounceTimer = Timer(Duration(seconds: 1), () {
@@ -863,8 +1135,9 @@ class _TileSheetPageState extends State<TileSheetPage> {
     print("=== STARTING CALCULATION API ===");
     print("Data received: $data");
 
-    final client =
-        IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
+    final client = IOClient(
+      HttpClient()..badCertificateCallback = (_, __, ___) => true,
+    );
     final url = Uri.parse('$apiUrl/calculation');
 
     String productId = data["id"].toString();
@@ -926,9 +1199,10 @@ class _TileSheetPageState extends State<TileSheetPage> {
       "category_id": 26,
       "product": data["Products"]?.toString() ?? "",
       "height": null,
-      "previous_uom": previousUomValues[productId] != null
-          ? int.tryParse(previousUomValues[productId]!)
-          : null,
+      "previous_uom":
+          previousUomValues[productId] != null
+              ? int.tryParse(previousUomValues[productId]!)
+              : null,
       "current_uom": currentUom != null ? int.tryParse(currentUom) : null,
       "length": profileValue ?? 0,
       "nos": nosValue,
@@ -1006,7 +1280,8 @@ class _TileSheetPageState extends State<TileSheetPage> {
 
           print("=== CALCULATION SUCCESS ===");
           print(
-              "Updated data: Length=${data["Profile"]}, Nos=${data["Nos"]}, R.Ft=${data["R.Ft"]}, Amount=${data["Amount"]}");
+            "Updated data: Length=${data["Profile"]}, Nos=${data["Nos"]}, R.Ft=${data["R.Ft"]}, Amount=${data["Amount"]}",
+          );
         } else {
           print("API returned error status: ${responseData["status"]}");
         }
@@ -1053,85 +1328,105 @@ class _TileSheetPageState extends State<TileSheetPage> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Subhead(
-                              text: "Add New Product",
-                              weight: FontWeight.w600,
-                              color: Colors.black),
+                            text: "Add New Product",
+                            weight: FontWeight.w600,
+                            color: Colors.black,
+                          ),
                           SizedBox(height: 16),
-                          _buildAnimatedDropdown(materialList, selectedMaterial,
-                              (value) {
-                            setState(() {
-                              selectedMaterial = value;
-                            });
-// _fetchProductName();
-                          },
-// enabled: productList.isNotEmpty,
-                              label: "Material Type",
-                              icon: Icons.category_outlined),
-                          _buildAnimatedDropdown(brandandList, selectedBrands,
-                              (value) {
-                            setState(() {
-                              selectedBrands = value;
-
-                              ///clear fields
-                              selectedColors = null;
-                              selectedThickness = null;
-                              selectedCoatingMass = null;
-                              colorandList = [];
-                              thickAndList = [];
-                              coatingAndList = [];
-                            });
-                            _fetchColorData();
-                          },
-                              enabled: brandandList.isNotEmpty,
-                              label: "Brand",
-                              icon: Icons.brightness_auto_outlined),
-                          _buildAnimatedDropdown(colorandList, selectedColors,
-                              (value) {
-                            setState(() {
-                              selectedColors = value;
-
-                              ///clear fields
-                              selectedThickness = null;
-                              selectedCoatingMass = null;
-                              thickAndList = [];
-                              coatingAndList = [];
-                            });
-                            _fetchThicknessData();
-                          },
-                              enabled: colorandList.isNotEmpty,
-                              label: "Color",
-                              icon: Icons.color_lens_outlined),
                           _buildAnimatedDropdown(
-                              thickAndList, selectedThickness, (value) {
-                            setState(() {
-                              selectedThickness = value;
-
-                              ///clear fields
-                              selectedCoatingMass = null;
-                              coatingAndList = [];
-                            });
-                            _fetchCoatingMassData();
-                          },
-                              enabled: thickAndList.isNotEmpty,
-                              label: "Thickness",
-                              icon: Icons.straighten_outlined),
+                            materialList,
+                            selectedMaterial,
+                            (value) {
+                              setState(() {
+                                selectedMaterial = value;
+                              });
+                              // _fetchProductName();
+                            },
+                            // enabled: productList.isNotEmpty,
+                            label: "Material Type",
+                            icon: Icons.category_outlined,
+                          ),
                           _buildAnimatedDropdown(
-                              coatingAndList, selectedCoatingMass, (value) {
-                            setState(() {
-                              selectedCoatingMass = value;
-                            });
-                          },
-                              enabled: coatingAndList.isNotEmpty,
-                              label: "Coating Mass",
-                              icon: Icons.layers_outlined),
+                            brandandList,
+                            selectedBrands,
+                            (value) {
+                              setState(() {
+                                selectedBrands = value;
+
+                                ///clear fields
+                                selectedColors = null;
+                                selectedThickness = null;
+                                selectedCoatingMass = null;
+                                colorandList = [];
+                                thickAndList = [];
+                                coatingAndList = [];
+                              });
+                              _fetchColorData();
+                            },
+                            enabled: brandandList.isNotEmpty,
+                            label: "Brand",
+                            icon: Icons.brightness_auto_outlined,
+                          ),
+                          _buildAnimatedDropdown(
+                            colorandList,
+                            selectedColors,
+                            (value) {
+                              setState(() {
+                                selectedColors = value;
+
+                                ///clear fields
+                                selectedThickness = null;
+                                selectedCoatingMass = null;
+                                thickAndList = [];
+                                coatingAndList = [];
+                              });
+                              _fetchThicknessData();
+                            },
+                            enabled: colorandList.isNotEmpty,
+                            label: "Color",
+                            icon: Icons.color_lens_outlined,
+                          ),
+                          _buildAnimatedDropdown(
+                            thickAndList,
+                            selectedThickness,
+                            (value) {
+                              setState(() {
+                                selectedThickness = value;
+
+                                ///clear fields
+                                selectedCoatingMass = null;
+                                coatingAndList = [];
+                              });
+                              _fetchCoatingMassData();
+                            },
+                            enabled: thickAndList.isNotEmpty,
+                            label: "Thickness",
+                            icon: Icons.straighten_outlined,
+                          ),
+                          _buildAnimatedDropdown(
+                            coatingAndList,
+                            selectedCoatingMass,
+                            (value) {
+                              setState(() {
+                                selectedCoatingMass = value;
+                              });
+                            },
+                            enabled: coatingAndList.isNotEmpty,
+                            label: "Coating Mass",
+                            icon: Icons.layers_outlined,
+                          ),
                           SizedBox(height: 24),
+                          _buildBaseProductSearchField(),
+                          SizedBox(height: 16),
                           Container(
                             padding: EdgeInsets.all(16),
                             decoration: BoxDecoration(
                               color: Colors.grey[100],
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(
-                                  color: Colors.deepPurple[400]!, width: 1.5),
+                                color: Colors.deepPurple[400]!,
+                                width: 1.5,
+                              ),
                             ),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1201,9 +1496,10 @@ class _TileSheetPageState extends State<TileSheetPage> {
                 SizedBox(height: 24),
                 if (submittedData.isNotEmpty)
                   Subhead(
-                      text: "   Added Products",
-                      weight: FontWeight.w600,
-                      color: Colors.black),
+                    text: "   Added Products",
+                    weight: FontWeight.w600,
+                    color: Colors.black,
+                  ),
                 SizedBox(height: 8),
                 _buildSubmittedDataList(),
               ],

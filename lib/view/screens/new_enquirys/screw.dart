@@ -35,7 +35,7 @@ class _ScrewState extends State<Screw> {
 
   List<Map<String, dynamic>> submittedData = [];
 
-// Form key for validation
+  // Form key for validation
   final _formKey = GlobalKey<FormState>();
 
   @override
@@ -57,8 +57,9 @@ class _ScrewState extends State<Screw> {
       selectedBrand = null;
     });
 
-    final client =
-        IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
+    final client = IOClient(
+      HttpClient()..badCertificateCallback = (_, __, ___) => true,
+    );
     final url = Uri.parse('$apiUrl/showlables/7');
 
     try {
@@ -73,11 +74,12 @@ class _ScrewState extends State<Screw> {
           final brands = message[1];
           if (brands is List) {
             setState(() {
-              brandList = brands
-                  .whereType<Map>()
-                  .map((e) => e["brand"]?.toString())
-                  .whereType<String>()
-                  .toList();
+              brandList =
+                  brands
+                      .whereType<Map>()
+                      .map((e) => e["brand"]?.toString())
+                      .whereType<String>()
+                      .toList();
             });
           }
         }
@@ -96,8 +98,9 @@ class _ScrewState extends State<Screw> {
       selectedScrew = null;
     });
 
-    final client =
-        IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
+    final client = IOClient(
+      HttpClient()..badCertificateCallback = (_, __, ___) => true,
+    );
     final url = Uri.parse('$apiUrl/labelinputdata');
 
     try {
@@ -125,11 +128,12 @@ class _ScrewState extends State<Screw> {
           final screws = message[0];
           if (screws is List) {
             setState(() {
-              screwLengthList = screws
-                  .whereType<Map>()
-                  .map((e) => e["length_of_screw"]?.toString())
-                  .whereType<String>()
-                  .toList();
+              screwLengthList =
+                  screws
+                      .whereType<Map>()
+                      .map((e) => e["length_of_screw"]?.toString())
+                      .whereType<String>()
+                      .toList();
             });
           }
         }
@@ -148,8 +152,9 @@ class _ScrewState extends State<Screw> {
       selectedThread = null;
     });
 
-    final client =
-        IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
+    final client = IOClient(
+      HttpClient()..badCertificateCallback = (_, __, ___) => true,
+    );
     final url = Uri.parse('$apiUrl/labelinputdata');
 
     try {
@@ -180,11 +185,12 @@ class _ScrewState extends State<Screw> {
           final threadTypes = message[0];
           if (threadTypes is List) {
             setState(() {
-              threadList = threadTypes
-                  .whereType<Map>()
-                  .map((e) => e["type_of_thread"]?.toString())
-                  .whereType<String>()
-                  .toList();
+              threadList =
+                  threadTypes
+                      .whereType<Map>()
+                      .map((e) => e["type_of_thread"]?.toString())
+                      .whereType<String>()
+                      .toList();
             });
           }
 
@@ -196,7 +202,8 @@ class _ScrewState extends State<Screw> {
                 idData.first["base_product_id"]?.toString(); // <-- Add this
             print("Selected Base Product ID: $selectedProductBaseId");
             print(
-                "Base Product Name: $selectedBaseProductName"); // <-- Optional debug
+              "Base Product Name: $selectedBaseProductName",
+            ); // <-- Optional debug
           }
         }
       }
@@ -205,7 +212,7 @@ class _ScrewState extends State<Screw> {
     }
   }
 
-// 1. ADD NEW VARIABLES AT THE TOP OF _ScrewState CLASS (after existing variables)
+  // 1. ADD NEW VARIABLES AT THE TOP OF _ScrewState CLASS (after existing variables)
   List<dynamic> responseData = [];
   Map<String, dynamic>? apiResponse;
 
@@ -223,15 +230,18 @@ class _ScrewState extends State<Screw> {
       "product_base_id": selectedProductBaseId,
       "product_base_name": "$selectedBaseProductName",
       "category_id": 7,
-      "category_name": "Screw"
+      "category_name": "Screw",
     };
 
     print("User input Data: $data");
     final url = "$apiUrl/addbag";
     final body = jsonEncode(data);
     try {
-      final response =
-          await ioClient.post(Uri.parse(url), body: body, headers: headers);
+      final response = await ioClient.post(
+        Uri.parse(url),
+        body: body,
+        headers: headers,
+      );
 
       debugPrint("This is a response: ${response.body}");
       if (selectedBrand == null ||
@@ -258,23 +268,254 @@ class _ScrewState extends State<Screw> {
     }
   }
 
-// 3. MODIFY _submitData() METHOD - Replace existing method with this:
+  TextEditingController baseProductController = TextEditingController();
+  List<dynamic> baseProductResults = [];
+  bool isSearchingBaseProduct = false;
+  String? selectedBaseProduct;
+  FocusNode baseProductFocusNode = FocusNode();
+
+  // Add this method for searching base products
+  Future<void> searchBaseProducts(String query) async {
+    if (query.isEmpty) {
+      setState(() {
+        baseProductResults = [];
+      });
+      return;
+    }
+
+    setState(() {
+      isSearchingBaseProduct = true;
+    });
+
+    HttpClient client = HttpClient();
+    client.badCertificateCallback =
+        ((X509Certificate cert, String host, int port) => true);
+    IOClient ioClient = IOClient(client);
+    final headers = {"Content-Type": "application/json"};
+    final data = {"category_id": "7", "searchbase": query};
+
+    try {
+      final response = await ioClient.post(
+        Uri.parse("https://demo.zaron.in:8181/ci4/api/baseproducts_search"),
+        headers: headers,
+        body: jsonEncode(data),
+      );
+
+      if (response.statusCode == 200) {
+        final responseData = jsonDecode(response.body);
+        print("Base product response: $responseData"); // Debug print
+        setState(() {
+          baseProductResults = responseData['base_products'] ?? [];
+          isSearchingBaseProduct = false;
+        });
+      } else {
+        setState(() {
+          baseProductResults = [];
+          isSearchingBaseProduct = false;
+        });
+      }
+    } catch (e) {
+      print("Error searching base products: $e");
+      setState(() {
+        baseProductResults = [];
+        isSearchingBaseProduct = false;
+      });
+    }
+  }
+
+  // Add this method to build the base product search field
+  Widget _buildBaseProductSearchField() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          "Base Product",
+          style: GoogleFonts.figtree(
+            fontSize: 16,
+            fontWeight: FontWeight.w500,
+            color: Colors.black87,
+          ),
+        ),
+        SizedBox(height: 8),
+        Container(
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.grey[300]!),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: TextField(
+            controller: baseProductController,
+            focusNode: baseProductFocusNode,
+            decoration: InputDecoration(
+              hintText: "Search base product...",
+              prefixIcon: Icon(Icons.search),
+              border: InputBorder.none,
+              contentPadding: EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 12,
+              ),
+              suffixIcon:
+                  isSearchingBaseProduct
+                      ? Padding(
+                        padding: EdgeInsets.all(12),
+                        child: SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                      )
+                      : null,
+            ),
+            onChanged: (value) {
+              searchBaseProducts(value);
+            },
+            onTap: () {
+              if (baseProductController.text.isNotEmpty) {
+                searchBaseProducts(baseProductController.text);
+              }
+            },
+          ),
+        ),
+
+        // Search Results Display (line by line, not dropdown)
+        if (baseProductResults.isNotEmpty)
+          Container(
+            margin: EdgeInsets.only(top: 8),
+            padding: EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.grey[50],
+              border: Border.all(color: Colors.grey[300]!),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "Search Results:",
+                  style: GoogleFonts.figtree(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black87,
+                  ),
+                ),
+                SizedBox(height: 8),
+                ...baseProductResults.map((product) {
+                  return GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        selectedBaseProduct = product.toString();
+                        baseProductController.text = selectedBaseProduct!;
+                        baseProductResults = [];
+                      });
+                    },
+                    child: Container(
+                      width: double.infinity,
+                      padding: EdgeInsets.symmetric(
+                        vertical: 12,
+                        horizontal: 12,
+                      ),
+                      margin: EdgeInsets.only(bottom: 6),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(color: Colors.grey[300]!),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.grey.withOpacity(0.1),
+                            spreadRadius: 1,
+                            blurRadius: 2,
+                            offset: Offset(0, 1),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(Icons.inventory_2, size: 16, color: Colors.blue),
+                          SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              product.toString(),
+                              style: GoogleFonts.figtree(
+                                fontSize: 14,
+                                color: Colors.black87,
+                                fontWeight: FontWeight.w400,
+                              ),
+                            ),
+                          ),
+                          Icon(
+                            Icons.arrow_forward_ios,
+                            size: 12,
+                            color: Colors.grey[400],
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ],
+            ),
+          ),
+
+        // Selected Base Product Display
+        if (selectedBaseProduct != null)
+          Container(
+            margin: EdgeInsets.only(top: 8),
+            padding: EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.blue[50],
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.blue[200]!),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.check_circle, color: Colors.green, size: 20),
+                SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    "Selected: $selectedBaseProduct",
+                    style: GoogleFonts.figtree(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.black87,
+                    ),
+                  ),
+                ),
+                GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      selectedBaseProduct = null;
+                      baseProductController.clear();
+                      baseProductResults = [];
+                    });
+                  },
+                  child: Icon(Icons.close, color: Colors.grey[600], size: 20),
+                ),
+              ],
+            ),
+          ),
+      ],
+    );
+  }
+
+  // 3. MODIFY _submitData() METHOD - Replace existing method with this:
   void _submitData() {
     if (selectedBrand == null ||
         selectedScrew == null ||
         selectedThread == null) {
       showDialog(
         context: context,
-        builder: (context) => AlertDialog(
-          title: Text('Incomplete Form'),
-          content: Text('Please fill all required fields to add a product.'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text('OK'),
+        builder:
+            (context) => AlertDialog(
+              title: Text('Incomplete Form'),
+              content: Text(
+                'Please fill all required fields to add a product.',
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: Text('OK'),
+                ),
+              ],
             ),
-          ],
-        ),
       );
       return;
     }
@@ -300,16 +541,14 @@ class _ScrewState extends State<Screw> {
         ),
         backgroundColor: Colors.green,
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         margin: EdgeInsets.all(16),
         duration: Duration(seconds: 1),
       ),
     );
   }
 
-// 4. REPLACE _buildSubmittedDataList() METHOD with this:
+  // 4. REPLACE _buildSubmittedDataList() METHOD with this:
   Widget _buildSubmittedDataList() {
     if (responseData.isEmpty) {
       return Container(
@@ -412,26 +651,28 @@ class _ScrewState extends State<Screw> {
                           onPressed: () {
                             showDialog(
                               context: context,
-                              builder: (context) => AlertDialog(
-                                title: Text("Delete Item"),
-                                content: Text(
-                                    "Are you sure you want to delete this item?"),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () => Navigator.pop(context),
-                                    child: Text("Cancel"),
+                              builder:
+                                  (context) => AlertDialog(
+                                    title: Text("Delete Item"),
+                                    content: Text(
+                                      "Are you sure you want to delete this item?",
+                                    ),
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () => Navigator.pop(context),
+                                        child: Text("Cancel"),
+                                      ),
+                                      ElevatedButton(
+                                        onPressed: () {
+                                          setState(() {
+                                            responseData.removeAt(index);
+                                          });
+                                          Navigator.pop(context);
+                                        },
+                                        child: Text("Delete"),
+                                      ),
+                                    ],
                                   ),
-                                  ElevatedButton(
-                                    onPressed: () {
-                                      setState(() {
-                                        responseData.removeAt(index);
-                                      });
-                                      Navigator.pop(context);
-                                    },
-                                    child: Text("Delete"),
-                                  ),
-                                ],
-                              ),
                             );
                           },
                         ),
@@ -480,12 +721,16 @@ class _ScrewState extends State<Screw> {
             children: [
               Expanded(
                 child: _buildDetailItem(
-                    "Basic Rate", _editableTextField(data, "Basic Rate")),
+                  "Basic Rate",
+                  _editableTextField(data, "Basic Rate"),
+                ),
               ),
               SizedBox(width: 10),
               Expanded(
                 child: _buildDetailItem(
-                    "Amount", _editableTextField(data, "Amount")),
+                  "Amount",
+                  _editableTextField(data, "Amount"),
+                ),
               ),
               SizedBox(width: 10),
               // Expanded(
@@ -514,13 +759,14 @@ class _ScrewState extends State<Screw> {
           fontSize: 15.sp,
         ),
         controller: controller,
-        keyboardType: (key == "Length" ||
-                key == "Nos" ||
-                key == "Basic Rate" ||
-                key == "Amount" ||
-                key == "R.Ft")
-            ? TextInputType.numberWithOptions(decimal: true)
-            : TextInputType.text,
+        keyboardType:
+            (key == "Length" ||
+                    key == "Nos" ||
+                    key == "Basic Rate" ||
+                    key == "Amount" ||
+                    key == "R.Ft")
+                ? TextInputType.numberWithOptions(decimal: true)
+                : TextInputType.text,
         onChanged: (val) {
           setState(() {
             data[key] = val;
@@ -541,8 +787,10 @@ class _ScrewState extends State<Screw> {
           }
         },
         decoration: InputDecoration(
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 12,
+            vertical: 0,
+          ),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(6),
             borderSide: BorderSide(color: Colors.grey[300]!),
@@ -553,8 +801,10 @@ class _ScrewState extends State<Screw> {
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(6),
-            borderSide:
-                BorderSide(color: Theme.of(context).primaryColor, width: 2),
+            borderSide: BorderSide(
+              color: Theme.of(context).primaryColor,
+              width: 2,
+            ),
           ),
           filled: true,
           fillColor: Colors.grey[50],
@@ -563,184 +813,10 @@ class _ScrewState extends State<Screw> {
     );
   }
 
-  // Widget _editableTextFieldForApi(Map<String, dynamic> data, String key) {
-  //   return SizedBox(
-  //     height: 38.h,
-  //     child: TextField(
-  //       style: GoogleFonts.figtree(
-  //         fontWeight: FontWeight.w500,
-  //         color: Colors.black,
-  //         fontSize: 15.sp,
-  //       ),
-  //       controller: TextEditingController(text: data[key]?.toString() ?? "0"),
-  //       onChanged: (val) => data[key] = val,
-  //       decoration: InputDecoration(
-  //         contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 0),
-  //         border: OutlineInputBorder(
-  //           borderRadius: BorderRadius.circular(6),
-  //           borderSide: BorderSide(color: Colors.grey[300]!),
-  //         ),
-  //         enabledBorder: OutlineInputBorder(
-  //           borderRadius: BorderRadius.circular(6),
-  //           borderSide: BorderSide(color: Colors.grey[300]!),
-  //         ),
-  //         focusedBorder: OutlineInputBorder(
-  //           borderRadius: BorderRadius.circular(6),
-  //           borderSide:
-  //               BorderSide(color: Theme.of(context).primaryColor, width: 2),
-  //         ),
-  //         filled: true,
-  //         fillColor: Colors.grey[50],
-  //       ),
-  //     ),
-  //   );
-  // }
   /// drop down for UOM 👇
   Map<String, dynamic>? apiResponseData;
   List<dynamic> responseProducts = [];
   Map<String, Map<String, String>> uomOptions = {};
-
-  // Widget _uomDropdownFromApi(Map<String, dynamic> data) {
-  //   String productId = data["id"].toString();
-  //   Map<String, String>? options = uomOptions[productId];
-  //
-  //   if (options == null || options.isEmpty) {
-  //     return _editableTextField(data, "UOM");
-  //   }
-  //
-  //   String? currentValue;
-  //   if (data["UOM"] is Map) {
-  //     currentValue = data["UOM"]["value"]?.toString();
-  //   } else {
-  //     currentValue = data["UOM"]?.toString();
-  //   }
-  //
-  //   return SizedBox(
-  //     height: 40.h,
-  //     child: DropdownButtonFormField<String>(
-  //       value: currentValue,
-  //       items: options.entries
-  //           .map((entry) =>
-  //               DropdownMenuItem(value: entry.key, child: Text(entry.value)))
-  //           .toList(),
-  //       onChanged: (val) {
-  //         setState(() {
-  //           data["UOM"] = {"value": val, "options": options};
-  //         });
-  //         print("UOM changed to: $val"); // Debug print
-  //         print(
-  //             "Product data: ${data["Products"]}, ID: ${data["id"]}"); // Debug print
-  //         // Trigger calculation with debounce
-  //         _debounceCalculation(data);
-  //       },
-  //       decoration: InputDecoration(
-  //         contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 0),
-  //         border: OutlineInputBorder(
-  //           borderRadius: BorderRadius.circular(6),
-  //           borderSide: BorderSide(color: Colors.grey[300]!),
-  //         ),
-  //         enabledBorder: OutlineInputBorder(
-  //           borderRadius: BorderRadius.circular(6),
-  //           borderSide: BorderSide(color: Colors.grey[300]!),
-  //         ),
-  //         focusedBorder: OutlineInputBorder(
-  //           borderRadius: BorderRadius.circular(6),
-  //           borderSide:
-  //               BorderSide(color: Theme.of(context).primaryColor, width: 2),
-  //         ),
-  //         filled: true,
-  //         fillColor: Colors.grey[50],
-  //       ),
-  //     ),
-  //   );
-  // }
-  /// drop down for UOM 👆
-
-  // Widget _uomDropdownForApi(Map<String, dynamic> data) {
-  //   List<String> uomOptions = ["Feet", "mm", "cm", "Inches", "Meters"];
-  //   // Set default UOM if not present
-  //   if (data["UOM"] == null) data["UOM"] = "Feet";
-  //
-  //   return SizedBox(
-  //     height: 40.h,
-  //     child: DropdownButtonFormField<String>(
-  //       value: data["UOM"],
-  //       items: uomOptions
-  //           .map((uom) => DropdownMenuItem(value: uom, child: Text(uom)))
-  //           .toList(),
-  //       onChanged: (val) {
-  //         setState(() {
-  //           data["UOM"] = val!;
-  //         });
-  //       },
-  //       decoration: InputDecoration(
-  //         contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 0),
-  //         border: OutlineInputBorder(
-  //           borderRadius: BorderRadius.circular(6),
-  //           borderSide: BorderSide(color: Colors.grey[300]!),
-  //         ),
-  //         enabledBorder: OutlineInputBorder(
-  //           borderRadius: BorderRadius.circular(6),
-  //           borderSide: BorderSide(color: Colors.grey[300]!),
-  //         ),
-  //         focusedBorder: OutlineInputBorder(
-  //           borderRadius: BorderRadius.circular(6),
-  //           borderSide:
-  //               BorderSide(color: Theme.of(context).primaryColor, width: 2),
-  //         ),
-  //         filled: true,
-  //         fillColor: Colors.grey[50],
-  //       ),
-  //     ),
-  //   );
-  // }
-
-  // Widget _billingOptionsDropdown(Map<String, dynamic> data) {
-  //   List<String> billingOptions = [
-  //     "Per Unit",
-  //     "Per Meter",
-  //     "Per Foot",
-  //     "Bulk",
-  //     "Custom"
-  //   ];
-  //   // Set default billing option if not present
-  //   if (data["BillingOption"] == null) data["BillingOption"] = "Per Unit";
-  //
-  //   return SizedBox(
-  //     height: 40.h,
-  //     child: DropdownButtonFormField<String>(
-  //       isExpanded: true,
-  //       value: data["BillingOption"],
-  //       items: billingOptions
-  //           .map((option) =>
-  //               DropdownMenuItem(value: option, child: Text(option)))
-  //           .toList(),
-  //       onChanged: (val) {
-  //         setState(() {
-  //           data["BillingOption"] = val!;
-  //         });
-  //       },
-  //       decoration: InputDecoration(
-  //         contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 0),
-  //         border: OutlineInputBorder(
-  //           borderRadius: BorderRadius.circular(6),
-  //           borderSide: BorderSide(color: Colors.grey[300]!),
-  //         ),
-  //         enabledBorder: OutlineInputBorder(
-  //           borderRadius: BorderRadius.circular(6),
-  //           borderSide: BorderSide(color: Colors.grey[300]!),
-  //         ),
-  //         focusedBorder: OutlineInputBorder(
-  //           borderRadius: BorderRadius.circular(6),
-  //           borderSide:
-  //               BorderSide(color: Theme.of(context).primaryColor, width: 2),
-  //         ),
-  //         filled: true,
-  //         fillColor: Colors.grey[50],
-  //       ),
-  //     ),
-  //   );
-  // }
 
   Widget _buildDetailItem(String label, Widget field) {
     return Container(
@@ -790,15 +866,16 @@ class _ScrewState extends State<Screw> {
           border: Border.all(
             color: enabled ? Colors.grey.shade300 : Colors.grey.shade200,
           ),
-          boxShadow: enabled
-              ? [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.03),
-                    blurRadius: 8,
-                    offset: Offset(0, 2),
-                  ),
-                ]
-              : [],
+          boxShadow:
+              enabled
+                  ? [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.03),
+                      blurRadius: 8,
+                      offset: Offset(0, 2),
+                    ),
+                  ]
+                  : [],
         ),
         child: DropdownSearch<String>(
           items: items,
@@ -807,11 +884,15 @@ class _ScrewState extends State<Screw> {
           dropdownDecoratorProps: DropDownDecoratorProps(
             dropdownSearchDecoration: InputDecoration(
               labelText: label,
-              prefixIcon:
-                  Icon(icon, color: enabled ? Colors.blue : Colors.grey),
+              prefixIcon: Icon(
+                icon,
+                color: enabled ? Colors.blue : Colors.grey,
+              ),
               border: InputBorder.none,
-              contentPadding:
-                  EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              contentPadding: EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 12,
+              ),
             ),
           ),
           popupProps: PopupProps.menu(
@@ -839,7 +920,7 @@ class _ScrewState extends State<Screw> {
   Map<String, Map<String, TextEditingController>> fieldControllers =
       {}; // Store controllers
 
-// Method to get or create controller for each field
+  // Method to get or create controller for each field
   TextEditingController _getController(Map<String, dynamic> data, String key) {
     String productId = data["id"].toString();
 
@@ -848,12 +929,14 @@ class _ScrewState extends State<Screw> {
 
     // If controller for this key doesn't exist, create it
     if (!fieldControllers[productId]!.containsKey(key)) {
-      String initialValue = (data[key] != null && data[key].toString() != "0")
-          ? data[key].toString()
-          : ""; // Avoid initializing with "0"
+      String initialValue =
+          (data[key] != null && data[key].toString() != "0")
+              ? data[key].toString()
+              : ""; // Avoid initializing with "0"
 
-      fieldControllers[productId]![key] =
-          TextEditingController(text: initialValue);
+      fieldControllers[productId]![key] = TextEditingController(
+        text: initialValue,
+      );
 
       print("Created controller for [$key] with value: '$initialValue'");
     } else {
@@ -872,7 +955,7 @@ class _ScrewState extends State<Screw> {
     return fieldControllers[productId]![key]!;
   }
 
-// Add this method for debounced calculation
+  // Add this method for debounced calculation
   void _debounceCalculation(Map<String, dynamic> data) {
     _debounceTimer?.cancel();
     _debounceTimer = Timer(Duration(milliseconds: 1500), () {
@@ -880,13 +963,14 @@ class _ScrewState extends State<Screw> {
     });
   }
 
-// Calculation API method - FIXED VERSION with UI Updates
+  // Calculation API method - FIXED VERSION with UI Updates
   Future<void> _performCalculation(Map<String, dynamic> data) async {
     print("=== STARTING CALCULATION API ===");
     print("Data received: $data");
 
-    final client =
-        IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
+    final client = IOClient(
+      HttpClient()..badCertificateCallback = (_, __, ___) => true,
+    );
     final url = Uri.parse('$apiUrl/calculation');
 
     String productId = data["id"].toString();
@@ -1013,7 +1097,8 @@ class _ScrewState extends State<Screw> {
 
           print("=== CALCULATION SUCCESS ===");
           print(
-              "Updated data: Length=${data["Profile"]}, Nos=${data["Nos"]}, R.Ft=${data["R.Ft"]}, Amount=${data["Amount"]}");
+            "Updated data: Length=${data["Profile"]}, Nos=${data["Nos"]}, R.Ft=${data["R.Ft"]}, Amount=${data["Amount"]}",
+          );
         } else {
           print("API returned error status: ${responseData["status"]}");
         }
@@ -1132,6 +1217,8 @@ class _ScrewState extends State<Screw> {
                             icon: Icons.keyboard_command_key_outlined,
                           ),
                           SizedBox(height: 24),
+                          _buildBaseProductSearchField(),
+                          SizedBox(height: 16),
                           Container(
                             padding: EdgeInsets.all(16),
                             decoration: BoxDecoration(
@@ -1213,8 +1300,10 @@ class _ScrewState extends State<Screw> {
                     padding: EdgeInsets.symmetric(horizontal: 4),
                     child: Row(
                       children: [
-                        Icon(Icons.shopping_bag_outlined,
-                            color: Colors.grey.shade700),
+                        Icon(
+                          Icons.shopping_bag_outlined,
+                          color: Colors.grey.shade700,
+                        ),
                         SizedBox(width: 8),
                         Text(
                           "Added Products",

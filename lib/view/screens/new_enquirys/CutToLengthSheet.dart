@@ -41,7 +41,7 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
   List<String> brandList = [];
   List<Map<String, dynamic>> submittedData = [];
 
-// Form key for validation
+  // Form key for validation
   final _formKey = GlobalKey<FormState>();
 
   @override
@@ -64,8 +64,9 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
       selectedProduct = null;
     });
 
-    final client =
-        IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
+    final client = IOClient(
+      HttpClient()..badCertificateCallback = (_, __, ___) => true,
+    );
     final url = Uri.parse('$apiUrl/showlables/626');
 
     try {
@@ -79,11 +80,12 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
 
         if (products is List) {
           setState(() {
-            productList = products
-                .whereType<Map>()
-                .map((e) => e["product_name"]?.toString())
-                .whereType<String>()
-                .toList();
+            productList =
+                products
+                    .whereType<Map>()
+                    .map((e) => e["product_name"]?.toString())
+                    .whereType<String>()
+                    .toList();
           });
         }
       }
@@ -98,8 +100,9 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
       selectedMeterial;
     });
 
-    final client =
-        IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
+    final client = IOClient(
+      HttpClient()..badCertificateCallback = (_, __, ___) => true,
+    );
     final url = Uri.parse('$apiUrl/showlables/626');
 
     try {
@@ -112,11 +115,12 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
 
         if (meterialData is List) {
           setState(() {
-            meterialList = meterialData
-                .whereType<Map>()
-                .map((e) => e["material_type"]?.toString())
-                .whereType<String>()
-                .toList();
+            meterialList =
+                meterialData
+                    .whereType<Map>()
+                    .map((e) => e["material_type"]?.toString())
+                    .whereType<String>()
+                    .toList();
           });
         }
       }
@@ -134,8 +138,9 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
       selectedThichness = null;
     });
 
-    final client =
-        IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
+    final client = IOClient(
+      HttpClient()..badCertificateCallback = (_, __, ___) => true,
+    );
     final url = Uri.parse('$apiUrl/labelinputdata');
 
     try {
@@ -147,7 +152,6 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
           // "selectedlabel": "material_type",
           // "selectedvalue": selectedMeterial,
           // "label_name": "thickness",
-
           "product_label": "thickness",
           "product_filters": [selectedProduct],
           "product_label_filters": ["product_name"],
@@ -166,11 +170,12 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
 
         if (selectedThickness is List) {
           setState(() {
-            thichnessLists = selectedThickness
-                .whereType<Map>()
-                .map((e) => e["thickness"]?.toString())
-                .whereType<String>()
-                .toList();
+            thichnessLists =
+                selectedThickness
+                    .whereType<Map>()
+                    .map((e) => e["thickness"]?.toString())
+                    .whereType<String>()
+                    .toList();
           });
         }
       }
@@ -188,8 +193,9 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
       selsectedCoat = null;
     });
 
-    final client =
-        IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
+    final client = IOClient(
+      HttpClient()..badCertificateCallback = (_, __, ___) => true,
+    );
     final url = Uri.parse('$apiUrl/labelinputdata');
 
     try {
@@ -201,7 +207,6 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
           // "selectedlabel": "thickness",
           // "selectedvalue": selectedThichness,
           // "label_name": "coating_mass",
-
           "product_label": "coating_mass",
           "product_filters": [selectedProduct],
           "product_label_filters": ["product_name"],
@@ -220,11 +225,12 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
 
         if (coat is List) {
           setState(() {
-            coatMassList = coat
-                .whereType<Map>()
-                .map((e) => e["coating_mass"]?.toString())
-                .whereType<String>()
-                .toList();
+            coatMassList =
+                coat
+                    .whereType<Map>()
+                    .map((e) => e["coating_mass"]?.toString())
+                    .whereType<String>()
+                    .toList();
           });
         }
       }
@@ -242,8 +248,9 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
       selectedyie = null;
     });
 
-    final client =
-        IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
+    final client = IOClient(
+      HttpClient()..badCertificateCallback = (_, __, ___) => true,
+    );
     final url = Uri.parse('$apiUrl/labelinputdata');
 
     try {
@@ -255,7 +262,6 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
           // "selectedlabel": "coating_mass",
           // "selectedvalue": selsectedCoat,
           // "label_name": "yield_strength",
-
           "product_label": "yield_strength",
           "product_filters": [selectedProduct],
           "product_label_filters": ["product_name"],
@@ -263,7 +269,7 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
           "base_product_filters": [
             selectedMeterial,
             selectedThichness,
-            selsectedCoat
+            selsectedCoat,
           ],
           "base_label_filters": ["material_type", "thickness", "coating_mass"],
           "base_category_id": "34",
@@ -278,11 +284,12 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
 
         if (yieldsStrength is List) {
           setState(() {
-            yieldsListt = yieldsStrength
-                .whereType<Map>()
-                .map((e) => e["yield_strength"]?.toString())
-                .whereType<String>()
-                .toList();
+            yieldsListt =
+                yieldsStrength
+                    .whereType<Map>()
+                    .map((e) => e["yield_strength"]?.toString())
+                    .whereType<String>()
+                    .toList();
           });
         }
       }
@@ -299,8 +306,9 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
       selectedBrand = null;
     });
 
-    final client =
-        IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
+    final client = IOClient(
+      HttpClient()..badCertificateCallback = (_, __, ___) => true,
+    );
     final url = Uri.parse('$apiUrl/labelinputdata');
 
     try {
@@ -316,13 +324,13 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
             selectedMeterial,
             selectedThichness,
             selsectedCoat,
-            selectedyie
+            selectedyie,
           ],
           "base_label_filters": [
             "material_type",
             "thickness",
             "coating_mass",
-            "yield_strength"
+            "yield_strength",
           ],
           "base_category_id": "34",
         }),
@@ -337,11 +345,12 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
           final brands = message[0];
           if (brands is List) {
             setState(() {
-              brandList = brands
-                  .whereType<Map>()
-                  .map((e) => e["brand"]?.toString())
-                  .whereType<String>()
-                  .toList();
+              brandList =
+                  brands
+                      .whereType<Map>()
+                      .map((e) => e["brand"]?.toString())
+                      .whereType<String>()
+                      .toList();
             });
           }
 
@@ -356,7 +365,8 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
                     item["base_product_id"]?.toString(); // <-- New line
                 print("Selected Product Base ID: $selectedProductBaseId");
                 print(
-                    "Base Product Name: $selectedBaseProductName"); // <-- New line
+                  "Base Product Name: $selectedBaseProductName",
+                ); // <-- New line
               }
             }
           }
@@ -367,11 +377,11 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
     }
   }
 
-// 1. ADD THESE VARIABLES at the top of your _CutToLengthSheetState class (around line 30)
+  // 1. ADD THESE VARIABLES at the top of your _CutToLengthSheetState class (around line 30)
   Map<String, dynamic>? apiResponse;
   bool showApiResponse = false;
 
-// 2. MODIFY the postAllData() method to store the response (replace your existing postAllData method)
+  // 2. MODIFY the postAllData() method to store the response (replace your existing postAllData method)
   Future<void> postAllData() async {
     HttpClient client = HttpClient();
     client.badCertificateCallback =
@@ -385,7 +395,7 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
       "product_base_id": selectedProductBaseId,
       "product_base_name": "$selectedBaseProductName",
       "category_id": 34,
-      "category_name": "Cut to Length Sheets"
+      "category_name": "Cut to Length Sheets",
     };
 
     print("This is a body data: $data");
@@ -404,7 +414,8 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
           selectedThichness == null ||
           selsectedCoat == null ||
           selectedyie == null ||
-          selectedBrand == null) return;
+          selectedBrand == null)
+        return;
       if (response.statusCode == 200) {
         // STORE THE API RESPONSE
         setState(() {
@@ -417,7 +428,7 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
     }
   }
 
-// 3. ADD THIS NEW METHOD to build the API response UI
+  // 3. ADD THIS NEW METHOD to build the API response UI
   Widget _buildApiResponseSection() {
     if (!showApiResponse || apiResponse == null) return SizedBox.shrink();
 
@@ -464,9 +475,11 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
     );
   }
 
-// 4. ADD THIS NEW METHOD to build individual API response items
+  // 4. ADD THIS NEW METHOD to build individual API response items
   Widget _buildApiResponseItem(
-      Map<String, dynamic> item, List<dynamic> labels) {
+    Map<String, dynamic> item,
+    List<dynamic> labels,
+  ) {
     return Card(
       margin: EdgeInsets.symmetric(vertical: 8),
       elevation: 1,
@@ -523,7 +536,7 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
     );
   }
 
-// 5. ADD THESE HELPER METHODS for the API response fields
+  // 5. ADD THESE HELPER METHODS for the API response fields
   Widget _buildUOMDropdown(Map<String, dynamic> item) {
     final uomData = item['UOM'] as Map<String, dynamic>;
     final options = uomData['options'] as Map<String, dynamic>;
@@ -532,20 +545,27 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('UOM',
-            style: TextStyle(
-                fontWeight: FontWeight.w500, color: Colors.grey[700])),
+        Text(
+          'UOM',
+          style: TextStyle(
+            fontWeight: FontWeight.w500,
+            color: Colors.grey[700],
+          ),
+        ),
         SizedBox(height: 6),
         SizedBox(
           height: 40.h,
           child: DropdownButtonFormField<String>(
             value: currentValue.isEmpty ? null : currentValue,
-            items: options.entries
-                .map((entry) => DropdownMenuItem(
-                      value: entry.key,
-                      child: Text(entry.value),
-                    ))
-                .toList(),
+            items:
+                options.entries
+                    .map(
+                      (entry) => DropdownMenuItem(
+                        value: entry.key,
+                        child: Text(entry.value),
+                      ),
+                    )
+                    .toList(),
             onChanged: (val) {
               setState(() {
                 item['UOM']['value'] = val!;
@@ -574,20 +594,27 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Billing Option',
-            style: TextStyle(
-                fontWeight: FontWeight.w500, color: Colors.grey[700])),
+        Text(
+          'Billing Option',
+          style: TextStyle(
+            fontWeight: FontWeight.w500,
+            color: Colors.grey[700],
+          ),
+        ),
         SizedBox(height: 6),
         SizedBox(
           height: 40.h,
           child: DropdownButtonFormField<String>(
             value: currentValue.isEmpty ? null : currentValue,
-            items: options.entries
-                .map((entry) => DropdownMenuItem(
-                      value: entry.key,
-                      child: Text(entry.value),
-                    ))
-                .toList(),
+            items:
+                options.entries
+                    .map(
+                      (entry) => DropdownMenuItem(
+                        value: entry.key,
+                        child: Text(entry.value),
+                      ),
+                    )
+                    .toList(),
             onChanged: (val) {
               setState(() {
                 item['Billing Option']['value'] = val!;
@@ -612,9 +639,13 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(fieldName,
-            style: TextStyle(
-                fontWeight: FontWeight.w500, color: Colors.grey[700])),
+        Text(
+          fieldName,
+          style: TextStyle(
+            fontWeight: FontWeight.w500,
+            color: Colors.grey[700],
+          ),
+        ),
         SizedBox(height: 6),
         SizedBox(
           height: 38.h,
@@ -640,9 +671,13 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(fieldName,
-            style: TextStyle(
-                fontWeight: FontWeight.w500, color: Colors.grey[700])),
+        Text(
+          fieldName,
+          style: TextStyle(
+            fontWeight: FontWeight.w500,
+            color: Colors.grey[700],
+          ),
+        ),
         SizedBox(height: 6),
         Container(
           height: 38.h,
@@ -664,6 +699,236 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
     );
   }
 
+  /// Base View Products data //
+  // Add these variables with your existing variables
+  TextEditingController baseProductController = TextEditingController();
+  List<dynamic> baseProductResults = [];
+  bool isSearchingBaseProduct = false;
+  String? selectedBaseProduct;
+  FocusNode baseProductFocusNode = FocusNode();
+
+  // Add this method for searching base products
+  Future<void> searchBaseProducts(String query) async {
+    if (query.isEmpty) {
+      setState(() {
+        baseProductResults = [];
+      });
+      return;
+    }
+
+    setState(() {
+      isSearchingBaseProduct = true;
+    });
+
+    HttpClient client = HttpClient();
+    client.badCertificateCallback =
+        ((X509Certificate cert, String host, int port) => true);
+    IOClient ioClient = IOClient(client);
+    final headers = {"Content-Type": "application/json"};
+    final data = {"category_id": "626", "searchbase": query};
+
+    try {
+      final response = await ioClient.post(
+        Uri.parse("https://demo.zaron.in:8181/ci4/api/baseproducts_search"),
+        headers: headers,
+        body: jsonEncode(data),
+      );
+
+      if (response.statusCode == 200) {
+        final responseData = jsonDecode(response.body);
+        print("Base product response: $responseData"); // Debug print
+        setState(() {
+          baseProductResults = responseData['base_products'] ?? [];
+          isSearchingBaseProduct = false;
+        });
+      } else {
+        setState(() {
+          baseProductResults = [];
+          isSearchingBaseProduct = false;
+        });
+      }
+    } catch (e) {
+      print("Error searching base products: $e");
+      setState(() {
+        baseProductResults = [];
+        isSearchingBaseProduct = false;
+      });
+    }
+  }
+
+  // Add this method to build the base product search field
+  Widget _buildBaseProductSearchField() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          "Base Product",
+          style: GoogleFonts.figtree(
+            fontSize: 16,
+            fontWeight: FontWeight.w500,
+            color: Colors.black87,
+          ),
+        ),
+        SizedBox(height: 8),
+        Container(
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.grey[300]!),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: TextField(
+            controller: baseProductController,
+            focusNode: baseProductFocusNode,
+            decoration: InputDecoration(
+              hintText: "Search base product...",
+              prefixIcon: Icon(Icons.search),
+              border: InputBorder.none,
+              contentPadding: EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 12,
+              ),
+              suffixIcon:
+                  isSearchingBaseProduct
+                      ? Padding(
+                        padding: EdgeInsets.all(12),
+                        child: SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                      )
+                      : null,
+            ),
+            onChanged: (value) {
+              searchBaseProducts(value);
+            },
+            onTap: () {
+              if (baseProductController.text.isNotEmpty) {
+                searchBaseProducts(baseProductController.text);
+              }
+            },
+          ),
+        ),
+
+        // Search Results Display (line by line, not dropdown)
+        if (baseProductResults.isNotEmpty)
+          Container(
+            margin: EdgeInsets.only(top: 8),
+            padding: EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.grey[50],
+              border: Border.all(color: Colors.grey[300]!),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "Search Results:",
+                  style: GoogleFonts.figtree(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black87,
+                  ),
+                ),
+                SizedBox(height: 8),
+                ...baseProductResults.map((product) {
+                  return GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        selectedBaseProduct = product.toString();
+                        baseProductController.text = selectedBaseProduct!;
+                        baseProductResults = [];
+                      });
+                    },
+                    child: Container(
+                      width: double.infinity,
+                      padding: EdgeInsets.symmetric(
+                        vertical: 12,
+                        horizontal: 12,
+                      ),
+                      margin: EdgeInsets.only(bottom: 6),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(color: Colors.grey[300]!),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.grey.withOpacity(0.1),
+                            spreadRadius: 1,
+                            blurRadius: 2,
+                            offset: Offset(0, 1),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(Icons.inventory_2, size: 16, color: Colors.blue),
+                          SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              product.toString(),
+                              style: GoogleFonts.figtree(
+                                fontSize: 14,
+                                color: Colors.black87,
+                                fontWeight: FontWeight.w400,
+                              ),
+                            ),
+                          ),
+                          Icon(
+                            Icons.arrow_forward_ios,
+                            size: 12,
+                            color: Colors.grey[400],
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ],
+            ),
+          ),
+
+        // Selected Base Product Display
+        if (selectedBaseProduct != null)
+          Container(
+            margin: EdgeInsets.only(top: 8),
+            padding: EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.blue[50],
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.blue[200]!),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.check_circle, color: Colors.green, size: 20),
+                SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    "Selected: $selectedBaseProduct",
+                    style: GoogleFonts.figtree(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.black87,
+                    ),
+                  ),
+                ),
+                GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      selectedBaseProduct = null;
+                      baseProductController.clear();
+                      baseProductResults = [];
+                    });
+                  },
+                  child: Icon(Icons.close, color: Colors.grey[600], size: 20),
+                ),
+              ],
+            ),
+          ),
+      ],
+    );
+  }
+
   void _submitData() {
     if (selectedProduct == null ||
         selectedMeterial == null ||
@@ -671,19 +936,22 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
         selsectedCoat == null ||
         selectedyie == null ||
         selectedBrand == null) {
-// Show elegant error message
+      // Show elegant error message
       showDialog(
         context: context,
-        builder: (context) => AlertDialog(
-          title: Text('Incomplete Form'),
-          content: Text('Please fill all required fields to add a product.'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text('OK'),
+        builder:
+            (context) => AlertDialog(
+              title: Text('Incomplete Form'),
+              content: Text(
+                'Please fill all required fields to add a product.',
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: Text('OK'),
+                ),
+              ],
             ),
-          ],
-        ),
       );
       return;
     }
@@ -707,7 +975,7 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
       selectedBrand = null;
     });
 
-// Show success message with a more elegant snackBar
+    // Show success message with a more elegant snackBar
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
@@ -719,9 +987,7 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
         ),
         backgroundColor: Colors.green,
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         margin: EdgeInsets.all(16),
         duration: Duration(seconds: 2),
       ),
@@ -747,200 +1013,207 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
     }
 
     return Column(
-      children: submittedData.asMap().entries.map((entry) {
-        int index = entry.key;
-        Map<String, dynamic> data = entry.value;
+      children:
+          submittedData.asMap().entries.map((entry) {
+            int index = entry.key;
+            Map<String, dynamic> data = entry.value;
 
-        return Card(
-          margin: EdgeInsets.symmetric(vertical: 10),
-          elevation: 2,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                crossAxisAlignment: CrossAxisAlignment.center,
+            return Card(
+              margin: EdgeInsets.symmetric(vertical: 10),
+              elevation: 2,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Padding(
-                    padding: const EdgeInsets.only(top: 15),
-                    child: SizedBox(
-                      // color: Colors.red,
-                      height: 40.h,
-                      width: 210.w,
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.only(top: 15),
+                        child: SizedBox(
+                          // color: Colors.red,
+                          height: 40.h,
+                          width: 210.w,
 
-                      child: Text(
-                        "  ${index + 1}.  ${data["Product"]}" ?? "",
-                        overflow: TextOverflow.ellipsis,
-                        style: GoogleFonts.figtree(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.black87),
-                      ),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Container(
-                      height: 40.h,
-                      width: 50.w,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(10),
-                        color: Colors.deepPurple[50],
-                      ),
-                      child: IconButton(
-                        icon: Icon(
-                          Icons.delete,
-                          color: Colors.redAccent,
+                          child: Text(
+                            "  ${index + 1}.  ${data["Product"]}" ?? "",
+                            overflow: TextOverflow.ellipsis,
+                            style: GoogleFonts.figtree(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.black87,
+                            ),
+                          ),
                         ),
-                        onPressed: () {
-                          showDialog(
-                              context: context,
-                              builder: (context) {
-                                return AlertDialog(
-                                  title: Subhead(
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Container(
+                          height: 40.h,
+                          width: 50.w,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(10),
+                            color: Colors.deepPurple[50],
+                          ),
+                          child: IconButton(
+                            icon: Icon(Icons.delete, color: Colors.redAccent),
+                            onPressed: () {
+                              showDialog(
+                                context: context,
+                                builder: (context) {
+                                  return AlertDialog(
+                                    title: Subhead(
                                       text:
                                           "Are you Sure to Delete This Item ?",
                                       weight: FontWeight.w500,
-                                      color: Colors.black),
-                                  actions: [
-                                    ElevatedButton(
-                                      onPressed: () {
-                                        setState(() {
-                                          submittedData.removeAt(index);
-                                        });
-                                        Navigator.pop(context);
-                                      },
-                                      child: Text("Yes"),
+                                      color: Colors.black,
                                     ),
-                                    ElevatedButton(
-                                      onPressed: () {
-                                        Navigator.pop(context);
-                                      },
-                                      child: Text("No"),
-                                    )
-                                  ],
-                                );
-                              });
-                        },
-                      ),
-                    ),
-                  )
-                ],
-              ),
-              _buildApiResponseSection(),
-              Padding(
-                padding: const EdgeInsets.only(top: 8.0, left: 8),
-                child: Container(
-                  height: 40.h,
-                  width: double.infinity.w,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Row(
-// mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Container(
-                        // color: Colors.red,
-                        height: 40.h,
-                        width: 280.w,
-                        child: TextField(
-                          style: TextStyle(
-                              fontSize: 13.sp,
-                              color: Colors.black87,
-                              fontWeight: FontWeight.w500),
-                          decoration: InputDecoration(
-                            enabledBorder: InputBorder.none,
-                            focusedBorder: InputBorder.none,
+                                    actions: [
+                                      ElevatedButton(
+                                        onPressed: () {
+                                          setState(() {
+                                            submittedData.removeAt(index);
+                                          });
+                                          Navigator.pop(context);
+                                        },
+                                        child: Text("Yes"),
+                                      ),
+                                      ElevatedButton(
+                                        onPressed: () {
+                                          Navigator.pop(context);
+                                        },
+                                        child: Text("No"),
+                                      ),
+                                    ],
+                                  );
+                                },
+                              );
+                            },
                           ),
-                          controller: TextEditingController(
-                              text: " ${data["Base Product"]}"),
-                          readOnly: true,
                         ),
                       ),
-                      Gap(5),
-                      Container(
-                          height: 30.h,
-                          width: 30.w,
-                          decoration: BoxDecoration(
+                    ],
+                  ),
+                  _buildApiResponseSection(),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8.0, left: 8),
+                    child: Container(
+                      height: 40.h,
+                      width: double.infinity.w,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Row(
+                        // mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Container(
+                            // color: Colors.red,
+                            height: 40.h,
+                            width: 280.w,
+                            child: TextField(
+                              style: TextStyle(
+                                fontSize: 13.sp,
+                                color: Colors.black87,
+                                fontWeight: FontWeight.w500,
+                              ),
+                              decoration: InputDecoration(
+                                enabledBorder: InputBorder.none,
+                                focusedBorder: InputBorder.none,
+                              ),
+                              controller: TextEditingController(
+                                text: " ${data["Base Product"]}",
+                              ),
+                              readOnly: true,
+                            ),
+                          ),
+                          Gap(5),
+                          Container(
+                            height: 30.h,
+                            width: 30.w,
+                            decoration: BoxDecoration(
                               color: Colors.grey[200],
-                              borderRadius: BorderRadius.circular(10)),
-                          child: IconButton(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: IconButton(
                               onPressed: () {
                                 editController.text = data["Base Product"];
                                 showDialog(
-                                    context: context,
-                                    builder: (context) {
-                                      return AlertDialog(
-                                        title: Text("Edit Your Length Sheet"),
-                                        content: Column(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            Container(
-                                              height: 40.h,
-                                              width: double.infinity.w,
-                                              decoration: BoxDecoration(
-                                                borderRadius:
-                                                    BorderRadius.circular(10),
-                                                color: Colors.white,
+                                  context: context,
+                                  builder: (context) {
+                                    return AlertDialog(
+                                      title: Text("Edit Your Length Sheet"),
+                                      content: Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Container(
+                                            height: 40.h,
+                                            width: double.infinity.w,
+                                            decoration: BoxDecoration(
+                                              borderRadius:
+                                                  BorderRadius.circular(10),
+                                              color: Colors.white,
+                                            ),
+                                            child: Padding(
+                                              padding: const EdgeInsets.only(
+                                                left: 7.0,
                                               ),
-                                              child: Padding(
-                                                padding: const EdgeInsets.only(
-                                                    left: 7.0),
-                                                child: TextField(
-                                                  decoration: InputDecoration(
-                                                    enabledBorder:
-                                                        InputBorder.none,
-                                                    focusedBorder:
-                                                        InputBorder.none,
-                                                  ),
-                                                  controller: editController,
-                                                  onSubmitted: (value) {
-                                                    setState(() {
-                                                      data["Base Product"] =
-                                                          value;
-                                                    });
-                                                    Navigator.pop(context);
-                                                  },
+                                              child: TextField(
+                                                decoration: InputDecoration(
+                                                  enabledBorder:
+                                                      InputBorder.none,
+                                                  focusedBorder:
+                                                      InputBorder.none,
                                                 ),
+                                                controller: editController,
+                                                onSubmitted: (value) {
+                                                  setState(() {
+                                                    data["Base Product"] =
+                                                        value;
+                                                  });
+                                                  Navigator.pop(context);
+                                                },
                                               ),
                                             ),
-                                          ],
-                                        ),
-                                        actions: [
-                                          ElevatedButton(
-                                              onPressed: () {
-                                                setState(() {
-                                                  data["Base Product"] =
-                                                      editController.text;
-                                                });
-                                                Navigator.pop(context);
-                                              },
-                                              child: MyText(
-                                                  text: "Save",
-                                                  weight: FontWeight.w500,
-                                                  color: Colors.black))
+                                          ),
                                         ],
-                                      );
-                                    });
+                                      ),
+                                      actions: [
+                                        ElevatedButton(
+                                          onPressed: () {
+                                            setState(() {
+                                              data["Base Product"] =
+                                                  editController.text;
+                                            });
+                                            Navigator.pop(context);
+                                          },
+                                          child: MyText(
+                                            text: "Save",
+                                            weight: FontWeight.w500,
+                                            color: Colors.black,
+                                          ),
+                                        ),
+                                      ],
+                                    );
+                                  },
+                                );
                               },
-                              icon: Icon(
-                                Icons.edit,
-                                size: 15,
-                              )))
-                    ],
+                              icon: Icon(Icons.edit, size: 15),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
-                ),
+                  Gap(5),
+                ],
               ),
-              Gap(5),
-            ],
-          ),
-        );
-      }).toList(),
+            );
+          }).toList(),
     );
   }
 
@@ -991,94 +1264,117 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Subhead(
-                              text: "Add New Product",
-                              weight: FontWeight.w600,
-                              color: Colors.black),
+                            text: "Add New Product",
+                            weight: FontWeight.w600,
+                            color: Colors.black,
+                          ),
                           SizedBox(height: 16),
-                          _buildAnimatedDropdown(productList, selectedProduct,
-                              (value) {
-                            setState(() {
-                              selectedProduct = value;
-                            });
-                          },
-                              label: "Product Name",
-                              icon: Icons.category_outlined),
-                          _buildAnimatedDropdown(meterialList, selectedMeterial,
-                              (value) {
-                            setState(() {
-                              selectedMeterial = value;
-                              selectedThichness = null;
-                              selsectedCoat = null;
-                              selectedyie = null;
-                              selectedBrand = null;
-                              thichnessLists = [];
-                              coatMassList = [];
-                              yieldsListt = [];
-                              brandList = [];
-                            });
-                            _fetchThickness();
-                          },
-                              label: "Meterial Type",
-                              icon: Icons.difference_outlined),
                           _buildAnimatedDropdown(
-                              thichnessLists, selectedThichness, (value) {
-                            setState(() {
-                              selectedThichness = value;
-                              selsectedCoat = null;
-                              selectedyie = null;
-                              selectedBrand = null;
-                              coatMassList = [];
-                              yieldsListt = [];
-                              brandList = [];
-                            });
-                            _fetchCoat();
-                          },
-                              enabled: thichnessLists.isNotEmpty,
-                              label: "Thickness",
-                              icon: Icons.straighten_outlined),
-                          _buildAnimatedDropdown(coatMassList, selsectedCoat,
-                              (value) {
-                            setState(() {
-                              selsectedCoat = value;
-                              selectedyie = null;
-                              selectedBrand = null;
-                              yieldsListt = [];
-                              brandList = [];
-                            });
-                            _fetchYie();
-                          },
-                              enabled: coatMassList.isNotEmpty,
-                              label: "Coating Mass",
-                              icon: Icons.layers_outlined),
-                          _buildAnimatedDropdown(yieldsListt, selectedyie,
-                              (value) {
-                            setState(() {
-                              selectedyie = value;
-                              selectedBrand = null;
-                              brandList = [];
-                            });
-                            _fetchBrandss();
-                          },
-                              enabled: yieldsListt.isNotEmpty,
-                              label: "Yield Strength",
-                              icon: Icons.radio_button_checked),
-                          _buildAnimatedDropdown(brandList, selectedBrand,
-                              (value) {
-                            setState(() {
-                              selectedBrand = value;
-                            });
-                          },
-                              enabled: brandList.isNotEmpty,
-                              label: "Brand",
-                              icon: Icons.brightness_auto_outlined),
+                            productList,
+                            selectedProduct,
+                            (value) {
+                              setState(() {
+                                selectedProduct = value;
+                              });
+                            },
+                            label: "Product Name",
+                            icon: Icons.category_outlined,
+                          ),
+                          _buildAnimatedDropdown(
+                            meterialList,
+                            selectedMeterial,
+                            (value) {
+                              setState(() {
+                                selectedMeterial = value;
+                                selectedThichness = null;
+                                selsectedCoat = null;
+                                selectedyie = null;
+                                selectedBrand = null;
+                                thichnessLists = [];
+                                coatMassList = [];
+                                yieldsListt = [];
+                                brandList = [];
+                              });
+                              _fetchThickness();
+                            },
+                            label: "Meterial Type",
+                            icon: Icons.difference_outlined,
+                          ),
+                          _buildAnimatedDropdown(
+                            thichnessLists,
+                            selectedThichness,
+                            (value) {
+                              setState(() {
+                                selectedThichness = value;
+                                selsectedCoat = null;
+                                selectedyie = null;
+                                selectedBrand = null;
+                                coatMassList = [];
+                                yieldsListt = [];
+                                brandList = [];
+                              });
+                              _fetchCoat();
+                            },
+                            enabled: thichnessLists.isNotEmpty,
+                            label: "Thickness",
+                            icon: Icons.straighten_outlined,
+                          ),
+                          _buildAnimatedDropdown(
+                            coatMassList,
+                            selsectedCoat,
+                            (value) {
+                              setState(() {
+                                selsectedCoat = value;
+                                selectedyie = null;
+                                selectedBrand = null;
+                                yieldsListt = [];
+                                brandList = [];
+                              });
+                              _fetchYie();
+                            },
+                            enabled: coatMassList.isNotEmpty,
+                            label: "Coating Mass",
+                            icon: Icons.layers_outlined,
+                          ),
+                          _buildAnimatedDropdown(
+                            yieldsListt,
+                            selectedyie,
+                            (value) {
+                              setState(() {
+                                selectedyie = value;
+                                selectedBrand = null;
+                                brandList = [];
+                              });
+                              _fetchBrandss();
+                            },
+                            enabled: yieldsListt.isNotEmpty,
+                            label: "Yield Strength",
+                            icon: Icons.radio_button_checked,
+                          ),
+                          _buildAnimatedDropdown(
+                            brandList,
+                            selectedBrand,
+                            (value) {
+                              setState(() {
+                                selectedBrand = value;
+                              });
+                            },
+                            enabled: brandList.isNotEmpty,
+                            label: "Brand",
+                            icon: Icons.brightness_auto_outlined,
+                          ),
                           SizedBox(height: 24),
+                          _buildBaseProductSearchField(),
+                          SizedBox(height: 16),
                           Container(
                             padding: EdgeInsets.all(16),
                             decoration: BoxDecoration(
                               color: Colors.grey[100],
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(
-                                  color: Colors.deepPurple[400]!, width: 1.5),
+                                color: Colors.deepPurple[400]!,
+                                width: 1.5,
+                              ),
                             ),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1152,9 +1448,10 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
                 SizedBox(height: 24),
                 if (submittedData.isNotEmpty)
                   Subhead(
-                      text: "   Added Products",
-                      weight: FontWeight.w600,
-                      color: Colors.black),
+                    text: "   Added Products",
+                    weight: FontWeight.w600,
+                    color: Colors.black,
+                  ),
                 SizedBox(height: 8),
                 _buildSubmittedDataList(),
               ],
@@ -1183,15 +1480,16 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
           border: Border.all(
             color: enabled ? Colors.grey.shade300 : Colors.grey.shade200,
           ),
-          boxShadow: enabled
-              ? [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.03),
-                    blurRadius: 8,
-                    offset: Offset(0, 2),
-                  ),
-                ]
-              : [],
+          boxShadow:
+              enabled
+                  ? [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.03),
+                      blurRadius: 8,
+                      offset: Offset(0, 2),
+                    ),
+                  ]
+                  : [],
         ),
         child: DropdownSearch<String>(
           items: items,
@@ -1200,11 +1498,15 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
           dropdownDecoratorProps: DropDownDecoratorProps(
             dropdownSearchDecoration: InputDecoration(
               labelText: label,
-              prefixIcon:
-                  Icon(icon, color: enabled ? Colors.blue : Colors.grey),
+              prefixIcon: Icon(
+                icon,
+                color: enabled ? Colors.blue : Colors.grey,
+              ),
               border: InputBorder.none,
-              contentPadding:
-                  EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              contentPadding: EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 12,
+              ),
             ),
           ),
           popupProps: PopupProps.menu(
