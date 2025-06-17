@@ -312,7 +312,7 @@ class _AccessoriesState extends State<Accessories> {
   Map<String, Map<String, String>> uomOptions = {};
 
   ///post All Data
-  // Replace the existing postAllData() method with this updated version:
+// Replace the existing postAllData() method with this updated version:
   Future<void> postAllData() async {
     HttpClient client = HttpClient();
     client.badCertificateCallback =
@@ -348,7 +348,7 @@ class _AccessoriesState extends State<Accessories> {
           selectedCoatingMass == null) return;
 
       if (response.statusCode == 200) {
-        // Parse and store the API response
+// Parse and store the API response
         final responseData = jsonDecode(response.body);
         setState(() {
           apiResponseData = responseData;
@@ -356,7 +356,7 @@ class _AccessoriesState extends State<Accessories> {
               responseData["lebels"].isNotEmpty) {
             responseProducts.addAll(responseData["lebels"][0]["data"] ?? []);
 
-            // Store UOM options for each product
+// Store UOM options for each product
             for (var product in responseProducts) {
               if (product["UOM"] != null && product["UOM"]["options"] != null) {
                 uomOptions[product["id"].toString()] = Map<String, String>.from(
@@ -370,6 +370,228 @@ class _AccessoriesState extends State<Accessories> {
     } catch (e) {
       throw Exception("Error posting data: $e");
     }
+  }
+
+  /// Base View Products data //
+// Add these variables with your existing variables
+  TextEditingController baseProductController = TextEditingController();
+  List<dynamic> baseProductResults = [];
+  bool isSearchingBaseProduct = false;
+  String? selectedBaseProduct;
+  FocusNode baseProductFocusNode = FocusNode();
+
+// Add this method for searching base products
+  Future<void> searchBaseProducts(String query) async {
+    if (query.isEmpty) {
+      setState(() {
+        baseProductResults = [];
+      });
+      return;
+    }
+
+    setState(() {
+      isSearchingBaseProduct = true;
+    });
+
+    HttpClient client = HttpClient();
+    client.badCertificateCallback =
+        ((X509Certificate cert, String host, int port) => true);
+    IOClient ioClient = IOClient(client);
+    final headers = {"Content-Type": "application/json"};
+    final data = {"category_id": "1", "searchbase": query};
+
+    try {
+      final response = await ioClient.post(
+        Uri.parse("https://demo.zaron.in:8181/ci4/api/baseproducts_search"),
+        headers: headers,
+        body: jsonEncode(data),
+      );
+
+      if (response.statusCode == 200) {
+        final responseData = jsonDecode(response.body);
+        print("Base product response: $responseData"); // Debug print
+        setState(() {
+          baseProductResults = responseData['base_products'] ?? [];
+          isSearchingBaseProduct = false;
+        });
+      } else {
+        setState(() {
+          baseProductResults = [];
+          isSearchingBaseProduct = false;
+        });
+      }
+    } catch (e) {
+      print("Error searching base products: $e");
+      setState(() {
+        baseProductResults = [];
+        isSearchingBaseProduct = false;
+      });
+    }
+  }
+
+// Add this method to build the base product search field
+  Widget _buildBaseProductSearchField() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          "Base Product",
+          style: GoogleFonts.figtree(
+            fontSize: 16,
+            fontWeight: FontWeight.w500,
+            color: Colors.black87,
+          ),
+        ),
+        SizedBox(height: 8),
+        Container(
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.grey[300]!),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: TextField(
+            controller: baseProductController,
+            focusNode: baseProductFocusNode,
+            decoration: InputDecoration(
+              hintText: "Search base product...",
+              prefixIcon: Icon(Icons.search),
+              border: InputBorder.none,
+              contentPadding:
+                  EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              suffixIcon: isSearchingBaseProduct
+                  ? Padding(
+                      padding: EdgeInsets.all(12),
+                      child: SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                    )
+                  : null,
+            ),
+            onChanged: (value) {
+              searchBaseProducts(value);
+            },
+            onTap: () {
+              if (baseProductController.text.isNotEmpty) {
+                searchBaseProducts(baseProductController.text);
+              }
+            },
+          ),
+        ),
+
+        // Search Results Display (line by line, not dropdown)
+        if (baseProductResults.isNotEmpty)
+          Container(
+            margin: EdgeInsets.only(top: 8),
+            padding: EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.grey[50],
+              border: Border.all(color: Colors.grey[300]!),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "Search Results:",
+                  style: GoogleFonts.figtree(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black87,
+                  ),
+                ),
+                SizedBox(height: 8),
+                ...baseProductResults.map((product) {
+                  return GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        selectedBaseProduct = product.toString();
+                        baseProductController.text = selectedBaseProduct!;
+                        baseProductResults = [];
+                      });
+                    },
+                    child: Container(
+                      width: double.infinity,
+                      padding:
+                          EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+                      margin: EdgeInsets.only(bottom: 6),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(color: Colors.grey[300]!),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.grey.withOpacity(0.1),
+                            spreadRadius: 1,
+                            blurRadius: 2,
+                            offset: Offset(0, 1),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(Icons.inventory_2, size: 16, color: Colors.blue),
+                          SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              product.toString(),
+                              style: GoogleFonts.figtree(
+                                fontSize: 14,
+                                color: Colors.black87,
+                                fontWeight: FontWeight.w400,
+                              ),
+                            ),
+                          ),
+                          Icon(Icons.arrow_forward_ios,
+                              size: 12, color: Colors.grey[400]),
+                        ],
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ],
+            ),
+          ),
+
+        // Selected Base Product Display
+        if (selectedBaseProduct != null)
+          Container(
+            margin: EdgeInsets.only(top: 8),
+            padding: EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.blue[50],
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.blue[200]!),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.check_circle, color: Colors.green, size: 20),
+                SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    "Selected: $selectedBaseProduct",
+                    style: GoogleFonts.figtree(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.black87,
+                    ),
+                  ),
+                ),
+                GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      selectedBaseProduct = null;
+                      baseProductController.clear();
+                      baseProductResults = [];
+                    });
+                  },
+                  child: Icon(Icons.close, color: Colors.grey[600], size: 20),
+                ),
+              ],
+            ),
+          ),
+      ],
+    );
   }
 
   void _submitData() {
@@ -441,7 +663,7 @@ class _AccessoriesState extends State<Accessories> {
     );
   }
 
-  // 1. Add this variable after line 25 (with other existing variables)
+// 1. Add this variable after line 25 (with other existing variables)
   bool isGridView = true; // Add this line
 
 // 2. Replace the existing _buildSubmittedDataList() method with this updated version:
@@ -465,7 +687,7 @@ class _AccessoriesState extends State<Accessories> {
 
     return Column(
       children: [
-        // Toggle Button Row
+// Toggle Button Row
         Row(
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
@@ -525,7 +747,7 @@ class _AccessoriesState extends State<Accessories> {
         ),
         SizedBox(height: 16),
 
-        // Content based on view type
+// Content based on view type
         isGridView ? _buildGridView() : _buildListView(),
       ],
     );
@@ -659,7 +881,7 @@ class _AccessoriesState extends State<Accessories> {
             padding: EdgeInsets.all(12),
             child: Column(
               children: [
-                // Product Header Row
+// Product Header Row
                 Row(
                   children: [
                     Expanded(
@@ -735,7 +957,7 @@ class _AccessoriesState extends State<Accessories> {
                 ),
                 SizedBox(height: 12),
 
-                // Compact Data Row
+// Compact Data Row
                 Row(
                   children: [
                     Expanded(
@@ -820,7 +1042,7 @@ class _AccessoriesState extends State<Accessories> {
     );
   }
 
-  // Modified UOM dropdown with calculation trigger
+// Modified UOM dropdown with calculation trigger
 
 // Modified UOM dropdown with calculation trigger
   Widget _uomDropdownFromApi(Map<String, dynamic> data) {
@@ -853,7 +1075,7 @@ class _AccessoriesState extends State<Accessories> {
           print("UOM changed to: $val"); // Debug print
           print(
               "Product data: ${data["Products"]}, ID: ${data["id"]}"); // Debug print
-          // Trigger calculation with debounce
+// Trigger calculation with debounce
           _debounceCalculation(data);
         },
         decoration: InputDecoration(
@@ -907,10 +1129,10 @@ class _AccessoriesState extends State<Accessories> {
           print("Controller text: ${controller.text}");
           print("Data after change: ${data[key]}");
 
-          // 🚫 DO NOT forcefully reset controller.text here!
-          // if (controller.text != val) {
-          //   controller.text = val;
-          // }
+// 🚫 DO NOT forcefully reset controller.text here!
+// if (controller.text != val) {
+//   controller.text = val;
+// }
 
           if (key == "Length" || key == "Nos" || key == "Basic Rate") {
             print("Triggering calculation for $key with value: $val");
@@ -1001,7 +1223,7 @@ class _AccessoriesState extends State<Accessories> {
     return value.isEmpty ? "No selection yet" : value.join(",  ");
   }
 
-  // Add these variables after existing declarations
+// Add these variables after existing declarations
 
   Timer? _debounceTimer;
   Map<String, dynamic> calculationResults = {};
@@ -1013,10 +1235,10 @@ class _AccessoriesState extends State<Accessories> {
   TextEditingController _getController(Map<String, dynamic> data, String key) {
     String productId = data["id"].toString();
 
-    // Initialize controllers map for this product ID
+// Initialize controllers map for this product ID
     fieldControllers.putIfAbsent(productId, () => {});
 
-    // If controller for this key doesn't exist, create it
+// If controller for this key doesn't exist, create it
     if (!fieldControllers[productId]!.containsKey(key)) {
       String initialValue = (data[key] != null && data[key].toString() != "0")
           ? data[key].toString()
@@ -1027,12 +1249,12 @@ class _AccessoriesState extends State<Accessories> {
 
       print("Created controller for [$key] with value: '$initialValue'");
     } else {
-      // Existing controller: check if it needs sync from data
+// Existing controller: check if it needs sync from data
       final controller = fieldControllers[productId]![key]!;
 
       final dataValue = data[key]?.toString() ?? "";
 
-      // If the controller is empty but data has a value, sync it
+// If the controller is empty but data has a value, sync it
       if (controller.text.isEmpty && dataValue.isNotEmpty && dataValue != "0") {
         controller.text = dataValue;
         print("Synced controller for [$key] to: '$dataValue'");
@@ -1061,7 +1283,7 @@ class _AccessoriesState extends State<Accessories> {
 
     String productId = data["id"].toString();
 
-    // Get current UOM value
+// Get current UOM value
     String? currentUom;
     if (data["UOM"] is Map) {
       currentUom = data["UOM"]["value"]?.toString();
@@ -1072,7 +1294,7 @@ class _AccessoriesState extends State<Accessories> {
     print("Current UOM: $currentUom");
     print("Previous UOM: ${previousUomValues[productId]}");
 
-    // Get Profile value from controller
+// Get Profile value from controller
     double? profileValue;
     String? profileText;
 
@@ -1091,7 +1313,7 @@ class _AccessoriesState extends State<Accessories> {
       profileValue = double.tryParse(profileText);
     }
 
-    // Get Nos value from controller
+// Get Nos value from controller
     int nosValue = 0;
     String? nosText;
 
@@ -1340,6 +1562,8 @@ class _AccessoriesState extends State<Accessories> {
                             label: "Coating Mass",
                             icon: Icons.layers_outlined,
                           ),
+                          SizedBox(height: 16),
+                          _buildBaseProductSearchField(),
                           SizedBox(height: 24),
                           Container(
                             padding: EdgeInsets.all(16),
@@ -1499,7 +1723,7 @@ class _AccessoriesState extends State<Accessories> {
               ),
             ),
             constraints: BoxConstraints(maxHeight: 300),
-            // borderRadius: BorderRadius.circular(12),
+// borderRadius: BorderRadius.circular(12),
           ),
         ),
       ),
