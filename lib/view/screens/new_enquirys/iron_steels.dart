@@ -557,46 +557,48 @@ class _IronSteelState extends State<IronSteel> {
       );
       return;
     }
-    setState(() {
-      submittedData.add({
-        "Product": "Accessories",
-        "UOM": "Feet",
-        "Length": "0",
-        "Nos": "1",
-        "Basic Rate": "0",
-        "SQ": "0",
-        "Amount": "0",
-        "Base Product":
-            "$selectedBrand, $selectedColor, $selectedThickness, $selectedCoatingMass,",
+    postAllData().then((_) {
+      setState(() {
+        submittedData.add({
+          "Product": "Accessories",
+          "UOM": "Feet",
+          "Length": "0",
+          "Nos": "1",
+          "Basic Rate": "0",
+          "SQ": "0",
+          "Amount": "0",
+          "Base Product":
+              "$selectedBrand, $selectedColor, $selectedThickness, $selectedCoatingMass,",
+        });
+        selectedBrand = null;
+        selectedColor = null;
+        selectedThickness = null;
+        selectedCoatingMass = null;
+        brandsList = [];
+        colorsList = [];
+        thicknessList = [];
+        coatingMassList = [];
+        _fetchBrands();
       });
-      selectedBrand = null;
-      selectedColor = null;
-      selectedThickness = null;
-      selectedCoatingMass = null;
-      brandsList = [];
-      colorsList = [];
-      thicknessList = [];
-      coatingMassList = [];
-      _fetchBrands();
-    });
 
-    // Show success message with a more elegant snackBar
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            Icon(Icons.check_circle, color: Colors.white),
-            SizedBox(width: 12),
-            Text("Product added successfully"),
-          ],
+      // Show success message with a more elegant snackBar
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              Icon(Icons.check_circle, color: Colors.white),
+              SizedBox(width: 12),
+              Text("Product added successfully"),
+            ],
+          ),
+          backgroundColor: Colors.green,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          margin: EdgeInsets.all(16),
+          duration: Duration(seconds: 3),
         ),
-        backgroundColor: Colors.green,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-        margin: EdgeInsets.all(16),
-        duration: Duration(seconds: 3),
-      ),
-    );
+      );
+    });
   }
 
   Widget _buildApiResponseList() {
@@ -1131,10 +1133,7 @@ class _IronSteelState extends State<IronSteel> {
                             width: double.infinity,
                             height: 54.h,
                             child: ElevatedButton(
-                              onPressed: () async {
-                                await postAllData();
-                                _submitData();
-                              },
+                              onPressed: _submitData,
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.deepPurple[400],
                                 foregroundColor: Colors.white,

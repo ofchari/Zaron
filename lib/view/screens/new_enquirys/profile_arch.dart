@@ -82,12 +82,11 @@ class _ProfileRidgeAndArchState extends State<ProfileRidgeAndArch> {
 
         if (products is List) {
           setState(() {
-            materialList =
-                products
-                    .whereType<Map>()
-                    .map((e) => e["product_name"]?.toString())
-                    .whereType<String>()
-                    .toList();
+            materialList = products
+                .whereType<Map>()
+                .map((e) => e["product_name"]?.toString())
+                .whereType<String>()
+                .toList();
           });
         }
       }
@@ -117,12 +116,11 @@ class _ProfileRidgeAndArchState extends State<ProfileRidgeAndArch> {
 
         if (brandData is List) {
           setState(() {
-            brandandList =
-                brandData
-                    .whereType<Map>()
-                    .map((e) => e["brand"]?.toString())
-                    .whereType<String>()
-                    .toList();
+            brandandList = brandData
+                .whereType<Map>()
+                .map((e) => e["brand"]?.toString())
+                .whereType<String>()
+                .toList();
           });
         }
       }
@@ -172,12 +170,11 @@ class _ProfileRidgeAndArchState extends State<ProfileRidgeAndArch> {
 
         if (selectedThickness is List) {
           setState(() {
-            colorandList =
-                selectedThickness
-                    .whereType<Map>()
-                    .map((e) => e["color"]?.toString())
-                    .whereType<String>()
-                    .toList();
+            colorandList = selectedThickness
+                .whereType<Map>()
+                .map((e) => e["color"]?.toString())
+                .whereType<String>()
+                .toList();
           });
         }
       }
@@ -227,12 +224,11 @@ class _ProfileRidgeAndArchState extends State<ProfileRidgeAndArch> {
 
         if (thickness is List) {
           setState(() {
-            thickAndList =
-                thickness
-                    .whereType<Map>()
-                    .map((e) => e["thickness"]?.toString())
-                    .whereType<String>()
-                    .toList();
+            thickAndList = thickness
+                .whereType<Map>()
+                .map((e) => e["thickness"]?.toString())
+                .whereType<String>()
+                .toList();
           });
         }
       }
@@ -246,8 +242,7 @@ class _ProfileRidgeAndArchState extends State<ProfileRidgeAndArch> {
     if (selectedBrands == null ||
         selectedColors == null ||
         selectedThickness == null ||
-        !mounted)
-      return;
+        !mounted) return;
 
     setState(() {
       coatingAndList = [];
@@ -288,12 +283,11 @@ class _ProfileRidgeAndArchState extends State<ProfileRidgeAndArch> {
           final coating = message[0];
           if (coating is List) {
             setState(() {
-              coatingAndList =
-                  coating
-                      .whereType<Map>()
-                      .map((e) => e["coating_mass"]?.toString())
-                      .whereType<String>()
-                      .toList();
+              coatingAndList = coating
+                  .whereType<Map>()
+                  .map((e) => e["coating_mass"]?.toString())
+                  .whereType<String>()
+                  .toList();
             });
           }
 
@@ -327,22 +321,6 @@ class _ProfileRidgeAndArchState extends State<ProfileRidgeAndArch> {
     IOClient ioClient = IOClient(client);
     final headers = {"Content-Type": "application/json"};
     final data = {
-      // "product_filters": null,
-      // "product_label_filters": null,
-      // "product_category_id": null,
-      // "base_product_filters": [
-      //   "${selectedBrands?.trim()}",
-      //   "${selectedColors?.trim()}",
-      //   "${selectedThickness?.trim()}",
-      //   "${selectedCoatingMass?.trim()}",
-      // ],
-      // "base_label_filters": [
-      //   "brand",
-      //   "color",
-      //   "thickness",
-      //   "coating_mass",
-      // ],
-      // "base_category_id": 32
       "customer_id": UserSession().userId,
       "product_id": 798,
       "product_name": selectedMaterial,
@@ -367,17 +345,10 @@ class _ProfileRidgeAndArchState extends State<ProfileRidgeAndArch> {
           selectedBrands == null ||
           selectedColors == null ||
           selectedThickness == null ||
-          selectedCoatingMass == null)
+          selectedCoatingMass == null) {
         return;
-      if (response.statusCode == 200) {
-        // Get.snackbar(
-        //   "Data Added",
-        //   "Successfully",
-        //   colorText: Colors.white,
-        //   backgroundColor: Colors.green,
-        //   snackPosition: SnackPosition.BOTTOM,
-        // );
       }
+      if (response.statusCode == 200) return;
     } catch (e) {
       throw Exception("Error posting data: $e");
     }
@@ -468,17 +439,16 @@ class _ProfileRidgeAndArchState extends State<ProfileRidgeAndArch> {
                 horizontal: 16,
                 vertical: 12,
               ),
-              suffixIcon:
-                  isSearchingBaseProduct
-                      ? Padding(
-                        padding: EdgeInsets.all(12),
-                        child: SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        ),
-                      )
-                      : null,
+              suffixIcon: isSearchingBaseProduct
+                  ? Padding(
+                      padding: EdgeInsets.all(12),
+                      child: SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                    )
+                  : null,
             ),
             onChanged: (value) {
               searchBaseProducts(value);
@@ -620,19 +590,18 @@ class _ProfileRidgeAndArchState extends State<ProfileRidgeAndArch> {
       // Show elegant error message
       showDialog(
         context: context,
-        builder:
-            (context) => AlertDialog(
-              title: Text('Incomplete Form'),
-              content: Text(
-                'Please fill all required fields to add a product.',
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: Text('OK'),
-                ),
-              ],
+        builder: (context) => AlertDialog(
+          title: Text('Incomplete Form'),
+          content: Text(
+            'Please fill all required fields to add a product.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text('OK'),
             ),
+          ],
+        ),
       );
       return;
     }
@@ -700,223 +669,218 @@ class _ProfileRidgeAndArchState extends State<ProfileRidgeAndArch> {
     }
 
     return Column(
-      children:
-          submittedData.asMap().entries.map((entry) {
-            int index = entry.key;
-            Map<String, dynamic> data = entry.value;
+      children: submittedData.asMap().entries.map((entry) {
+        int index = entry.key;
+        Map<String, dynamic> data = entry.value;
 
-            return Card(
-              margin: EdgeInsets.symmetric(vertical: 10),
-              elevation: 2,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.start,
-                crossAxisAlignment: CrossAxisAlignment.start,
+        return Card(
+          margin: EdgeInsets.symmetric(vertical: 10),
+          elevation: 2,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.only(top: 15),
-                        child: SizedBox(
-                          // color: Colors.red,
-                          height: 40.h,
-                          width: 210.w,
+                  Padding(
+                    padding: const EdgeInsets.only(top: 15),
+                    child: SizedBox(
+                      // color: Colors.red,
+                      height: 40.h,
+                      width: 210.w,
 
-                          child: Text(
-                            "  ${index + 1}.  ${data["Product"]}" ?? "",
-                            overflow: TextOverflow.ellipsis,
-                            style: GoogleFonts.figtree(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.black87,
-                            ),
-                          ),
+                      child: Text(
+                        "  ${index + 1}.  ${data["Product"]}" ?? "",
+                        overflow: TextOverflow.ellipsis,
+                        style: GoogleFonts.figtree(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.black87,
                         ),
                       ),
-                      Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Container(
-                          height: 40.h,
-                          width: 50.w,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(10),
-                            color: Colors.deepPurple[50],
-                          ),
-                          child: IconButton(
-                            icon: Icon(Icons.delete, color: Colors.redAccent),
-                            onPressed: () {
-                              showDialog(
-                                context: context,
-                                builder: (context) {
-                                  return AlertDialog(
-                                    title: Subhead(
-                                      text:
-                                          "Are you Sure to Delete This Item ?",
-                                      weight: FontWeight.w500,
-                                      color: Colors.black,
-                                    ),
-                                    actions: [
-                                      ElevatedButton(
-                                        onPressed: () {
-                                          setState(() {
-                                            submittedData.removeAt(index);
-                                          });
-                                          Navigator.pop(context);
-                                        },
-                                        child: Text("Yes"),
-                                      ),
-                                      ElevatedButton(
-                                        onPressed: () {
-                                          Navigator.pop(context);
-                                        },
-                                        child: Text("No"),
-                                      ),
-                                    ],
-                                  );
-                                },
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Container(
+                      height: 40.h,
+                      width: 50.w,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(10),
+                        color: Colors.deepPurple[50],
+                      ),
+                      child: IconButton(
+                        icon: Icon(Icons.delete, color: Colors.redAccent),
+                        onPressed: () {
+                          showDialog(
+                            context: context,
+                            builder: (context) {
+                              return AlertDialog(
+                                title: Subhead(
+                                  text: "Are you Sure to Delete This Item ?",
+                                  weight: FontWeight.w500,
+                                  color: Colors.black,
+                                ),
+                                actions: [
+                                  ElevatedButton(
+                                    onPressed: () {
+                                      setState(() {
+                                        submittedData.removeAt(index);
+                                      });
+                                      Navigator.pop(context);
+                                    },
+                                    child: Text("Yes"),
+                                  ),
+                                  ElevatedButton(
+                                    onPressed: () {
+                                      Navigator.pop(context);
+                                    },
+                                    child: Text("No"),
+                                  ),
+                                ],
                               );
                             },
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              _buildProductDetailInRows(data),
+              // Row(
+              //   children: [
+              //     MyText(
+              //         text: "  UOM - ",
+              //         weight: FontWeight.w600,
+              //         color: Colors.grey.shade600),
+              //     MyText(
+              //         text: "Length - ",
+              //         weight: FontWeight.w600,
+              //         color: Colors.grey.shade600),
+              //     MyText(
+              //         text: "Nos  ",
+              //         weight: FontWeight.w600,
+              //         color: Colors.grey.shade600),
+              //   ],
+              // ),
+              Padding(
+                padding: const EdgeInsets.only(top: 8.0, left: 8),
+                child: Container(
+                  height: 40.h,
+                  width: double.infinity.w,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Row(
+                    // mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Container(
+                        // color: Colors.red,
+                        height: 40.h,
+                        width: 280.w,
+                        child: TextField(
+                          style: TextStyle(
+                            fontSize: 13.sp,
+                            color: Colors.black87,
+                            fontWeight: FontWeight.w500,
                           ),
+                          decoration: InputDecoration(
+                            enabledBorder: InputBorder.none,
+                            focusedBorder: InputBorder.none,
+                          ),
+                          controller: TextEditingController(
+                            text: " ${data["Base Product"]}",
+                          ),
+                          readOnly: true,
+                        ),
+                      ),
+                      Gap(5),
+                      Container(
+                        height: 30.h,
+                        width: 30.w,
+                        decoration: BoxDecoration(
+                          color: Colors.grey[200],
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: IconButton(
+                          onPressed: () {
+                            editController.text = data["Base Product"];
+                            showDialog(
+                              context: context,
+                              builder: (context) {
+                                return AlertDialog(
+                                  title: Text("Edit Your Screw"),
+                                  content: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Container(
+                                        height: 40.h,
+                                        width: double.infinity.w,
+                                        decoration: BoxDecoration(
+                                          borderRadius:
+                                              BorderRadius.circular(10),
+                                          color: Colors.white,
+                                        ),
+                                        child: Padding(
+                                          padding: const EdgeInsets.only(
+                                            left: 7.0,
+                                          ),
+                                          child: TextField(
+                                            decoration: InputDecoration(
+                                              enabledBorder: InputBorder.none,
+                                              focusedBorder: InputBorder.none,
+                                            ),
+                                            controller: editController,
+                                            onSubmitted: (value) {
+                                              setState(() {
+                                                data["Base Product"] = value;
+                                              });
+                                              Navigator.pop(context);
+                                            },
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  actions: [
+                                    ElevatedButton(
+                                      onPressed: () {
+                                        setState(() {
+                                          data["Base Product"] =
+                                              editController.text;
+                                        });
+                                        Navigator.pop(context);
+                                      },
+                                      child: MyText(
+                                        text: "Save",
+                                        weight: FontWeight.w500,
+                                        color: Colors.black,
+                                      ),
+                                    ),
+                                  ],
+                                );
+                              },
+                            );
+                          },
+                          icon: Icon(Icons.edit, size: 15),
                         ),
                       ),
                     ],
                   ),
-                  _buildProductDetailInRows(data),
-                  // Row(
-                  //   children: [
-                  //     MyText(
-                  //         text: "  UOM - ",
-                  //         weight: FontWeight.w600,
-                  //         color: Colors.grey.shade600),
-                  //     MyText(
-                  //         text: "Length - ",
-                  //         weight: FontWeight.w600,
-                  //         color: Colors.grey.shade600),
-                  //     MyText(
-                  //         text: "Nos  ",
-                  //         weight: FontWeight.w600,
-                  //         color: Colors.grey.shade600),
-                  //   ],
-                  // ),
-                  Padding(
-                    padding: const EdgeInsets.only(top: 8.0, left: 8),
-                    child: Container(
-                      height: 40.h,
-                      width: double.infinity.w,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Row(
-                        // mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          Container(
-                            // color: Colors.red,
-                            height: 40.h,
-                            width: 280.w,
-                            child: TextField(
-                              style: TextStyle(
-                                fontSize: 13.sp,
-                                color: Colors.black87,
-                                fontWeight: FontWeight.w500,
-                              ),
-                              decoration: InputDecoration(
-                                enabledBorder: InputBorder.none,
-                                focusedBorder: InputBorder.none,
-                              ),
-                              controller: TextEditingController(
-                                text: " ${data["Base Product"]}",
-                              ),
-                              readOnly: true,
-                            ),
-                          ),
-                          Gap(5),
-                          Container(
-                            height: 30.h,
-                            width: 30.w,
-                            decoration: BoxDecoration(
-                              color: Colors.grey[200],
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: IconButton(
-                              onPressed: () {
-                                editController.text = data["Base Product"];
-                                showDialog(
-                                  context: context,
-                                  builder: (context) {
-                                    return AlertDialog(
-                                      title: Text("Edit Your Screw"),
-                                      content: Column(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Container(
-                                            height: 40.h,
-                                            width: double.infinity.w,
-                                            decoration: BoxDecoration(
-                                              borderRadius:
-                                                  BorderRadius.circular(10),
-                                              color: Colors.white,
-                                            ),
-                                            child: Padding(
-                                              padding: const EdgeInsets.only(
-                                                left: 7.0,
-                                              ),
-                                              child: TextField(
-                                                decoration: InputDecoration(
-                                                  enabledBorder:
-                                                      InputBorder.none,
-                                                  focusedBorder:
-                                                      InputBorder.none,
-                                                ),
-                                                controller: editController,
-                                                onSubmitted: (value) {
-                                                  setState(() {
-                                                    data["Base Product"] =
-                                                        value;
-                                                  });
-                                                  Navigator.pop(context);
-                                                },
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                      actions: [
-                                        ElevatedButton(
-                                          onPressed: () {
-                                            setState(() {
-                                              data["Base Product"] =
-                                                  editController.text;
-                                            });
-                                            Navigator.pop(context);
-                                          },
-                                          child: MyText(
-                                            text: "Save",
-                                            weight: FontWeight.w500,
-                                            color: Colors.black,
-                                          ),
-                                        ),
-                                      ],
-                                    );
-                                  },
-                                );
-                              },
-                              icon: Icon(Icons.edit, size: 15),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  Gap(5),
-                ],
+                ),
               ),
-            );
-          }).toList(),
+              Gap(5),
+            ],
+          ),
+        );
+      }).toList(),
     );
   }
 
@@ -1033,10 +997,9 @@ class _ProfileRidgeAndArchState extends State<ProfileRidgeAndArch> {
       height: 40.h,
       child: DropdownButtonFormField<String>(
         value: data["UOM"],
-        items:
-            uomOptions
-                .map((uom) => DropdownMenuItem(value: uom, child: Text(uom)))
-                .toList(),
+        items: uomOptions
+            .map((uom) => DropdownMenuItem(value: uom, child: Text(uom)))
+            .toList(),
         onChanged: (val) {
           setState(() {
             data["UOM"] = val!;
@@ -1095,16 +1058,15 @@ class _ProfileRidgeAndArchState extends State<ProfileRidgeAndArch> {
           border: Border.all(
             color: enabled ? Colors.grey.shade300 : Colors.grey.shade200,
           ),
-          boxShadow:
-              enabled
-                  ? [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.03),
-                      blurRadius: 8,
-                      offset: Offset(0, 2),
-                    ),
-                  ]
-                  : [],
+          boxShadow: enabled
+              ? [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.03),
+                    blurRadius: 8,
+                    offset: Offset(0, 2),
+                  ),
+                ]
+              : [],
         ),
         child: DropdownSearch<String>(
           items: items,
@@ -1161,6 +1123,7 @@ class _ProfileRidgeAndArchState extends State<ProfileRidgeAndArch> {
         child: Padding(
           padding: EdgeInsets.all(16),
           child: SingleChildScrollView(
+            physics: BouncingScrollPhysics(),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [

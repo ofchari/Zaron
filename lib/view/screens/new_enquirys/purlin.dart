@@ -77,12 +77,11 @@ class _PurlinState extends State<Purlin> {
 
         if (products is List) {
           setState(() {
-            productList =
-                products
-                    .whereType<Map>()
-                    .map((e) => e["shape_of_product"]?.toString())
-                    .whereType<String>()
-                    .toList();
+            productList = products
+                .whereType<Map>()
+                .map((e) => e["shape_of_product"]?.toString())
+                .whereType<String>()
+                .toList();
           });
         }
       }
@@ -129,12 +128,11 @@ class _PurlinState extends State<Purlin> {
 
         if (sizes is List) {
           setState(() {
-            sizeList =
-                sizes
-                    .whereType<Map>()
-                    .map((e) => e["size"]?.toString())
-                    .whereType<String>()
-                    .toList();
+            sizeList = sizes
+                .whereType<Map>()
+                .map((e) => e["size"]?.toString())
+                .whereType<String>()
+                .toList();
           });
         }
       }
@@ -181,12 +179,11 @@ class _PurlinState extends State<Purlin> {
 
         if (materials is List) {
           setState(() {
-            materialTypeList =
-                materials
-                    .whereType<Map>()
-                    .map((e) => e["material_type"]?.toString())
-                    .whereType<String>()
-                    .toList();
+            materialTypeList = materials
+                .whereType<Map>()
+                .map((e) => e["material_type"]?.toString())
+                .whereType<String>()
+                .toList();
           });
         }
       }
@@ -237,12 +234,11 @@ class _PurlinState extends State<Purlin> {
 
         if (thick is List) {
           setState(() {
-            thicknessList =
-                thick
-                    .whereType<Map>()
-                    .map((e) => e["thickness"]?.toString())
-                    .whereType<String>()
-                    .toList();
+            thicknessList = thick
+                .whereType<Map>()
+                .map((e) => e["thickness"]?.toString())
+                .whereType<String>()
+                .toList();
           });
         }
       }
@@ -300,12 +296,11 @@ class _PurlinState extends State<Purlin> {
           final brandListRaw = message[0];
           if (brandListRaw is List) {
             setState(() {
-              brandsList =
-                  brandListRaw
-                      .whereType<Map>()
-                      .map((e) => e["brand"]?.toString())
-                      .whereType<String>()
-                      .toList();
+              brandsList = brandListRaw
+                  .whereType<Map>()
+                  .map((e) => e["brand"]?.toString())
+                  .whereType<String>()
+                  .toList();
             });
           }
 
@@ -503,17 +498,16 @@ class _PurlinState extends State<Purlin> {
                 horizontal: 16,
                 vertical: 12,
               ),
-              suffixIcon:
-                  isSearchingBaseProduct
-                      ? Padding(
-                        padding: EdgeInsets.all(12),
-                        child: SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        ),
-                      )
-                      : null,
+              suffixIcon: isSearchingBaseProduct
+                  ? Padding(
+                      padding: EdgeInsets.all(12),
+                      child: SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                    )
+                  : null,
             ),
             onChanged: (value) {
               searchBaseProducts(value);
@@ -669,97 +663,95 @@ class _PurlinState extends State<Purlin> {
     }
 
     return Column(
-      children:
-          apiResponseData.asMap().entries.map((entry) {
-            int index = entry.key;
-            Map<String, dynamic> data = entry.value;
+      children: apiResponseData.asMap().entries.map((entry) {
+        int index = entry.key;
+        Map<String, dynamic> data = entry.value;
 
-            return Card(
-              margin: EdgeInsets.symmetric(vertical: 10),
-              elevation: 2,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Column(
+        return Card(
+          margin: EdgeInsets.symmetric(vertical: 10),
+          elevation: 2,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Column(
+            children: [
+              // Header with product name and delete button
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  // Header with product name and delete button
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Expanded(
-                        child: Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: Text(
-                            "${data["S.No"] ?? (index + 1)}. ${data["Products"] ?? 'Product'}",
-                            style: GoogleFonts.figtree(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.black87,
-                            ),
-                          ),
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Text(
+                        "${data["S.No"] ?? (index + 1)}. ${data["Products"] ?? 'Product'}",
+                        style: GoogleFonts.figtree(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.black87,
                         ),
                       ),
-                      Container(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.blue[50],
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Text(
-                          "ID: ${data['id'] ?? 'N/A'}",
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.blue[700],
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: IconButton(
-                          icon: Icon(Icons.delete, color: Colors.redAccent),
-                          onPressed: () {
-                            showDialog(
-                              context: context,
-                              builder:
-                                  (context) => AlertDialog(
-                                    title: Text("Delete Product"),
-                                    content: Text(
-                                      "Are you sure you want to delete this item?",
-                                    ),
-                                    actions: [
-                                      TextButton(
-                                        onPressed: () => Navigator.pop(context),
-                                        child: Text("Cancel"),
-                                      ),
-                                      ElevatedButton(
-                                        onPressed: () {
-                                          setState(() {
-                                            apiResponseData.removeAt(index);
-                                          });
-                                          Navigator.pop(context);
-                                        },
-                                        child: Text("Delete"),
-                                      ),
-                                    ],
-                                  ),
-                            );
-                          },
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
-
-                  // Editable fields in rows
-                  _buildApiResponseFields(data),
-                  SizedBox(height: 16),
+                  Container(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.blue[50],
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      "ID: ${data['id'] ?? 'N/A'}",
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.blue[700],
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: IconButton(
+                      icon: Icon(Icons.delete, color: Colors.redAccent),
+                      onPressed: () {
+                        showDialog(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                            title: Text("Delete Product"),
+                            content: Text(
+                              "Are you sure you want to delete this item?",
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(context),
+                                child: Text("Cancel"),
+                              ),
+                              ElevatedButton(
+                                onPressed: () {
+                                  setState(() {
+                                    apiResponseData.removeAt(index);
+                                  });
+                                  Navigator.pop(context);
+                                },
+                                child: Text("Delete"),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                  ),
                 ],
               ),
-            );
-          }).toList(),
+
+              // Editable fields in rows
+              _buildApiResponseFields(data),
+              SizedBox(height: 16),
+            ],
+          ),
+        );
+      }).toList(),
     );
   }
 
@@ -883,10 +875,10 @@ class _PurlinState extends State<Purlin> {
     try {
       if (data['UOM'] != null &&
           data['UOM']['options'] is Map<String, String>) {
-        uomOptions =
-            (data['UOM']['options'] as Map<String, String>).entries
-                .map((e) => e.value)
-                .toList();
+        uomOptions = (data['UOM']['options'] as Map<String, String>)
+            .entries
+            .map((e) => e.value)
+            .toList();
       }
     } catch (e) {
       print("Error parsing UOM options: $e");
@@ -896,10 +888,9 @@ class _PurlinState extends State<Purlin> {
       height: 40.h,
       child: DropdownButtonFormField<String>(
         value: uomOptions.contains(selectedValue) ? selectedValue : null,
-        items:
-            uomOptions
-                .map((uom) => DropdownMenuItem(value: uom, child: Text(uom)))
-                .toList(),
+        items: uomOptions
+            .map((uom) => DropdownMenuItem(value: uom, child: Text(uom)))
+            .toList(),
         onChanged: (val) {
           setState(() {
             data['UOM'] = data['UOM'] ?? {};
@@ -938,69 +929,66 @@ class _PurlinState extends State<Purlin> {
         selectedMaterialType == null) {
       showDialog(
         context: context,
-        builder:
-            (context) => AlertDialog(
-              title: Text('Incomplete Form'),
-              content: Text(
-                'Please fill all required fields to add a product.',
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: Text('OK'),
-                ),
-              ],
+        builder: (context) => AlertDialog(
+          title: Text('Incomplete Form'),
+          content: Text(
+            'Please fill all required fields to add a product.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text('OK'),
             ),
+          ],
+        ),
       );
       return;
     }
 
     // Call postAllData and wait for completion
-    postAllData()
-        .then((_) {
-          setState(() {
-            selectProduct = null;
-            selectedSize = null;
-            selectedMaterialType = null;
-            selectedThickness = null;
-            selectedBrand = null;
-            productList = [];
-            sizeList = [];
-            materialTypeList = [];
-            thicknessList = [];
-            brandsList = [];
-            _fetchShapeProduct();
-          });
+    postAllData().then((_) {
+      setState(() {
+        selectProduct = null;
+        selectedSize = null;
+        selectedMaterialType = null;
+        selectedThickness = null;
+        selectedBrand = null;
+        productList = [];
+        sizeList = [];
+        materialTypeList = [];
+        thicknessList = [];
+        brandsList = [];
+        _fetchShapeProduct();
+      });
 
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Row(
-                children: [
-                  Icon(Icons.check_circle, color: Colors.white),
-                  SizedBox(width: 12),
-                  Text("Product added successfully"),
-                ],
-              ),
-              backgroundColor: Colors.green,
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-              margin: EdgeInsets.all(16),
-              duration: Duration(seconds: 2),
-            ),
-          );
-        })
-        .catchError((e) {
-          print("Error in submitData: $e");
-          Get.snackbar(
-            "Error",
-            "Failed to add product: $e",
-            colorText: Colors.white,
-            backgroundColor: Colors.red,
-            snackPosition: SnackPosition.BOTTOM,
-          );
-        });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              Icon(Icons.check_circle, color: Colors.white),
+              SizedBox(width: 12),
+              Text("Product added successfully"),
+            ],
+          ),
+          backgroundColor: Colors.green,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+          ),
+          margin: EdgeInsets.all(16),
+          duration: Duration(seconds: 2),
+        ),
+      );
+    }).catchError((e) {
+      print("Error in submitData: $e");
+      Get.snackbar(
+        "Error",
+        "Failed to add product: $e",
+        colorText: Colors.white,
+        backgroundColor: Colors.red,
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    });
   }
 
   Widget _buildDetailItem(String label, Widget field) {
@@ -1050,16 +1038,15 @@ class _PurlinState extends State<Purlin> {
           border: Border.all(
             color: enabled ? Colors.grey.shade300 : Colors.grey.shade200,
           ),
-          boxShadow:
-              enabled
-                  ? [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.03),
-                      blurRadius: 8,
-                      offset: Offset(0, 2),
-                    ),
-                  ]
-                  : [],
+          boxShadow: enabled
+              ? [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.03),
+                    blurRadius: 8,
+                    offset: Offset(0, 2),
+                  ),
+                ]
+              : [],
         ),
         child: DropdownSearch<String>(
           items: items,
@@ -1116,6 +1103,7 @@ class _PurlinState extends State<Purlin> {
         child: Padding(
           padding: EdgeInsets.all(16),
           child: SingleChildScrollView(
+            physics: BouncingScrollPhysics(),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [

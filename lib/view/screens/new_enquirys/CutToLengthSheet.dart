@@ -80,12 +80,11 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
 
         if (products is List) {
           setState(() {
-            productList =
-                products
-                    .whereType<Map>()
-                    .map((e) => e["product_name"]?.toString())
-                    .whereType<String>()
-                    .toList();
+            productList = products
+                .whereType<Map>()
+                .map((e) => e["product_name"]?.toString())
+                .whereType<String>()
+                .toList();
           });
         }
       }
@@ -115,12 +114,11 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
 
         if (meterialData is List) {
           setState(() {
-            meterialList =
-                meterialData
-                    .whereType<Map>()
-                    .map((e) => e["material_type"]?.toString())
-                    .whereType<String>()
-                    .toList();
+            meterialList = meterialData
+                .whereType<Map>()
+                .map((e) => e["material_type"]?.toString())
+                .whereType<String>()
+                .toList();
           });
         }
       }
@@ -170,12 +168,11 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
 
         if (selectedThickness is List) {
           setState(() {
-            thichnessLists =
-                selectedThickness
-                    .whereType<Map>()
-                    .map((e) => e["thickness"]?.toString())
-                    .whereType<String>()
-                    .toList();
+            thichnessLists = selectedThickness
+                .whereType<Map>()
+                .map((e) => e["thickness"]?.toString())
+                .whereType<String>()
+                .toList();
           });
         }
       }
@@ -225,12 +222,11 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
 
         if (coat is List) {
           setState(() {
-            coatMassList =
-                coat
-                    .whereType<Map>()
-                    .map((e) => e["coating_mass"]?.toString())
-                    .whereType<String>()
-                    .toList();
+            coatMassList = coat
+                .whereType<Map>()
+                .map((e) => e["coating_mass"]?.toString())
+                .whereType<String>()
+                .toList();
           });
         }
       }
@@ -284,12 +280,11 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
 
         if (yieldsStrength is List) {
           setState(() {
-            yieldsListt =
-                yieldsStrength
-                    .whereType<Map>()
-                    .map((e) => e["yield_strength"]?.toString())
-                    .whereType<String>()
-                    .toList();
+            yieldsListt = yieldsStrength
+                .whereType<Map>()
+                .map((e) => e["yield_strength"]?.toString())
+                .whereType<String>()
+                .toList();
           });
         }
       }
@@ -345,12 +340,11 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
           final brands = message[0];
           if (brands is List) {
             setState(() {
-              brandList =
-                  brands
-                      .whereType<Map>()
-                      .map((e) => e["brand"]?.toString())
-                      .whereType<String>()
-                      .toList();
+              brandList = brands
+                  .whereType<Map>()
+                  .map((e) => e["brand"]?.toString())
+                  .whereType<String>()
+                  .toList();
             });
           }
 
@@ -414,8 +408,7 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
           selectedThichness == null ||
           selsectedCoat == null ||
           selectedyie == null ||
-          selectedBrand == null)
-        return;
+          selectedBrand == null) return;
       if (response.statusCode == 200) {
         // STORE THE API RESPONSE
         setState(() {
@@ -557,15 +550,14 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
           height: 40.h,
           child: DropdownButtonFormField<String>(
             value: currentValue.isEmpty ? null : currentValue,
-            items:
-                options.entries
-                    .map(
-                      (entry) => DropdownMenuItem(
-                        value: entry.key,
-                        child: Text(entry.value),
-                      ),
-                    )
-                    .toList(),
+            items: options.entries
+                .map(
+                  (entry) => DropdownMenuItem(
+                    value: entry.key,
+                    child: Text(entry.value),
+                  ),
+                )
+                .toList(),
             onChanged: (val) {
               setState(() {
                 item['UOM']['value'] = val!;
@@ -606,15 +598,14 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
           height: 40.h,
           child: DropdownButtonFormField<String>(
             value: currentValue.isEmpty ? null : currentValue,
-            items:
-                options.entries
-                    .map(
-                      (entry) => DropdownMenuItem(
-                        value: entry.key,
-                        child: Text(entry.value),
-                      ),
-                    )
-                    .toList(),
+            items: options.entries
+                .map(
+                  (entry) => DropdownMenuItem(
+                    value: entry.key,
+                    child: Text(entry.value),
+                  ),
+                )
+                .toList(),
             onChanged: (val) {
               setState(() {
                 item['Billing Option']['value'] = val!;
@@ -786,17 +777,16 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
                 horizontal: 16,
                 vertical: 12,
               ),
-              suffixIcon:
-                  isSearchingBaseProduct
-                      ? Padding(
-                        padding: EdgeInsets.all(12),
-                        child: SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        ),
-                      )
-                      : null,
+              suffixIcon: isSearchingBaseProduct
+                  ? Padding(
+                      padding: EdgeInsets.all(12),
+                      child: SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                    )
+                  : null,
             ),
             onChanged: (value) {
               searchBaseProducts(value);
@@ -939,59 +929,60 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
       // Show elegant error message
       showDialog(
         context: context,
-        builder:
-            (context) => AlertDialog(
-              title: Text('Incomplete Form'),
-              content: Text(
-                'Please fill all required fields to add a product.',
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: Text('OK'),
-                ),
-              ],
+        builder: (context) => AlertDialog(
+          title: Text('Incomplete Form'),
+          content: Text(
+            'Please fill all required fields to add a product.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text('OK'),
             ),
+          ],
+        ),
       );
       return;
     }
-    setState(() {
-      submittedData.add({
-        "Product": "Length Sheets",
-        "UOM": "Feet",
-        "Length": "0",
-        "Nos": "1",
-        "Basic Rate": "0",
-        "SQ": "0",
-        "Amount": "0",
-        "Base Product":
-            "$selectedMeterial ,$selectedThichness, $selsectedCoat, $selectedyie, $selectedBrand, ",
+    postAllData().then((_) {
+      setState(() {
+        submittedData.add({
+          "Product": "Length Sheets",
+          "UOM": "Feet",
+          "Length": "0",
+          "Nos": "1",
+          "Basic Rate": "0",
+          "SQ": "0",
+          "Amount": "0",
+          "Base Product":
+              "$selectedMeterial ,$selectedThichness, $selsectedCoat, $selectedyie, $selectedBrand, ",
+        });
+        selectedProduct = null;
+        selectedMeterial = null;
+        selectedThichness = null;
+        selsectedCoat = null;
+        selectedyie = null;
+        selectedBrand = null;
       });
-      selectedProduct = null;
-      selectedMeterial = null;
-      selectedThichness = null;
-      selsectedCoat = null;
-      selectedyie = null;
-      selectedBrand = null;
-    });
 
-    // Show success message with a more elegant snackBar
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            Icon(Icons.check_circle, color: Colors.white),
-            SizedBox(width: 12),
-            Text("Product added successfully"),
-          ],
+      // Show success message with a more elegant snackBar
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              Icon(Icons.check_circle, color: Colors.white),
+              SizedBox(width: 12),
+              Text("Product added successfully"),
+            ],
+          ),
+          backgroundColor: Colors.green,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          margin: EdgeInsets.all(16),
+          duration: Duration(seconds: 2),
         ),
-        backgroundColor: Colors.green,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-        margin: EdgeInsets.all(16),
-        duration: Duration(seconds: 2),
-      ),
-    );
+      );
+    });
   }
 
   Widget _buildSubmittedDataList() {
@@ -1013,207 +1004,202 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
     }
 
     return Column(
-      children:
-          submittedData.asMap().entries.map((entry) {
-            int index = entry.key;
-            Map<String, dynamic> data = entry.value;
+      children: submittedData.asMap().entries.map((entry) {
+        int index = entry.key;
+        Map<String, dynamic> data = entry.value;
 
-            return Card(
-              margin: EdgeInsets.symmetric(vertical: 10),
-              elevation: 2,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.start,
-                crossAxisAlignment: CrossAxisAlignment.start,
+        return Card(
+          margin: EdgeInsets.symmetric(vertical: 10),
+          elevation: 2,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.only(top: 15),
-                        child: SizedBox(
-                          // color: Colors.red,
-                          height: 40.h,
-                          width: 210.w,
+                  Padding(
+                    padding: const EdgeInsets.only(top: 15),
+                    child: SizedBox(
+                      // color: Colors.red,
+                      height: 40.h,
+                      width: 210.w,
 
-                          child: Text(
-                            "  ${index + 1}.  ${data["Product"]}" ?? "",
-                            overflow: TextOverflow.ellipsis,
-                            style: GoogleFonts.figtree(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.black87,
-                            ),
-                          ),
+                      child: Text(
+                        "  ${index + 1}.  ${data["Product"]}" ?? "",
+                        overflow: TextOverflow.ellipsis,
+                        style: GoogleFonts.figtree(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.black87,
                         ),
                       ),
-                      Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Container(
-                          height: 40.h,
-                          width: 50.w,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(10),
-                            color: Colors.deepPurple[50],
-                          ),
-                          child: IconButton(
-                            icon: Icon(Icons.delete, color: Colors.redAccent),
-                            onPressed: () {
-                              showDialog(
-                                context: context,
-                                builder: (context) {
-                                  return AlertDialog(
-                                    title: Subhead(
-                                      text:
-                                          "Are you Sure to Delete This Item ?",
-                                      weight: FontWeight.w500,
-                                      color: Colors.black,
-                                    ),
-                                    actions: [
-                                      ElevatedButton(
-                                        onPressed: () {
-                                          setState(() {
-                                            submittedData.removeAt(index);
-                                          });
-                                          Navigator.pop(context);
-                                        },
-                                        child: Text("Yes"),
-                                      ),
-                                      ElevatedButton(
-                                        onPressed: () {
-                                          Navigator.pop(context);
-                                        },
-                                        child: Text("No"),
-                                      ),
-                                    ],
-                                  );
-                                },
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Container(
+                      height: 40.h,
+                      width: 50.w,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(10),
+                        color: Colors.deepPurple[50],
+                      ),
+                      child: IconButton(
+                        icon: Icon(Icons.delete, color: Colors.redAccent),
+                        onPressed: () {
+                          showDialog(
+                            context: context,
+                            builder: (context) {
+                              return AlertDialog(
+                                title: Subhead(
+                                  text: "Are you Sure to Delete This Item ?",
+                                  weight: FontWeight.w500,
+                                  color: Colors.black,
+                                ),
+                                actions: [
+                                  ElevatedButton(
+                                    onPressed: () {
+                                      setState(() {
+                                        submittedData.removeAt(index);
+                                      });
+                                      Navigator.pop(context);
+                                    },
+                                    child: Text("Yes"),
+                                  ),
+                                  ElevatedButton(
+                                    onPressed: () {
+                                      Navigator.pop(context);
+                                    },
+                                    child: Text("No"),
+                                  ),
+                                ],
                               );
                             },
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              _buildApiResponseSection(),
+              Padding(
+                padding: const EdgeInsets.only(top: 8.0, left: 8),
+                child: Container(
+                  height: 40.h,
+                  width: double.infinity.w,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Row(
+                    // mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Container(
+                        // color: Colors.red,
+                        height: 40.h,
+                        width: 280.w,
+                        child: TextField(
+                          style: TextStyle(
+                            fontSize: 13.sp,
+                            color: Colors.black87,
+                            fontWeight: FontWeight.w500,
                           ),
+                          decoration: InputDecoration(
+                            enabledBorder: InputBorder.none,
+                            focusedBorder: InputBorder.none,
+                          ),
+                          controller: TextEditingController(
+                            text: " ${data["Base Product"]}",
+                          ),
+                          readOnly: true,
+                        ),
+                      ),
+                      Gap(5),
+                      Container(
+                        height: 30.h,
+                        width: 30.w,
+                        decoration: BoxDecoration(
+                          color: Colors.grey[200],
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: IconButton(
+                          onPressed: () {
+                            editController.text = data["Base Product"];
+                            showDialog(
+                              context: context,
+                              builder: (context) {
+                                return AlertDialog(
+                                  title: Text("Edit Your Length Sheet"),
+                                  content: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Container(
+                                        height: 40.h,
+                                        width: double.infinity.w,
+                                        decoration: BoxDecoration(
+                                          borderRadius:
+                                              BorderRadius.circular(10),
+                                          color: Colors.white,
+                                        ),
+                                        child: Padding(
+                                          padding: const EdgeInsets.only(
+                                            left: 7.0,
+                                          ),
+                                          child: TextField(
+                                            decoration: InputDecoration(
+                                              enabledBorder: InputBorder.none,
+                                              focusedBorder: InputBorder.none,
+                                            ),
+                                            controller: editController,
+                                            onSubmitted: (value) {
+                                              setState(() {
+                                                data["Base Product"] = value;
+                                              });
+                                              Navigator.pop(context);
+                                            },
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  actions: [
+                                    ElevatedButton(
+                                      onPressed: () {
+                                        setState(() {
+                                          data["Base Product"] =
+                                              editController.text;
+                                        });
+                                        Navigator.pop(context);
+                                      },
+                                      child: MyText(
+                                        text: "Save",
+                                        weight: FontWeight.w500,
+                                        color: Colors.black,
+                                      ),
+                                    ),
+                                  ],
+                                );
+                              },
+                            );
+                          },
+                          icon: Icon(Icons.edit, size: 15),
                         ),
                       ),
                     ],
                   ),
-                  _buildApiResponseSection(),
-                  Padding(
-                    padding: const EdgeInsets.only(top: 8.0, left: 8),
-                    child: Container(
-                      height: 40.h,
-                      width: double.infinity.w,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Row(
-                        // mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          Container(
-                            // color: Colors.red,
-                            height: 40.h,
-                            width: 280.w,
-                            child: TextField(
-                              style: TextStyle(
-                                fontSize: 13.sp,
-                                color: Colors.black87,
-                                fontWeight: FontWeight.w500,
-                              ),
-                              decoration: InputDecoration(
-                                enabledBorder: InputBorder.none,
-                                focusedBorder: InputBorder.none,
-                              ),
-                              controller: TextEditingController(
-                                text: " ${data["Base Product"]}",
-                              ),
-                              readOnly: true,
-                            ),
-                          ),
-                          Gap(5),
-                          Container(
-                            height: 30.h,
-                            width: 30.w,
-                            decoration: BoxDecoration(
-                              color: Colors.grey[200],
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: IconButton(
-                              onPressed: () {
-                                editController.text = data["Base Product"];
-                                showDialog(
-                                  context: context,
-                                  builder: (context) {
-                                    return AlertDialog(
-                                      title: Text("Edit Your Length Sheet"),
-                                      content: Column(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Container(
-                                            height: 40.h,
-                                            width: double.infinity.w,
-                                            decoration: BoxDecoration(
-                                              borderRadius:
-                                                  BorderRadius.circular(10),
-                                              color: Colors.white,
-                                            ),
-                                            child: Padding(
-                                              padding: const EdgeInsets.only(
-                                                left: 7.0,
-                                              ),
-                                              child: TextField(
-                                                decoration: InputDecoration(
-                                                  enabledBorder:
-                                                      InputBorder.none,
-                                                  focusedBorder:
-                                                      InputBorder.none,
-                                                ),
-                                                controller: editController,
-                                                onSubmitted: (value) {
-                                                  setState(() {
-                                                    data["Base Product"] =
-                                                        value;
-                                                  });
-                                                  Navigator.pop(context);
-                                                },
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                      actions: [
-                                        ElevatedButton(
-                                          onPressed: () {
-                                            setState(() {
-                                              data["Base Product"] =
-                                                  editController.text;
-                                            });
-                                            Navigator.pop(context);
-                                          },
-                                          child: MyText(
-                                            text: "Save",
-                                            weight: FontWeight.w500,
-                                            color: Colors.black,
-                                          ),
-                                        ),
-                                      ],
-                                    );
-                                  },
-                                );
-                              },
-                              icon: Icon(Icons.edit, size: 15),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  Gap(5),
-                ],
+                ),
               ),
-            );
-          }).toList(),
+              Gap(5),
+            ],
+          ),
+        );
+      }).toList(),
     );
   }
 
@@ -1247,6 +1233,7 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
         child: Padding(
           padding: EdgeInsets.all(16),
           child: SingleChildScrollView(
+            physics: BouncingScrollPhysics(),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -1405,10 +1392,7 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
                             width: double.infinity,
                             height: 54.h,
                             child: ElevatedButton(
-                              onPressed: () async {
-                                await postAllData();
-                                _submitData();
-                              },
+                              onPressed: _submitData,
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.deepPurple[400],
                                 foregroundColor: Colors.white,
@@ -1480,16 +1464,15 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
           border: Border.all(
             color: enabled ? Colors.grey.shade300 : Colors.grey.shade200,
           ),
-          boxShadow:
-              enabled
-                  ? [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.03),
-                      blurRadius: 8,
-                      offset: Offset(0, 2),
-                    ),
-                  ]
-                  : [],
+          boxShadow: enabled
+              ? [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.03),
+                    blurRadius: 8,
+                    offset: Offset(0, 2),
+                  ),
+                ]
+              : [],
         ),
         child: DropdownSearch<String>(
           items: items,

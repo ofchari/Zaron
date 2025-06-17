@@ -80,12 +80,11 @@ class _GIStiffnerState extends State<GIStiffner> {
 
         if (products is List) {
           setState(() {
-            productList =
-                products
-                    .whereType<Map>()
-                    .map((e) => e["product_name"]?.toString())
-                    .whereType<String>()
-                    .toList();
+            productList = products
+                .whereType<Map>()
+                .map((e) => e["product_name"]?.toString())
+                .whereType<String>()
+                .toList();
           });
         }
       }
@@ -115,12 +114,11 @@ class _GIStiffnerState extends State<GIStiffner> {
 
         if (meterialData is List) {
           setState(() {
-            meterialList =
-                meterialData
-                    .whereType<Map>()
-                    .map((e) => e["material_type"]?.toString())
-                    .whereType<String>()
-                    .toList();
+            meterialList = meterialData
+                .whereType<Map>()
+                .map((e) => e["material_type"]?.toString())
+                .whereType<String>()
+                .toList();
           });
         }
       }
@@ -166,12 +164,11 @@ class _GIStiffnerState extends State<GIStiffner> {
 
         if (selectedThickness is List) {
           setState(() {
-            thichnessLists =
-                selectedThickness
-                    .whereType<Map>()
-                    .map((e) => e["thickness"]?.toString())
-                    .whereType<String>()
-                    .toList();
+            thichnessLists = selectedThickness
+                .whereType<Map>()
+                .map((e) => e["thickness"]?.toString())
+                .whereType<String>()
+                .toList();
           });
         }
       }
@@ -217,12 +214,11 @@ class _GIStiffnerState extends State<GIStiffner> {
 
         if (coat is List) {
           setState(() {
-            coatMassList =
-                coat
-                    .whereType<Map>()
-                    .map((e) => e["coating_mass"]?.toString())
-                    .whereType<String>()
-                    .toList();
+            coatMassList = coat
+                .whereType<Map>()
+                .map((e) => e["coating_mass"]?.toString())
+                .whereType<String>()
+                .toList();
           });
         }
       }
@@ -272,12 +268,11 @@ class _GIStiffnerState extends State<GIStiffner> {
 
         if (yieldsStrength is List) {
           setState(() {
-            yieldsListt =
-                yieldsStrength
-                    .whereType<Map>()
-                    .map((e) => e["yield_strength"]?.toString())
-                    .whereType<String>()
-                    .toList();
+            yieldsListt = yieldsStrength
+                .whereType<Map>()
+                .map((e) => e["yield_strength"]?.toString())
+                .whereType<String>()
+                .toList();
           });
         }
       }
@@ -333,12 +328,11 @@ class _GIStiffnerState extends State<GIStiffner> {
           final brands = message[0];
           if (brands is List) {
             setState(() {
-              brandList =
-                  brands
-                      .whereType<Map>()
-                      .map((e) => e["brand"]?.toString())
-                      .whereType<String>()
-                      .toList();
+              brandList = brands
+                  .whereType<Map>()
+                  .map((e) => e["brand"]?.toString())
+                  .whereType<String>()
+                  .toList();
             });
           }
 
@@ -408,6 +402,69 @@ class _GIStiffnerState extends State<GIStiffner> {
     } catch (e) {
       throw Exception("Error posting data: $e");
     }
+  }
+
+  // 3. MODIFY the _submitData() method - REPLACE the existing method with this:
+  void _submitData() {
+    if (selectedMeterial == null ||
+        selectedThichness == null ||
+        selsectedCoat == null ||
+        selectedyie == null ||
+        selectedBrand == null ||
+        selectedProduct == null) {
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text('Incomplete Form'),
+          content: Text(
+            'Please fill all required fields to add a product.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text('OK'),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+
+    postAllData().then((_) {
+      // Reset form fields
+      setState(() {
+        selectedMeterial = null;
+        selectedThichness = null;
+        selsectedCoat = null;
+        selectedyie = null;
+        selectedBrand = null;
+        selectedProduct = null;
+        meterialList = [];
+        thichnessLists = [];
+        coatMassList = [];
+        yieldsListt = [];
+        brandList = [];
+        _fetchMeterialType();
+      });
+
+      // Show success message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              Icon(Icons.check_circle, color: Colors.white),
+              SizedBox(width: 12),
+              Text("Product added successfully"),
+            ],
+          ),
+          backgroundColor: Colors.green,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          margin: EdgeInsets.all(16),
+          duration: Duration(seconds: 2),
+        ),
+      );
+    });
   }
 
   TextEditingController baseProductController = TextEditingController();
@@ -495,17 +552,16 @@ class _GIStiffnerState extends State<GIStiffner> {
                 horizontal: 16,
                 vertical: 12,
               ),
-              suffixIcon:
-                  isSearchingBaseProduct
-                      ? Padding(
-                        padding: EdgeInsets.all(12),
-                        child: SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        ),
-                      )
-                      : null,
+              suffixIcon: isSearchingBaseProduct
+                  ? Padding(
+                      padding: EdgeInsets.all(12),
+                      child: SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                    )
+                  : null,
             ),
             onChanged: (value) {
               searchBaseProducts(value);
@@ -638,68 +694,6 @@ class _GIStiffnerState extends State<GIStiffner> {
     );
   }
 
-  // 3. MODIFY the _submitData() method - REPLACE the existing method with this:
-  void _submitData() {
-    if (selectedMeterial == null ||
-        selectedThichness == null ||
-        selsectedCoat == null ||
-        selectedyie == null ||
-        selectedBrand == null ||
-        selectedProduct == null) {
-      showDialog(
-        context: context,
-        builder:
-            (context) => AlertDialog(
-              title: Text('Incomplete Form'),
-              content: Text(
-                'Please fill all required fields to add a product.',
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: Text('OK'),
-                ),
-              ],
-            ),
-      );
-      return;
-    }
-
-    // Reset form fields
-    setState(() {
-      selectedMeterial = null;
-      selectedThichness = null;
-      selsectedCoat = null;
-      selectedyie = null;
-      selectedBrand = null;
-      selectedProduct = null;
-      meterialList = [];
-      thichnessLists = [];
-      coatMassList = [];
-      yieldsListt = [];
-      brandList = [];
-      _fetchMeterialType();
-    });
-
-    // Show success message
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            Icon(Icons.check_circle, color: Colors.white),
-            SizedBox(width: 12),
-            Text("Product added successfully"),
-          ],
-        ),
-        backgroundColor: Colors.green,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-        margin: EdgeInsets.all(16),
-        duration: Duration(seconds: 2),
-      ),
-    );
-  }
-
   // 4. REPLACE the _buildSubmittedDataList() method with this:
   Widget _buildSubmittedDataList() {
     if (responseProducts.isEmpty) {
@@ -720,223 +714,218 @@ class _GIStiffnerState extends State<GIStiffner> {
     }
 
     return Column(
-      children:
-          responseProducts.asMap().entries.map((entry) {
-            int index = entry.key;
-            Map<String, dynamic> data = entry.value;
+      children: responseProducts.asMap().entries.map((entry) {
+        int index = entry.key;
+        Map<String, dynamic> data = entry.value;
 
-            return Card(
-              margin: EdgeInsets.symmetric(vertical: 10),
-              elevation: 2,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.start,
-                crossAxisAlignment: CrossAxisAlignment.start,
+        return Card(
+          margin: EdgeInsets.symmetric(vertical: 10),
+          elevation: 2,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Expanded(
-                        child: Padding(
-                          padding: const EdgeInsets.only(top: 15),
-                          child: SizedBox(
-                            height: 40.h,
-                            width: 210.w,
-                            child: Text(
-                              "  ${data["S.No"]}.  ${data["Products"]}" ?? "",
-                              overflow: TextOverflow.ellipsis,
-                              style: GoogleFonts.figtree(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.black87,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                      Container(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.blue[50],
-                          borderRadius: BorderRadius.circular(6),
-                        ),
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.only(top: 15),
+                      child: SizedBox(
+                        height: 40.h,
+                        width: 210.w,
                         child: Text(
-                          "ID: ${data['id']}",
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.blue[700],
-                            fontWeight: FontWeight.w500,
+                          "  ${data["S.No"]}.  ${data["Products"]}" ?? "",
+                          overflow: TextOverflow.ellipsis,
+                          style: GoogleFonts.figtree(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.black87,
                           ),
                         ),
                       ),
-                      Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Container(
-                          height: 40.h,
-                          width: 50.w,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(10),
-                            color: Colors.deepPurple[50],
-                          ),
-                          child: IconButton(
-                            icon: Icon(Icons.delete, color: Colors.redAccent),
-                            onPressed: () {
-                              showDialog(
-                                context: context,
-                                builder: (context) {
-                                  return AlertDialog(
-                                    title: Subhead(
-                                      text:
-                                          "Are you Sure to Delete This Item ?",
-                                      weight: FontWeight.w500,
-                                      color: Colors.black,
-                                    ),
-                                    actions: [
-                                      ElevatedButton(
-                                        onPressed: () {
-                                          setState(() {
-                                            responseProducts.removeAt(index);
-                                          });
-                                          Navigator.pop(context);
-                                        },
-                                        child: Text("Yes"),
-                                      ),
-                                      ElevatedButton(
-                                        onPressed: () {
-                                          Navigator.pop(context);
-                                        },
-                                        child: Text("No"),
-                                      ),
-                                    ],
-                                  );
-                                },
+                    ),
+                  ),
+                  Container(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.blue[50],
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      "ID: ${data['id']}",
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.blue[700],
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Container(
+                      height: 40.h,
+                      width: 50.w,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(10),
+                        color: Colors.deepPurple[50],
+                      ),
+                      child: IconButton(
+                        icon: Icon(Icons.delete, color: Colors.redAccent),
+                        onPressed: () {
+                          showDialog(
+                            context: context,
+                            builder: (context) {
+                              return AlertDialog(
+                                title: Subhead(
+                                  text: "Are you Sure to Delete This Item ?",
+                                  weight: FontWeight.w500,
+                                  color: Colors.black,
+                                ),
+                                actions: [
+                                  ElevatedButton(
+                                    onPressed: () {
+                                      setState(() {
+                                        responseProducts.removeAt(index);
+                                      });
+                                      Navigator.pop(context);
+                                    },
+                                    child: Text("Yes"),
+                                  ),
+                                  ElevatedButton(
+                                    onPressed: () {
+                                      Navigator.pop(context);
+                                    },
+                                    child: Text("No"),
+                                  ),
+                                ],
                               );
                             },
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              _buildProductDetailInRows(data),
+              Padding(
+                padding: const EdgeInsets.only(top: 8.0, left: 8),
+                child: Container(
+                  height: 40.h,
+                  width: double.infinity.w,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Container(
+                        height: 40.h,
+                        width: 280.w,
+                        child: TextField(
+                          style: TextStyle(
+                            fontSize: 13.sp,
+                            color: Colors.black87,
+                            fontWeight: FontWeight.w500,
                           ),
+                          decoration: InputDecoration(
+                            enabledBorder: InputBorder.none,
+                            focusedBorder: InputBorder.none,
+                          ),
+                          controller: TextEditingController(
+                            text: " ${data["Base Product"]}",
+                          ),
+                          readOnly: true,
+                        ),
+                      ),
+                      Gap(5),
+                      Container(
+                        height: 30.h,
+                        width: 30.w,
+                        decoration: BoxDecoration(
+                          color: Colors.grey[200],
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: IconButton(
+                          onPressed: () {
+                            editController.text = data["Base Product"];
+                            showDialog(
+                              context: context,
+                              builder: (context) {
+                                return AlertDialog(
+                                  title: Text("Edit Your GI Stiffner"),
+                                  content: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Container(
+                                        height: 40.h,
+                                        width: double.infinity.w,
+                                        decoration: BoxDecoration(
+                                          borderRadius:
+                                              BorderRadius.circular(10),
+                                          color: Colors.white,
+                                        ),
+                                        child: Padding(
+                                          padding: const EdgeInsets.only(
+                                            left: 7.0,
+                                          ),
+                                          child: TextField(
+                                            decoration: InputDecoration(
+                                              enabledBorder: InputBorder.none,
+                                              focusedBorder: InputBorder.none,
+                                            ),
+                                            controller: editController,
+                                            onSubmitted: (value) {
+                                              setState(() {
+                                                data["Base Product"] = value;
+                                              });
+                                              Navigator.pop(context);
+                                            },
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  actions: [
+                                    ElevatedButton(
+                                      onPressed: () {
+                                        setState(() {
+                                          data["Base Product"] =
+                                              editController.text;
+                                        });
+                                        Navigator.pop(context);
+                                      },
+                                      child: MyText(
+                                        text: "Save",
+                                        weight: FontWeight.w500,
+                                        color: Colors.black,
+                                      ),
+                                    ),
+                                  ],
+                                );
+                              },
+                            );
+                          },
+                          icon: Icon(Icons.edit, size: 15),
                         ),
                       ),
                     ],
                   ),
-                  _buildProductDetailInRows(data),
-                  Padding(
-                    padding: const EdgeInsets.only(top: 8.0, left: 8),
-                    child: Container(
-                      height: 40.h,
-                      width: double.infinity.w,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          Container(
-                            height: 40.h,
-                            width: 280.w,
-                            child: TextField(
-                              style: TextStyle(
-                                fontSize: 13.sp,
-                                color: Colors.black87,
-                                fontWeight: FontWeight.w500,
-                              ),
-                              decoration: InputDecoration(
-                                enabledBorder: InputBorder.none,
-                                focusedBorder: InputBorder.none,
-                              ),
-                              controller: TextEditingController(
-                                text: " ${data["Base Product"]}",
-                              ),
-                              readOnly: true,
-                            ),
-                          ),
-                          Gap(5),
-                          Container(
-                            height: 30.h,
-                            width: 30.w,
-                            decoration: BoxDecoration(
-                              color: Colors.grey[200],
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: IconButton(
-                              onPressed: () {
-                                editController.text = data["Base Product"];
-                                showDialog(
-                                  context: context,
-                                  builder: (context) {
-                                    return AlertDialog(
-                                      title: Text("Edit Your GI Stiffner"),
-                                      content: Column(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Container(
-                                            height: 40.h,
-                                            width: double.infinity.w,
-                                            decoration: BoxDecoration(
-                                              borderRadius:
-                                                  BorderRadius.circular(10),
-                                              color: Colors.white,
-                                            ),
-                                            child: Padding(
-                                              padding: const EdgeInsets.only(
-                                                left: 7.0,
-                                              ),
-                                              child: TextField(
-                                                decoration: InputDecoration(
-                                                  enabledBorder:
-                                                      InputBorder.none,
-                                                  focusedBorder:
-                                                      InputBorder.none,
-                                                ),
-                                                controller: editController,
-                                                onSubmitted: (value) {
-                                                  setState(() {
-                                                    data["Base Product"] =
-                                                        value;
-                                                  });
-                                                  Navigator.pop(context);
-                                                },
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                      actions: [
-                                        ElevatedButton(
-                                          onPressed: () {
-                                            setState(() {
-                                              data["Base Product"] =
-                                                  editController.text;
-                                            });
-                                            Navigator.pop(context);
-                                          },
-                                          child: MyText(
-                                            text: "Save",
-                                            weight: FontWeight.w500,
-                                            color: Colors.black,
-                                          ),
-                                        ),
-                                      ],
-                                    );
-                                  },
-                                );
-                              },
-                              icon: Icon(Icons.edit, size: 15),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  Gap(5),
-                ],
+                ),
               ),
-            );
-          }).toList(),
+              Gap(5),
+            ],
+          ),
+        );
+      }).toList(),
     );
   }
 
@@ -1018,15 +1007,14 @@ class _GIStiffnerState extends State<GIStiffner> {
       height: 40.h,
       child: DropdownButtonFormField<String>(
         value: currentValue?.isEmpty == true ? null : currentValue,
-        items:
-            billingOptions.entries
-                .map(
-                  (entry) => DropdownMenuItem(
-                    value: entry.key,
-                    child: Text(entry.value),
-                  ),
-                )
-                .toList(),
+        items: billingOptions.entries
+            .map(
+              (entry) => DropdownMenuItem(
+                value: entry.key,
+                child: Text(entry.value),
+              ),
+            )
+            .toList(),
         onChanged: (val) {
           setState(() {
             if (data["Billing Option"] is Map) {
@@ -1140,16 +1128,15 @@ class _GIStiffnerState extends State<GIStiffner> {
           border: Border.all(
             color: enabled ? Colors.grey.shade300 : Colors.grey.shade200,
           ),
-          boxShadow:
-              enabled
-                  ? [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.03),
-                      blurRadius: 8,
-                      offset: Offset(0, 2),
-                    ),
-                  ]
-                  : [],
+          boxShadow: enabled
+              ? [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.03),
+                    blurRadius: 8,
+                    offset: Offset(0, 2),
+                  ),
+                ]
+              : [],
         ),
         child: DropdownSearch<String>(
           items: items,
@@ -1206,6 +1193,7 @@ class _GIStiffnerState extends State<GIStiffner> {
         child: Padding(
           padding: EdgeInsets.all(16),
           child: SingleChildScrollView(
+            physics: BouncingScrollPhysics(),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -1376,10 +1364,7 @@ class _GIStiffnerState extends State<GIStiffner> {
                             width: double.infinity,
                             height: 54.h,
                             child: ElevatedButton(
-                              onPressed: () async {
-                                await postAllData();
-                                _submitData();
-                              },
+                              onPressed: _submitData,
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.deepPurple[400],
                                 foregroundColor: Colors.white,

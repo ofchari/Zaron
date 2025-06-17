@@ -71,12 +71,11 @@ class _ScrewAccessoriesState extends State<ScrewAccessories> {
 
         if (products is List) {
           setState(() {
-            productList =
-                products
-                    .whereType<Map>()
-                    .map((e) => e["product_name"]?.toString())
-                    .whereType<String>()
-                    .toList();
+            productList = products
+                .whereType<Map>()
+                .map((e) => e["product_name"]?.toString())
+                .whereType<String>()
+                .toList();
           });
         }
       }
@@ -122,12 +121,11 @@ class _ScrewAccessoriesState extends State<ScrewAccessories> {
 
         if (colors is List) {
           setState(() {
-            colorsList =
-                colors
-                    .whereType<Map>()
-                    .map((e) => e["color"]?.toString())
-                    .whereType<String>()
-                    .toList();
+            colorsList = colors
+                .whereType<Map>()
+                .map((e) => e["color"]?.toString())
+                .whereType<String>()
+                .toList();
           });
         }
       }
@@ -176,12 +174,11 @@ class _ScrewAccessoriesState extends State<ScrewAccessories> {
           final brandListData = message[0];
           if (brandListData is List) {
             setState(() {
-              brandList =
-                  brandListData
-                      .whereType<Map>()
-                      .map((e) => e["brand"]?.toString())
-                      .whereType<String>()
-                      .toList();
+              brandList = brandListData
+                  .whereType<Map>()
+                  .map((e) => e["brand"]?.toString())
+                  .whereType<String>()
+                  .toList();
             });
           }
 
@@ -363,17 +360,16 @@ class _ScrewAccessoriesState extends State<ScrewAccessories> {
                 horizontal: 16,
                 vertical: 12,
               ),
-              suffixIcon:
-                  isSearchingBaseProduct
-                      ? Padding(
-                        padding: EdgeInsets.all(12),
-                        child: SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        ),
-                      )
-                      : null,
+              suffixIcon: isSearchingBaseProduct
+                  ? Padding(
+                      padding: EdgeInsets.all(12),
+                      child: SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                    )
+                  : null,
             ),
             onChanged: (value) {
               searchBaseProducts(value);
@@ -511,59 +507,60 @@ class _ScrewAccessoriesState extends State<ScrewAccessories> {
       // Show elegant error message
       showDialog(
         context: context,
-        builder:
-            (context) => AlertDialog(
-              title: Text('Incomplete Form'),
-              content: Text(
-                'Please fill all required fields to add a product.',
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: Text('OK'),
-                ),
-              ],
+        builder: (context) => AlertDialog(
+          title: Text('Incomplete Form'),
+          content: Text(
+            'Please fill all required fields to add a product.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text('OK'),
             ),
+          ],
+        ),
       );
       return;
     }
-    setState(() {
-      submittedData.add({
-        "Product": "Screw Accessories",
-        "UOM": "Feet",
-        "Length": "0",
-        "Nos": "1",
-        "Basic Rate": "0",
-        "SQ": "0",
-        "Amount": "0",
-        "Base Product": "$selectedProduct, $selectedColor, $selsectedBrand,",
+    postAllData().then((_) {
+      setState(() {
+        submittedData.add({
+          "Product": "Screw Accessories",
+          "UOM": "Feet",
+          "Length": "0",
+          "Nos": "1",
+          "Basic Rate": "0",
+          "SQ": "0",
+          "Amount": "0",
+          "Base Product": "$selectedProduct, $selectedColor, $selsectedBrand,",
+        });
+        selectedProduct = null;
+        selectedColor = null;
+        selsectedBrand = null;
+        productList = [];
+        colorsList = [];
+        brandList = [];
+        _fetchBrands();
       });
-      selectedProduct = null;
-      selectedColor = null;
-      selsectedBrand = null;
-      productList = [];
-      colorsList = [];
-      brandList = [];
-      _fetchBrands();
-    });
 
-    // Show success message with a more elegant snackbar
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            Icon(Icons.check_circle, color: Colors.white),
-            SizedBox(width: 12),
-            Text("Product added successfully"),
-          ],
+      // Show success message with a more elegant snackbar
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              Icon(Icons.check_circle, color: Colors.white),
+              SizedBox(width: 12),
+              Text("Product added successfully"),
+            ],
+          ),
+          backgroundColor: Colors.green,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          margin: EdgeInsets.all(16),
+          duration: Duration(seconds: 2),
         ),
-        backgroundColor: Colors.green,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-        margin: EdgeInsets.all(16),
-        duration: Duration(seconds: 2),
-      ),
-    );
+      );
+    });
   }
 
   Widget _buildSubmittedDataList() {
@@ -585,105 +582,102 @@ class _ScrewAccessoriesState extends State<ScrewAccessories> {
     }
 
     return Column(
-      children:
-          responseData.asMap().entries.map((entry) {
-            int index = entry.key;
-            Map<String, dynamic> product = entry.value as Map<String, dynamic>;
+      children: responseData.asMap().entries.map((entry) {
+        int index = entry.key;
+        Map<String, dynamic> product = entry.value as Map<String, dynamic>;
 
-            return Card(
-              margin: EdgeInsets.symmetric(vertical: 10),
-              elevation: 2,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Padding(
-                padding: EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+        return Card(
+          margin: EdgeInsets.symmetric(vertical: 10),
+          elevation: 2,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Padding(
+            padding: EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Header Row with Product Name and Delete Button
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    // Header Row with Product Name and Delete Button
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Expanded(
-                          child: Text(
-                            "${product['S.No']}. ${product['Products']}",
-                            style: GoogleFonts.figtree(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.black87,
-                            ),
-                          ),
+                    Expanded(
+                      child: Text(
+                        "${product['S.No']}. ${product['Products']}",
+                        style: GoogleFonts.figtree(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.black87,
                         ),
-                        if (product['id'] != null)
-                          Container(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.blue[50],
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Text(
-                              "ID: ${product['id']}",
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.blue[700],
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ),
-                        Container(
-                          height: 40,
-                          width: 50,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(10),
-                            color: Colors.deepPurple[50],
-                          ),
-                          child: IconButton(
-                            icon: Icon(Icons.delete, color: Colors.redAccent),
-                            onPressed: () {
-                              showDialog(
-                                context: context,
-                                builder:
-                                    (context) => AlertDialog(
-                                      title: Text("Delete Product"),
-                                      content: Text(
-                                        "Are you sure you want to delete this item?",
-                                      ),
-                                      actions: [
-                                        TextButton(
-                                          onPressed: () {
-                                            setState(() {
-                                              responseData.removeAt(index);
-                                            });
-                                            Navigator.pop(context);
-                                          },
-                                          child: Text("Yes"),
-                                        ),
-                                        TextButton(
-                                          onPressed:
-                                              () => Navigator.pop(context),
-                                          child: Text("No"),
-                                        ),
-                                      ],
-                                    ),
-                              );
-                            },
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
-
-                    SizedBox(height: 16),
-                    // Editable Fields in Rows
-                    _buildApiProductDetailInRows(product),
+                    if (product['id'] != null)
+                      Container(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.blue[50],
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          "ID: ${product['id']}",
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.blue[700],
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    Container(
+                      height: 40,
+                      width: 50,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(10),
+                        color: Colors.deepPurple[50],
+                      ),
+                      child: IconButton(
+                        icon: Icon(Icons.delete, color: Colors.redAccent),
+                        onPressed: () {
+                          showDialog(
+                            context: context,
+                            builder: (context) => AlertDialog(
+                              title: Text("Delete Product"),
+                              content: Text(
+                                "Are you sure you want to delete this item?",
+                              ),
+                              actions: [
+                                TextButton(
+                                  onPressed: () {
+                                    setState(() {
+                                      responseData.removeAt(index);
+                                    });
+                                    Navigator.pop(context);
+                                  },
+                                  child: Text("Yes"),
+                                ),
+                                TextButton(
+                                  onPressed: () => Navigator.pop(context),
+                                  child: Text("No"),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+                    ),
                   ],
                 ),
-              ),
-            );
-          }).toList(),
+
+                SizedBox(height: 16),
+                // Editable Fields in Rows
+                _buildApiProductDetailInRows(product),
+              ],
+            ),
+          ),
+        );
+      }).toList(),
     );
   }
 
@@ -799,16 +793,15 @@ class _ScrewAccessoriesState extends State<ScrewAccessories> {
           border: Border.all(
             color: enabled ? Colors.grey.shade300 : Colors.grey.shade200,
           ),
-          boxShadow:
-              enabled
-                  ? [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.03),
-                      blurRadius: 8,
-                      offset: Offset(0, 2),
-                    ),
-                  ]
-                  : [],
+          boxShadow: enabled
+              ? [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.03),
+                    blurRadius: 8,
+                    offset: Offset(0, 2),
+                  ),
+                ]
+              : [],
         ),
         child: DropdownSearch<String>(
           items: items,
@@ -865,6 +858,7 @@ class _ScrewAccessoriesState extends State<ScrewAccessories> {
         child: Padding(
           padding: EdgeInsets.all(16),
           child: SingleChildScrollView(
+            physics: BouncingScrollPhysics(),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [

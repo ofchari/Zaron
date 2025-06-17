@@ -74,12 +74,11 @@ class _ScrewState extends State<Screw> {
           final brands = message[1];
           if (brands is List) {
             setState(() {
-              brandList =
-                  brands
-                      .whereType<Map>()
-                      .map((e) => e["brand"]?.toString())
-                      .whereType<String>()
-                      .toList();
+              brandList = brands
+                  .whereType<Map>()
+                  .map((e) => e["brand"]?.toString())
+                  .whereType<String>()
+                  .toList();
             });
           }
         }
@@ -128,12 +127,11 @@ class _ScrewState extends State<Screw> {
           final screws = message[0];
           if (screws is List) {
             setState(() {
-              screwLengthList =
-                  screws
-                      .whereType<Map>()
-                      .map((e) => e["length_of_screw"]?.toString())
-                      .whereType<String>()
-                      .toList();
+              screwLengthList = screws
+                  .whereType<Map>()
+                  .map((e) => e["length_of_screw"]?.toString())
+                  .whereType<String>()
+                  .toList();
             });
           }
         }
@@ -185,12 +183,11 @@ class _ScrewState extends State<Screw> {
           final threadTypes = message[0];
           if (threadTypes is List) {
             setState(() {
-              threadList =
-                  threadTypes
-                      .whereType<Map>()
-                      .map((e) => e["type_of_thread"]?.toString())
-                      .whereType<String>()
-                      .toList();
+              threadList = threadTypes
+                  .whereType<Map>()
+                  .map((e) => e["type_of_thread"]?.toString())
+                  .whereType<String>()
+                  .toList();
             });
           }
 
@@ -266,6 +263,59 @@ class _ScrewState extends State<Screw> {
     } catch (e) {
       throw Exception("Error posting data: $e");
     }
+  }
+
+  // 3. MODIFY _submitData() METHOD - Replace existing method with this:
+  void _submitData() {
+    if (selectedBrand == null ||
+        selectedScrew == null ||
+        selectedThread == null) {
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text('Incomplete Form'),
+          content: Text(
+            'Please fill all required fields to add a product.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text('OK'),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+
+    postScrewData().then((_) {
+      setState(() {
+        selectedBrand = null;
+        selectedScrew = null;
+        selectedThread = null;
+        brandList = [];
+        screwLengthList = [];
+        threadList = [];
+        _fetchBrand();
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              Icon(Icons.check_circle, color: Colors.white),
+              SizedBox(width: 12),
+              Text("Product added successfully"),
+            ],
+          ),
+          backgroundColor: Colors.green,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          margin: EdgeInsets.all(16),
+          duration: Duration(seconds: 1),
+        ),
+      );
+    });
   }
 
   TextEditingController baseProductController = TextEditingController();
@@ -353,17 +403,16 @@ class _ScrewState extends State<Screw> {
                 horizontal: 16,
                 vertical: 12,
               ),
-              suffixIcon:
-                  isSearchingBaseProduct
-                      ? Padding(
-                        padding: EdgeInsets.all(12),
-                        child: SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        ),
-                      )
-                      : null,
+              suffixIcon: isSearchingBaseProduct
+                  ? Padding(
+                      padding: EdgeInsets.all(12),
+                      child: SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                    )
+                  : null,
             ),
             onChanged: (value) {
               searchBaseProducts(value);
@@ -496,58 +545,6 @@ class _ScrewState extends State<Screw> {
     );
   }
 
-  // 3. MODIFY _submitData() METHOD - Replace existing method with this:
-  void _submitData() {
-    if (selectedBrand == null ||
-        selectedScrew == null ||
-        selectedThread == null) {
-      showDialog(
-        context: context,
-        builder:
-            (context) => AlertDialog(
-              title: Text('Incomplete Form'),
-              content: Text(
-                'Please fill all required fields to add a product.',
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: Text('OK'),
-                ),
-              ],
-            ),
-      );
-      return;
-    }
-
-    setState(() {
-      selectedBrand = null;
-      selectedScrew = null;
-      selectedThread = null;
-      brandList = [];
-      screwLengthList = [];
-      threadList = [];
-      _fetchBrand();
-    });
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            Icon(Icons.check_circle, color: Colors.white),
-            SizedBox(width: 12),
-            Text("Product added successfully"),
-          ],
-        ),
-        backgroundColor: Colors.green,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-        margin: EdgeInsets.all(16),
-        duration: Duration(seconds: 1),
-      ),
-    );
-  }
-
   // 4. REPLACE _buildSubmittedDataList() METHOD with this:
   Widget _buildSubmittedDataList() {
     if (responseData.isEmpty) {
@@ -651,28 +648,27 @@ class _ScrewState extends State<Screw> {
                           onPressed: () {
                             showDialog(
                               context: context,
-                              builder:
-                                  (context) => AlertDialog(
-                                    title: Text("Delete Item"),
-                                    content: Text(
-                                      "Are you sure you want to delete this item?",
-                                    ),
-                                    actions: [
-                                      TextButton(
-                                        onPressed: () => Navigator.pop(context),
-                                        child: Text("Cancel"),
-                                      ),
-                                      ElevatedButton(
-                                        onPressed: () {
-                                          setState(() {
-                                            responseData.removeAt(index);
-                                          });
-                                          Navigator.pop(context);
-                                        },
-                                        child: Text("Delete"),
-                                      ),
-                                    ],
+                              builder: (context) => AlertDialog(
+                                title: Text("Delete Item"),
+                                content: Text(
+                                  "Are you sure you want to delete this item?",
+                                ),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(context),
+                                    child: Text("Cancel"),
                                   ),
+                                  ElevatedButton(
+                                    onPressed: () {
+                                      setState(() {
+                                        responseData.removeAt(index);
+                                      });
+                                      Navigator.pop(context);
+                                    },
+                                    child: Text("Delete"),
+                                  ),
+                                ],
+                              ),
                             );
                           },
                         ),
@@ -759,14 +755,13 @@ class _ScrewState extends State<Screw> {
           fontSize: 15.sp,
         ),
         controller: controller,
-        keyboardType:
-            (key == "Length" ||
-                    key == "Nos" ||
-                    key == "Basic Rate" ||
-                    key == "Amount" ||
-                    key == "R.Ft")
-                ? TextInputType.numberWithOptions(decimal: true)
-                : TextInputType.text,
+        keyboardType: (key == "Length" ||
+                key == "Nos" ||
+                key == "Basic Rate" ||
+                key == "Amount" ||
+                key == "R.Ft")
+            ? TextInputType.numberWithOptions(decimal: true)
+            : TextInputType.text,
         onChanged: (val) {
           setState(() {
             data[key] = val;
@@ -866,16 +861,15 @@ class _ScrewState extends State<Screw> {
           border: Border.all(
             color: enabled ? Colors.grey.shade300 : Colors.grey.shade200,
           ),
-          boxShadow:
-              enabled
-                  ? [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.03),
-                      blurRadius: 8,
-                      offset: Offset(0, 2),
-                    ),
-                  ]
-                  : [],
+          boxShadow: enabled
+              ? [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.03),
+                    blurRadius: 8,
+                    offset: Offset(0, 2),
+                  ),
+                ]
+              : [],
         ),
         child: DropdownSearch<String>(
           items: items,
@@ -929,10 +923,9 @@ class _ScrewState extends State<Screw> {
 
     // If controller for this key doesn't exist, create it
     if (!fieldControllers[productId]!.containsKey(key)) {
-      String initialValue =
-          (data[key] != null && data[key].toString() != "0")
-              ? data[key].toString()
-              : ""; // Avoid initializing with "0"
+      String initialValue = (data[key] != null && data[key].toString() != "0")
+          ? data[key].toString()
+          : ""; // Avoid initializing with "0"
 
       fieldControllers[productId]![key] = TextEditingController(
         text: initialValue,
@@ -1051,15 +1044,6 @@ class _ScrewState extends State<Screw> {
         if (responseData["status"] == "success") {
           setState(() {
             calculationResults[productId] = responseData;
-
-            // if (responseData["Length"] != null) {
-            //   data["Profile"] = responseData["Length"].toString();
-            //   if (fieldControllers[productId]?["Profile"] != null) {
-            //     fieldControllers[productId]!["Profile"]!.text =
-            //         responseData["Length"].toString();
-            //   }
-            // }
-
             if (responseData["Nos"] != null) {
               String newNos = responseData["Nos"].toString().trim();
               String currentInput =
@@ -1258,10 +1242,7 @@ class _ScrewState extends State<Screw> {
                             width: double.infinity,
                             height: 54.h,
                             child: ElevatedButton(
-                              onPressed: () async {
-                                await postScrewData();
-                                _submitData();
-                              },
+                              onPressed: _submitData,
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.deepPurple[400],
                                 foregroundColor: Colors.white,

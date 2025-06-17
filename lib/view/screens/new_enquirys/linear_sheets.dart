@@ -80,12 +80,11 @@ class _LinerSheetPageState extends State<LinerSheetPage> {
 
         if (products is List) {
           setState(() {
-            productList =
-                products
-                    .whereType<Map>()
-                    .map((e) => e["product_name"]?.toString())
-                    .whereType<String>()
-                    .toList();
+            productList = products
+                .whereType<Map>()
+                .map((e) => e["product_name"]?.toString())
+                .whereType<String>()
+                .toList();
           });
         }
       }
@@ -115,12 +114,11 @@ class _LinerSheetPageState extends State<LinerSheetPage> {
 
         if (brandData is List) {
           setState(() {
-            brandandList =
-                brandData
-                    .whereType<Map>()
-                    .map((e) => e["brand"]?.toString())
-                    .whereType<String>()
-                    .toList();
+            brandandList = brandData
+                .whereType<Map>()
+                .map((e) => e["brand"]?.toString())
+                .whereType<String>()
+                .toList();
           });
         }
       }
@@ -170,12 +168,11 @@ class _LinerSheetPageState extends State<LinerSheetPage> {
 
         if (selectedThickness is List) {
           setState(() {
-            colorandList =
-                selectedThickness
-                    .whereType<Map>()
-                    .map((e) => e["color"]?.toString())
-                    .whereType<String>()
-                    .toList();
+            colorandList = selectedThickness
+                .whereType<Map>()
+                .map((e) => e["color"]?.toString())
+                .whereType<String>()
+                .toList();
           });
         }
       }
@@ -225,12 +222,11 @@ class _LinerSheetPageState extends State<LinerSheetPage> {
 
         if (thickness is List) {
           setState(() {
-            thickAndList =
-                thickness
-                    .whereType<Map>()
-                    .map((e) => e["thickness"]?.toString())
-                    .whereType<String>()
-                    .toList();
+            thickAndList = thickness
+                .whereType<Map>()
+                .map((e) => e["thickness"]?.toString())
+                .whereType<String>()
+                .toList();
           });
         }
       }
@@ -282,12 +278,11 @@ class _LinerSheetPageState extends State<LinerSheetPage> {
           final coating = message[0];
           if (coating is List) {
             setState(() {
-              coatingAndList =
-                  coating
-                      .whereType<Map>()
-                      .map((e) => e["coating_mass"]?.toString())
-                      .whereType<String>()
-                      .toList();
+              coatingAndList = coating
+                  .whereType<Map>()
+                  .map((e) => e["coating_mass"]?.toString())
+                  .whereType<String>()
+                  .toList();
             });
           }
 
@@ -392,8 +387,7 @@ class _LinerSheetPageState extends State<LinerSheetPage> {
           selectedBrands == null ||
           selectedColors == null ||
           selectedThickness == null ||
-          selectedCoatingMass == null)
-        return;
+          selectedCoatingMass == null) return;
 
       if (response.statusCode == 200) {
         // Parse and store the API response
@@ -420,6 +414,77 @@ class _LinerSheetPageState extends State<LinerSheetPage> {
     } catch (e) {
       throw Exception("Error posting data: $e");
     }
+  }
+
+  void _submitData() {
+    if (selectedProduct == null ||
+        selectedBrands == null ||
+        selectedColors == null ||
+        selectedThickness == null ||
+        selectedCoatingMass == null) {
+      // Show elegant error message
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text('Incomplete Form'),
+          content: Text(
+            'Please fill all required fields to add a product.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text('OK'),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+    postAllData().then((_) {
+      setState(() {
+        submittedData.add({
+          "Product": "Linear Sheets",
+          "UOM": "Feet",
+          "Length": "0",
+          "Nos": "1",
+          "Basic Rate": "0",
+          "SQ": "0",
+          "Amount": "0",
+          "Base Product":
+              "$selectedProduct, $selectedBrands, $selectedColors, $selectedThickness, $selectedCoatingMass,",
+        });
+        selectedProduct = null;
+        selectedBrands = null;
+        selectedColors = null;
+        selectedThickness = null;
+        selectedCoatingMass = null;
+        productList = [];
+        brandandList = [];
+        colorandList = [];
+        thickAndList = [];
+        coatingAndList = [];
+        _fetchProductName();
+        _fetchBrandData();
+      });
+
+      // Show success message with a more elegant snackBar
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              Icon(Icons.check_circle, color: Colors.white),
+              SizedBox(width: 12),
+              Text("Product added successfully"),
+            ],
+          ),
+          backgroundColor: Colors.green,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          margin: EdgeInsets.all(16),
+          duration: Duration(seconds: 2),
+        ),
+      );
+    });
   }
 
   TextEditingController baseProductController = TextEditingController();
@@ -507,17 +572,16 @@ class _LinerSheetPageState extends State<LinerSheetPage> {
                 horizontal: 16,
                 vertical: 12,
               ),
-              suffixIcon:
-                  isSearchingBaseProduct
-                      ? Padding(
-                        padding: EdgeInsets.all(12),
-                        child: SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        ),
-                      )
-                      : null,
+              suffixIcon: isSearchingBaseProduct
+                  ? Padding(
+                      padding: EdgeInsets.all(12),
+                      child: SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                    )
+                  : null,
             ),
             onChanged: (value) {
               searchBaseProducts(value);
@@ -650,76 +714,6 @@ class _LinerSheetPageState extends State<LinerSheetPage> {
     );
   }
 
-  void _submitData() {
-    if (selectedProduct == null ||
-        selectedBrands == null ||
-        selectedColors == null ||
-        selectedThickness == null ||
-        selectedCoatingMass == null) {
-      // Show elegant error message
-      showDialog(
-        context: context,
-        builder:
-            (context) => AlertDialog(
-              title: Text('Incomplete Form'),
-              content: Text(
-                'Please fill all required fields to add a product.',
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: Text('OK'),
-                ),
-              ],
-            ),
-      );
-      return;
-    }
-    setState(() {
-      submittedData.add({
-        "Product": "Linear Sheets",
-        "UOM": "Feet",
-        "Length": "0",
-        "Nos": "1",
-        "Basic Rate": "0",
-        "SQ": "0",
-        "Amount": "0",
-        "Base Product":
-            "$selectedProduct, $selectedBrands, $selectedColors, $selectedThickness, $selectedCoatingMass,",
-      });
-      selectedProduct = null;
-      selectedBrands = null;
-      selectedColors = null;
-      selectedThickness = null;
-      selectedCoatingMass = null;
-      productList = [];
-      brandandList = [];
-      colorandList = [];
-      thickAndList = [];
-      coatingAndList = [];
-      _fetchProductName();
-      _fetchBrandData();
-    });
-
-    // Show success message with a more elegant snackBar
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            Icon(Icons.check_circle, color: Colors.white),
-            SizedBox(width: 12),
-            Text("Product added successfully"),
-          ],
-        ),
-        backgroundColor: Colors.green,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-        margin: EdgeInsets.all(16),
-        duration: Duration(seconds: 2),
-      ),
-    );
-  }
-
   Widget _buildSubmittedDataList() {
     if (responseProducts.isEmpty) {
       return Container(
@@ -739,224 +733,220 @@ class _LinerSheetPageState extends State<LinerSheetPage> {
     }
 
     return Column(
-      children:
-          responseProducts.asMap().entries.map((entry) {
-            int index = entry.key;
-            Map<String, dynamic> data = Map<String, dynamic>.from(entry.value);
+      children: responseProducts.asMap().entries.map((entry) {
+        int index = entry.key;
+        Map<String, dynamic> data = Map<String, dynamic>.from(entry.value);
 
-            return Card(
-              margin: EdgeInsets.symmetric(vertical: 10),
-              elevation: 2,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.start,
-                crossAxisAlignment: CrossAxisAlignment.start,
+        return Card(
+          margin: EdgeInsets.symmetric(vertical: 10),
+          elevation: 2,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Expanded(
-                        child: Padding(
-                          padding: const EdgeInsets.only(top: 15),
-                          child: SizedBox(
-                            height: 40.h,
-                            width: 210.w,
-                            child: Text(
-                              "  ${data["S.No"]}.  ${data["Products"]}" ?? "",
-                              overflow: TextOverflow.ellipsis,
-                              style: GoogleFonts.figtree(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.black87,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                      Container(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.blue[50],
-                          borderRadius: BorderRadius.circular(6),
-                        ),
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.only(top: 15),
+                      child: SizedBox(
+                        height: 40.h,
+                        width: 210.w,
                         child: Text(
-                          "ID: ${data['id']}",
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.blue[700],
-                            fontWeight: FontWeight.w500,
+                          "  ${data["S.No"]}.  ${data["Products"]}" ?? "",
+                          overflow: TextOverflow.ellipsis,
+                          style: GoogleFonts.figtree(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.black87,
                           ),
                         ),
                       ),
-                      Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Container(
-                          height: 40.h,
-                          width: 50.w,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(10),
-                            color: Colors.deepPurple[50],
-                          ),
-                          child: IconButton(
-                            icon: Icon(Icons.delete, color: Colors.redAccent),
-                            onPressed: () {
-                              showDialog(
-                                context: context,
-                                builder: (context) {
-                                  return AlertDialog(
-                                    title: Subhead(
-                                      text:
-                                          "Are you Sure to Delete This Item ?",
-                                      weight: FontWeight.w500,
-                                      color: Colors.black,
-                                    ),
-                                    actions: [
-                                      ElevatedButton(
-                                        onPressed: () {
-                                          setState(() {
-                                            responseProducts.removeAt(index);
-                                          });
-                                          Navigator.pop(context);
-                                        },
-                                        child: Text("Yes"),
-                                      ),
-                                      ElevatedButton(
-                                        onPressed: () {
-                                          Navigator.pop(context);
-                                        },
-                                        child: Text("No"),
-                                      ),
-                                    ],
-                                  );
-                                },
+                    ),
+                  ),
+                  Container(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.blue[50],
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      "ID: ${data['id']}",
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.blue[700],
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Container(
+                      height: 40.h,
+                      width: 50.w,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(10),
+                        color: Colors.deepPurple[50],
+                      ),
+                      child: IconButton(
+                        icon: Icon(Icons.delete, color: Colors.redAccent),
+                        onPressed: () {
+                          showDialog(
+                            context: context,
+                            builder: (context) {
+                              return AlertDialog(
+                                title: Subhead(
+                                  text: "Are you Sure to Delete This Item ?",
+                                  weight: FontWeight.w500,
+                                  color: Colors.black,
+                                ),
+                                actions: [
+                                  ElevatedButton(
+                                    onPressed: () {
+                                      setState(() {
+                                        responseProducts.removeAt(index);
+                                      });
+                                      Navigator.pop(context);
+                                    },
+                                    child: Text("Yes"),
+                                  ),
+                                  ElevatedButton(
+                                    onPressed: () {
+                                      Navigator.pop(context);
+                                    },
+                                    child: Text("No"),
+                                  ),
+                                ],
                               );
                             },
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              _buildProductDetailInRows(data),
+              Padding(
+                padding: const EdgeInsets.only(top: 8.0, left: 8),
+                child: Container(
+                  height: 40.h,
+                  width: double.infinity.w,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Container(
+                        height: 40.h,
+                        width: 280.w,
+                        child: TextField(
+                          style: TextStyle(
+                            fontSize: 13.sp,
+                            color: Colors.black87,
+                            fontWeight: FontWeight.w500,
                           ),
+                          decoration: InputDecoration(
+                            enabledBorder: InputBorder.none,
+                            focusedBorder: InputBorder.none,
+                          ),
+                          controller: TextEditingController(
+                            text: " ${data["Material Specification"]}",
+                          ),
+                          readOnly: true,
+                        ),
+                      ),
+                      Gap(5),
+                      Container(
+                        height: 30.h,
+                        width: 30.w,
+                        decoration: BoxDecoration(
+                          color: Colors.grey[200],
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: IconButton(
+                          onPressed: () {
+                            editController.text =
+                                data["Material Specification"].toString();
+                            showDialog(
+                              context: context,
+                              builder: (context) {
+                                return AlertDialog(
+                                  title: Text("Edit Your Liner Sheet"),
+                                  content: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Container(
+                                        height: 40.h,
+                                        width: double.infinity.w,
+                                        decoration: BoxDecoration(
+                                          borderRadius:
+                                              BorderRadius.circular(10),
+                                          color: Colors.white,
+                                        ),
+                                        child: Padding(
+                                          padding: const EdgeInsets.only(
+                                            left: 7.0,
+                                          ),
+                                          child: TextField(
+                                            decoration: InputDecoration(
+                                              enabledBorder: InputBorder.none,
+                                              focusedBorder: InputBorder.none,
+                                            ),
+                                            controller: editController,
+                                            onSubmitted: (value) {
+                                              setState(() {
+                                                data["Material Specification"] =
+                                                    value;
+                                              });
+                                              Navigator.pop(context);
+                                            },
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  actions: [
+                                    ElevatedButton(
+                                      onPressed: () {
+                                        setState(() {
+                                          data["Material Specification"] =
+                                              editController.text;
+                                        });
+                                        Navigator.pop(context);
+                                      },
+                                      child: MyText(
+                                        text: "Save",
+                                        weight: FontWeight.w500,
+                                        color: Colors.black,
+                                      ),
+                                    ),
+                                  ],
+                                );
+                              },
+                            );
+                          },
+                          icon: Icon(Icons.edit, size: 15),
                         ),
                       ),
                     ],
                   ),
-                  _buildProductDetailInRows(data),
-                  Padding(
-                    padding: const EdgeInsets.only(top: 8.0, left: 8),
-                    child: Container(
-                      height: 40.h,
-                      width: double.infinity.w,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          Container(
-                            height: 40.h,
-                            width: 280.w,
-                            child: TextField(
-                              style: TextStyle(
-                                fontSize: 13.sp,
-                                color: Colors.black87,
-                                fontWeight: FontWeight.w500,
-                              ),
-                              decoration: InputDecoration(
-                                enabledBorder: InputBorder.none,
-                                focusedBorder: InputBorder.none,
-                              ),
-                              controller: TextEditingController(
-                                text: " ${data["Material Specification"]}",
-                              ),
-                              readOnly: true,
-                            ),
-                          ),
-                          Gap(5),
-                          Container(
-                            height: 30.h,
-                            width: 30.w,
-                            decoration: BoxDecoration(
-                              color: Colors.grey[200],
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: IconButton(
-                              onPressed: () {
-                                editController.text =
-                                    data["Material Specification"].toString();
-                                showDialog(
-                                  context: context,
-                                  builder: (context) {
-                                    return AlertDialog(
-                                      title: Text("Edit Your Liner Sheet"),
-                                      content: Column(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Container(
-                                            height: 40.h,
-                                            width: double.infinity.w,
-                                            decoration: BoxDecoration(
-                                              borderRadius:
-                                                  BorderRadius.circular(10),
-                                              color: Colors.white,
-                                            ),
-                                            child: Padding(
-                                              padding: const EdgeInsets.only(
-                                                left: 7.0,
-                                              ),
-                                              child: TextField(
-                                                decoration: InputDecoration(
-                                                  enabledBorder:
-                                                      InputBorder.none,
-                                                  focusedBorder:
-                                                      InputBorder.none,
-                                                ),
-                                                controller: editController,
-                                                onSubmitted: (value) {
-                                                  setState(() {
-                                                    data["Material Specification"] =
-                                                        value;
-                                                  });
-                                                  Navigator.pop(context);
-                                                },
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                      actions: [
-                                        ElevatedButton(
-                                          onPressed: () {
-                                            setState(() {
-                                              data["Material Specification"] =
-                                                  editController.text;
-                                            });
-                                            Navigator.pop(context);
-                                          },
-                                          child: MyText(
-                                            text: "Save",
-                                            weight: FontWeight.w500,
-                                            color: Colors.black,
-                                          ),
-                                        ),
-                                      ],
-                                    );
-                                  },
-                                );
-                              },
-                              icon: Icon(Icons.edit, size: 15),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  Gap(5),
-                ],
+                ),
               ),
-            );
-          }).toList(),
+              Gap(5),
+            ],
+          ),
+        );
+      }).toList(),
     );
   }
 
@@ -1092,15 +1082,14 @@ class _LinerSheetPageState extends State<LinerSheetPage> {
       height: 40.h,
       child: DropdownButtonFormField<String>(
         value: currentValue,
-        items:
-            options.entries
-                .map(
-                  (entry) => DropdownMenuItem(
-                    value: entry.key,
-                    child: Text(entry.value),
-                  ),
-                )
-                .toList(),
+        items: options.entries
+            .map(
+              (entry) => DropdownMenuItem(
+                value: entry.key,
+                child: Text(entry.value),
+              ),
+            )
+            .toList(),
         onChanged: (val) {
           setState(() {
             data["UOM"] = {"value": val, "options": options};
@@ -1159,16 +1148,15 @@ class _LinerSheetPageState extends State<LinerSheetPage> {
           border: Border.all(
             color: enabled ? Colors.grey.shade300 : Colors.grey.shade200,
           ),
-          boxShadow:
-              enabled
-                  ? [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.03),
-                      blurRadius: 8,
-                      offset: Offset(0, 2),
-                    ),
-                  ]
-                  : [],
+          boxShadow: enabled
+              ? [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.03),
+                    blurRadius: 8,
+                    offset: Offset(0, 2),
+                  ),
+                ]
+              : [],
         ),
         child: DropdownSearch<String>(
           items: items,
@@ -1225,6 +1213,7 @@ class _LinerSheetPageState extends State<LinerSheetPage> {
         child: Padding(
           padding: EdgeInsets.all(16),
           child: SingleChildScrollView(
+            physics: BouncingScrollPhysics(),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -1372,10 +1361,7 @@ class _LinerSheetPageState extends State<LinerSheetPage> {
                             width: double.infinity,
                             height: 54.h,
                             child: ElevatedButton(
-                              onPressed: () async {
-                                await postAllData();
-                                _submitData();
-                              },
+                              onPressed: _submitData,
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.deepPurple[400],
                                 foregroundColor: Colors.white,

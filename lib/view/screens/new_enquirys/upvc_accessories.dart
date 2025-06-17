@@ -74,12 +74,11 @@ class _UpvcAccessoriesState extends State<UpvcAccessories> {
 
         if (product is List) {
           setState(() {
-            productList =
-                product
-                    .whereType<Map>()
-                    .map((e) => e["product_name_base"]?.toString())
-                    .whereType<String>()
-                    .toList();
+            productList = product
+                .whereType<Map>()
+                .map((e) => e["product_name_base"]?.toString())
+                .whereType<String>()
+                .toList();
           });
         }
       }
@@ -129,12 +128,11 @@ class _UpvcAccessoriesState extends State<UpvcAccessories> {
 
         if (brands is List) {
           setState(() {
-            brandsList =
-                brands
-                    .whereType<Map>()
-                    .map((e) => e["brand"]?.toString())
-                    .whereType<String>()
-                    .toList();
+            brandsList = brands
+                .whereType<Map>()
+                .map((e) => e["brand"]?.toString())
+                .whereType<String>()
+                .toList();
           });
         }
       }
@@ -184,12 +182,11 @@ class _UpvcAccessoriesState extends State<UpvcAccessories> {
 
         if (color is List) {
           setState(() {
-            colorsList =
-                color
-                    .whereType<Map>()
-                    .map((e) => e["color"]?.toString())
-                    .whereType<String>()
-                    .toList();
+            colorsList = color
+                .whereType<Map>()
+                .map((e) => e["color"]?.toString())
+                .whereType<String>()
+                .toList();
           });
         }
       }
@@ -203,8 +200,7 @@ class _UpvcAccessoriesState extends State<UpvcAccessories> {
     if (selectProductNameBase == null ||
         selectedBrand == null ||
         selectedColor == null ||
-        !mounted)
-      return;
+        !mounted) return;
 
     setState(() {
       sizeList = [];
@@ -249,20 +245,18 @@ class _UpvcAccessoriesState extends State<UpvcAccessories> {
 
           if (sizeData is List) {
             setState(() {
-              sizeList =
-                  sizeData
-                      .whereType<Map>()
-                      .map((e) => e["SIZE"]?.toString())
-                      .whereType<String>()
-                      .toList();
+              sizeList = sizeData
+                  .whereType<Map>()
+                  .map((e) => e["SIZE"]?.toString())
+                  .whereType<String>()
+                  .toList();
             });
           }
 
           if (idData is List && idData.isNotEmpty && idData.first is Map) {
             selectedProductBaseId = idData.first["id"]?.toString();
-            selectedBaseProductName =
-                idData.first["base_product_id"]
-                    ?.toString(); // <-- Add this line
+            selectedBaseProductName = idData.first["base_product_id"]
+                ?.toString(); // <-- Add this line
             debugPrint(
               "Selected Base Product ID (SIZE): $selectedProductBaseId",
             );
@@ -316,8 +310,7 @@ class _UpvcAccessoriesState extends State<UpvcAccessories> {
       if (selectedBrand == null ||
           selectedColor == null ||
           selectProductNameBase == null ||
-          selectedSize == null)
-        return;
+          selectedSize == null) return;
 
       if (response.statusCode == 200) {
         // NEW CODE: Parse and store the API response
@@ -429,17 +422,16 @@ class _UpvcAccessoriesState extends State<UpvcAccessories> {
                 horizontal: 16,
                 vertical: 12,
               ),
-              suffixIcon:
-                  isSearchingBaseProduct
-                      ? Padding(
-                        padding: EdgeInsets.all(12),
-                        child: SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        ),
-                      )
-                      : null,
+              suffixIcon: isSearchingBaseProduct
+                  ? Padding(
+                      padding: EdgeInsets.all(12),
+                      child: SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                    )
+                  : null,
             ),
             onChanged: (value) {
               searchBaseProducts(value);
@@ -600,105 +592,102 @@ class _UpvcAccessoriesState extends State<UpvcAccessories> {
     }
 
     return Column(
-      children:
-          responseProducts.asMap().entries.map((entry) {
-            int index = entry.key;
-            Map<String, dynamic> product = entry.value;
+      children: responseProducts.asMap().entries.map((entry) {
+        int index = entry.key;
+        Map<String, dynamic> product = entry.value;
 
-            return Card(
-              margin: EdgeInsets.symmetric(vertical: 10),
-              elevation: 2,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Padding(
-                padding: EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+        return Card(
+          margin: EdgeInsets.symmetric(vertical: 10),
+          elevation: 2,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Padding(
+            padding: EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Header Row with Product Name and Delete Button
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    // Header Row with Product Name and Delete Button
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Expanded(
-                          child: Text(
-                            "${product['S.No']}. ${product['Products']}",
-                            style: GoogleFonts.figtree(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.black87,
-                            ),
-                          ),
+                    Expanded(
+                      child: Text(
+                        "${product['S.No']}. ${product['Products']}",
+                        style: GoogleFonts.figtree(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.black87,
                         ),
-                        Container(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.blue[50],
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: Text(
-                            "ID: ${product['id']}",
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.blue[700],
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ),
-                        Container(
-                          height: 40.h,
-                          width: 50.w,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(10),
-                            color: Colors.deepPurple[50],
-                          ),
-                          child: IconButton(
-                            icon: Icon(Icons.delete, color: Colors.redAccent),
-                            onPressed: () {
-                              showDialog(
-                                context: context,
-                                builder:
-                                    (context) => AlertDialog(
-                                      title: Text("Delete Product"),
-                                      content: Text(
-                                        "Are you sure you want to delete this item?",
-                                      ),
-                                      actions: [
-                                        TextButton(
-                                          onPressed: () {
-                                            setState(() {
-                                              responseProducts.removeAt(index);
-                                            });
-                                            Navigator.pop(context);
-                                          },
-                                          child: Text("Yes"),
-                                        ),
-                                        TextButton(
-                                          onPressed:
-                                              () => Navigator.pop(context),
-                                          child: Text("No"),
-                                        ),
-                                      ],
-                                    ),
-                              );
-                            },
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
-
-                    SizedBox(height: 16),
-
-                    // Editable Fields in Rows
-                    _buildApiProductDetailInRows(product),
+                    Container(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.blue[50],
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        "ID: ${product['id']}",
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.blue[700],
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                    Container(
+                      height: 40.h,
+                      width: 50.w,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(10),
+                        color: Colors.deepPurple[50],
+                      ),
+                      child: IconButton(
+                        icon: Icon(Icons.delete, color: Colors.redAccent),
+                        onPressed: () {
+                          showDialog(
+                            context: context,
+                            builder: (context) => AlertDialog(
+                              title: Text("Delete Product"),
+                              content: Text(
+                                "Are you sure you want to delete this item?",
+                              ),
+                              actions: [
+                                TextButton(
+                                  onPressed: () {
+                                    setState(() {
+                                      responseProducts.removeAt(index);
+                                    });
+                                    Navigator.pop(context);
+                                  },
+                                  child: Text("Yes"),
+                                ),
+                                TextButton(
+                                  onPressed: () => Navigator.pop(context),
+                                  child: Text("No"),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+                    ),
                   ],
                 ),
-              ),
-            );
-          }).toList(),
+
+                SizedBox(height: 16),
+
+                // Editable Fields in Rows
+                _buildApiProductDetailInRows(product),
+              ],
+            ),
+          ),
+        );
+      }).toList(),
     );
   }
 
@@ -812,53 +801,54 @@ class _UpvcAccessoriesState extends State<UpvcAccessories> {
         selectedSize == null) {
       showDialog(
         context: context,
-        builder:
-            (context) => AlertDialog(
-              title: Text('Incomplete Form'),
-              content: Text(
-                'Please fill all required fields to add a product.',
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: Text('OK'),
-                ),
-              ],
+        builder: (context) => AlertDialog(
+          title: Text('Incomplete Form'),
+          content: Text(
+            'Please fill all required fields to add a product.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text('OK'),
             ),
+          ],
+        ),
       );
       return;
     }
 
-    // Reset form fields after successful addition
-    setState(() {
-      selectProductNameBase = null;
-      selectedBrand = null;
-      selectedColor = null;
-      selectedSize = null;
-      productList = [];
-      brandsList = [];
-      colorsList = [];
-      sizeList = [];
-      _fetchProductName();
-    });
+    postAllData().then((_) {
+      // Reset form fields after successful addition
+      setState(() {
+        selectProductNameBase = null;
+        selectedBrand = null;
+        selectedColor = null;
+        selectedSize = null;
+        productList = [];
+        brandsList = [];
+        colorsList = [];
+        sizeList = [];
+        _fetchProductName();
+      });
 
-    // Show success message
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            Icon(Icons.check_circle, color: Colors.white),
-            SizedBox(width: 12),
-            Text("Product added successfully"),
-          ],
+      // Show success message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              Icon(Icons.check_circle, color: Colors.white),
+              SizedBox(width: 12),
+              Text("Product added successfully"),
+            ],
+          ),
+          backgroundColor: Colors.green,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          margin: EdgeInsets.all(16),
+          duration: Duration(seconds: 2),
         ),
-        backgroundColor: Colors.green,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-        margin: EdgeInsets.all(16),
-        duration: Duration(seconds: 2),
-      ),
-    );
+      );
+    });
   }
 
   String _selectedItems() {
@@ -882,10 +872,9 @@ class _UpvcAccessoriesState extends State<UpvcAccessories> {
     fieldControllers.putIfAbsent(productId, () => {});
 
     if (!fieldControllers[productId]!.containsKey(key)) {
-      String initialValue =
-          (data[key] != null && data[key].toString() != "0")
-              ? data[key].toString()
-              : "";
+      String initialValue = (data[key] != null && data[key].toString() != "0")
+          ? data[key].toString()
+          : "";
       fieldControllers[productId]![key] = TextEditingController(
         text: initialValue,
       );
@@ -1124,10 +1113,7 @@ class _UpvcAccessoriesState extends State<UpvcAccessories> {
                             width: double.infinity,
                             height: 54.h,
                             child: ElevatedButton(
-                              onPressed: () async {
-                                await postAllData();
-                                _submitData();
-                              },
+                              onPressed: _submitData,
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.deepPurple[400],
                                 foregroundColor: Colors.white,
@@ -1211,16 +1197,15 @@ class _UpvcAccessoriesState extends State<UpvcAccessories> {
           border: Border.all(
             color: enabled ? Colors.grey.shade300 : Colors.grey.shade200,
           ),
-          boxShadow:
-              enabled
-                  ? [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.03),
-                      blurRadius: 8,
-                      offset: Offset(0, 2),
-                    ),
-                  ]
-                  : [],
+          boxShadow: enabled
+              ? [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.03),
+                    blurRadius: 8,
+                    offset: Offset(0, 2),
+                  ),
+                ]
+              : [],
         ),
         child: DropdownSearch<String>(
           items: items,

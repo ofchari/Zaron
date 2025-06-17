@@ -73,12 +73,11 @@ class _DeckingSheetsState extends State<DeckingSheets> {
 
         if (meterialType is List) {
           setState(() {
-            materialTypeList =
-                meterialType
-                    .whereType<Map>()
-                    .map((e) => e["material_type"]?.toString())
-                    .whereType<String>()
-                    .toList();
+            materialTypeList = meterialType
+                .whereType<Map>()
+                .map((e) => e["material_type"]?.toString())
+                .whereType<String>()
+                .toList();
           });
         }
       }
@@ -125,12 +124,11 @@ class _DeckingSheetsState extends State<DeckingSheets> {
 
         if (selectedThickness is List) {
           setState(() {
-            thicknessList =
-                selectedThickness
-                    .whereType<Map>()
-                    .map((e) => e["thickness"]?.toString())
-                    .whereType<String>()
-                    .toList();
+            thicknessList = selectedThickness
+                .whereType<Map>()
+                .map((e) => e["thickness"]?.toString())
+                .whereType<String>()
+                .toList();
           });
         }
       }
@@ -177,12 +175,11 @@ class _DeckingSheetsState extends State<DeckingSheets> {
 
         if (thickness is List) {
           setState(() {
-            coatingMassList =
-                thickness
-                    .whereType<Map>()
-                    .map((e) => e["coating_mass"]?.toString())
-                    .whereType<String>()
-                    .toList();
+            coatingMassList = thickness
+                .whereType<Map>()
+                .map((e) => e["coating_mass"]?.toString())
+                .whereType<String>()
+                .toList();
           });
         }
       }
@@ -233,12 +230,11 @@ class _DeckingSheetsState extends State<DeckingSheets> {
 
         if (coating is List) {
           setState(() {
-            yieldStrengthList =
-                coating
-                    .whereType<Map>()
-                    .map((e) => e["yield_strength"]?.toString())
-                    .whereType<String>()
-                    .toList();
+            yieldStrengthList = coating
+                .whereType<Map>()
+                .map((e) => e["yield_strength"]?.toString())
+                .whereType<String>()
+                .toList();
           });
         }
       }
@@ -294,12 +290,11 @@ class _DeckingSheetsState extends State<DeckingSheets> {
         final brands = message[0];
         if (brands is List) {
           setState(() {
-            brandList =
-                brands
-                    .whereType<Map>()
-                    .map((e) => e["brand"]?.toString())
-                    .whereType<String>()
-                    .toList();
+            brandList = brands
+                .whereType<Map>()
+                .map((e) => e["brand"]?.toString())
+                .whereType<String>()
+                .toList();
           });
         }
 
@@ -376,6 +371,66 @@ class _DeckingSheetsState extends State<DeckingSheets> {
     }
   }
 
+  // 5. Modify the _submitData() method to not add local data:
+  void _submitData() {
+    if (selectedMaterialType == null ||
+        selectedThickness == null ||
+        selectCoatingMass == null ||
+        selectedYieldStrength == null ||
+        selectedBrand == null) {
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text('Incomplete Form'),
+          content: Text(
+            'Please fill all required fields to add a product.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text('OK'),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+
+    postAllData().then((_) {
+      // Reset form fields
+      setState(() {
+        selectedMaterialType = null;
+        selectedThickness = null;
+        selectCoatingMass = null;
+        selectedYieldStrength = null;
+        selectedBrand = null;
+        materialTypeList = [];
+        thicknessList = [];
+        coatingMassList = [];
+        yieldStrengthList = [];
+        brandList = [];
+        _fetchMaterialType(); // Re-fetch material types for the next selection
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              Icon(Icons.check_circle, color: Colors.white),
+              SizedBox(width: 12),
+              Text("Product added successfully"),
+            ],
+          ),
+          backgroundColor: Colors.green,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          margin: EdgeInsets.all(16),
+          duration: Duration(seconds: 2),
+        ),
+      );
+    });
+  }
+
   // 3. Replace the entire _buildSubmittedDataList() method with this:
   Widget _buildSubmittedDataList() {
     if (responseData.isEmpty) {
@@ -396,105 +451,102 @@ class _DeckingSheetsState extends State<DeckingSheets> {
     }
 
     return Column(
-      children:
-          responseData.asMap().entries.map((entry) {
-            int index = entry.key;
-            Map<String, dynamic> data = entry.value;
+      children: responseData.asMap().entries.map((entry) {
+        int index = entry.key;
+        Map<String, dynamic> data = entry.value;
 
-            return Card(
-              margin: EdgeInsets.symmetric(vertical: 10),
-              elevation: 2,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+        return Card(
+          margin: EdgeInsets.symmetric(vertical: 10),
+          elevation: 2,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header with Product name and delete button
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  // Header with Product name and delete button
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Expanded(
-                        child: Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: Text(
-                            "${data['S.No']}. ${data['Products']}",
-                            style: GoogleFonts.figtree(
-                              fontSize: 18.sp,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.black87,
-                            ),
-                          ),
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Text(
+                        "${data['S.No']}. ${data['Products']}",
+                        style: GoogleFonts.figtree(
+                          fontSize: 18.sp,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.black87,
                         ),
                       ),
-                      Container(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.blue[50],
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Text(
-                          "ID: ${data['id']}",
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.blue[700],
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Container(
-                          height: 40.h,
-                          width: 50.w,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(10),
-                            color: Colors.deepPurple[50],
-                          ),
-                          child: IconButton(
-                            icon: Icon(Icons.delete, color: Colors.redAccent),
-                            onPressed: () {
-                              showDialog(
-                                context: context,
-                                builder:
-                                    (context) => AlertDialog(
-                                      title: Text(
-                                        "Are you sure to delete this item?",
-                                      ),
-                                      actions: [
-                                        ElevatedButton(
-                                          onPressed: () {
-                                            setState(() {
-                                              responseData.removeAt(index);
-                                            });
-                                            Navigator.pop(context);
-                                          },
-                                          child: Text("Yes"),
-                                        ),
-                                        ElevatedButton(
-                                          onPressed:
-                                              () => Navigator.pop(context),
-                                          child: Text("No"),
-                                        ),
-                                      ],
-                                    ),
-                              );
-                            },
-                          ),
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
-
-                  // Product details in rows
-                  _buildApiResponseRows(data),
+                  Container(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.blue[50],
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      "ID: ${data['id']}",
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.blue[700],
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Container(
+                      height: 40.h,
+                      width: 50.w,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(10),
+                        color: Colors.deepPurple[50],
+                      ),
+                      child: IconButton(
+                        icon: Icon(Icons.delete, color: Colors.redAccent),
+                        onPressed: () {
+                          showDialog(
+                            context: context,
+                            builder: (context) => AlertDialog(
+                              title: Text(
+                                "Are you sure to delete this item?",
+                              ),
+                              actions: [
+                                ElevatedButton(
+                                  onPressed: () {
+                                    setState(() {
+                                      responseData.removeAt(index);
+                                    });
+                                    Navigator.pop(context);
+                                  },
+                                  child: Text("Yes"),
+                                ),
+                                ElevatedButton(
+                                  onPressed: () => Navigator.pop(context),
+                                  child: Text("No"),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ),
                 ],
               ),
-            );
-          }).toList(),
+
+              // Product details in rows
+              _buildApiResponseRows(data),
+            ],
+          ),
+        );
+      }).toList(),
     );
   }
 
@@ -582,15 +634,14 @@ class _DeckingSheetsState extends State<DeckingSheets> {
       height: 38.h,
       child: DropdownButtonFormField<String>(
         value: currentValue,
-        items:
-            options.entries
-                .map(
-                  (entry) => DropdownMenuItem(
-                    value: entry.key,
-                    child: Text(entry.value),
-                  ),
-                )
-                .toList(),
+        items: options.entries
+            .map(
+              (entry) => DropdownMenuItem(
+                value: entry.key,
+                child: Text(entry.value),
+              ),
+            )
+            .toList(),
         onChanged: (val) {
           setState(() {
             data['UOM']['value'] = val!;
@@ -633,15 +684,14 @@ class _DeckingSheetsState extends State<DeckingSheets> {
       height: 38.h,
       child: DropdownButtonFormField<String>(
         value: currentValue.isEmpty ? null : currentValue,
-        items:
-            options.entries
-                .map(
-                  (entry) => DropdownMenuItem(
-                    value: entry.key,
-                    child: Text(entry.value),
-                  ),
-                )
-                .toList(),
+        items: options.entries
+            .map(
+              (entry) => DropdownMenuItem(
+                value: entry.key,
+                child: Text(entry.value),
+              ),
+            )
+            .toList(),
         onChanged: (val) {
           setState(() {
             data['Billing Option']['value'] = val ?? '';
@@ -842,17 +892,16 @@ class _DeckingSheetsState extends State<DeckingSheets> {
                 horizontal: 16,
                 vertical: 12,
               ),
-              suffixIcon:
-                  isSearchingBaseProduct
-                      ? Padding(
-                        padding: EdgeInsets.all(12),
-                        child: SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        ),
-                      )
-                      : null,
+              suffixIcon: isSearchingBaseProduct
+                  ? Padding(
+                      padding: EdgeInsets.all(12),
+                      child: SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                    )
+                  : null,
             ),
             onChanged: (value) {
               searchBaseProducts(value);
@@ -985,65 +1034,6 @@ class _DeckingSheetsState extends State<DeckingSheets> {
     );
   }
 
-  // 5. Modify the _submitData() method to not add local data:
-  void _submitData() {
-    if (selectedMaterialType == null ||
-        selectedThickness == null ||
-        selectCoatingMass == null ||
-        selectedYieldStrength == null ||
-        selectedBrand == null) {
-      showDialog(
-        context: context,
-        builder:
-            (context) => AlertDialog(
-              title: Text('Incomplete Form'),
-              content: Text(
-                'Please fill all required fields to add a product.',
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: Text('OK'),
-                ),
-              ],
-            ),
-      );
-      return;
-    }
-
-    // Reset form fields
-    setState(() {
-      selectedMaterialType = null;
-      selectedThickness = null;
-      selectCoatingMass = null;
-      selectedYieldStrength = null;
-      selectedBrand = null;
-      materialTypeList = [];
-      thicknessList = [];
-      coatingMassList = [];
-      yieldStrengthList = [];
-      brandList = [];
-      _fetchMaterialType(); // Re-fetch material types for the next selection
-    });
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            Icon(Icons.check_circle, color: Colors.white),
-            SizedBox(width: 12),
-            Text("Product added successfully"),
-          ],
-        ),
-        backgroundColor: Colors.green,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-        margin: EdgeInsets.all(16),
-        duration: Duration(seconds: 2),
-      ),
-    );
-  }
-
   // Helper method to format the preview text
   String _selectedItems() {
     List<String> selectedValues = [
@@ -1077,16 +1067,15 @@ class _DeckingSheetsState extends State<DeckingSheets> {
           border: Border.all(
             color: enabled ? Colors.grey.shade300 : Colors.grey.shade200,
           ),
-          boxShadow:
-              enabled
-                  ? [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.03),
-                      blurRadius: 8,
-                      offset: Offset(0, 2),
-                    ),
-                  ]
-                  : [],
+          boxShadow: enabled
+              ? [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.03),
+                    blurRadius: 8,
+                    offset: Offset(0, 2),
+                  ),
+                ]
+              : [],
         ),
         child: DropdownSearch<String>(
           items: items,
@@ -1143,6 +1132,7 @@ class _DeckingSheetsState extends State<DeckingSheets> {
         child: Padding(
           padding: EdgeInsets.all(16),
           child: SingleChildScrollView(
+            physics: BouncingScrollPhysics(),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -1294,10 +1284,7 @@ class _DeckingSheetsState extends State<DeckingSheets> {
                             width: double.infinity,
                             height: 54.h,
                             child: ElevatedButton(
-                              onPressed: () async {
-                                await postAllData();
-                                _submitData();
-                              },
+                              onPressed: _submitData,
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.deepPurple[400],
                                 foregroundColor: Colors.white,
