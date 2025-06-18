@@ -73,12 +73,11 @@ class _AluminumState extends State<Aluminum> {
 
         if (materials is List) {
           setState(() {
-            materialTypeList =
-                materials
-                    .whereType<Map>()
-                    .map((e) => e["material_type"]?.toString())
-                    .whereType<String>()
-                    .toList();
+            materialTypeList = materials
+                .whereType<Map>()
+                .map((e) => e["material_type"]?.toString())
+                .whereType<String>()
+                .toList();
           });
         }
       }
@@ -123,12 +122,11 @@ class _AluminumState extends State<Aluminum> {
 
         if (thick is List) {
           setState(() {
-            thicknessList =
-                thick
-                    .whereType<Map>()
-                    .map((e) => e["thickness"]?.toString())
-                    .whereType<String>()
-                    .toList();
+            thicknessList = thick
+                .whereType<Map>()
+                .map((e) => e["thickness"]?.toString())
+                .whereType<String>()
+                .toList();
           });
         }
       }
@@ -173,12 +171,11 @@ class _AluminumState extends State<Aluminum> {
 
         if (brand is List) {
           setState(() {
-            brandsList =
-                brand
-                    .whereType<Map>()
-                    .map((e) => e["brand"]?.toString())
-                    .whereType<String>()
-                    .toList();
+            brandsList = brand
+                .whereType<Map>()
+                .map((e) => e["brand"]?.toString())
+                .whereType<String>()
+                .toList();
           });
         }
       }
@@ -231,12 +228,11 @@ class _AluminumState extends State<Aluminum> {
           final colorData = message[0];
           if (colorData is List) {
             setState(() {
-              colorsList =
-                  colorData
-                      .whereType<Map>()
-                      .map((e) => e["color"]?.toString())
-                      .whereType<String>()
-                      .toList();
+              colorsList = colorData
+                  .whereType<Map>()
+                  .map((e) => e["color"]?.toString())
+                  .whereType<String>()
+                  .toList();
             });
           }
 
@@ -326,128 +322,127 @@ class _AluminumState extends State<Aluminum> {
     }
 
     return Column(
-      children:
-          apiProductsList.asMap().entries.map((entry) {
-            Map<String, dynamic> data = entry.value;
+      children: apiProductsList.asMap().entries.map((entry) {
+        Map<String, dynamic> data = entry.value;
 
-            return Card(
-              margin: EdgeInsets.symmetric(vertical: 10),
-              elevation: 2,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Padding(
-                padding: EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+        return Card(
+          margin: EdgeInsets.symmetric(vertical: 10),
+          elevation: 2,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Padding(
+            padding: EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Expanded(
-                          child: Text(
-                            "${data['S.No']}. ${data['Products']}",
-                            style: GoogleFonts.poppins(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.black87,
-                            ),
-                          ),
+                    Expanded(
+                      child: Text(
+                        "${data['S.No']}. ${data['Products']}",
+                        style: GoogleFonts.poppins(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.black87,
                         ),
-                        Container(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.blue[50],
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: Text(
-                            "ID: ${data['id']}",
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.blue[700],
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
-                    SizedBox(height: 16),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _buildApiDetailItem(
-                            "UOM",
-                            _buildApiUomDropdown(data),
-                          ),
+                    Container(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.blue[50],
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        "ID: ${data['id']}",
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.blue[700],
+                          fontWeight: FontWeight.w500,
                         ),
-                        SizedBox(width: 10),
-                        Expanded(
-                          child: _buildApiDetailItem(
-                            "Billing Option",
-                            _buildApiBillingDropdown(data),
-                          ),
-                        ),
-                        SizedBox(width: 10),
-                        Expanded(
-                          child: _buildApiDetailItem(
-                            "Length",
-                            _buildApiEditableField(data, "Length"),
-                          ),
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: 12),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _buildApiDetailItem(
-                            "Crimp",
-                            _buildApiReadOnlyField(data, "Crimp"),
-                          ),
-                        ),
-                        SizedBox(width: 10),
-                        Expanded(
-                          child: _buildApiDetailItem(
-                            "Nos",
-                            _buildApiEditableField(data, "Nos"),
-                          ),
-                        ),
-                        SizedBox(width: 10),
-                        Expanded(
-                          child: _buildApiDetailItem(
-                            "Qty",
-                            _buildApiEditableField(data, "Qty"),
-                          ),
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: 12),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _buildApiDetailItem(
-                            "Basic Rate",
-                            _buildApiReadOnlyField(data, "Basic Rate"),
-                          ),
-                        ),
-                        SizedBox(width: 10),
-                        Expanded(
-                          child: _buildApiDetailItem(
-                            "Amount",
-                            _buildApiReadOnlyField(data, "Amount"),
-                          ),
-                        ),
-                        Expanded(child: SizedBox()),
-                      ],
+                      ),
                     ),
                   ],
                 ),
-              ),
-            );
-          }).toList(),
+                SizedBox(height: 16),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildApiDetailItem(
+                        "UOM",
+                        _buildApiUomDropdown(data),
+                      ),
+                    ),
+                    SizedBox(width: 10),
+                    Expanded(
+                      child: _buildApiDetailItem(
+                        "Billing Option",
+                        _buildApiBillingDropdown(data),
+                      ),
+                    ),
+                    SizedBox(width: 10),
+                    Expanded(
+                      child: _buildApiDetailItem(
+                        "Length",
+                        _buildApiEditableField(data, "Length"),
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildApiDetailItem(
+                        "Crimp",
+                        _buildApiReadOnlyField(data, "Crimp"),
+                      ),
+                    ),
+                    SizedBox(width: 10),
+                    Expanded(
+                      child: _buildApiDetailItem(
+                        "Nos",
+                        _buildApiEditableField(data, "Nos"),
+                      ),
+                    ),
+                    SizedBox(width: 10),
+                    Expanded(
+                      child: _buildApiDetailItem(
+                        "Qty",
+                        _buildApiEditableField(data, "Qty"),
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildApiDetailItem(
+                        "Basic Rate",
+                        _buildApiReadOnlyField(data, "Basic Rate"),
+                      ),
+                    ),
+                    SizedBox(width: 10),
+                    Expanded(
+                      child: _buildApiDetailItem(
+                        "Amount",
+                        _buildApiReadOnlyField(data, "Amount"),
+                      ),
+                    ),
+                    Expanded(child: SizedBox()),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      }).toList(),
     );
   }
 
@@ -533,16 +528,15 @@ class _AluminumState extends State<Aluminum> {
       height: 40,
       child: DropdownButtonFormField<String>(
         value: currentValue.isNotEmpty ? currentValue : null,
-        items:
-            options.entries.map((entry) {
-              return DropdownMenuItem<String>(
-                value: entry.key.toString(),
-                child: Text(
-                  entry.value.toString(),
-                  style: GoogleFonts.poppins(fontSize: 14),
-                ),
-              );
-            }).toList(),
+        items: options.entries.map((entry) {
+          return DropdownMenuItem<String>(
+            value: entry.key.toString(),
+            child: Text(
+              entry.value.toString(),
+              style: GoogleFonts.poppins(fontSize: 14),
+            ),
+          );
+        }).toList(),
         onChanged: (val) {
           setState(() {
             data['UOM']['value'] = val;
@@ -579,16 +573,15 @@ class _AluminumState extends State<Aluminum> {
       child: DropdownButtonFormField<String>(
         isExpanded: true,
         value: currentValue.isNotEmpty ? currentValue : null,
-        items:
-            options.entries.map((entry) {
-              return DropdownMenuItem<String>(
-                value: entry.key.toString(),
-                child: Text(
-                  entry.value.toString(),
-                  style: GoogleFonts.poppins(fontSize: 14),
-                ),
-              );
-            }).toList(),
+        items: options.entries.map((entry) {
+          return DropdownMenuItem<String>(
+            value: entry.key.toString(),
+            child: Text(
+              entry.value.toString(),
+              style: GoogleFonts.poppins(fontSize: 14),
+            ),
+          );
+        }).toList(),
         onChanged: (val) {
           setState(() {
             data['Billing Option']['value'] = val;
@@ -702,17 +695,16 @@ class _AluminumState extends State<Aluminum> {
                 horizontal: 16,
                 vertical: 12,
               ),
-              suffixIcon:
-                  isSearchingBaseProduct
-                      ? Padding(
-                        padding: EdgeInsets.all(12),
-                        child: SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        ),
-                      )
-                      : null,
+              suffixIcon: isSearchingBaseProduct
+                  ? Padding(
+                      padding: EdgeInsets.all(12),
+                      child: SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                    )
+                  : null,
             ),
             onChanged: (value) {
               searchBaseProducts(value);
@@ -852,19 +844,18 @@ class _AluminumState extends State<Aluminum> {
         selectedMaterialType == null) {
       showDialog(
         context: context,
-        builder:
-            (context) => AlertDialog(
-              title: Text('Incomplete Form'),
-              content: Text(
-                'Please fill all required fields to add a product.',
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: Text('OK'),
-                ),
-              ],
+        builder: (context) => AlertDialog(
+          title: Text('Incomplete Form'),
+          content: Text(
+            'Please fill all required fields to add a product.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text('OK'),
             ),
+          ],
+        ),
       );
       return;
     }
@@ -928,16 +919,15 @@ class _AluminumState extends State<Aluminum> {
           border: Border.all(
             color: enabled ? Colors.grey.shade300 : Colors.grey.shade200,
           ),
-          boxShadow:
-              enabled
-                  ? [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.03),
-                      blurRadius: 8,
-                      offset: Offset(0, 2),
-                    ),
-                  ]
-                  : [],
+          boxShadow: enabled
+              ? [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.03),
+                    blurRadius: 8,
+                    offset: Offset(0, 2),
+                  ),
+                ]
+              : [],
         ),
         child: DropdownSearch<String>(
           items: items,
@@ -948,7 +938,7 @@ class _AluminumState extends State<Aluminum> {
               labelText: label,
               prefixIcon: Icon(
                 icon,
-                color: enabled ? Colors.deepPurple[400] : Colors.grey,
+                color: enabled ? Colors.deepPurple : Colors.grey,
               ),
               border: InputBorder.none,
               contentPadding: EdgeInsets.symmetric(

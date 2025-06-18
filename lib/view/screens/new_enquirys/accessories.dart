@@ -630,6 +630,7 @@ class _AccessoriesState extends State<Accessories> {
       );
       return;
     }
+
     postAllData().then((_) {
       setState(() {
         submittedData.add({
@@ -1770,7 +1771,7 @@ class _AccessoriesState extends State<Accessories> {
               labelText: label,
               prefixIcon: Icon(
                 icon,
-                color: enabled ? Colors.blue : Colors.grey,
+                color: enabled ? Colors.deepPurple : Colors.grey,
               ),
               border: InputBorder.none,
               contentPadding: EdgeInsets.symmetric(

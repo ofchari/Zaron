@@ -637,7 +637,6 @@ class _TileSheetPageState extends State<TileSheetPage> {
         coatingAndList = [];
         _fetchBrandData();
       });
-
       // Show success message with a more elegant snackBar
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -1043,7 +1042,7 @@ class _TileSheetPageState extends State<TileSheetPage> {
               labelText: label,
               prefixIcon: Icon(
                 icon,
-                color: enabled ? Colors.blue : Colors.grey,
+                color: enabled ? Colors.deepPurple : Colors.grey,
               ),
               border: InputBorder.none,
               contentPadding: EdgeInsets.symmetric(
