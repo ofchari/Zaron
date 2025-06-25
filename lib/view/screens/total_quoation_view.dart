@@ -1,10 +1,13 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:gap/gap.dart';
+import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
+import 'package:http/io_client.dart';
 
 import '../universal_api/api&key.dart';
 import '../widgets/buttons.dart';
@@ -21,6 +24,7 @@ class TotalQuoationView extends StatefulWidget {
 }
 
 class _TotalQuoationViewState extends State<TotalQuoationView> {
+  final remarkController = TextEditingController();
   int? selectedIndex;
   late double height;
   late double width;
@@ -38,7 +42,6 @@ class _TotalQuoationViewState extends State<TotalQuoationView> {
   void initState() {
     super.initState();
     fetchTableData();
-    fetchAdditionalInfo();
   }
 
   Future<void> fetchTableData() async {
@@ -66,20 +69,38 @@ class _TotalQuoationViewState extends State<TotalQuoationView> {
     }
   }
 
-  Future<void> fetchAdditionalInfo() async {
-    final response = await http.get(Uri.parse("$apiUrl/add_info"));
+  Future<void> fetchAdditionalInfo(String itemId) async {
+    final response =
+        await http.get(Uri.parse("$apiUrl/quotation_add_info/$itemId"));
+
     if (response.statusCode == 200) {
       final jsonData = json.decode(response.body);
-      setState(() {
-        additionalInfo = jsonData['data'];
-        additionalValues = {
-          for (var key in additionalInfo.keys) key: additionalInfo[key]['value']
-        };
-      });
+      try {
+        setState(() {
+          additionalInfo = jsonData['data'] ?? {};
+          additionalValues = {};
+          for (var key in additionalInfo.keys) {
+            final entry = additionalInfo[key];
+            if (entry is Map && entry.containsKey('value')) {
+              additionalValues[key] = entry['value'];
+            }
+          }
+        });
+      } catch (e) {
+        print('Error parsing additional info: $e');
+      }
+    } else {
+      print('Failed to load additional info: ${response.statusCode}');
     }
   }
 
-  void openAdditionalDrawer() {
+  void openAdditionalDrawer(String itemId) async {
+    await fetchAdditionalInfo(itemId);
+
+    var size = MediaQuery.of(context).size;
+    height = size.height;
+    width = size.width;
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -116,88 +137,122 @@ class _TotalQuoationViewState extends State<TotalQuoationView> {
                       height: 4,
                       margin: const EdgeInsets.only(bottom: 16),
                       decoration: BoxDecoration(
-                        color: Colors.grey[400],
+                        color: Colors.grey,
                         borderRadius: BorderRadius.circular(4),
                       ),
                     ),
                   ),
                   Subhead(
-                      text: "Additional Information",
-                      weight: FontWeight.w500,
-                      color: Colors.black),
+                    text: "Additional Information",
+                    weight: FontWeight.w500,
+                    color: Colors.black,
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: remarkController,
+                    decoration: InputDecoration(
+                      filled: true,
+                      fillColor: Colors.grey[100],
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 12),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: BorderSide.none,
+                      ),
+                      hintText: "Remarks",
+                    ),
+                  ),
                   const SizedBox(height: 10),
-                  ListView.builder(
-                    controller: scrollController,
-                    itemCount: additionalInfo.length,
-                    itemBuilder: (context, index) {
-                      final entry = additionalInfo.entries.elementAt(index);
-                      final key = entry.key;
-                      final options =
-                          Map<String, String>.from(entry.value['options']);
-                      final selectedValue = additionalValues[key] ?? '';
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 16.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            MyText(
+                  Expanded(
+                    child: ListView.builder(
+                      controller: scrollController,
+                      itemCount: additionalInfo.length,
+                      itemBuilder: (context, index) {
+                        final entry = additionalInfo.entries.elementAt(index);
+                        final key = entry.key;
+                        final value = entry.value;
+
+                        if (value is! Map || !value.containsKey('options')) {
+                          return const SizedBox.shrink();
+                        }
+
+                        final options =
+                            Map<String, String>.from(value['options']);
+                        final selectedValue = additionalValues[key];
+
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 16.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              MyText(
                                 text: key,
                                 weight: FontWeight.w400,
-                                color: Colors.black),
-                            const SizedBox(height: 6),
-                            DropdownButtonFormField<String>(
-                              isExpanded: true,
-                              value: options.containsKey(selectedValue)
-                                  ? selectedValue
-                                  : null,
-                              decoration: InputDecoration(
-                                filled: true,
-                                fillColor: Colors.grey[100],
-                                contentPadding: const EdgeInsets.symmetric(
-                                    horizontal: 12, vertical: 12),
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(10),
-                                  borderSide: BorderSide.none,
+                                color: Colors.black,
+                              ),
+                              const SizedBox(height: 6),
+                              DropdownButtonFormField<String>(
+                                isExpanded: true,
+                                value: options.containsKey(selectedValue)
+                                    ? selectedValue
+                                    : null,
+                                decoration: InputDecoration(
+                                  filled: true,
+                                  fillColor: Colors.grey[100],
+                                  contentPadding: const EdgeInsets.symmetric(
+                                      horizontal: 12, vertical: 12),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                    borderSide: BorderSide.none,
+                                  ),
                                 ),
-                              ),
-                              hint: Text(
-                                "Select option",
-                                style: GoogleFonts.outfit(
-                                    textStyle: TextStyle(
-                                        fontSize: 14.5,
-                                        fontWeight: FontWeight.w400,
-                                        color: Colors.black)),
-                              ),
-                              onChanged: (newValue) {
-                                setState(() {
-                                  additionalValues[key] = newValue!;
-                                });
-                              },
-                              items: options.entries.map((entry) {
-                                return DropdownMenuItem<String>(
-                                  value: entry.key,
-                                  child: MyText(
+                                hint: Text(
+                                  "Select option",
+                                  style: GoogleFonts.outfit(
+                                    fontSize: 14.5,
+                                    fontWeight: FontWeight.w400,
+                                    color: Colors.black,
+                                  ),
+                                ),
+                                onChanged: (newValue) {
+                                  setState(() {
+                                    additionalValues[key] = newValue!;
+                                  });
+                                },
+                                items: options.entries.map((entry) {
+                                  return DropdownMenuItem<String>(
+                                    value: entry.key,
+                                    child: MyText(
                                       text: entry.value,
                                       weight: FontWeight.w500,
-                                      color: Colors.black),
-                                );
-                              }).toList(),
-                            ),
-                          ],
-                        ),
-                      );
-                    },
+                                      color: Colors.black,
+                                    ),
+                                  );
+                                }).toList(),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
                   ),
-                  Gap(7),
-                  Center(
-                    child: Buttons(
+                  const SizedBox(height: 10),
+                  InkWell(
+                    onTap: () {
+                      postAdditionalInfo(itemId);
+                      Navigator.pop(context);
+                    },
+                    child: Center(
+                      child: Buttons(
                         text: "Save",
                         weight: FontWeight.w500,
                         color: Colors.blue,
                         height: height / 20.5,
                         width: width / 4,
-                        radius: BorderRadius.circular(5)),
-                  )
+                        radius: BorderRadius.circular(5),
+                      ),
+                    ),
+                  ),
                 ],
               ),
             );
@@ -205,6 +260,47 @@ class _TotalQuoationViewState extends State<TotalQuoationView> {
         );
       },
     );
+  }
+
+  Future<void> postAdditionalInfo(String itemId) async {
+    HttpClient client = HttpClient();
+    client.badCertificateCallback =
+        ((X509Certificate cert, String host, int port) => true);
+    IOClient ioClient = IOClient(client);
+
+    final headers = {"Content-Type": "application/json"};
+    final Map<String, dynamic> payload = {
+      "id": itemId,
+      "remarks": remarkController.text,
+      ...additionalValues,
+    };
+    print("User Input Data Fields${payload}");
+
+    final url = "$apiUrl/quotation_storeaddinfo";
+    final body = json.encode(payload);
+
+    try {
+      final response =
+          await http.post(Uri.parse(url), headers: headers, body: body);
+      print("This is the status code${response.statusCode}");
+      if (response.statusCode == 200) {
+        print("this is a post Data response : ${response.body}");
+        Get.snackbar(
+          "Success",
+          "Data Added Successfully",
+          colorText: Colors.white,
+          backgroundColor: Colors.green,
+        );
+      }
+    } catch (e) {
+      throw Exception("Error posting data: $e");
+    }
+  }
+
+  @override
+  void dispose() {
+    remarkController.dispose();
+    super.dispose();
   }
 
   /// Inside your _TotalEnquiryViewState class
@@ -404,7 +500,7 @@ class _TotalQuoationViewState extends State<TotalQuoationView> {
         centerTitle: true,
         backgroundColor: Colors.white,
         title: Subhead(
-            text: "Total Quoation View",
+            text: "Total Quotation View",
             weight: FontWeight.w500,
             color: Colors.black),
       ),
@@ -542,9 +638,12 @@ class _TotalQuoationViewState extends State<TotalQuoationView> {
                                           ),
                                           IconButton(
                                             icon: Icon(Icons.settings,
-                                                color: Colors.grey),
+                                                color: Colors.green),
                                             onPressed: () {
-                                              openAdditionalDrawer();
+                                              final itemId = row['id'];
+                                              if (itemId != null) {
+                                                openAdditionalDrawer(itemId);
+                                              }
                                             },
                                           ),
                                         ],

@@ -503,7 +503,9 @@ class _ScrewAccessoriesState extends State<ScrewAccessories> {
   }
 
   void _submitData() {
-    if (selectedProduct == null || selectedColor == null) {
+    if (selectedProduct == null ||
+        selectedColor == null ||
+        selsectedBrand == null) {
       // Show elegant error message
       showDialog(
         context: context,

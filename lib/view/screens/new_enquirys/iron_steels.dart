@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -292,19 +293,91 @@ class _IronSteelState extends State<IronSteel> {
         return;
       }
       if (response.statusCode == 200) {
-        // Parse the API response and store it
         final responseData = jsonDecode(response.body);
         if (responseData['status'] == true && responseData['lebels'] != null) {
           setState(() {
-            apiResponseData = List<Map<String, dynamic>>.from(
+            // Get the new data
+            List<Map<String, dynamic>> newData =
+                List<Map<String, dynamic>>.from(
               responseData['lebels'][0]['data'],
             );
+
+            // Append new data to existing lists
+            apiResponseData.addAll(newData);
+            responseProducts.addAll(newData);
           });
         }
       }
     } catch (e) {
       throw Exception("Error posting data: $e");
     }
+  }
+
+  void _submitData() {
+    if (selectedBrand == null ||
+        selectedColor == null ||
+        selectedThickness == null ||
+        selectedCoatingMass == null) {
+      // Show elegant error message
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text('Incomplete Form'),
+          content: Text(
+            'Please fill all required fields to add a product.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text('OK'),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+    postAllData().then((_) {
+      setState(() {
+        submittedData.add({
+          "Product": "Accessories",
+          "UOM": "Feet",
+          "Length": "0",
+          "Nos": "1",
+          "Basic Rate": "0",
+          "SQ": "0",
+          "Amount": "0",
+          "Base Product":
+              "$selectedBrand, $selectedColor, $selectedThickness, $selectedCoatingMass,",
+        });
+        selectedBrand = null;
+        selectedColor = null;
+        selectedThickness = null;
+        selectedCoatingMass = null;
+        brandsList = [];
+        colorsList = [];
+        thicknessList = [];
+        coatingMassList = [];
+        _fetchBrands();
+      });
+
+      // Show success message with a more elegant snackBar
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              Icon(Icons.check_circle, color: Colors.white),
+              SizedBox(width: 12),
+              Text("Product added successfully"),
+            ],
+          ),
+          backgroundColor: Colors.green,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          margin: EdgeInsets.all(16),
+          duration: Duration(seconds: 3),
+        ),
+      );
+    });
   }
 
   TextEditingController baseProductController = TextEditingController();
@@ -534,75 +607,13 @@ class _IronSteelState extends State<IronSteel> {
     );
   }
 
-  void _submitData() {
-    if (selectedBrand == null ||
-        selectedColor == null ||
-        selectedThickness == null ||
-        selectedCoatingMass == null) {
-      // Show elegant error message
-      showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: Text('Incomplete Form'),
-          content: Text(
-            'Please fill all required fields to add a product.',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text('OK'),
-            ),
-          ],
-        ),
-      );
-      return;
-    }
-    postAllData().then((_) {
-      setState(() {
-        submittedData.add({
-          "Product": "Accessories",
-          "UOM": "Feet",
-          "Length": "0",
-          "Nos": "1",
-          "Basic Rate": "0",
-          "SQ": "0",
-          "Amount": "0",
-          "Base Product":
-              "$selectedBrand, $selectedColor, $selectedThickness, $selectedCoatingMass,",
-        });
-        selectedBrand = null;
-        selectedColor = null;
-        selectedThickness = null;
-        selectedCoatingMass = null;
-        brandsList = [];
-        colorsList = [];
-        thicknessList = [];
-        coatingMassList = [];
-        _fetchBrands();
-      });
+  // Add these variables after line 25 (after the existing List declarations)
+  // Map<String, dynamic>? apiResponseData;
+  List<dynamic> responseProducts = [];
+  Map<String, Map<String, String>> uomOptions = {};
 
-      // Show success message with a more elegant snackBar
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Row(
-            children: [
-              Icon(Icons.check_circle, color: Colors.white),
-              SizedBox(width: 12),
-              Text("Product added successfully"),
-            ],
-          ),
-          backgroundColor: Colors.green,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-          margin: EdgeInsets.all(16),
-          duration: Duration(seconds: 3),
-        ),
-      );
-    });
-  }
-
-  Widget _buildApiResponseList() {
-    if (apiResponseData.isEmpty) {
+  Widget _buildSubmittedDataList() {
+    if (responseProducts.isEmpty) {
       return Container(
         padding: EdgeInsets.symmetric(vertical: 40),
         alignment: Alignment.center,
@@ -620,9 +631,9 @@ class _IronSteelState extends State<IronSteel> {
     }
 
     return Column(
-      children: apiResponseData.asMap().entries.map((entry) {
+      children: responseProducts.asMap().entries.map((entry) {
         int index = entry.key;
-        Map<String, dynamic> data = entry.value;
+        Map<String, dynamic> data = Map<String, dynamic>.from(entry.value);
 
         return Card(
           margin: EdgeInsets.symmetric(vertical: 10),
@@ -631,24 +642,28 @@ class _IronSteelState extends State<IronSteel> {
             borderRadius: BorderRadius.circular(12),
           ),
           child: Column(
+            mainAxisAlignment: MainAxisAlignment.start,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header with product name and delete button
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Expanded(
                     child: Padding(
-                      padding: const EdgeInsets.all(15),
-                      child: Text(
-                        "${data["S.No"]}. ${data["Products"]}" ?? "",
-                        style: GoogleFonts.figtree(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.black87,
+                      padding: const EdgeInsets.only(top: 15),
+                      child: SizedBox(
+                        height: 40.h,
+                        width: 210.w,
+                        child: Text(
+                          "  ${index + 1}.  ${data["Products"]}" ?? "",
+                          overflow: TextOverflow.ellipsis,
+                          style: GoogleFonts.figtree(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.black87,
+                          ),
                         ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                   ),
@@ -684,26 +699,32 @@ class _IronSteelState extends State<IronSteel> {
                         onPressed: () {
                           showDialog(
                             context: context,
-                            builder: (context) => AlertDialog(
-                              title: Text(
-                                "Are you sure to delete this item?",
-                              ),
-                              actions: [
-                                TextButton(
-                                  onPressed: () {
-                                    setState(() {
-                                      apiResponseData.removeAt(index);
-                                    });
-                                    Navigator.pop(context);
-                                  },
-                                  child: Text("Yes"),
+                            builder: (context) {
+                              return AlertDialog(
+                                title: Subhead(
+                                  text: "Are you Sure to Delete This Item ?",
+                                  weight: FontWeight.w500,
+                                  color: Colors.black,
                                 ),
-                                TextButton(
-                                  onPressed: () => Navigator.pop(context),
-                                  child: Text("No"),
-                                ),
-                              ],
-                            ),
+                                actions: [
+                                  ElevatedButton(
+                                    onPressed: () {
+                                      setState(() {
+                                        responseProducts.removeAt(index);
+                                      });
+                                      Navigator.pop(context);
+                                    },
+                                    child: Text("Yes"),
+                                  ),
+                                  ElevatedButton(
+                                    onPressed: () {
+                                      Navigator.pop(context);
+                                    },
+                                    child: Text("No"),
+                                  ),
+                                ],
+                              );
+                            },
                           );
                         },
                       ),
@@ -711,9 +732,114 @@ class _IronSteelState extends State<IronSteel> {
                   ),
                 ],
               ),
-
-              // Product details in rows
-              _buildApiProductDetails(data, index),
+              _buildProductDetailInRows(data),
+              // Padding(
+              //   padding: const EdgeInsets.only(top: 8.0, left: 8),
+              //   child: Container(
+              //     height: 40.h,
+              //     width: double.infinity.w,
+              //     decoration: BoxDecoration(
+              //       borderRadius: BorderRadius.circular(10),
+              //     ),
+              //     child: Row(
+              //       crossAxisAlignment: CrossAxisAlignment.center,
+              //       children: [
+              //         Container(
+              //           height: 40.h,
+              //           width: 280.w,
+              //           child: TextField(
+              //             style: TextStyle(
+              //               fontSize: 13.sp,
+              //               color: Colors.black87,
+              //               fontWeight: FontWeight.w500,
+              //             ),
+              //             decoration: InputDecoration(
+              //               enabledBorder: InputBorder.none,
+              //               focusedBorder: InputBorder.none,
+              //             ),
+              //             controller: TextEditingController(
+              //               text: " ${data["Material Specification"]}",
+              //             ),
+              //             readOnly: true,
+              //           ),
+              //         ),
+              //         Gap(5),
+              //         Container(
+              //           height: 30.h,
+              //           width: 30.w,
+              //           decoration: BoxDecoration(
+              //             color: Colors.grey[200],
+              //             borderRadius: BorderRadius.circular(10),
+              //           ),
+              //           child: IconButton(
+              //             onPressed: () {
+              //               editController.text =
+              //                   data["Material Specification"].toString();
+              //               showDialog(
+              //                 context: context,
+              //                 builder: (context) {
+              //                   return AlertDialog(
+              //                     title: Text("Edit Your Liner Sheet"),
+              //                     content: Column(
+              //                       mainAxisSize: MainAxisSize.min,
+              //                       children: [
+              //                         Container(
+              //                           height: 40.h,
+              //                           width: double.infinity.w,
+              //                           decoration: BoxDecoration(
+              //                             borderRadius:
+              //                                 BorderRadius.circular(10),
+              //                             color: Colors.white,
+              //                           ),
+              //                           child: Padding(
+              //                             padding: const EdgeInsets.only(
+              //                               left: 7.0,
+              //                             ),
+              //                             child: TextField(
+              //                               decoration: InputDecoration(
+              //                                 enabledBorder: InputBorder.none,
+              //                                 focusedBorder: InputBorder.none,
+              //                               ),
+              //                               controller: editController,
+              //                               onSubmitted: (value) {
+              //                                 setState(() {
+              //                                   data["Material Specification"] =
+              //                                       value;
+              //                                 });
+              //                                 Navigator.pop(context);
+              //                               },
+              //                             ),
+              //                           ),
+              //                         ),
+              //                       ],
+              //                     ),
+              //                     actions: [
+              //                       ElevatedButton(
+              //                         onPressed: () {
+              //                           setState(() {
+              //                             data["Material Specification"] =
+              //                                 editController.text;
+              //                           });
+              //                           Navigator.pop(context);
+              //                         },
+              //                         child: MyText(
+              //                           text: "Save",
+              //                           weight: FontWeight.w500,
+              //                           color: Colors.black,
+              //                         ),
+              //                       ),
+              //                     ],
+              //                   );
+              //                 },
+              //               );
+              //             },
+              //             icon: Icon(Icons.edit, size: 15),
+              //           ),
+              //         ),
+              //       ],
+              //     ),
+              //   ),
+              // ),
             ],
           ),
         );
@@ -721,84 +847,72 @@ class _IronSteelState extends State<IronSteel> {
     );
   }
 
-  Widget _buildApiProductDetails(Map<String, dynamic> data, int index) {
+  Widget _buildProductDetailInRows(Map<String, dynamic> data) {
     return Column(
       children: [
-        // Row 1: UOM, Profile, Crimp
         Padding(
           padding: const EdgeInsets.all(8.0),
           child: Row(
             children: [
               Expanded(
-                child: _buildDetailItem("UOM", _buildUOMDropdown(data, index)),
+                child: _buildDetailItem("UOM", _uomDropdownFromApi(data)),
               ),
               SizedBox(width: 10),
               Expanded(
                 child: _buildDetailItem(
                   "Profile",
-                  _buildEditableField(data, "Profile", index),
+                  _editableTextField(data, "Profile"),
                 ),
               ),
               SizedBox(width: 10),
               Expanded(
-                child: _buildDetailItem(
-                  "Crimp",
-                  _buildEditableField(data, "Crimp", index),
-                ),
+                child: _buildDetailItem("Nos", _editableTextField(data, "Nos")),
               ),
             ],
           ),
         ),
-
-        // Row 2: Nos, Basic Rate, Sq.Mtr
+        Gap(5),
         Padding(
           padding: const EdgeInsets.all(8.0),
           child: Row(
             children: [
-              Expanded(
-                child: _buildDetailItem(
-                  "Nos",
-                  _buildEditableField(data, "Nos", index),
-                ),
-              ),
-              SizedBox(width: 10),
               Expanded(
                 child: _buildDetailItem(
                   "Basic Rate",
-                  _buildEditableField(data, "Basic Rate", index),
+                  _editableTextField(data, "Basic Rate"),
                 ),
               ),
               SizedBox(width: 10),
               Expanded(
                 child: _buildDetailItem(
-                  "Sq.Mtr",
-                  _buildEditableField(data, "Sq.Mtr", index),
+                  "SQMtr",
+                  _editableTextField(data, "SQMtr"),
+                ),
+              ),
+              SizedBox(width: 10),
+              Expanded(
+                child: _buildDetailItem(
+                  "Amount",
+                  _editableTextField(data, "Amount"),
                 ),
               ),
             ],
           ),
         ),
-
-        // Row 3: Amount
+        Gap(5.h),
         Padding(
           padding: const EdgeInsets.all(8.0),
           child: Row(
             children: [
               Expanded(
                 child: _buildDetailItem(
-                  "Amount",
-                  _buildEditableField(data, "Amount", index),
+                  "Crimp",
+                  _editableTextField(data, "height"),
                 ),
               ),
-              SizedBox(width: 20),
-              Expanded(child: Container()), // Empty space
-              SizedBox(width: 20),
-              Expanded(child: Container()), // Empty space
             ],
           ),
         ),
-
-        Gap(10),
       ],
     );
   }
@@ -821,27 +935,117 @@ class _IronSteelState extends State<IronSteel> {
     );
   }
 
-  Widget _buildUOMDropdown(Map<String, dynamic> data, int index) {
-    Map<String, dynamic> uomData = data["UOM"];
-    String currentValue = uomData["value"];
-    Map<String, dynamic> options = uomData["options"];
+  // Widget _uomDropdownFromApi(Map<String, dynamic> data) {
+  //   String productId = data["id"].toString();
+  //   Map<String, String>? options = uomOptions[productId];
+  //
+  //   if (options == null || options.isEmpty) {
+  //     return _editableTextField(data, "UOM");
+  //   }
+  //
+  //   String? currentValue;
+  //   if (data["UOM"] is Map) {
+  //     currentValue = data["UOM"]["value"]?.toString();
+  //   } else {
+  //     currentValue = data["UOM"]?.toString();
+  //   }
+  //
+  //   return SizedBox(
+  //     height: 40.h,
+  //     child: DropdownButtonFormField<String>(
+  //       value: currentValue,
+  //       items: options.entries
+  //           .map(
+  //             (entry) => DropdownMenuItem(
+  //               value: entry.key,
+  //               child: Text(entry.value),
+  //             ),
+  //           )
+  //           .toList(),
+  //       onChanged: (val) {
+  //         setState(() {
+  //           data["UOM"] = {"value": val, "options": options};
+  //         });
+  //         print("UOM changed to: $val"); // Debug print
+  //         print(
+  //           "Product data: ${data["Products"]}, ID: ${data["id"]}",
+  //         ); // Debug print
+  //         // Trigger calculation with debounce
+  //         _debounceCalculation(data);
+  //       },
+  //       decoration: InputDecoration(
+  //         contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 0),
+  //         border: OutlineInputBorder(
+  //           borderRadius: BorderRadius.circular(6),
+  //           borderSide: BorderSide(color: Colors.grey[300]!),
+  //         ),
+  //         enabledBorder: OutlineInputBorder(
+  //           borderRadius: BorderRadius.circular(6),
+  //           borderSide: BorderSide(color: Colors.grey[300]!),
+  //         ),
+  //         focusedBorder: OutlineInputBorder(
+  //           borderRadius: BorderRadius.circular(6),
+  //           borderSide: BorderSide(
+  //             color: Theme.of(context).primaryColor,
+  //             width: 2,
+  //           ),
+  //         ),
+  //         filled: true,
+  //         fillColor: Colors.grey[50],
+  //       ),
+  //     ),
+  //   );
+  // }
+
+  Widget _uomDropdownFromApi(Map<String, dynamic> data) {
+    String productId = data["id"].toString();
+
+    // Extract UOM data from the response
+    Map<String, dynamic>? uomData;
+    if (data["UOM"] is Map) {
+      uomData = Map<String, dynamic>.from(data["UOM"]);
+    }
+
+    // If no UOM data, return text field
+    if (uomData == null || !uomData.containsKey('options')) {
+      return _editableTextField(data, "UOM");
+    }
+
+    // Get the options map
+    Map<String, String> options =
+        Map<String, String>.from(uomData['options'] as Map);
+
+    // Get current value
+    String currentValue = uomData['value']?.toString() ?? options.keys.first;
 
     return SizedBox(
       height: 40.h,
       child: DropdownButtonFormField<String>(
         value: currentValue,
-        items: options.entries
-            .map(
-              (entry) => DropdownMenuItem(
-                value: entry.key,
-                child: Text(entry.value),
+        items: options.entries.map((entry) {
+          return DropdownMenuItem<String>(
+            value: entry.key,
+            child: Text(
+              entry.value,
+              style: GoogleFonts.figtree(
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
               ),
-            )
-            .toList(),
+            ),
+          );
+        }).toList(),
         onChanged: (val) {
-          setState(() {
-            apiResponseData[index]["UOM"]["value"] = val!;
-          });
+          if (val != null) {
+            setState(() {
+              // Update the UOM data structure
+              data["UOM"] = {
+                "value": val,
+                "options": options,
+              };
+            });
+            print("UOM changed to: $val (${options[val]})");
+            _debounceCalculation(data);
+          }
         },
         decoration: InputDecoration(
           contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 0),
@@ -867,7 +1071,9 @@ class _IronSteelState extends State<IronSteel> {
     );
   }
 
-  Widget _buildEditableField(Map<String, dynamic> data, String key, int index) {
+  Widget _editableTextField(Map<String, dynamic> data, String key) {
+    final controller = _getController(data, key);
+
     return SizedBox(
       height: 38.h,
       child: TextField(
@@ -876,14 +1082,41 @@ class _IronSteelState extends State<IronSteel> {
           color: Colors.black,
           fontSize: 15.sp,
         ),
-        controller: TextEditingController(text: data[key].toString()),
+        controller: controller,
+        keyboardType: (key == "Length" ||
+                key == "Nos" ||
+                key == "Basic Rate" ||
+                key == "Amount" ||
+                key == "sqmtr")
+            ? TextInputType.numberWithOptions(decimal: true)
+            : TextInputType.text,
         onChanged: (val) {
           setState(() {
-            apiResponseData[index][key] = val;
+            data[key] = val;
           });
+
+          print("Field $key changed to: $val");
+          print("Controller text: ${controller.text}");
+          print("Data after change: ${data[key]}");
+
+          // 🚫 DO NOT forcefully reset controller.text here!
+          // if (controller.text != val) {
+          //   controller.text = val;
+          // }
+
+          if (key == "Length" ||
+              key == "Nos" ||
+              key == "Basic Rate" ||
+              key == "height") {
+            print("Triggering calculation for $key with value: $val");
+            _debounceCalculation(data);
+          }
         },
         decoration: InputDecoration(
-          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 0),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 12,
+            vertical: 0,
+          ),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(6),
             borderSide: BorderSide(color: Colors.grey[300]!),
@@ -914,6 +1147,244 @@ class _IronSteelState extends State<IronSteel> {
       if (selectedCoatingMass != null) "CoatingMass: $selectedCoatingMass",
     ];
     return values.isEmpty ? "No selections yet" : values.join(",  ");
+  }
+
+  Timer? _debounceTimer;
+  Map<String, dynamic> calculationResults = {};
+  Map<String, String?> previousUomValues = {}; // Track previous UOM values
+  Map<String, Map<String, TextEditingController>> fieldControllers =
+      {}; // Store controllers
+
+  // Method to get or create controller for each field
+  TextEditingController _getController(Map<String, dynamic> data, String key) {
+    String productId = data["id"].toString();
+
+    // Initialize controllers map for this product ID
+    fieldControllers.putIfAbsent(productId, () => {});
+
+    // If controller for this key doesn't exist, create it
+    if (!fieldControllers[productId]!.containsKey(key)) {
+      String initialValue = (data[key] != null && data[key].toString() != "0")
+          ? data[key].toString()
+          : ""; // Avoid initializing with "0"
+
+      fieldControllers[productId]![key] = TextEditingController(
+        text: initialValue,
+      );
+
+      print("Created controller for [$key] with value: '$initialValue'");
+    } else {
+      // Existing controller: check if it needs sync from data
+      final controller = fieldControllers[productId]![key]!;
+
+      final dataValue = data[key]?.toString() ?? "";
+
+      // If the controller is empty but data has a value, sync it
+      if (controller.text.isEmpty && dataValue.isNotEmpty && dataValue != "0") {
+        controller.text = dataValue;
+        print("Synced controller for [$key] to: '$dataValue'");
+      }
+    }
+
+    return fieldControllers[productId]![key]!;
+  }
+
+  // Add this method for debounced calculation
+  void _debounceCalculation(Map<String, dynamic> data) {
+    _debounceTimer?.cancel();
+    _debounceTimer = Timer(Duration(seconds: 1), () {
+      _performCalculation(data);
+    });
+  }
+
+  Future<void> _performCalculation(Map<String, dynamic> data) async {
+    print("=== STARTING CALCULATION API ===");
+    print("Data received: $data");
+
+    final client = IOClient(
+      HttpClient()..badCertificateCallback = (_, __, ___) => true,
+    );
+    final url = Uri.parse('$apiUrl/calculation');
+
+    String productId = data["id"].toString();
+
+    // Get current UOM value
+    String? currentUom;
+    if (data["UOM"] is Map) {
+      currentUom = data["UOM"]["value"]?.toString();
+    } else {
+      currentUom = data["UOM"]?.toString();
+    }
+
+    print("Current UOM: $currentUom");
+    print("Previous UOM: ${previousUomValues[productId]}");
+
+    // Get Profile value from controller
+    double? profileValue;
+    String? profileText;
+
+    if (fieldControllers.containsKey(productId) &&
+        fieldControllers[productId]!.containsKey("Profile")) {
+      profileText = fieldControllers[productId]!["Profile"]!.text;
+      print("Profile from controller: $profileText");
+    }
+
+    if (profileText == null || profileText.isEmpty) {
+      profileText = data["Profile"]?.toString();
+      print("Profile from data: $profileText");
+    }
+
+    if (profileText != null && profileText.isNotEmpty) {
+      profileValue = double.tryParse(profileText);
+    }
+
+    // Get Nos value from controller
+    int nosValue = 0;
+    String? nosText;
+
+    if (fieldControllers.containsKey(productId) &&
+        fieldControllers[productId]!.containsKey("Nos")) {
+      nosText = fieldControllers[productId]!["Nos"]!.text;
+      print("Nos from controller: $nosText");
+    }
+
+    if (nosText == null || nosText.isEmpty) {
+      nosText = data["Nos"]?.toString();
+      print("Nos from data: $nosText");
+    }
+
+    if (nosText != null && nosText.isNotEmpty) {
+      nosValue = int.tryParse(nosText) ?? 1;
+    }
+
+    // Get height (crimp) value from controller
+    String? heightValue;
+    if (fieldControllers.containsKey(productId) &&
+        fieldControllers[productId]!.containsKey("height")) {
+      heightValue = fieldControllers[productId]!["height"]!.text;
+      print("Height from controller: $heightValue");
+    }
+
+    if (heightValue == null || heightValue.isEmpty) {
+      heightValue = data["height"]?.toString();
+      print("Height from data: $heightValue");
+    }
+
+    print("Final Profile Value: $profileValue");
+    print("Final Nos Value: $nosValue");
+    print("Final Height Value: $heightValue");
+
+    final requestBody = {
+      "id": int.tryParse(data["id"].toString()) ?? 0,
+      "category_id": 3,
+      "product": data["Products"]?.toString() ?? "",
+      "height": heightValue,
+      "previous_uom": previousUomValues[productId] != null
+          ? int.tryParse(previousUomValues[productId]!)
+          : null,
+      "current_uom": currentUom != null ? int.tryParse(currentUom) : null,
+      "length": profileValue ?? 0,
+      "nos": nosValue,
+      "basic_rate": double.tryParse(data["Basic Rate"]?.toString() ?? "0") ?? 0,
+    };
+
+    print("Request Body: ${jsonEncode(requestBody)}");
+
+    try {
+      final response = await client.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(requestBody),
+      );
+
+      print("Response Status: ${response.statusCode}");
+      print("Response Body: ${response.body}");
+
+      if (response.statusCode == 200) {
+        final responseData = jsonDecode(response.body);
+
+        if (responseData["status"] == "success") {
+          setState(() {
+            calculationResults[productId] = responseData;
+
+            // Update Profile/Length
+            if (responseData["Length"] != null) {
+              data["Profile"] = responseData["Length"].toString();
+              if (fieldControllers[productId]?["Profile"] != null) {
+                fieldControllers[productId]!["Profile"]!.text =
+                    responseData["Length"].toString();
+              }
+            }
+
+            // Update Nos
+            if (responseData["Nos"] != null) {
+              String newNos = responseData["Nos"].toString().trim();
+              String currentInput =
+                  fieldControllers[productId]!["Nos"]!.text.trim();
+
+              if (currentInput.isEmpty || currentInput == "0") {
+                data["Nos"] = newNos;
+                if (fieldControllers[productId]?["Nos"] != null) {
+                  fieldControllers[productId]!["Nos"]!.text = newNos;
+                }
+                print("Nos field updated to: $newNos");
+              } else {
+                print("Nos NOT updated because user input = '$currentInput'");
+              }
+            }
+
+            // Update Height/Crimp
+            if (responseData["crimp"] != null) {
+              String newCrimp = responseData["crimp"].toString();
+              String currentCrimp =
+                  fieldControllers[productId]!["height"]?.text.trim() ?? "";
+
+              if (currentCrimp.isEmpty || currentCrimp == "0") {
+                data["height"] = newCrimp;
+                if (fieldControllers[productId]?["height"] != null) {
+                  fieldControllers[productId]!["height"]!.text = newCrimp;
+                }
+                print("Height field updated to: $newCrimp");
+              } else {
+                print(
+                    "Height NOT updated because user input = '$currentCrimp'");
+              }
+            }
+
+            // Update SQMtr
+            if (responseData["sqmtr"] != null) {
+              data["SQMtr"] = responseData["sqmtr"].toString();
+              if (fieldControllers[productId]?["SQMtr"] != null) {
+                fieldControllers[productId]!["SQMtr"]!.text =
+                    responseData["sqmtr"].toString();
+              }
+            }
+
+            // Update Amount
+            if (responseData["Amount"] != null) {
+              data["Amount"] = responseData["Amount"].toString();
+              if (fieldControllers[productId]?["Amount"] != null) {
+                fieldControllers[productId]!["Amount"]!.text =
+                    responseData["Amount"].toString();
+              }
+            }
+
+            previousUomValues[productId] = currentUom;
+          });
+
+          print("=== CALCULATION SUCCESS ===");
+          print(
+            "Updated data: Length=${data["Profile"]}, Nos=${data["Nos"]}, Height=${data["height"]}, Amount=${data["Amount"]}",
+          );
+        } else {
+          print("API returned error status: ${responseData["status"]}");
+        }
+      } else {
+        print("HTTP Error: ${response.statusCode}");
+      }
+    } catch (e) {
+      print("Calculation API Error: $e");
+    }
   }
 
   Widget _buildAnimatedDropdown(
@@ -1174,7 +1645,7 @@ class _IronSteelState extends State<IronSteel> {
                     color: Colors.black,
                   ),
                 SizedBox(height: 8),
-                _buildApiResponseList(),
+                _buildSubmittedDataList(),
               ],
             ),
           ),

@@ -37,10 +37,10 @@ class _AccessoriesState extends State<Accessories> {
   List<String> thickAndList = [];
   List<String> coatingAndList = [];
 
-  // List<String> brandList = [];
+// List<String> brandList = [];
   List<Map<String, dynamic>> submittedData = [];
 
-  // Form key for validation
+// Form key for validation
   final _formKey = GlobalKey<FormState>();
 
   @override
@@ -148,10 +148,10 @@ class _AccessoriesState extends State<Accessories> {
         url,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-          // "category_id": "3",
-          // "selectedlabel": "brand",
-          // "selectedvalue": selectedBrands,
-          // "label_name": "color",
+// "category_id": "3",
+// "selectedlabel": "brand",
+// "selectedvalue": selectedBrands,
+// "label_name": "color",
           "product_label": "color",
           "product_filters": [selectedAccessories],
           "product_label_filters": ["accessories_name"],
@@ -202,10 +202,10 @@ class _AccessoriesState extends State<Accessories> {
         url,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-          // "category_id": "3",
-          // "selectedlabel": "color",
-          // "selectedvalue": selectedColors,
-          // "label_name": "thickness",
+// "category_id": "3",
+// "selectedlabel": "color",
+// "selectedvalue": selectedColors,
+// "label_name": "thickness",
           "product_label": "thickness",
           "product_filters": [selectedAccessories],
           "product_label_filters": ["accessories_name"],
@@ -309,13 +309,18 @@ class _AccessoriesState extends State<Accessories> {
   }
 
   ///post All Data
-  // Add these variables after line 25 (after the existing List declarations)
+// Add these variables after line 25 (after the existing List declarations)
   Map<String, dynamic>? apiResponseData;
   List<dynamic> responseProducts = [];
   Map<String, Map<String, String>> uomOptions = {};
 
   ///post All Data
-  // Replace the existing postAllData() method with this updated version:
+// Updated postAllData method to trigger image fetching after successful response
+
+// Updated postAllData method with better product ID handling
+  String? currentMainProductId;
+
+// Updated postAllData method to store the main product_id
   Future<void> postAllData() async {
     HttpClient client = HttpClient();
     client.badCertificateCallback =
@@ -336,6 +341,7 @@ class _AccessoriesState extends State<Accessories> {
     print("This is a body data: $data");
     final url = "$apiUrl/addbag";
     final body = jsonEncode(data);
+
     try {
       final response = await ioClient.post(
         Uri.parse(url),
@@ -344,23 +350,32 @@ class _AccessoriesState extends State<Accessories> {
       );
 
       debugPrint("This is a response: ${response.body}");
+
       if (selectedAccessories == null ||
           selectedBrands == null ||
           selectedColors == null ||
           selectedThickness == null ||
-          selectedCoatingMass == null) return;
+          selectedCoatingMass == null) {
+        return;
+      }
 
       if (response.statusCode == 200) {
-        // Parse and store the API response
+// Parse and store the API response
         final responseData = jsonDecode(response.body);
         setState(() {
           apiResponseData = responseData;
+
+// Store the main product_id from the response
+          currentMainProductId = responseData["product_id"]?.toString();
+          debugPrint("Stored main product_id: $currentMainProductId");
+
           if (responseData["lebels"] != null &&
               responseData["lebels"].isNotEmpty) {
-            responseProducts.addAll(responseData["lebels"][0]["data"] ?? []);
+            List<dynamic> newProducts = responseData["lebels"][0]["data"] ?? [];
+            responseProducts.addAll(newProducts);
 
-            // Store UOM options for each product
-            for (var product in responseProducts) {
+// Store UOM options for each product
+            for (var product in newProducts) {
               if (product["UOM"] != null && product["UOM"]["options"] != null) {
                 uomOptions[product["id"].toString()] = Map<String, String>.from(
                   product["UOM"]["options"].map(
@@ -368,24 +383,42 @@ class _AccessoriesState extends State<Accessories> {
                   ),
                 );
               }
+
+// Debug print to see the product structure
+              debugPrint(
+                  "Product added: ${product["id"]} - ${product["Products"]}");
             }
           }
         });
+
+// // Show success message
+//         ScaffoldMessenger.of(context).showSnackBar(
+//           SnackBar(content: Text("Product added successfully!")),
+//         );
+      } else {
+        debugPrint("Error response: ${response.statusCode} - ${response.body}");
+        throw Exception("Server returned ${response.statusCode}");
       }
     } catch (e) {
+      debugPrint("Exception in postAllData: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error adding product: $e")),
+      );
       throw Exception("Error posting data: $e");
+    } finally {
+      client.close();
     }
   }
 
   /// Base View Products data //
-  // Add these variables with your existing variables
+// Add these variables with your existing variables
   TextEditingController baseProductController = TextEditingController();
   List<dynamic> baseProductResults = [];
   bool isSearchingBaseProduct = false;
   String? selectedBaseProduct;
   FocusNode baseProductFocusNode = FocusNode();
 
-  // Add this method for searching base products
+// Add this method for searching base products
   Future<void> searchBaseProducts(String query) async {
     if (query.isEmpty) {
       setState(() {
@@ -434,7 +467,7 @@ class _AccessoriesState extends State<Accessories> {
     }
   }
 
-  // Add this method to build the base product search field
+// Add this method to build the base product search field
   Widget _buildBaseProductSearchField() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -486,7 +519,7 @@ class _AccessoriesState extends State<Accessories> {
           ),
         ),
 
-        // Search Results Display (line by line, not dropdown)
+// Search Results Display (line by line, not dropdown)
         if (baseProductResults.isNotEmpty)
           Container(
             margin: EdgeInsets.only(top: 8),
@@ -565,7 +598,7 @@ class _AccessoriesState extends State<Accessories> {
             ),
           ),
 
-        // Selected Base Product Display
+// Selected Base Product Display
         if (selectedBaseProduct != null)
           Container(
             margin: EdgeInsets.only(top: 8),
@@ -612,7 +645,7 @@ class _AccessoriesState extends State<Accessories> {
         selectedColors == null ||
         selectedThickness == null ||
         selectedCoatingMass == null) {
-      // Show elegant error message
+// Show elegant error message
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
@@ -630,7 +663,6 @@ class _AccessoriesState extends State<Accessories> {
       );
       return;
     }
-
     postAllData().then((_) {
       setState(() {
         submittedData.add({
@@ -658,7 +690,7 @@ class _AccessoriesState extends State<Accessories> {
         _fetchBrandData();
       });
 
-      // Show success message with a more elegant snackBar
+// Show success message with a more elegant snackBar
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Row(
@@ -678,10 +710,10 @@ class _AccessoriesState extends State<Accessories> {
     });
   }
 
-  // 1. Add this variable after line 25 (with other existing variables)
+// 1. Add this variable after line 25 (with other existing variables)
   bool isGridView = true; // Add this line
 
-  // 2. Replace the existing _buildSubmittedDataList() method with this updated version:
+// 2. Replace the existing _buildSubmittedDataList() method with this updated version:
   Widget _buildSubmittedDataList() {
     if (responseProducts.isEmpty) {
       return Container(
@@ -702,7 +734,7 @@ class _AccessoriesState extends State<Accessories> {
 
     return Column(
       children: [
-        // Toggle Button Row
+// Toggle Button Row
         Row(
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
@@ -766,13 +798,13 @@ class _AccessoriesState extends State<Accessories> {
         ),
         SizedBox(height: 16),
 
-        // Content based on view type
+// Content based on view type
         isGridView ? _buildGridView() : _buildListView(),
       ],
     );
   }
 
-  // 3. Add this new method for Grid View (your existing card layout):
+  /// 3. Add this new method for Grid View (your existing card layout):
   Widget _buildGridView() {
     return Column(
       children: responseProducts.asMap().entries.map((entry) {
@@ -827,6 +859,29 @@ class _AccessoriesState extends State<Accessories> {
                         color: Colors.blue[700],
                         fontWeight: FontWeight.w500,
                       ),
+                    ),
+                  ),
+// Attachment Button
+                  Padding(
+                    padding: const EdgeInsets.all(4.0),
+                    child: Container(
+                      height: 40.h,
+                      width: 40.w,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(10),
+                        color: Colors.green[50],
+                      ),
+                      child: IconButton(
+                          icon: Icon(Icons.attach_file,
+                              color: Colors.green[600], size: 20),
+// Alternative - explicitly use main product_id:
+                          onPressed: () {
+                            String mainProductId =
+                                apiResponseData?["product_id"]?.toString() ??
+                                    "Unknown ID";
+// String productName = product["Products"] ?? "Unknown Product";
+                            _showAttachmentDialog(mainProductId);
+                          }),
                     ),
                   ),
                   Padding(
@@ -885,7 +940,7 @@ class _AccessoriesState extends State<Accessories> {
     );
   }
 
-  // 4. Add this new method for List View (compact horizontal layout):
+// 4. Add this new method for List View (compact horizontal layout):
   Widget _buildListView() {
     return Column(
       children: responseProducts.asMap().entries.map((entry) {
@@ -902,7 +957,7 @@ class _AccessoriesState extends State<Accessories> {
             padding: EdgeInsets.all(12),
             child: Column(
               children: [
-                // Product Header Row
+// Product Header Row
                 Row(
                   children: [
                     Expanded(
@@ -935,7 +990,26 @@ class _AccessoriesState extends State<Accessories> {
                         ),
                       ),
                     ),
-                    SizedBox(width: 8),
+                    SizedBox(width: 4),
+// Attachment Button
+                    Container(
+                      height: 28,
+                      width: 28,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(6),
+                        color: Colors.green[50],
+                      ),
+                      child: IconButton(
+                        padding: EdgeInsets.zero,
+                        icon: Icon(
+                          Icons.attach_file,
+                          color: Colors.green[600],
+                          size: 16,
+                        ),
+                        onPressed: () {},
+                      ),
+                    ),
+                    SizedBox(width: 4),
                     Container(
                       height: 32,
                       width: 32,
@@ -987,7 +1061,7 @@ class _AccessoriesState extends State<Accessories> {
                 ),
                 SizedBox(height: 12),
 
-                // Compact Data Row
+// Compact Data Row
                 Row(
                   children: [
                     Expanded(
@@ -1045,7 +1119,7 @@ class _AccessoriesState extends State<Accessories> {
     );
   }
 
-  // 5. Add this helper method for compact fields in list view:
+// 5. Add this helper method for compact fields in list view:
   Widget _buildCompactField(String label, Widget field) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1064,7 +1138,7 @@ class _AccessoriesState extends State<Accessories> {
     );
   }
 
-  // Replace the existing _buildProductDetailInRows() method with this:
+// Replace the existing _buildProductDetailInRows() method with this:
 
   Widget _buildDetailItem(String label, Widget field) {
     return Column(
@@ -1084,9 +1158,9 @@ class _AccessoriesState extends State<Accessories> {
     );
   }
 
-  // Modified UOM dropdown with calculation trigger
+  /// Modified UOM dropdown with calculation trigger
 
-  // Modified UOM dropdown with calculation trigger
+// Modified UOM dropdown with calculation trigger
   Widget _uomDropdownFromApi(Map<String, dynamic> data) {
     String productId = data["id"].toString();
     Map<String, String>? options = uomOptions[productId];
@@ -1122,7 +1196,7 @@ class _AccessoriesState extends State<Accessories> {
           print(
             "Product data: ${data["Products"]}, ID: ${data["id"]}",
           ); // Debug print
-          // Trigger calculation with debounce
+// Trigger calculation with debounce
           _debounceCalculation(data);
         },
         decoration: InputDecoration(
@@ -1149,7 +1223,7 @@ class _AccessoriesState extends State<Accessories> {
     );
   }
 
-  // Modified editable text field with proper controller management
+// Modified editable text field with proper controller management
   Widget _editableTextField(Map<String, dynamic> data, String key) {
     final controller = _getController(data, key);
 
@@ -1178,10 +1252,10 @@ class _AccessoriesState extends State<Accessories> {
           print("Controller text: ${controller.text}");
           print("Data after change: ${data[key]}");
 
-          // 🚫 DO NOT forcefully reset controller.text here!
-          // if (controller.text != val) {
-          //   controller.text = val;
-          // }
+// 🚫 DO NOT forcefully reset controller.text here!
+// if (controller.text != val) {
+//   controller.text = val;
+// }
 
           if (key == "Length" || key == "Nos" || key == "Basic Rate") {
             print("Triggering calculation for $key with value: $val");
@@ -1215,7 +1289,7 @@ class _AccessoriesState extends State<Accessories> {
     );
   }
 
-  // Modified product detail rows to include R.Ft
+// Modified product detail rows to include R.Ft
   Widget _buildProductDetailInRows(Map<String, dynamic> data) {
     return Column(
       children: [
@@ -1284,7 +1358,339 @@ class _AccessoriesState extends State<Accessories> {
     return value.isEmpty ? "No selection yet" : value.join(",  ");
   }
 
-  // Add these variables after existing declarations
+// Updated fetchProductImages method with better error handling
+// Updated fetchProductImages method with better error handling
+  Future<List<dynamic>> fetchProductImages(String productId) async {
+    HttpClient client = HttpClient();
+    client.badCertificateCallback =
+        ((X509Certificate cert, String host, int port) => true);
+    IOClient ioClient = IOClient(client);
+
+    final headers = {"Content-Type": "application/json"};
+    final data = {"product_id": productId};
+    const url = "https://demo.zaron.in:8181/ci4/api/product_images";
+    final body = jsonEncode(data);
+
+    debugPrint("Fetching images for product ID: $productId");
+    debugPrint("Request body: $body");
+
+    try {
+      final response = await ioClient.post(
+        Uri.parse(url),
+        headers: headers,
+        body: body,
+      );
+
+      debugPrint("Product Images Response Status: ${response.statusCode}");
+      debugPrint("Product Images Response Body: ${response.body}");
+
+      if (response.statusCode == 200) {
+        final responseData = jsonDecode(response.body);
+
+// Handle the actual response structure
+        if (responseData["status"] == "success" &&
+            responseData["product_images"] != null) {
+          debugPrint(
+              "Successfully fetched ${responseData["product_images"].length} images");
+          return responseData["product_images"];
+        } else {
+          debugPrint("No images found or invalid response structure");
+          debugPrint("Response status: ${responseData["status"]}");
+          return [];
+        }
+      } else {
+        debugPrint("Failed to fetch images: ${response.statusCode}");
+        debugPrint("Response body: ${response.body}");
+
+// Try to parse error response
+        try {
+          final errorData = jsonDecode(response.body);
+          debugPrint("Error details: ${errorData["message"]}");
+        } catch (e) {
+          debugPrint("Could not parse error response: $e");
+        }
+        return [];
+      }
+    } catch (e) {
+      debugPrint("Exception in fetchProductImages: $e");
+      return [];
+    } finally {
+      client.close();
+    }
+  }
+
+// Updated _showAttachmentDialog method to fetch and display images
+// Updated _showAttachmentDialog method - always use main product_id
+  void _showAttachmentDialog(String productName) async {
+// Show loading dialog first
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => Center(
+        child: CircularProgressIndicator(),
+      ),
+    );
+
+    try {
+// Always use the main product_id from the API response, not individual item IDs
+      String mainProductId = currentMainProductId ??
+          apiResponseData?["product_id"]?.toString() ??
+          "Unknown ID";
+
+      debugPrint("Using MAIN product ID for images: $mainProductId");
+      debugPrint("Product name: $productName");
+
+// Fetch product images using the main product_id
+      List<dynamic> images = await fetchProductImages(mainProductId);
+
+// Close loading dialog
+      Navigator.pop(context);
+
+// Show images dialog
+      showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            title: Text(
+              "Attachments - $productName",
+              style: GoogleFonts.figtree(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            content: Container(
+              width: double.maxFinite,
+              height: images.isEmpty ? 100 : 300,
+              child: images.isEmpty
+                  ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.image_not_supported,
+                            size: 50,
+                            color: Colors.grey,
+                          ),
+                          SizedBox(height: 10),
+                          Text(
+                            "No images available",
+                            style: TextStyle(color: Colors.grey),
+                          ),
+                        ],
+                      ),
+                    )
+                  : ListView.builder(
+                      itemCount: images.length,
+                      itemBuilder: (context, index) {
+                        var imageData = images[index];
+                        String imageUrl = "";
+                        String imageName = "";
+
+// Handle the actual API response structure
+                        if (imageData is Map) {
+// Make sure to construct the full URL correctly
+                          String imagePath = imageData["product_image"] ?? "";
+                          if (imagePath.isNotEmpty) {
+// Check if the path already includes the base URL
+                            if (imagePath.startsWith('http')) {
+                              imageUrl = imagePath;
+                            } else {
+                              imageUrl =
+                                  "https://demo.zaron.in:8181/uploads/$imagePath";
+                            }
+                          }
+                          imageName = imageData["image_layout_plan"] ??
+                              "Image ${index + 1}";
+                        }
+
+                        return Card(
+                          margin: EdgeInsets.symmetric(vertical: 5),
+                          child: imageUrl.isNotEmpty
+                              ? Column(
+                                  children: [
+                                    GestureDetector(
+                                      onTap: () {
+// Show full screen image
+                                        _showFullScreenImage(imageUrl);
+                                      },
+                                      child: Container(
+                                        height: 200,
+                                        width: double.infinity,
+                                        child: Image.network(
+                                          imageUrl,
+                                          fit: BoxFit.cover,
+                                          loadingBuilder: (context, child,
+                                              loadingProgress) {
+                                            if (loadingProgress == null)
+                                              return child;
+                                            return Center(
+                                              child: CircularProgressIndicator(
+                                                value: loadingProgress
+                                                            .expectedTotalBytes !=
+                                                        null
+                                                    ? loadingProgress
+                                                            .cumulativeBytesLoaded /
+                                                        loadingProgress
+                                                            .expectedTotalBytes!
+                                                    : null,
+                                              ),
+                                            );
+                                          },
+                                          errorBuilder:
+                                              (context, error, stackTrace) {
+                                            debugPrint(
+                                                "Image load error: $error");
+                                            debugPrint("Image URL: $imageUrl");
+                                            return Container(
+                                              height: 200,
+                                              color: Colors.grey[200],
+                                              child: Column(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment.center,
+                                                children: [
+                                                  Icon(Icons.broken_image,
+                                                      size: 50,
+                                                      color: Colors.grey),
+                                                  Text("Failed to load image",
+                                                      style: TextStyle(
+                                                          color: Colors.grey)),
+                                                  Text("URL: $imageUrl",
+                                                      style: TextStyle(
+                                                          color: Colors.grey,
+                                                          fontSize: 10)),
+                                                ],
+                                              ),
+                                            );
+                                          },
+                                        ),
+                                      ),
+                                    ),
+// Show image name/layout plan
+                                    Padding(
+                                      padding: EdgeInsets.all(8.0),
+                                      child: Text(
+                                        imageName,
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.w500,
+                                          fontSize: 14,
+                                        ),
+                                        textAlign: TextAlign.center,
+                                      ),
+                                    ),
+                                  ],
+                                )
+                              : ListTile(
+                                  leading: Icon(Icons.broken_image,
+                                      color: Colors.grey),
+                                  title: Text("Invalid image data"),
+                                ),
+                        );
+                      },
+                    ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text("Close"),
+              ),
+            ],
+          );
+        },
+      );
+    } catch (e) {
+// Close loading dialog if still open
+      Navigator.pop(context);
+
+      debugPrint("Error in _showAttachmentDialog: $e");
+
+// Show error dialog
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text("Error"),
+          content: Text("Failed to load images: $e"),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text("OK"),
+            ),
+          ],
+        ),
+      );
+    }
+  }
+
+// Example of how to call it correctly:
+// Example of how to call it correctly:
+  void onAttachmentButtonPressed(Map<String, dynamic> product) {
+// Use the main product_id from the API response, not the individual item ID
+    String productId =
+        currentMainProductId ?? "1"; // Use stored main product_id
+    String productName = product["Products"] ?? "Unknown Product";
+
+    debugPrint("Using main product_id for attachment: $productId");
+    _showAttachmentDialog(
+      productId,
+    );
+  }
+
+// Alternative way if you want to extract it directly from apiResponseData:
+  void onAttachmentButtonPressedAlternative(Map<String, dynamic> product) {
+    String productId = apiResponseData?["product_id"]?.toString() ?? "1";
+    String productName = product["Products"] ?? "Unknown Product";
+
+    debugPrint("Using main product_id for attachment: $productId");
+    _showAttachmentDialog(
+      productId,
+    );
+  }
+
+// Add a class variable to store the main product_id
+
+// Method to show full screen image
+  void _showFullScreenImage(String imageUrl) {
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        backgroundColor: Colors.black,
+        child: Stack(
+          children: [
+            Center(
+              child: InteractiveViewer(
+                child: Image.network(
+                  imageUrl,
+                  fit: BoxFit.contain,
+                  errorBuilder: (context, error, stackTrace) {
+                    return Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.broken_image,
+                              size: 100, color: Colors.white),
+                          Text("Failed to load image",
+                              style: TextStyle(color: Colors.white)),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ),
+            Positioned(
+              top: 40,
+              right: 20,
+              child: IconButton(
+                icon: Icon(Icons.close, color: Colors.white, size: 30),
+                onPressed: () => Navigator.pop(context),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+// Add these variables after existing declarations
 
   Timer? _debounceTimer;
   Map<String, dynamic> calculationResults = {};
@@ -1292,14 +1698,14 @@ class _AccessoriesState extends State<Accessories> {
   Map<String, Map<String, TextEditingController>> fieldControllers =
       {}; // Store controllers
 
-  // Method to get or create controller for each field
+// Method to get or create controller for each field
   TextEditingController _getController(Map<String, dynamic> data, String key) {
     String productId = data["id"].toString();
 
-    // Initialize controllers map for this product ID
+// Initialize controllers map for this product ID
     fieldControllers.putIfAbsent(productId, () => {});
 
-    // If controller for this key doesn't exist, create it
+// If controller for this key doesn't exist, create it
     if (!fieldControllers[productId]!.containsKey(key)) {
       String initialValue = (data[key] != null && data[key].toString() != "0")
           ? data[key].toString()
@@ -1311,12 +1717,12 @@ class _AccessoriesState extends State<Accessories> {
 
       print("Created controller for [$key] with value: '$initialValue'");
     } else {
-      // Existing controller: check if it needs sync from data
+// Existing controller: check if it needs sync from data
       final controller = fieldControllers[productId]![key]!;
 
       final dataValue = data[key]?.toString() ?? "";
 
-      // If the controller is empty but data has a value, sync it
+// If the controller is empty but data has a value, sync it
       if (controller.text.isEmpty && dataValue.isNotEmpty && dataValue != "0") {
         controller.text = dataValue;
         print("Synced controller for [$key] to: '$dataValue'");
@@ -1326,7 +1732,7 @@ class _AccessoriesState extends State<Accessories> {
     return fieldControllers[productId]![key]!;
   }
 
-  // Add this method for debounced calculation
+// Add this method for debounced calculation
   void _debounceCalculation(Map<String, dynamic> data) {
     _debounceTimer?.cancel();
     _debounceTimer = Timer(Duration(seconds: 1), () {
@@ -1334,7 +1740,7 @@ class _AccessoriesState extends State<Accessories> {
     });
   }
 
-  // Calculation API method - FIXED VERSION with UI Updates
+// Calculation API method - FIXED VERSION with UI Updates
   Future<void> _performCalculation(Map<String, dynamic> data) async {
     print("=== STARTING CALCULATION API ===");
     print("Data received: $data");
@@ -1346,7 +1752,7 @@ class _AccessoriesState extends State<Accessories> {
 
     String productId = data["id"].toString();
 
-    // Get current UOM value
+// Get current UOM value
     String? currentUom;
     if (data["UOM"] is Map) {
       currentUom = data["UOM"]["value"]?.toString();
@@ -1357,7 +1763,7 @@ class _AccessoriesState extends State<Accessories> {
     print("Current UOM: $currentUom");
     print("Previous UOM: ${previousUomValues[productId]}");
 
-    // Get Profile value from controller
+// Get Profile value from controller
     double? profileValue;
     String? profileText;
 
@@ -1376,7 +1782,7 @@ class _AccessoriesState extends State<Accessories> {
       profileValue = double.tryParse(profileText);
     }
 
-    // Get Nos value from controller
+// Get Nos value from controller
     int nosValue = 0;
     String? nosText;
 
@@ -1792,7 +2198,7 @@ class _AccessoriesState extends State<Accessories> {
               ),
             ),
             constraints: BoxConstraints(maxHeight: 300),
-            // borderRadius: BorderRadius.circular(12),
+// borderRadius: BorderRadius.circular(12),
           ),
         ),
       ),

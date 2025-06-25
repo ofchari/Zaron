@@ -24,7 +24,7 @@ class TotalEnquiryView extends StatefulWidget {
 }
 
 class _TotalEnquiryViewState extends State<TotalEnquiryView> {
-  int? selectedRowIndex;
+  Map<String, int?> selectedRowIndices = {};
 
   String categoryName = '';
   final remarkController = TextEditingController();
@@ -229,7 +229,7 @@ class _TotalEnquiryViewState extends State<TotalEnquiryView> {
                                 ),
                                 hint: Text(
                                   "Select option",
-                                  style: GoogleFonts.outfit(
+                                  style: GoogleFonts.figtree(
                                     fontSize: 14.5,
                                     fontWeight: FontWeight.w400,
                                     color: Colors.black,
@@ -563,7 +563,7 @@ class _TotalEnquiryViewState extends State<TotalEnquiryView> {
                                           table['data']);
                                   String categoryName = table['categoryName'];
 
-// Get UOM/Billing options from first row if available
+                                  // Get UOM/Billing options from first row if available
                                   Map<String, dynamic> uomOptions = {};
                                   Map<String, dynamic> billingOptions = {};
 
@@ -614,15 +614,38 @@ class _TotalEnquiryViewState extends State<TotalEnquiryView> {
                                           Map<String, dynamic> row =
                                               entry.value;
                                           return DataRow(
+                                            // onSelectChanged: (selected) {
+                                            //   setState(() {
+                                            //     selectedRowIndex = rowIndex;
+                                            //   });
+                                            // },
+                                            // color: MaterialStateProperty
+                                            //     .resolveWith<Color?>(
+                                            //         (Set<MaterialState> state) {
+                                            //   if (selectedRowIndex ==
+                                            //       rowIndex) {
+                                            //     return Colors.grey.shade200;
+                                            //   }
+                                            //   return null;
+                                            // }),
                                             onSelectChanged: (selected) {
                                               setState(() {
-                                                selectedRowIndex = rowIndex;
+                                                // Use categoryName as the key to track selection for each table
+                                                if (selected!) {
+                                                  selectedRowIndices[
+                                                      categoryName] = rowIndex;
+                                                } else {
+                                                  selectedRowIndices
+                                                      .remove(categoryName);
+                                                }
                                               });
                                             },
                                             color: MaterialStateProperty
                                                 .resolveWith<Color?>(
                                                     (Set<MaterialState> state) {
-                                              if (selectedRowIndex ==
+                                              // Check if this row is selected in its specific table
+                                              if (selectedRowIndices[
+                                                      categoryName] ==
                                                   rowIndex) {
                                                 return Colors.grey.shade200;
                                               }

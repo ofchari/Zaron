@@ -4,6 +4,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:zaron/view/screens/cancel_quotation.dart';
+import 'package:zaron/view/screens/login.dart';
 import 'package:zaron/view/screens/new_enquirys/new_enquiry.dart';
 import 'package:zaron/view/screens/quotation.dart';
 import 'package:zaron/view/screens/total_enquiry.dart';
@@ -101,9 +102,13 @@ class _DashboardState extends State<Dashboard> {
     ];
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
+      backgroundColor: Color(0xFFF5F5F5),
       appBar: AppBar(
-        leading: Icon(Icons.login_sharp),
+        leading: IconButton(
+            onPressed: () {
+              Get.offAll(Login());
+            },
+            icon: const Icon(Icons.logout, color: Colors.black)),
         title: Subhead(
             text: "Dashboard", weight: FontWeight.w600, color: Colors.black),
         centerTitle: true,

@@ -8,7 +8,8 @@ import 'package:http/http.dart' as http;
 import 'package:zaron/view/screens/global_user/global_user.dart';
 import 'package:zaron/view/screens/total_quoation_view.dart';
 import 'package:zaron/view/universal_api/api&key.dart';
-import 'package:zaron/view/widgets/subhead.dart';
+
+import '../widgets/subhead.dart';
 
 class QuotationPage extends StatefulWidget {
   const QuotationPage({super.key});
@@ -146,86 +147,166 @@ class _QuotationPageState extends State<QuotationPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Colors.grey[50],
       appBar: AppBar(
+        elevation: 0,
         centerTitle: true,
         backgroundColor: Colors.white,
         title: Subhead(
             text: "Total Quotation",
             weight: FontWeight.w500,
             color: Colors.black),
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(
+            bottom: Radius.circular(15),
+          ),
+        ),
       ),
       body: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.only(left: 12, right: 12, top: 16),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: fromDateController,
-                    readOnly: true,
-                    onTap: () => _selectDate(context, fromDateController),
+            padding: const EdgeInsets.all(16),
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.grey.withOpacity(0.1),
+                    spreadRadius: 1,
+                    blurRadius: 5,
+                    offset: const Offset(0, 3),
+                  ),
+                ],
+              ),
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: fromDateController,
+                          readOnly: true,
+                          onTap: () => _selectDate(context, fromDateController),
+                          decoration: InputDecoration(
+                            labelText: 'From Date',
+                            prefixIcon: const Icon(Icons.calendar_today,
+                                color: Colors.purple),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide:
+                                  BorderSide(color: Colors.grey.shade300),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide:
+                                  const BorderSide(color: Colors.purple),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: TextField(
+                          controller: toDateController,
+                          readOnly: true,
+                          onTap: () => _selectDate(context, toDateController),
+                          decoration: InputDecoration(
+                            labelText: 'To Date',
+                            prefixIcon: const Icon(Icons.calendar_today,
+                                color: Colors.purple),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide:
+                                  BorderSide(color: Colors.grey.shade300),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide:
+                                  const BorderSide(color: Colors.purple),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: enquiryNoController,
                     decoration: InputDecoration(
-                      labelText: 'From Date',
-                      prefixIcon: Icon(Icons.calendar_today),
-                      border: OutlineInputBorder(),
+                      labelText: 'Quotation No',
+                      prefixIcon:
+                          const Icon(Icons.search, color: Colors.purple),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(color: Colors.grey.shade300),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: const BorderSide(color: Colors.purple),
+                      ),
                     ),
                   ),
-                ),
-                SizedBox(width: 12),
-                Expanded(
-                  child: TextField(
-                    controller: toDateController,
-                    readOnly: true,
-                    onTap: () => _selectDate(context, toDateController),
-                    decoration: InputDecoration(
-                      labelText: 'To Date',
-                      prefixIcon: Icon(Icons.calendar_today),
-                      border: OutlineInputBorder(),
-                    ),
+                ],
+              ),
+            ),
+          ),
+          Container(
+            margin: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+            padding: EdgeInsets.all(16.r),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [Colors.white, Colors.purple[50]!],
+              ),
+              borderRadius: BorderRadius.circular(12.r),
+              border: Border.all(
+                color: Colors.purple,
+                width: 0.5,
+              ),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.analytics_outlined, color: Colors.purple),
+                SizedBox(width: 8.w),
+                Text(
+                  'Total Records: $totalRecords',
+                  style: GoogleFonts.poppins(
+                    fontSize: 15.sp,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.purple,
                   ),
                 ),
               ],
             ),
           ),
-          // Enquiry No (Search)
-          Padding(
-            padding: const EdgeInsets.only(left: 12, right: 12, top: 16),
-            child: TextField(
-              controller: enquiryNoController,
-              decoration: InputDecoration(
-                contentPadding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
-                labelText: 'Quotation No',
-                labelStyle: GoogleFonts.outfit(
-                  textStyle: TextStyle(
-                    fontSize: 15.sp,
-                    fontWeight: FontWeight.w500,
-                    color: Colors.black,
-                  ),
-                ),
-                border: const OutlineInputBorder(),
-                suffixIcon: const Icon(Icons.search),
-              ),
-            ),
-          ),
 
-          // Total Records Counter
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-            alignment: Alignment.centerLeft,
-            child: Text(
-              'Total Records: $totalRecords',
-              style: GoogleFonts.outfit(
-                textStyle: TextStyle(
-                  fontSize: 16.sp,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.black87,
-                ),
-              ),
-            ),
-          ),
+          // // Total Records Counter
+          // Container(
+          //   padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+          //   alignment: Alignment.centerLeft,
+          //   child: Text(
+          //     'Total Records: $totalRecords',
+          //     style: GoogleFonts.outfit(
+          //       textStyle: TextStyle(
+          //         fontSize: 16.sp,
+          //         fontWeight: FontWeight.w600,
+          //         color: Colors.black87,
+          //       ),
+          //     ),
+          //   ),
+          // ),
 
           // Table
           isLoading
@@ -237,15 +318,36 @@ class _QuotationPageState extends State<QuotationPage> {
                       scrollDirection: Axis.vertical,
                       child: SingleChildScrollView(
                         scrollDirection: Axis.horizontal,
-                        child: Padding(
-                          padding: const EdgeInsets.all(8.0),
+                        padding: const EdgeInsets.all(16.0),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.grey.withOpacity(0.1),
+                                spreadRadius: 2,
+                                blurRadius: 5,
+                                offset: const Offset(0, 3),
+                              ),
+                            ],
+                          ),
                           child: DataTable(
                             showCheckboxColumn: false,
                             border: TableBorder.all(
-                                color: Colors.purple, width: 0.5),
-                            dataRowHeight: 60,
+                              color: Colors.purple.withOpacity(0.3),
+                              width: 1,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            // child: Padding(
+                            //   padding: const EdgeInsets.all(8.0),
+                            //   child: DataTable(
+                            //     showCheckboxColumn: false,
+                            //     border: TableBorder.all(
+                            //         color: Colors.purple, width: 0.5),
+                            //     dataRowHeight: 60,
                             columnSpacing: 40,
-                            headingRowHeight: 56,
+                            headingRowHeight: 70,
                             columns: [
                               DataColumn(
                                 label: Text(

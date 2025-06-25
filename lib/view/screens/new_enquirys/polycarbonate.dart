@@ -1158,7 +1158,7 @@ class _PolycarbonateState extends State<Polycarbonate> {
               labelText: label,
               prefixIcon: Icon(
                 icon,
-                color: enabled ? Colors.blue : Colors.grey,
+                color: enabled ? Colors.deepPurple : Colors.grey,
               ),
               border: InputBorder.none,
               contentPadding: EdgeInsets.symmetric(
@@ -1326,10 +1326,7 @@ class _PolycarbonateState extends State<Polycarbonate> {
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  Icon(
-                                    Icons.add_shopping_cart_outlined,
-                                    color: Colors.white,
-                                  ),
+                                  Icon(Icons.add_shopping_cart_outlined),
                                   SizedBox(width: 10),
                                   Text(
                                     "Add Product",

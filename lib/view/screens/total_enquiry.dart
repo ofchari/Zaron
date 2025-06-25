@@ -2,13 +2,13 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:gap/gap.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'package:zaron/view/screens/global_user/global_user.dart';
 import 'package:zaron/view/screens/total_enquiry_view.dart';
 import 'package:zaron/view/universal_api/api&key.dart';
+import 'package:zaron/view/widgets/subhead.dart';
 
 class TotalEnquiryPage extends StatefulWidget {
   const TotalEnquiryPage({super.key});
@@ -150,40 +150,43 @@ class _TotalEnquiryPageState extends State<TotalEnquiryPage> {
   Widget build(BuildContext context) {
     var size = MediaQuery.sizeOf(context);
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Colors.grey[50],
+      appBar: AppBar(
+        elevation: 0,
+        centerTitle: true,
+        backgroundColor: Colors.white,
+        title: Subhead(
+            text: "Total Enquiry",
+            weight: FontWeight.w500,
+            color: Colors.black),
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(
+            bottom: Radius.circular(15),
+          ),
+        ),
+      ),
       body: SafeArea(
         child: Column(
           children: [
-            Text(
-              "Total Enquiry",
-              style: GoogleFonts.poppins(
-                fontSize: 16.sp,
-                fontWeight: FontWeight.w500,
-                color: Colors.black87,
-              ),
-            ),
             Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
-              child: Card(
-                // Container(
-                //   padding: EdgeInsets.all(16.r),
-                //   decoration: BoxDecoration(
-                //     color: Colors.white,
-                //     borderRadius: BorderRadius.circular(12.r),
-                //     boxShadow: [
-                //       BoxShadow(
-                //         color: Colors.grey.withOpacity(0.1),
-                //         spreadRadius: 1,
-                //         blurRadius: 4,
-                //         offset: const Offset(0, 1),
-                //       ),
-                //     ],
-                //   ),
-                child: Container(
-                  height: 70.h,
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Row(
+              padding: const EdgeInsets.all(16),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.grey.withOpacity(0.1),
+                      spreadRadius: 1,
+                      blurRadius: 5,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
+                ),
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  children: [
+                    Row(
                       children: [
                         Expanded(
                           child: TextField(
@@ -196,17 +199,22 @@ class _TotalEnquiryPageState extends State<TotalEnquiryPage> {
                               prefixIcon: const Icon(Icons.calendar_today,
                                   color: Colors.purple),
                               border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(8.r),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8),
+                                borderSide:
+                                    BorderSide(color: Colors.grey.shade300),
                               ),
                               focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(8.r),
+                                borderRadius: BorderRadius.circular(8),
                                 borderSide:
                                     const BorderSide(color: Colors.purple),
                               ),
                             ),
                           ),
                         ),
-                        SizedBox(width: 12.w),
+                        const SizedBox(width: 12),
                         Expanded(
                           child: TextField(
                             controller: toDateController,
@@ -217,10 +225,15 @@ class _TotalEnquiryPageState extends State<TotalEnquiryPage> {
                               prefixIcon: const Icon(Icons.calendar_today,
                                   color: Colors.purple),
                               border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(8.r),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8),
+                                borderSide:
+                                    BorderSide(color: Colors.grey.shade300),
                               ),
                               focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(8.r),
+                                borderRadius: BorderRadius.circular(8),
                                 borderSide:
                                     const BorderSide(color: Colors.purple),
                               ),
@@ -229,61 +242,30 @@ class _TotalEnquiryPageState extends State<TotalEnquiryPage> {
                         ),
                       ],
                     ),
-                  ),
-                ),
-              ),
-            ),
-            Gap(5),
-
-            // Enquiry No (Search)
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16.w),
-              child: Card(
-                // Container(
-                //   padding: EdgeInsets.all(16.r),
-                //   decoration: BoxDecoration(
-                //     color: Colors.white,
-                //     borderRadius: BorderRadius.circular(12.r),
-                //     boxShadow: [
-                //       BoxShadow(
-                //         color: Colors.grey.withOpacity(0.1),
-                //         spreadRadius: 5,
-                //         blurRadius: 7,
-                //         offset: const Offset(0, 1),
-                //       ),
-                //     ],
-                //   ),
-                child: Container(
-                  height: 70.h,
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: TextField(
+                    const SizedBox(height: 16),
+                    TextField(
                       controller: enquiryNoController,
                       decoration: InputDecoration(
-                        contentPadding: EdgeInsets.symmetric(
-                            horizontal: 12.w, vertical: 16.h),
                         labelText: 'Search Enquiry No',
-                        labelStyle: GoogleFonts.poppins(
-                          fontSize: 14.sp,
-                          fontWeight: FontWeight.w500,
-                          color: Colors.black87,
-                        ),
+                        prefixIcon:
+                            const Icon(Icons.search, color: Colors.purple),
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8.r),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(color: Colors.grey.shade300),
                         ),
                         focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8.r),
+                          borderRadius: BorderRadius.circular(8),
                           borderSide: const BorderSide(color: Colors.purple),
                         ),
-                        suffixIcon:
-                            const Icon(Icons.search, color: Colors.purple),
                       ),
                     ),
-                  ),
+                  ],
                 ),
               ),
             ),
-            Gap(5),
             // Total Records Counter
             Container(
               margin: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
@@ -292,9 +274,13 @@ class _TotalEnquiryPageState extends State<TotalEnquiryPage> {
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: [Colors.purple[50]!, Colors.purple[200]!],
+                  colors: [Colors.white, Colors.purple[50]!],
                 ),
                 borderRadius: BorderRadius.circular(12.r),
+                border: Border.all(
+                  color: Colors.purple,
+                  width: 0.5,
+                ),
               ),
               child: Row(
                 children: [
@@ -322,19 +308,29 @@ class _TotalEnquiryPageState extends State<TotalEnquiryPage> {
                         scrollDirection: Axis.vertical,
                         child: SingleChildScrollView(
                           scrollDirection: Axis.horizontal,
-                          child: Padding(
-                            padding: const EdgeInsets.all(8.0),
+                          padding: const EdgeInsets.all(16.0),
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(12),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.grey.withOpacity(0.1),
+                                  spreadRadius: 2,
+                                  blurRadius: 5,
+                                  offset: const Offset(0, 3),
+                                ),
+                              ],
+                            ),
                             child: DataTable(
                               showCheckboxColumn: false,
                               border: TableBorder.all(
                                 color: Colors.purple.withOpacity(0.3),
-                                width: 0.5,
-                                borderRadius: BorderRadius.circular(8.r),
+                                width: 1,
+                                borderRadius: BorderRadius.circular(12),
                               ),
-                              dataRowHeight: 58.h,
-                              columnSpacing: 40.w,
-                              headingRowColor: MaterialStateProperty.all(
-                                  Colors.purple.withOpacity(0.05)),
+                              columnSpacing: 40,
+                              headingRowHeight: 70,
                               columns: [
                                 DataColumn(
                                     label: Text('No',
@@ -389,8 +385,7 @@ class _TotalEnquiryPageState extends State<TotalEnquiryPage> {
                                       //   ? Colors.white
                                       //   : Colors.grey.shade200;
                                     },
-                                  ),
-                                  // Row tap logic
+                                  ), // Row tap logic
                                   onSelectChanged: (_) {
                                     setState(() {
                                       selectedRowIndex = index;
