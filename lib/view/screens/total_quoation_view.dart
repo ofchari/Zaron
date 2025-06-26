@@ -25,12 +25,15 @@ class TotalQuoationView extends StatefulWidget {
 
 class _TotalQuoationViewState extends State<TotalQuoationView> {
   final remarkController = TextEditingController();
-  int? selectedIndex;
+  int? selectedCategoryId;
+  Map<String, int?> selectedIndices = {};
   late double height;
   late double width;
 
+  List<Map<String, dynamic>> categories = [];
   String categoryName = '';
-  List<String> labels = [];
+  Map<String, List<String>> categoryLabels = {};
+  Map<String, List<Map<String, dynamic>>> categoryData = {};
   List<Map<String, dynamic>> data = [];
   Map<String, dynamic> uomOptions = {};
 
@@ -41,31 +44,61 @@ class _TotalQuoationViewState extends State<TotalQuoationView> {
   @override
   void initState() {
     super.initState();
+    print(widget.id);
     fetchTableData();
   }
 
   Future<void> fetchTableData() async {
-    final response = await http.get(
-      Uri.parse('$apiUrl/rowlabels/${widget.id}'),
-    );
+    String url = '$apiUrl/quotation_rowlabels/${widget.id}';
+    try {
+      final response = await http.get(Uri.parse(url));
 
-    if (response.statusCode == 200) {
-      final jsonData = json.decode(response.body);
-      final category = jsonData['categories'][0];
+      if (response.statusCode == 200) {
+        final jsonData = json.decode(response.body);
+        if (jsonData['status'] == 'success') {
+          final categoriesData =
+              List<Map<String, dynamic>>.from(jsonData['categories']);
 
-      setState(() {
-        categoryName = category['category_name'];
-        labels = List<String>.from(category['labels']);
-        data = List<Map<String, dynamic>>.from(category['data']);
-        if (data.isNotEmpty && data[0]['UOM'] is Map) {
-          uomOptions = Map<String, dynamic>.from(data[0]['UOM']['options']);
+          if (categoriesData.isNotEmpty) {
+            setState(() {
+              categories = categoriesData;
+              // Store labels and data for each category
+              for (var category in categories) {
+                final categoryId = category['category_id'].toString();
+                categoryLabels[categoryId] =
+                    List<String>.from(category['labels'] ?? []);
+                categoryData[categoryId] =
+                    List<Map<String, dynamic>>.from(category['data'] ?? []);
+
+                // Initialize UOM options from all categories
+                for (var item in category['data'] ?? []) {
+                  if (item['UOM'] is Map && item['UOM']['options'] is Map) {
+                    uomOptions.addAll(
+                        Map<String, String>.from(item['UOM']['options']));
+                  }
+                }
+              }
+              isLoading = false;
+            });
+          }
+        } else {
+          setState(() {
+            isLoading = false;
+          });
+          throw Exception("API returned failure status");
         }
-        isLoading = false;
-      });
-    } else {
+      } else {
+        setState(() {
+          isLoading = false;
+        });
+        throw Exception("Failed to fetch data: ${response.statusCode}");
+      }
+    } catch (e) {
       setState(() {
         isLoading = false;
       });
+      print("Error fetching table data: $e");
+      throw Exception("Error fetching table data: $e");
     }
   }
 
@@ -495,176 +528,259 @@ class _TotalQuoationViewState extends State<TotalQuoationView> {
 
   Widget _smallBuildLayout() {
     return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        centerTitle: true,
         backgroundColor: Colors.white,
-        title: Subhead(
-            text: "Total Quotation View",
-            weight: FontWeight.w500,
-            color: Colors.black),
-      ),
-      body: isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : Column(
-              children: [
-                Gap(5),
-                Text(
-                  categoryName.toString(),
-                  style: GoogleFonts.outfit(
-                      textStyle: TextStyle(
-                          fontSize: 15.sp,
-                          fontWeight: FontWeight.w500,
-                          color: Colors.grey)),
-                ),
-                Gap(20),
-                Expanded(
-                  child: Scrollbar(
-                    thumbVisibility: true,
-                    child: SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
-                        child: SingleChildScrollView(
-                          scrollDirection: Axis.vertical,
-                          child: DataTable(
-                            showCheckboxColumn: false,
-                            border: TableBorder.all(
-                                color: Colors.purple, width: 0.5),
-                            dataRowHeight: 60,
-                            columnSpacing: 40,
-                            headingRowHeight: 56,
-                            columns: labels
-                                .map((label) => DataColumn(
-                                    label: MyText(
-                                        text: label,
-                                        weight: FontWeight.w500,
-                                        color: Colors.black)))
-                                .toList(),
-                            rows: data.asMap().entries.map((entry) {
-                              int rowIndex = entry.key;
-                              Map<String, dynamic> row = entry.value;
+        appBar: AppBar(
+          centerTitle: true,
+          backgroundColor: Colors.white,
+          title: Subhead(
+              text: "Total Quotation View",
+              weight: FontWeight.w500,
+              color: Colors.black),
+        ),
+        body: isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : Column(
+                children: [
+                  const Gap(5),
+                  Expanded(
+                    child: Scrollbar(
+                      thumbVisibility: true,
+                      child: SingleChildScrollView(
+                        child: Column(
+                          children: categories.map((category) {
+                            final categoryId =
+                                category['category_id'].toString();
+                            final labels = categoryLabels[categoryId] ?? [];
+                            final data = categoryData[categoryId] ?? [];
 
-                              return DataRow(
-                                // 👇 Highlight selected row
-                                color:
-                                    MaterialStateProperty.resolveWith<Color?>(
-                                  (Set<MaterialState> states) {
-                                    if (selectedIndex == rowIndex) {
-                                      return Colors.grey.shade200;
-                                    }
-                                    return null;
-                                  },
+                            return Column(
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: Text(
+                                    category['category_name'] ?? '',
+                                    style: GoogleFonts.outfit(
+                                      textStyle: TextStyle(
+                                        fontSize: 15.sp,
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.black,
+                                      ),
+                                    ),
+                                  ),
                                 ),
-                                // 👇 Detect row tap
-                                onSelectChanged: (selected) {
-                                  setState(() {
-                                    selectedIndex = rowIndex;
-                                  });
-                                },
-                                cells: labels.map((label) {
-                                  var value = row[label];
-
-                                  if (label == "UOM" && value is Map) {
-                                    String selectedValue = value['value'];
-                                    return DataCell(
-                                      DropdownButton<String>(
-                                        style: GoogleFonts.outfit(
-                                            textStyle: TextStyle(
-                                                fontSize: 14.5,
-                                                fontWeight: FontWeight.w500,
-                                                color: Colors.black)),
-                                        value: selectedValue,
-                                        onChanged: (newValue) {
-                                          setState(() {
-                                            row[label]['value'] = newValue!;
-                                          });
-                                        },
-                                        items: uomOptions.entries
-                                            .map(
-                                              (entry) =>
-                                                  DropdownMenuItem<String>(
-                                                value: entry.key,
-                                                child: Text(entry.value),
-                                              ),
-                                            )
-                                            .toList(),
-                                      ),
-                                    );
-                                  } else if (label == "Nos" ||
-                                      label == "Profile" ||
-                                      label == "Sq.Mtr") {
-                                    return DataCell(
-                                      SizedBox(
-                                        width: 80,
-                                        child: TextFormField(
-                                          initialValue: value.toString(),
-                                          keyboardType: TextInputType.number,
-                                          onChanged: (newVal) {
-                                            setState(() {
-                                              row[label] = newVal;
-                                            });
-                                          },
-                                          decoration: const InputDecoration(
-                                            border: InputBorder.none,
-                                            contentPadding:
-                                                EdgeInsets.symmetric(
-                                                    horizontal: 8),
-                                          ),
-                                        ),
-                                      ),
-                                    );
-                                  } else if (label == "Action") {
-                                    return DataCell(
-                                      Row(
-                                        children: [
-                                          IconButton(
-                                            icon: Icon(Icons.groups,
-                                                color: Colors.blue),
-                                            onPressed: () {
-                                              final itemId = row['id'];
-                                              if (itemId != null) {
-                                                openGroupDialog(itemId);
-                                              }
-                                            },
-                                          ),
-                                          IconButton(
-                                            icon: Icon(Icons.delete,
-                                                color: Colors.red),
-                                            onPressed: () {
-                                              final itemId = row['id'];
-                                              if (itemId != null) {
-                                                deleteItem(itemId);
-                                              }
-                                            },
-                                          ),
-                                          IconButton(
-                                            icon: Icon(Icons.settings,
-                                                color: Colors.green),
-                                            onPressed: () {
-                                              final itemId = row['id'];
-                                              if (itemId != null) {
-                                                openAdditionalDrawer(itemId);
-                                              }
-                                            },
+                                SingleChildScrollView(
+                                  scrollDirection: Axis.horizontal,
+                                  padding: const EdgeInsets.all(16.0),
+                                  child: Scrollbar(
+                                    thumbVisibility: true,
+                                    notificationPredicate: (notification) =>
+                                        notification.depth == 1,
+                                    child: Container(
+                                      decoration: BoxDecoration(
+                                        color: Colors.white,
+                                        borderRadius: BorderRadius.circular(12),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Colors.grey.withOpacity(0.1),
+                                            spreadRadius: 2,
+                                            blurRadius: 5,
+                                            offset: const Offset(0, 3),
                                           ),
                                         ],
                                       ),
-                                    );
-                                  } else {
-                                    return DataCell(MyText(
-                                      text: value.toString(),
-                                      weight: FontWeight.w500,
-                                      color: Colors.black,
-                                    ));
-                                  }
-                                }).toList(),
-                              );
-                            }).toList(),
-                          ),
-                        )),
+                                      child: DataTable(
+                                        showCheckboxColumn: false,
+                                        border: TableBorder.all(
+                                          color: Colors.purple.withOpacity(0.3),
+                                          width: 1,
+                                          borderRadius:
+                                              BorderRadius.circular(12),
+                                        ),
+                                        columnSpacing: 40,
+                                        headingRowHeight: 70,
+                                        columns: labels
+                                            .map((label) => DataColumn(
+                                                  label: MyText(
+                                                    text: label,
+                                                    weight: FontWeight.w500,
+                                                    color: Colors.black,
+                                                  ),
+                                                ))
+                                            .toList(),
+                                        rows: data.asMap().entries.map((entry) {
+                                          int rowIndex = entry.key;
+                                          Map<String, dynamic> row =
+                                              entry.value;
+                                          return DataRow(
+                                            color: MaterialStateProperty
+                                                .resolveWith<Color?>(
+                                              (Set<MaterialState> states) {
+                                                if (selectedCategoryId ==
+                                                        int.parse(categoryId) &&
+                                                    selectedIndices[
+                                                            categoryId] ==
+                                                        rowIndex) {
+                                                  return Colors.grey.shade200;
+                                                }
+                                                return null;
+                                              },
+                                            ),
+                                            onSelectChanged: (selected) {
+                                              setState(() {
+                                                if (selectedCategoryId ==
+                                                        int.parse(categoryId) &&
+                                                    selectedIndices[
+                                                            categoryId] ==
+                                                        rowIndex) {
+                                                  // Deselect if the same row is tapped
+                                                  selectedCategoryId = null;
+                                                  selectedIndices[categoryId] =
+                                                      null;
+                                                } else {
+                                                  // Select the new row
+                                                  selectedCategoryId =
+                                                      int.parse(categoryId);
+                                                  selectedIndices[categoryId] =
+                                                      rowIndex;
+                                                }
+                                              });
+                                            },
+                                            cells: labels.map((label) {
+                                              var value = row[label];
+
+                                              if (label == "UOM" &&
+                                                  value is Map) {
+                                                String selectedValue =
+                                                    value['value'];
+                                                return DataCell(
+                                                  DropdownButton<String>(
+                                                    style: GoogleFonts.outfit(
+                                                      textStyle: TextStyle(
+                                                        fontSize: 14.5,
+                                                        fontWeight:
+                                                            FontWeight.w500,
+                                                        color: Colors.black,
+                                                      ),
+                                                    ),
+                                                    value: selectedValue,
+                                                    onChanged: (newValue) {
+                                                      setState(() {
+                                                        row[label]['value'] =
+                                                            newValue!;
+                                                      });
+                                                    },
+                                                    items: uomOptions.entries
+                                                        .map(
+                                                          (entry) =>
+                                                              DropdownMenuItem<
+                                                                  String>(
+                                                            value: entry.key,
+                                                            child: Text(
+                                                                entry.value),
+                                                          ),
+                                                        )
+                                                        .toList(),
+                                                  ),
+                                                );
+                                              } else if (label == "Nos" ||
+                                                  label == "Profile" ||
+                                                  label == "Sq.Mtr") {
+                                                return DataCell(
+                                                  SizedBox(
+                                                    width: 80,
+                                                    child: TextFormField(
+                                                      initialValue:
+                                                          value.toString(),
+                                                      keyboardType:
+                                                          TextInputType.number,
+                                                      onChanged: (newVal) {
+                                                        setState(() {
+                                                          row[label] = newVal;
+                                                        });
+                                                      },
+                                                      decoration:
+                                                          const InputDecoration(
+                                                        border:
+                                                            InputBorder.none,
+                                                        contentPadding:
+                                                            EdgeInsets
+                                                                .symmetric(
+                                                                    horizontal:
+                                                                        8),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                );
+                                              } else if (label == "Action") {
+                                                return DataCell(
+                                                  Row(
+                                                    children: [
+                                                      IconButton(
+                                                        icon: const Icon(
+                                                            Icons.groups,
+                                                            color: Colors.blue),
+                                                        onPressed: () {
+                                                          final itemId =
+                                                              row['id'];
+                                                          if (itemId != null) {
+                                                            openGroupDialog(
+                                                                itemId);
+                                                          }
+                                                        },
+                                                      ),
+                                                      IconButton(
+                                                        icon: const Icon(
+                                                            Icons.delete,
+                                                            color: Colors.red),
+                                                        onPressed: () {
+                                                          final itemId =
+                                                              row['id'];
+                                                          if (itemId != null) {
+                                                            deleteItem(itemId);
+                                                          }
+                                                        },
+                                                      ),
+                                                      IconButton(
+                                                        icon: const Icon(
+                                                            Icons.settings,
+                                                            color:
+                                                                Colors.green),
+                                                        onPressed: () {
+                                                          final itemId =
+                                                              row['id'];
+                                                          if (itemId != null) {
+                                                            openAdditionalDrawer(
+                                                                itemId);
+                                                          }
+                                                        },
+                                                      ),
+                                                    ],
+                                                  ),
+                                                );
+                                              } else {
+                                                return DataCell(MyText(
+                                                  text: value.toString(),
+                                                  weight: FontWeight.w500,
+                                                  color: Colors.black,
+                                                ));
+                                              }
+                                            }).toList(),
+                                          );
+                                        }).toList(),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                // Gap(10),
+                                // Divider(height: 30, thickness: 1),
+                              ],
+                            );
+                          }).toList(),
+                        ),
+                      ),
+                    ),
                   ),
-                ),
-              ],
-            ),
-    );
+                ],
+              ));
   }
 }
