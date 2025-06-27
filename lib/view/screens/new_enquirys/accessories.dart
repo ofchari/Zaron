@@ -1242,7 +1242,7 @@ class _AccessoriesState extends State<Accessories> {
                 key == "Amount" ||
                 key == "R.Ft")
             ? TextInputType.numberWithOptions(decimal: true)
-            : TextInputType.text,
+            : TextInputType.numberWithOptions(decimal: true),
         onChanged: (val) {
           setState(() {
             data[key] = val;
@@ -1488,10 +1488,14 @@ class _AccessoriesState extends State<Accessories> {
 
 // Handle the actual API response structure
                         if (imageData is Map) {
-// Make sure to construct the full URL correctly
-                          String imagePath = imageData["product_image"] ?? "";
+                          // Handle different possible data types for product_image
+                          String imagePath = '';
+                          if (imageData["product_image"] != null) {
+                            imagePath = imageData["product_image"].toString();
+                          }
+
                           if (imagePath.isNotEmpty) {
-// Check if the path already includes the base URL
+                            // Check if the path already includes the base URL
                             if (imagePath.startsWith('http')) {
                               imageUrl = imagePath;
                             } else {
@@ -1499,8 +1503,11 @@ class _AccessoriesState extends State<Accessories> {
                                   "https://demo.zaron.in:8181/uploads/$imagePath";
                             }
                           }
-                          imageName = imageData["image_layout_plan"] ??
-                              "Image ${index + 1}";
+
+                          // Handle image name/layout plan with type safety
+                          imageName =
+                              imageData["image_layout_plan"]?.toString() ??
+                                  "Image ${index + 1}";
                         }
 
                         return Card(

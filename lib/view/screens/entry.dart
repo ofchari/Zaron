@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:zaron/view/screens/login.dart';
@@ -15,6 +16,18 @@ class _EntryState extends State<Entry> {
   late double height;
   late double width;
   @override
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: Brightness.dark,
+      systemNavigationBarColor: Colors.transparent,
+      systemNavigationBarIconBrightness: Brightness.dark,
+    ));
+  }
+
   Widget build(BuildContext context) {
     /// Define Sizes //
     var size = MediaQuery.of(context).size;

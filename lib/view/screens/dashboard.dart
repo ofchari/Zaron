@@ -102,7 +102,7 @@ class _DashboardState extends State<Dashboard> {
     ];
 
     return Scaffold(
-      backgroundColor: Color(0xFFF5F5F5),
+      backgroundColor: Colors.grey[100],
       appBar: AppBar(
         leading: IconButton(
             onPressed: () {
@@ -112,7 +112,7 @@ class _DashboardState extends State<Dashboard> {
         title: Subhead(
             text: "Dashboard", weight: FontWeight.w600, color: Colors.black),
         centerTitle: true,
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.grey[100],
         elevation: 0,
         actions: [
           Image.asset(

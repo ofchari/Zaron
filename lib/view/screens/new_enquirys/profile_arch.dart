@@ -1009,7 +1009,7 @@ class _ProfileRidgeAndArchState extends State<ProfileRidgeAndArch> {
                 key == "Amount" ||
                 key == "sqmtr")
             ? TextInputType.numberWithOptions(decimal: true)
-            : TextInputType.text,
+            : TextInputType.numberWithOptions(decimal: true),
         onChanged: (val) {
           setState(() {
             data[key] = val;
@@ -1281,7 +1281,12 @@ class _ProfileRidgeAndArchState extends State<ProfileRidgeAndArch> {
       "current_uom": currentUom != null ? int.tryParse(currentUom) : null,
       "length": null,
       "nos": nosValue,
-      "basic_rate": double.tryParse(data["Basic Rate"]?.toString() ?? "0") ?? 0,
+      "basic_rate": double.tryParse(
+              fieldControllers[productId]?["Basic Rate"]?.text ??
+                  data["Basic Rate"]?.toString() ??
+                  "0") ??
+          0,
+      // double.tryParse(data["Basic Rate"]?.toString() ?? "0") ?? 0,
     };
 
     print("Request Body: ${jsonEncode(requestBody)}");

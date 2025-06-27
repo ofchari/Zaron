@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -35,6 +36,12 @@ class _LoginState extends State<Login> {
   void initState() {
     super.initState();
     checkSavedUser();
+    SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: Brightness.dark,
+      systemNavigationBarColor: Colors.white,
+      systemNavigationBarIconBrightness: Brightness.dark,
+    ));
   }
 
   Future<void> checkSavedUser() async {
@@ -186,17 +193,16 @@ class _LoginState extends State<Login> {
   void showErrorDialog(BuildContext context, String message) {
     showDialog(
       context: context,
-      builder:
-          (context) => AlertDialog(
-            title: Text('Error'),
-            content: Text(message),
-            actions: [
-              ElevatedButton(
-                child: Text('OK'),
-                onPressed: () => Navigator.of(context).pop(),
-              ),
-            ],
+      builder: (context) => AlertDialog(
+        title: Text('Error'),
+        content: Text(message),
+        actions: [
+          ElevatedButton(
+            child: Text('OK'),
+            onPressed: () => Navigator.of(context).pop(),
           ),
+        ],
+      ),
     );
   }
 
