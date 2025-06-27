@@ -341,14 +341,37 @@ class _ProfileRidgeAndArchState extends State<ProfileRidgeAndArch> {
       );
 
       debugPrint("This is a response: ${response.body}");
-      if (selectedMaterial == null ||
-          selectedBrands == null ||
-          selectedColors == null ||
-          selectedThickness == null ||
-          selectedCoatingMass == null) {
-        return;
-      }
-      if (response.statusCode == 200) return;
+      final responseData = jsonDecode(response.body);
+
+      setState(() {
+        apiResponseData = responseData;
+        if (responseData["lebels"] != null &&
+            responseData["lebels"].isNotEmpty) {
+          // Append new products to the existing list
+          final newProducts = responseData["lebels"][0]["data"] ?? [];
+          responseProducts.addAll(newProducts);
+
+          // Store UOM options for each product
+
+          for (var product in responseProducts) {
+            if (product["UOM"] != null && product["UOM"]["options"] != null) {
+              uomOptions[product["id"].toString()] = Map<String, String>.from(
+                product["UOM"]["options"].map(
+                  (key, value) => MapEntry(key.toString(), value.toString()),
+                ),
+              );
+            }
+          }
+        }
+      });
+      // if (selectedMaterial == null ||
+      //         selectedBrands == null ||
+      //         selectedColors == null ||
+      //         selectedThickness == null
+      //     // || selectedCoatingMass == null
+      //     ) {
+      //   return;
+      // }
     } catch (e) {
       throw Exception("Error posting data: $e");
     }
@@ -359,227 +382,6 @@ class _ProfileRidgeAndArchState extends State<ProfileRidgeAndArch> {
   bool isSearchingBaseProduct = false;
   String? selectedBaseProduct;
   FocusNode baseProductFocusNode = FocusNode();
-
-  // Add this method for searching base products
-  Future<void> searchBaseProducts(String query) async {
-    if (query.isEmpty) {
-      setState(() {
-        baseProductResults = [];
-      });
-      return;
-    }
-
-    setState(() {
-      isSearchingBaseProduct = true;
-    });
-
-    HttpClient client = HttpClient();
-    client.badCertificateCallback =
-        ((X509Certificate cert, String host, int port) => true);
-    IOClient ioClient = IOClient(client);
-    final headers = {"Content-Type": "application/json"};
-    final data = {"category_id": "32", "searchbase": query};
-
-    try {
-      final response = await ioClient.post(
-        Uri.parse("https://demo.zaron.in:8181/ci4/api/baseproducts_search"),
-        headers: headers,
-        body: jsonEncode(data),
-      );
-
-      if (response.statusCode == 200) {
-        final responseData = jsonDecode(response.body);
-        print("Base product response: $responseData"); // Debug print
-        setState(() {
-          baseProductResults = responseData['base_products'] ?? [];
-          isSearchingBaseProduct = false;
-        });
-      } else {
-        setState(() {
-          baseProductResults = [];
-          isSearchingBaseProduct = false;
-        });
-      }
-    } catch (e) {
-      print("Error searching base products: $e");
-      setState(() {
-        baseProductResults = [];
-        isSearchingBaseProduct = false;
-      });
-    }
-  }
-
-  // Add this method to build the base product search field
-  Widget _buildBaseProductSearchField() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          "Base Product",
-          style: GoogleFonts.figtree(
-            fontSize: 16,
-            fontWeight: FontWeight.w500,
-            color: Colors.black87,
-          ),
-        ),
-        SizedBox(height: 8),
-        Container(
-          decoration: BoxDecoration(
-            border: Border.all(color: Colors.grey[300]!),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: TextField(
-            controller: baseProductController,
-            focusNode: baseProductFocusNode,
-            decoration: InputDecoration(
-              hintText: "Search base product...",
-              prefixIcon: Icon(Icons.search),
-              border: InputBorder.none,
-              contentPadding: EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 12,
-              ),
-              suffixIcon: isSearchingBaseProduct
-                  ? Padding(
-                      padding: EdgeInsets.all(12),
-                      child: SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      ),
-                    )
-                  : null,
-            ),
-            onChanged: (value) {
-              searchBaseProducts(value);
-            },
-            onTap: () {
-              if (baseProductController.text.isNotEmpty) {
-                searchBaseProducts(baseProductController.text);
-              }
-            },
-          ),
-        ),
-
-        // Search Results Display (line by line, not dropdown)
-        if (baseProductResults.isNotEmpty)
-          Container(
-            margin: EdgeInsets.only(top: 8),
-            padding: EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.grey[50],
-              border: Border.all(color: Colors.grey[300]!),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  "Search Results:",
-                  style: GoogleFonts.figtree(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.black87,
-                  ),
-                ),
-                SizedBox(height: 8),
-                ...baseProductResults.map((product) {
-                  return GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        selectedBaseProduct = product.toString();
-                        baseProductController.text = selectedBaseProduct!;
-                        baseProductResults = [];
-                      });
-                    },
-                    child: Container(
-                      width: double.infinity,
-                      padding: EdgeInsets.symmetric(
-                        vertical: 12,
-                        horizontal: 12,
-                      ),
-                      margin: EdgeInsets.only(bottom: 6),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(6),
-                        border: Border.all(color: Colors.grey[300]!),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.grey.withOpacity(0.1),
-                            spreadRadius: 1,
-                            blurRadius: 2,
-                            offset: Offset(0, 1),
-                          ),
-                        ],
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(Icons.inventory_2, size: 16, color: Colors.blue),
-                          SizedBox(width: 10),
-                          Expanded(
-                            child: Text(
-                              product.toString(),
-                              style: GoogleFonts.figtree(
-                                fontSize: 14,
-                                color: Colors.black87,
-                                fontWeight: FontWeight.w400,
-                              ),
-                            ),
-                          ),
-                          Icon(
-                            Icons.arrow_forward_ios,
-                            size: 12,
-                            color: Colors.grey[400],
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                }).toList(),
-              ],
-            ),
-          ),
-
-        // Selected Base Product Display
-        if (selectedBaseProduct != null)
-          Container(
-            margin: EdgeInsets.only(top: 8),
-            padding: EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.blue[50],
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.blue[200]!),
-            ),
-            child: Row(
-              children: [
-                Icon(Icons.check_circle, color: Colors.green, size: 20),
-                SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    "Selected: $selectedBaseProduct",
-                    style: GoogleFonts.figtree(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.black87,
-                    ),
-                  ),
-                ),
-                GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      selectedBaseProduct = null;
-                      baseProductController.clear();
-                      baseProductResults = [];
-                    });
-                  },
-                  child: Icon(Icons.close, color: Colors.grey[600], size: 20),
-                ),
-              ],
-            ),
-          ),
-      ],
-    );
-  }
 
   void _submitData() {
     if (selectedMaterial == null ||
@@ -607,53 +409,52 @@ class _ProfileRidgeAndArchState extends State<ProfileRidgeAndArch> {
       );
       return;
     }
-    setState(() {
-      submittedData.add({
-        "Product": "Profile and Arch",
-        "UOM": "Feet",
-        "Length": "0",
-        "Nos": "1",
-        "Basic Rate": "0",
-        "SQ": "0",
-        "Amount": "0",
-        "Base Product":
-            "$selectedMaterial, $selectedBrands,$selectedColors, $selectedThickness, $selectedCoatingMass",
+    postAllData().then((_) {
+      setState(() {
+        submittedData.add({
+          "Product": "Profile and Arch",
+          "UOM": "Feet",
+          "Length": "0",
+          "Nos": "1",
+          "Basic Rate": "0",
+          "SQ": "0",
+          "Amount": "0",
+          "Base Product":
+              "$selectedMaterial, $selectedBrands,$selectedColors, $selectedThickness, $selectedCoatingMass",
+        });
+        selectedMaterial = null;
+        selectedBrands = null;
+        selectedColors = null;
+        selectedThickness = null;
+        selectedCoatingMass = null;
+        materialList = [];
+        brandandList = [];
+        colorandList = [];
+        thickAndList = [];
+        coatingAndList = [];
+        _fetchMaterial();
+        _fetchBrandData();
       });
-      selectedMaterial = null;
-      selectedBrands = null;
-      selectedColors = null;
-      selectedThickness = null;
-      selectedCoatingMass = null;
-      materialList = [];
-      brandandList = [];
-      colorandList = [];
-      thickAndList = [];
-      coatingAndList = [];
-      _fetchMaterial();
-      _fetchBrandData();
-    });
 
-    // Show success message with a more elegant snackBar
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            Icon(Icons.check_circle, color: Colors.white),
-            SizedBox(width: 12),
-            Text("Product added successfully"),
-          ],
+      // Show success message with a more elegant snackBar
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              Icon(Icons.check_circle, color: Colors.white),
+              SizedBox(width: 12),
+              Text("Product added successfully"),
+            ],
+          ),
+          backgroundColor: Colors.green,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          margin: EdgeInsets.all(16),
+          duration: Duration(seconds: 2),
         ),
-        backgroundColor: Colors.green,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-        margin: EdgeInsets.all(16),
-        duration: Duration(seconds: 2),
-      ),
-    );
+      );
+    });
   }
-
-  List<dynamic> responseProducts = [];
-  Map<String, Map<String, String>> uomOptions = {};
 
   Widget _buildSubmittedDataList() {
     if (responseProducts.isEmpty) {
@@ -699,7 +500,7 @@ class _ProfileRidgeAndArchState extends State<ProfileRidgeAndArch> {
                         height: 40.h,
                         width: 210.w,
                         child: Text(
-                          "  ${index + 1}.  ${data["Products"]}" ?? "",
+                          "  ${index + 1}.  ${data["Products"] ?? ""}",
                           overflow: TextOverflow.ellipsis,
                           style: GoogleFonts.figtree(
                             fontSize: 18,
@@ -890,6 +691,231 @@ class _ProfileRidgeAndArchState extends State<ProfileRidgeAndArch> {
     );
   }
 
+  Map<String, dynamic>? apiResponseData;
+  List<dynamic> responseProducts = [];
+  Map<String, Map<String, String>> uomOptions = {};
+
+  // Add this method to build the base product search field
+  Widget _buildBaseProductSearchField() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          "Base Product",
+          style: GoogleFonts.figtree(
+            fontSize: 16,
+            fontWeight: FontWeight.w500,
+            color: Colors.black87,
+          ),
+        ),
+        SizedBox(height: 8),
+        Container(
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.grey[300]!),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: TextField(
+            controller: baseProductController,
+            focusNode: baseProductFocusNode,
+            decoration: InputDecoration(
+              hintText: "Search base product...",
+              prefixIcon: Icon(Icons.search),
+              border: InputBorder.none,
+              contentPadding: EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 12,
+              ),
+              suffixIcon: isSearchingBaseProduct
+                  ? Padding(
+                      padding: EdgeInsets.all(12),
+                      child: SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                    )
+                  : null,
+            ),
+            onChanged: (value) {
+              searchBaseProducts(value);
+            },
+            onTap: () {
+              if (baseProductController.text.isNotEmpty) {
+                searchBaseProducts(baseProductController.text);
+              }
+            },
+          ),
+        ),
+
+        // Search Results Display (line by line, not dropdown)
+        if (baseProductResults.isNotEmpty)
+          Container(
+            margin: EdgeInsets.only(top: 8),
+            padding: EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.grey[50],
+              border: Border.all(color: Colors.grey[300]!),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "Search Results:",
+                  style: GoogleFonts.figtree(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black87,
+                  ),
+                ),
+                SizedBox(height: 8),
+                ...baseProductResults.map((product) {
+                  return GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        selectedBaseProduct = product.toString();
+                        baseProductController.text = selectedBaseProduct!;
+                        baseProductResults = [];
+                      });
+                    },
+                    child: Container(
+                      width: double.infinity,
+                      padding: EdgeInsets.symmetric(
+                        vertical: 12,
+                        horizontal: 12,
+                      ),
+                      margin: EdgeInsets.only(bottom: 6),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(color: Colors.grey[300]!),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.grey.withOpacity(0.1),
+                            spreadRadius: 1,
+                            blurRadius: 2,
+                            offset: Offset(0, 1),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(Icons.inventory_2, size: 16, color: Colors.blue),
+                          SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              product.toString(),
+                              style: GoogleFonts.figtree(
+                                fontSize: 14,
+                                color: Colors.black87,
+                                fontWeight: FontWeight.w400,
+                              ),
+                            ),
+                          ),
+                          Icon(
+                            Icons.arrow_forward_ios,
+                            size: 12,
+                            color: Colors.grey[400],
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ],
+            ),
+          ),
+
+        // Selected Base Product Display
+        if (selectedBaseProduct != null)
+          Container(
+            margin: EdgeInsets.only(top: 8),
+            padding: EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.blue[50],
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.blue[200]!),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.check_circle, color: Colors.green, size: 20),
+                SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    "Selected: $selectedBaseProduct",
+                    style: GoogleFonts.figtree(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.black87,
+                    ),
+                  ),
+                ),
+                GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      selectedBaseProduct = null;
+                      baseProductController.clear();
+                      baseProductResults = [];
+                    });
+                  },
+                  child: Icon(Icons.close, color: Colors.grey[600], size: 20),
+                ),
+              ],
+            ),
+          ),
+      ],
+    );
+  }
+
+  // Add this method for searching base products
+  Future<void> searchBaseProducts(String query) async {
+    if (query.isEmpty) {
+      setState(() {
+        baseProductResults = [];
+      });
+      return;
+    }
+
+    setState(() {
+      isSearchingBaseProduct = true;
+    });
+
+    HttpClient client = HttpClient();
+    client.badCertificateCallback =
+        ((X509Certificate cert, String host, int port) => true);
+    IOClient ioClient = IOClient(client);
+    final headers = {"Content-Type": "application/json"};
+    final data = {"category_id": "32", "searchbase": query};
+
+    try {
+      final response = await ioClient.post(
+        Uri.parse("https://demo.zaron.in:8181/ci4/api/baseproducts_search"),
+        headers: headers,
+        body: jsonEncode(data),
+      );
+
+      if (response.statusCode == 200) {
+        final responseData = jsonDecode(response.body);
+        print("Base product response: $responseData"); // Debug print
+        setState(() {
+          baseProductResults = responseData['base_products'] ?? [];
+          isSearchingBaseProduct = false;
+        });
+      } else {
+        setState(() {
+          baseProductResults = [];
+          isSearchingBaseProduct = false;
+        });
+      }
+    } catch (e) {
+      print("Error searching base products: $e");
+      setState(() {
+        baseProductResults = [];
+        isSearchingBaseProduct = false;
+      });
+    }
+  }
+
   // New method that organizes fields in rows, two fields per row
   Widget _buildProductDetailInRows(Map<String, dynamic> data) {
     return Column(
@@ -1001,6 +1027,7 @@ class _ProfileRidgeAndArchState extends State<ProfileRidgeAndArch> {
           if (key == "Length" ||
               key == "Nos" ||
               key == "Basic Rate" ||
+              key == "Amount" ||
               key == "height") {
             print("Triggering calculation for $key with value: $val");
             _debounceCalculation(data);
@@ -1276,6 +1303,15 @@ class _ProfileRidgeAndArchState extends State<ProfileRidgeAndArch> {
           setState(() {
             calculationResults[productId] = responseData;
 
+            // Update Basic Rate if provided in response
+            if (responseData["basic_rate"] != null) {
+              data["Basic Rate"] = responseData["basic_rate"].toString();
+              if (fieldControllers[productId]?["Basic Rate"] != null) {
+                fieldControllers[productId]!["Basic Rate"]!.text =
+                    responseData["basic_rate"].toString();
+              }
+            }
+
             // Update Profile/Length
             if (responseData["Length"] != null) {
               data["Profile"] = responseData["Length"].toString();
@@ -1284,7 +1320,6 @@ class _ProfileRidgeAndArchState extends State<ProfileRidgeAndArch> {
                     responseData["Length"].toString();
               }
             }
-
             // Update Nos
             if (responseData["Nos"] != null) {
               String newNos = responseData["Nos"].toString().trim();
