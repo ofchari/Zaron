@@ -11,6 +11,7 @@ import 'package:http/io_client.dart';
 import 'package:zaron/view/universal_api/api&key.dart';
 import 'package:zaron/view/widgets/subhead.dart';
 
+import '../camera_upload/acessories_uploads/accessories_attahment.dart';
 import '../global_user/global_user.dart';
 
 class Accessories extends StatefulWidget {
@@ -37,17 +38,27 @@ class _AccessoriesState extends State<Accessories> {
   List<String> thickAndList = [];
   List<String> coatingAndList = [];
 
-// List<String> brandList = [];
   List<Map<String, dynamic>> submittedData = [];
+  Map<String, dynamic>? apiResponseData;
+  List<dynamic> responseProducts = [];
+  Map<String, Map<String, String>> uomOptions = {};
 
-// Form key for validation
   final _formKey = GlobalKey<FormState>();
+  bool isGridView = true;
+  TextEditingController baseProductController = TextEditingController();
+  List<dynamic> baseProductResults = [];
+  bool isSearchingBaseProduct = false;
+  String? selectedBaseProduct;
+  FocusNode baseProductFocusNode = FocusNode();
+  String? currentMainProductId;
+  Timer? _debounceTimer;
+  Map<String, dynamic> calculationResults = {};
+  Map<String, String?> previousUomValues = {};
+  Map<String, Map<String, TextEditingController>> fieldControllers = {};
 
   @override
   void initState() {
     super.initState();
-
-    ///inside the textcontroller - text: widget.data["Base Product"]
     editController = TextEditingController();
     _fetchAccessories();
     _fetchBrandData();
@@ -57,6 +68,11 @@ class _AccessoriesState extends State<Accessories> {
   void dispose() {
     _debounceTimer?.cancel();
     editController.dispose();
+    baseProductController.dispose();
+    baseProductFocusNode.dispose();
+    fieldControllers.forEach((_, controllers) {
+      controllers.forEach((_, controller) => controller.dispose());
+    });
     super.dispose();
   }
 
@@ -77,7 +93,7 @@ class _AccessoriesState extends State<Accessories> {
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         final accessories = data["message"]["message"][1];
-        debugPrint("Accessories:::${accessories}");
+        debugPrint("Accessories:::$accessories");
         debugPrint(response.body, wrapWidth: 1024);
 
         if (accessories is List) {
@@ -91,14 +107,14 @@ class _AccessoriesState extends State<Accessories> {
         }
       }
     } catch (e) {
-      print("Exception fetching brands: $e");
+      print("Exception fetching accessories: $e");
     }
   }
 
   Future<void> _fetchBrandData() async {
     setState(() {
       brandandList = [];
-      selectedBrands;
+      selectedBrands = null;
     });
 
     final client = IOClient(
@@ -129,7 +145,6 @@ class _AccessoriesState extends State<Accessories> {
     }
   }
 
-  /// fetch colors Api's //
   Future<void> _fetchColorData() async {
     if (selectedBrands == null) return;
 
@@ -148,10 +163,6 @@ class _AccessoriesState extends State<Accessories> {
         url,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-// "category_id": "3",
-// "selectedlabel": "brand",
-// "selectedvalue": selectedBrands,
-// "label_name": "color",
           "product_label": "color",
           "product_filters": [selectedAccessories],
           "product_label_filters": ["accessories_name"],
@@ -183,7 +194,6 @@ class _AccessoriesState extends State<Accessories> {
     }
   }
 
-  /// fetch Thickness Api's ///
   Future<void> _fetchThicknessData() async {
     if (selectedBrands == null) return;
 
@@ -202,10 +212,6 @@ class _AccessoriesState extends State<Accessories> {
         url,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-// "category_id": "3",
-// "selectedlabel": "color",
-// "selectedvalue": selectedColors,
-// "label_name": "thickness",
           "product_label": "thickness",
           "product_filters": [selectedAccessories],
           "product_label_filters": ["accessories_name"],
@@ -237,7 +243,6 @@ class _AccessoriesState extends State<Accessories> {
     }
   }
 
-  /// fetch Thickness Api's ///
   Future<void> _fetchCoatingMassData() async {
     if (selectedBrands == null ||
         selectedColors == null ||
@@ -308,19 +313,6 @@ class _AccessoriesState extends State<Accessories> {
     }
   }
 
-  ///post All Data
-// Add these variables after line 25 (after the existing List declarations)
-  Map<String, dynamic>? apiResponseData;
-  List<dynamic> responseProducts = [];
-  Map<String, Map<String, String>> uomOptions = {};
-
-  ///post All Data
-// Updated postAllData method to trigger image fetching after successful response
-
-// Updated postAllData method with better product ID handling
-  String? currentMainProductId;
-
-// Updated postAllData method to store the main product_id
   Future<void> postAllData() async {
     HttpClient client = HttpClient();
     client.badCertificateCallback =
@@ -360,12 +352,9 @@ class _AccessoriesState extends State<Accessories> {
       }
 
       if (response.statusCode == 200) {
-// Parse and store the API response
         final responseData = jsonDecode(response.body);
         setState(() {
           apiResponseData = responseData;
-
-// Store the main product_id from the response
           currentMainProductId = responseData["product_id"]?.toString();
           debugPrint("Stored main product_id: $currentMainProductId");
 
@@ -374,7 +363,6 @@ class _AccessoriesState extends State<Accessories> {
             List<dynamic> newProducts = responseData["lebels"][0]["data"] ?? [];
             responseProducts.addAll(newProducts);
 
-// Store UOM options for each product
             for (var product in newProducts) {
               if (product["UOM"] != null && product["UOM"]["options"] != null) {
                 uomOptions[product["id"].toString()] = Map<String, String>.from(
@@ -383,18 +371,11 @@ class _AccessoriesState extends State<Accessories> {
                   ),
                 );
               }
-
-// Debug print to see the product structure
               debugPrint(
                   "Product added: ${product["id"]} - ${product["Products"]}");
             }
           }
         });
-
-// // Show success message
-//         ScaffoldMessenger.of(context).showSnackBar(
-//           SnackBar(content: Text("Product added successfully!")),
-//         );
       } else {
         debugPrint("Error response: ${response.statusCode} - ${response.body}");
         throw Exception("Server returned ${response.statusCode}");
@@ -410,15 +391,6 @@ class _AccessoriesState extends State<Accessories> {
     }
   }
 
-  /// Base View Products data //
-// Add these variables with your existing variables
-  TextEditingController baseProductController = TextEditingController();
-  List<dynamic> baseProductResults = [];
-  bool isSearchingBaseProduct = false;
-  String? selectedBaseProduct;
-  FocusNode baseProductFocusNode = FocusNode();
-
-// Add this method for searching base products
   Future<void> searchBaseProducts(String query) async {
     if (query.isEmpty) {
       setState(() {
@@ -447,7 +419,7 @@ class _AccessoriesState extends State<Accessories> {
 
       if (response.statusCode == 200) {
         final responseData = jsonDecode(response.body);
-        print("Base product response: $responseData"); // Debug print
+        print("Base product response: $responseData");
         setState(() {
           baseProductResults = responseData['base_products'] ?? [];
           isSearchingBaseProduct = false;
@@ -467,7 +439,6 @@ class _AccessoriesState extends State<Accessories> {
     }
   }
 
-// Add this method to build the base product search field
   Widget _buildBaseProductSearchField() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -518,8 +489,6 @@ class _AccessoriesState extends State<Accessories> {
             },
           ),
         ),
-
-// Search Results Display (line by line, not dropdown)
         if (baseProductResults.isNotEmpty)
           Container(
             margin: EdgeInsets.only(top: 8),
@@ -597,8 +566,6 @@ class _AccessoriesState extends State<Accessories> {
               ],
             ),
           ),
-
-// Selected Base Product Display
         if (selectedBaseProduct != null)
           Container(
             margin: EdgeInsets.only(top: 8),
@@ -645,7 +612,6 @@ class _AccessoriesState extends State<Accessories> {
         selectedColors == null ||
         selectedThickness == null ||
         selectedCoatingMass == null) {
-// Show elegant error message
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
@@ -690,7 +656,6 @@ class _AccessoriesState extends State<Accessories> {
         _fetchBrandData();
       });
 
-// Show success message with a more elegant snackBar
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Row(
@@ -710,10 +675,6 @@ class _AccessoriesState extends State<Accessories> {
     });
   }
 
-// 1. Add this variable after line 25 (with other existing variables)
-  bool isGridView = true; // Add this line
-
-// 2. Replace the existing _buildSubmittedDataList() method with this updated version:
   Widget _buildSubmittedDataList() {
     if (responseProducts.isEmpty) {
       return Container(
@@ -734,7 +695,6 @@ class _AccessoriesState extends State<Accessories> {
 
     return Column(
       children: [
-// Toggle Button Row
         Row(
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
@@ -797,14 +757,11 @@ class _AccessoriesState extends State<Accessories> {
           ],
         ),
         SizedBox(height: 16),
-
-// Content based on view type
         isGridView ? _buildGridView() : _buildListView(),
       ],
     );
   }
 
-  /// 3. Add this new method for Grid View (your existing card layout):
   Widget _buildGridView() {
     return Column(
       children: responseProducts.asMap().entries.map((entry) {
@@ -861,7 +818,6 @@ class _AccessoriesState extends State<Accessories> {
                       ),
                     ),
                   ),
-// Attachment Button
                   Padding(
                     padding: const EdgeInsets.all(4.0),
                     child: Container(
@@ -872,16 +828,21 @@ class _AccessoriesState extends State<Accessories> {
                         color: Colors.green[50],
                       ),
                       child: IconButton(
-                          icon: Icon(Icons.attach_file,
-                              color: Colors.green[600], size: 20),
-// Alternative - explicitly use main product_id:
-                          onPressed: () {
-                            String mainProductId =
-                                apiResponseData?["product_id"]?.toString() ??
-                                    "Unknown ID";
-// String productName = product["Products"] ?? "Unknown Product";
-                            _showAttachmentDialog(mainProductId);
-                          }),
+                        icon: Icon(Icons.attach_file,
+                            color: Colors.green[600], size: 20),
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => AttachmentScreen(
+                                productId: data['id'].toString(),
+                                mainProductId:
+                                    currentMainProductId ?? "Unknown ID",
+                              ),
+                            ),
+                          );
+                        },
+                      ),
                     ),
                   ),
                   Padding(
@@ -940,7 +901,6 @@ class _AccessoriesState extends State<Accessories> {
     );
   }
 
-// 4. Add this new method for List View (compact horizontal layout):
   Widget _buildListView() {
     return Column(
       children: responseProducts.asMap().entries.map((entry) {
@@ -957,7 +917,6 @@ class _AccessoriesState extends State<Accessories> {
             padding: EdgeInsets.all(12),
             child: Column(
               children: [
-// Product Header Row
                 Row(
                   children: [
                     Expanded(
@@ -991,7 +950,6 @@ class _AccessoriesState extends State<Accessories> {
                       ),
                     ),
                     SizedBox(width: 4),
-// Attachment Button
                     Container(
                       height: 28,
                       width: 28,
@@ -1006,7 +964,18 @@ class _AccessoriesState extends State<Accessories> {
                           color: Colors.green[600],
                           size: 16,
                         ),
-                        onPressed: () {},
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => AttachmentScreen(
+                                productId: data['id'].toString(),
+                                mainProductId:
+                                    currentMainProductId ?? "Unknown ID",
+                              ),
+                            ),
+                          );
+                        },
                       ),
                     ),
                     SizedBox(width: 4),
@@ -1060,8 +1029,6 @@ class _AccessoriesState extends State<Accessories> {
                   ],
                 ),
                 SizedBox(height: 12),
-
-// Compact Data Row
                 Row(
                   children: [
                     Expanded(
@@ -1119,7 +1086,6 @@ class _AccessoriesState extends State<Accessories> {
     );
   }
 
-// 5. Add this helper method for compact fields in list view:
   Widget _buildCompactField(String label, Widget field) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1137,8 +1103,6 @@ class _AccessoriesState extends State<Accessories> {
       ],
     );
   }
-
-// Replace the existing _buildProductDetailInRows() method with this:
 
   Widget _buildDetailItem(String label, Widget field) {
     return Column(
@@ -1158,9 +1122,6 @@ class _AccessoriesState extends State<Accessories> {
     );
   }
 
-  /// Modified UOM dropdown with calculation trigger
-
-// Modified UOM dropdown with calculation trigger
   Widget _uomDropdownFromApi(Map<String, dynamic> data) {
     String productId = data["id"].toString();
     Map<String, String>? options = uomOptions[productId];
@@ -1192,11 +1153,8 @@ class _AccessoriesState extends State<Accessories> {
           setState(() {
             data["UOM"] = {"value": val, "options": options};
           });
-          print("UOM changed to: $val"); // Debug print
-          print(
-            "Product data: ${data["Products"]}, ID: ${data["id"]}",
-          ); // Debug print
-// Trigger calculation with debounce
+          print("UOM changed to: $val");
+          print("Product data: ${data["Products"]}, ID: ${data["id"]}");
           _debounceCalculation(data);
         },
         decoration: InputDecoration(
@@ -1223,7 +1181,6 @@ class _AccessoriesState extends State<Accessories> {
     );
   }
 
-// Modified editable text field with proper controller management
   Widget _editableTextField(Map<String, dynamic> data, String key) {
     final controller = _getController(data, key);
 
@@ -1247,16 +1204,9 @@ class _AccessoriesState extends State<Accessories> {
           setState(() {
             data[key] = val;
           });
-
           print("Field $key changed to: $val");
           print("Controller text: ${controller.text}");
           print("Data after change: ${data[key]}");
-
-// 🚫 DO NOT forcefully reset controller.text here!
-// if (controller.text != val) {
-//   controller.text = val;
-// }
-
           if (key == "Length" || key == "Nos" || key == "Basic Rate") {
             print("Triggering calculation for $key with value: $val");
             _debounceCalculation(data);
@@ -1289,7 +1239,6 @@ class _AccessoriesState extends State<Accessories> {
     );
   }
 
-// Modified product detail rows to include R.Ft
   Widget _buildProductDetailInRows(Map<String, dynamic> data) {
     return Column(
       children: [
@@ -1358,388 +1307,28 @@ class _AccessoriesState extends State<Accessories> {
     return value.isEmpty ? "No selection yet" : value.join(",  ");
   }
 
-// Updated fetchProductImages method with better error handling
-// Updated fetchProductImages method with better error handling
-  Future<List<dynamic>> fetchProductImages(String productId) async {
-    HttpClient client = HttpClient();
-    client.badCertificateCallback =
-        ((X509Certificate cert, String host, int port) => true);
-    IOClient ioClient = IOClient(client);
-
-    final headers = {"Content-Type": "application/json"};
-    final data = {"product_id": productId};
-    const url = "https://demo.zaron.in:8181/ci4/api/product_images";
-    final body = jsonEncode(data);
-
-    debugPrint("Fetching images for product ID: $productId");
-    debugPrint("Request body: $body");
-
-    try {
-      final response = await ioClient.post(
-        Uri.parse(url),
-        headers: headers,
-        body: body,
-      );
-
-      debugPrint("Product Images Response Status: ${response.statusCode}");
-      debugPrint("Product Images Response Body: ${response.body}");
-
-      if (response.statusCode == 200) {
-        final responseData = jsonDecode(response.body);
-
-// Handle the actual response structure
-        if (responseData["status"] == "success" &&
-            responseData["product_images"] != null) {
-          debugPrint(
-              "Successfully fetched ${responseData["product_images"].length} images");
-          return responseData["product_images"];
-        } else {
-          debugPrint("No images found or invalid response structure");
-          debugPrint("Response status: ${responseData["status"]}");
-          return [];
-        }
-      } else {
-        debugPrint("Failed to fetch images: ${response.statusCode}");
-        debugPrint("Response body: ${response.body}");
-
-// Try to parse error response
-        try {
-          final errorData = jsonDecode(response.body);
-          debugPrint("Error details: ${errorData["message"]}");
-        } catch (e) {
-          debugPrint("Could not parse error response: $e");
-        }
-        return [];
-      }
-    } catch (e) {
-      debugPrint("Exception in fetchProductImages: $e");
-      return [];
-    } finally {
-      client.close();
-    }
-  }
-
-// Updated _showAttachmentDialog method to fetch and display images
-// Updated _showAttachmentDialog method - always use main product_id
-  void _showAttachmentDialog(String productName) async {
-// Show loading dialog first
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => Center(
-        child: CircularProgressIndicator(),
-      ),
-    );
-
-    try {
-// Always use the main product_id from the API response, not individual item IDs
-      String mainProductId = currentMainProductId ??
-          apiResponseData?["product_id"]?.toString() ??
-          "Unknown ID";
-
-      debugPrint("Using MAIN product ID for images: $mainProductId");
-      debugPrint("Product name: $productName");
-
-// Fetch product images using the main product_id
-      List<dynamic> images = await fetchProductImages(mainProductId);
-
-// Close loading dialog
-      Navigator.pop(context);
-
-// Show images dialog
-      showDialog(
-        context: context,
-        builder: (context) {
-          return AlertDialog(
-            title: Text(
-              "Attachments - $productName",
-              style: GoogleFonts.figtree(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            content: Container(
-              width: double.maxFinite,
-              height: images.isEmpty ? 100 : 300,
-              child: images.isEmpty
-                  ? Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.image_not_supported,
-                            size: 50,
-                            color: Colors.grey,
-                          ),
-                          SizedBox(height: 10),
-                          Text(
-                            "No images available",
-                            style: TextStyle(color: Colors.grey),
-                          ),
-                        ],
-                      ),
-                    )
-                  : ListView.builder(
-                      itemCount: images.length,
-                      itemBuilder: (context, index) {
-                        var imageData = images[index];
-                        String imageUrl = "";
-                        String imageName = "";
-
-// Handle the actual API response structure
-                        if (imageData is Map) {
-                          // Handle different possible data types for product_image
-                          String imagePath = '';
-                          if (imageData["product_image"] != null) {
-                            imagePath = imageData["product_image"].toString();
-                          }
-
-                          if (imagePath.isNotEmpty) {
-                            // Check if the path already includes the base URL
-                            if (imagePath.startsWith('http')) {
-                              imageUrl = imagePath;
-                            } else {
-                              imageUrl =
-                                  "https://demo.zaron.in:8181/uploads/$imagePath";
-                            }
-                          }
-
-                          // Handle image name/layout plan with type safety
-                          imageName =
-                              imageData["image_layout_plan"]?.toString() ??
-                                  "Image ${index + 1}";
-                        }
-
-                        return Card(
-                          margin: EdgeInsets.symmetric(vertical: 5),
-                          child: imageUrl.isNotEmpty
-                              ? Column(
-                                  children: [
-                                    GestureDetector(
-                                      onTap: () {
-// Show full screen image
-                                        _showFullScreenImage(imageUrl);
-                                      },
-                                      child: Container(
-                                        height: 200,
-                                        width: double.infinity,
-                                        child: Image.network(
-                                          imageUrl,
-                                          fit: BoxFit.cover,
-                                          loadingBuilder: (context, child,
-                                              loadingProgress) {
-                                            if (loadingProgress == null)
-                                              return child;
-                                            return Center(
-                                              child: CircularProgressIndicator(
-                                                value: loadingProgress
-                                                            .expectedTotalBytes !=
-                                                        null
-                                                    ? loadingProgress
-                                                            .cumulativeBytesLoaded /
-                                                        loadingProgress
-                                                            .expectedTotalBytes!
-                                                    : null,
-                                              ),
-                                            );
-                                          },
-                                          errorBuilder:
-                                              (context, error, stackTrace) {
-                                            debugPrint(
-                                                "Image load error: $error");
-                                            debugPrint("Image URL: $imageUrl");
-                                            return Container(
-                                              height: 200,
-                                              color: Colors.grey[200],
-                                              child: Column(
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment.center,
-                                                children: [
-                                                  Icon(Icons.broken_image,
-                                                      size: 50,
-                                                      color: Colors.grey),
-                                                  Text("Failed to load image",
-                                                      style: TextStyle(
-                                                          color: Colors.grey)),
-                                                  Text("URL: $imageUrl",
-                                                      style: TextStyle(
-                                                          color: Colors.grey,
-                                                          fontSize: 10)),
-                                                ],
-                                              ),
-                                            );
-                                          },
-                                        ),
-                                      ),
-                                    ),
-// Show image name/layout plan
-                                    Padding(
-                                      padding: EdgeInsets.all(8.0),
-                                      child: Text(
-                                        imageName,
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.w500,
-                                          fontSize: 14,
-                                        ),
-                                        textAlign: TextAlign.center,
-                                      ),
-                                    ),
-                                  ],
-                                )
-                              : ListTile(
-                                  leading: Icon(Icons.broken_image,
-                                      color: Colors.grey),
-                                  title: Text("Invalid image data"),
-                                ),
-                        );
-                      },
-                    ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: Text("Close"),
-              ),
-            ],
-          );
-        },
-      );
-    } catch (e) {
-// Close loading dialog if still open
-      Navigator.pop(context);
-
-      debugPrint("Error in _showAttachmentDialog: $e");
-
-// Show error dialog
-      showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: Text("Error"),
-          content: Text("Failed to load images: $e"),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text("OK"),
-            ),
-          ],
-        ),
-      );
-    }
-  }
-
-// Example of how to call it correctly:
-// Example of how to call it correctly:
-  void onAttachmentButtonPressed(Map<String, dynamic> product) {
-// Use the main product_id from the API response, not the individual item ID
-    String productId =
-        currentMainProductId ?? "1"; // Use stored main product_id
-    String productName = product["Products"] ?? "Unknown Product";
-
-    debugPrint("Using main product_id for attachment: $productId");
-    _showAttachmentDialog(
-      productId,
-    );
-  }
-
-// Alternative way if you want to extract it directly from apiResponseData:
-  void onAttachmentButtonPressedAlternative(Map<String, dynamic> product) {
-    String productId = apiResponseData?["product_id"]?.toString() ?? "1";
-    String productName = product["Products"] ?? "Unknown Product";
-
-    debugPrint("Using main product_id for attachment: $productId");
-    _showAttachmentDialog(
-      productId,
-    );
-  }
-
-// Add a class variable to store the main product_id
-
-// Method to show full screen image
-  void _showFullScreenImage(String imageUrl) {
-    showDialog(
-      context: context,
-      builder: (context) => Dialog(
-        backgroundColor: Colors.black,
-        child: Stack(
-          children: [
-            Center(
-              child: InteractiveViewer(
-                child: Image.network(
-                  imageUrl,
-                  fit: BoxFit.contain,
-                  errorBuilder: (context, error, stackTrace) {
-                    return Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.broken_image,
-                              size: 100, color: Colors.white),
-                          Text("Failed to load image",
-                              style: TextStyle(color: Colors.white)),
-                        ],
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ),
-            Positioned(
-              top: 40,
-              right: 20,
-              child: IconButton(
-                icon: Icon(Icons.close, color: Colors.white, size: 30),
-                onPressed: () => Navigator.pop(context),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-// Add these variables after existing declarations
-
-  Timer? _debounceTimer;
-  Map<String, dynamic> calculationResults = {};
-  Map<String, String?> previousUomValues = {}; // Track previous UOM values
-  Map<String, Map<String, TextEditingController>> fieldControllers =
-      {}; // Store controllers
-
-// Method to get or create controller for each field
   TextEditingController _getController(Map<String, dynamic> data, String key) {
     String productId = data["id"].toString();
-
-// Initialize controllers map for this product ID
     fieldControllers.putIfAbsent(productId, () => {});
-
-// If controller for this key doesn't exist, create it
     if (!fieldControllers[productId]!.containsKey(key)) {
       String initialValue = (data[key] != null && data[key].toString() != "0")
           ? data[key].toString()
-          : ""; // Avoid initializing with "0"
-
+          : "";
       fieldControllers[productId]![key] = TextEditingController(
         text: initialValue,
       );
-
       print("Created controller for [$key] with value: '$initialValue'");
     } else {
-// Existing controller: check if it needs sync from data
       final controller = fieldControllers[productId]![key]!;
-
       final dataValue = data[key]?.toString() ?? "";
-
-// If the controller is empty but data has a value, sync it
       if (controller.text.isEmpty && dataValue.isNotEmpty && dataValue != "0") {
         controller.text = dataValue;
         print("Synced controller for [$key] to: '$dataValue'");
       }
     }
-
     return fieldControllers[productId]![key]!;
   }
 
-// Add this method for debounced calculation
   void _debounceCalculation(Map<String, dynamic> data) {
     _debounceTimer?.cancel();
     _debounceTimer = Timer(Duration(seconds: 1), () {
@@ -1747,7 +1336,6 @@ class _AccessoriesState extends State<Accessories> {
     });
   }
 
-// Calculation API method - FIXED VERSION with UI Updates
   Future<void> _performCalculation(Map<String, dynamic> data) async {
     print("=== STARTING CALCULATION API ===");
     print("Data received: $data");
@@ -1758,8 +1346,6 @@ class _AccessoriesState extends State<Accessories> {
     final url = Uri.parse('$apiUrl/calculation');
 
     String productId = data["id"].toString();
-
-// Get current UOM value
     String? currentUom;
     if (data["UOM"] is Map) {
       currentUom = data["UOM"]["value"]?.toString();
@@ -1770,40 +1356,32 @@ class _AccessoriesState extends State<Accessories> {
     print("Current UOM: $currentUom");
     print("Previous UOM: ${previousUomValues[productId]}");
 
-// Get Profile value from controller
     double? profileValue;
     String? profileText;
-
     if (fieldControllers.containsKey(productId) &&
         fieldControllers[productId]!.containsKey("Profile")) {
       profileText = fieldControllers[productId]!["Profile"]!.text;
       print("Profile from controller: $profileText");
     }
-
     if (profileText == null || profileText.isEmpty) {
       profileText = data["Profile"]?.toString();
       print("Profile from data: $profileText");
     }
-
     if (profileText != null && profileText.isNotEmpty) {
       profileValue = double.tryParse(profileText);
     }
 
-// Get Nos value from controller
     int nosValue = 0;
     String? nosText;
-
     if (fieldControllers.containsKey(productId) &&
         fieldControllers[productId]!.containsKey("Nos")) {
       nosText = fieldControllers[productId]!["Nos"]!.text;
       print("Nos from controller: $nosText");
     }
-
     if (nosText == null || nosText.isEmpty) {
       nosText = data["Nos"]?.toString();
       print("Nos from data: $nosText");
     }
-
     if (nosText != null && nosText.isNotEmpty) {
       nosValue = int.tryParse(nosText) ?? 1;
     }
@@ -1839,11 +1417,9 @@ class _AccessoriesState extends State<Accessories> {
 
       if (response.statusCode == 200) {
         final responseData = jsonDecode(response.body);
-
         if (responseData["status"] == "success") {
           setState(() {
             calculationResults[productId] = responseData;
-
             if (responseData["Length"] != null) {
               data["Profile"] = responseData["Length"].toString();
               if (fieldControllers[productId]?["Profile"] != null) {
@@ -1851,12 +1427,10 @@ class _AccessoriesState extends State<Accessories> {
                     responseData["Length"].toString();
               }
             }
-
             if (responseData["Nos"] != null) {
               String newNos = responseData["Nos"].toString().trim();
               String currentInput =
                   fieldControllers[productId]!["Nos"]!.text.trim();
-
               if (currentInput.isEmpty || currentInput == "0") {
                 data["Nos"] = newNos;
                 if (fieldControllers[productId]?["Nos"] != null) {
@@ -1867,7 +1441,6 @@ class _AccessoriesState extends State<Accessories> {
                 print("Nos NOT updated because user input = '$currentInput'");
               }
             }
-
             if (responseData["R.Ft"] != null) {
               data["R.Ft"] = responseData["R.Ft"].toString();
               if (fieldControllers[productId]?["R.Ft"] != null) {
@@ -1875,7 +1448,6 @@ class _AccessoriesState extends State<Accessories> {
                     responseData["R.Ft"].toString();
               }
             }
-
             if (responseData["Amount"] != null) {
               data["Amount"] = responseData["Amount"].toString();
               if (fieldControllers[productId]?["Amount"] != null) {
@@ -1883,10 +1455,8 @@ class _AccessoriesState extends State<Accessories> {
                     responseData["Amount"].toString();
               }
             }
-
             previousUomValues[productId] = currentUom;
           });
-
           print("=== CALCULATION SUCCESS ===");
           print(
             "Updated data: Length=${data["Profile"]}, Nos=${data["Nos"]}, R.Ft=${data["R.Ft"]}, Amount=${data["Amount"]}",
@@ -1900,6 +1470,70 @@ class _AccessoriesState extends State<Accessories> {
     } catch (e) {
       print("Calculation API Error: $e");
     }
+  }
+
+  Widget _buildAnimatedDropdown(
+    List<String> items,
+    String? selectedValue,
+    ValueChanged<String?> onChanged, {
+    bool enabled = true,
+    required String label,
+    required IconData icon,
+  }) {
+    return Padding(
+      padding: EdgeInsets.only(bottom: 16),
+      child: AnimatedContainer(
+        duration: Duration(milliseconds: 200),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(12),
+          color: enabled ? Colors.white : Colors.grey.shade100,
+          border: Border.all(
+            color: enabled ? Colors.grey.shade300 : Colors.grey.shade200,
+          ),
+          boxShadow: enabled
+              ? [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.03),
+                    blurRadius: 8,
+                    offset: Offset(0, 2),
+                  ),
+                ]
+              : [],
+        ),
+        child: DropdownSearch<String>(
+          items: items,
+          selectedItem: selectedValue,
+          onChanged: enabled ? onChanged : null,
+          dropdownDecoratorProps: DropDownDecoratorProps(
+            dropdownSearchDecoration: InputDecoration(
+              labelText: label,
+              prefixIcon: Icon(
+                icon,
+                color: enabled ? Colors.deepPurple : Colors.grey,
+              ),
+              border: InputBorder.none,
+              contentPadding: EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 12,
+              ),
+            ),
+          ),
+          popupProps: PopupProps.menu(
+            showSearchBox: true,
+            searchFieldProps: TextFieldProps(
+              decoration: InputDecoration(
+                hintText: "Search...",
+                prefixIcon: Icon(Icons.search),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+            ),
+            constraints: BoxConstraints(maxHeight: 300),
+          ),
+        ),
+      ),
+    );
   }
 
   @override
@@ -2141,71 +1775,6 @@ class _AccessoriesState extends State<Accessories> {
                 ],
               ],
             ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildAnimatedDropdown(
-    List<String> items,
-    String? selectedValue,
-    ValueChanged<String?> onChanged, {
-    bool enabled = true,
-    required String label,
-    required IconData icon,
-  }) {
-    return Padding(
-      padding: EdgeInsets.only(bottom: 16),
-      child: AnimatedContainer(
-        duration: Duration(milliseconds: 200),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12),
-          color: enabled ? Colors.white : Colors.grey.shade100,
-          border: Border.all(
-            color: enabled ? Colors.grey.shade300 : Colors.grey.shade200,
-          ),
-          boxShadow: enabled
-              ? [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.03),
-                    blurRadius: 8,
-                    offset: Offset(0, 2),
-                  ),
-                ]
-              : [],
-        ),
-        child: DropdownSearch<String>(
-          items: items,
-          selectedItem: selectedValue,
-          onChanged: enabled ? onChanged : null,
-          dropdownDecoratorProps: DropDownDecoratorProps(
-            dropdownSearchDecoration: InputDecoration(
-              labelText: label,
-              prefixIcon: Icon(
-                icon,
-                color: enabled ? Colors.deepPurple : Colors.grey,
-              ),
-              border: InputBorder.none,
-              contentPadding: EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 12,
-              ),
-            ),
-          ),
-          popupProps: PopupProps.menu(
-            showSearchBox: true,
-            searchFieldProps: TextFieldProps(
-              decoration: InputDecoration(
-                hintText: "Search...",
-                prefixIcon: Icon(Icons.search),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-            ),
-            constraints: BoxConstraints(maxHeight: 300),
-// borderRadius: BorderRadius.circular(12),
           ),
         ),
       ),
