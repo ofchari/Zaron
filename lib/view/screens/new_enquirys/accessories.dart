@@ -443,15 +443,25 @@ class _AccessoriesState extends State<Accessories> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          "Base Product",
-          style: GoogleFonts.figtree(
-            fontSize: 16,
-            fontWeight: FontWeight.w500,
-            color: Colors.black87,
-          ),
-        ),
-        SizedBox(height: 8),
+        Gap(10),
+        isGridView
+            ? Text(
+                "Base Product",
+                style: GoogleFonts.figtree(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.black87,
+                ),
+              )
+            : Text(
+                "Base Product",
+                style: TextStyle(
+                  fontWeight: FontWeight.w500,
+                  color: Colors.grey[600],
+                  fontSize: 12,
+                ),
+              ),
+        Gap(3),
         Container(
           decoration: BoxDecoration(
             border: Border.all(color: Colors.grey[300]!),
@@ -893,7 +903,11 @@ class _AccessoriesState extends State<Accessories> {
                 ],
               ),
               _buildProductDetailInRows(data),
-              Gap(5),
+              Padding(
+                padding: const EdgeInsets.only(left: 8.0, right: 8.0),
+                child: _buildBaseProductSearchField(),
+              ),
+              SizedBox(height: 24),
             ],
           ),
         );
@@ -1078,6 +1092,7 @@ class _AccessoriesState extends State<Accessories> {
                     ),
                   ],
                 ),
+                _buildBaseProductSearchField(),
               ],
             ),
           ),
@@ -1674,8 +1689,6 @@ class _AccessoriesState extends State<Accessories> {
                             icon: Icons.layers_outlined,
                           ),
                           SizedBox(height: 16),
-                          _buildBaseProductSearchField(),
-                          SizedBox(height: 24),
                           Container(
                             padding: EdgeInsets.all(16),
                             decoration: BoxDecoration(

@@ -122,28 +122,21 @@ class _AttachmentScreenState extends State<AttachmentScreen> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        leading: Container(
-          margin: EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.9),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: IconButton(
-            icon:
-                Icon(Icons.arrow_back_ios_new, color: Colors.black87, size: 20),
-            onPressed: () => Navigator.pop(context),
-          ),
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back_ios_new, color: Colors.black87, size: 20),
+          onPressed: () => Navigator.pop(context),
         ),
         title: Container(
-            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.9),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Subhead(
-                text: 'Product Attachments',
-                weight: FontWeight.w500,
-                color: Colors.black)),
+          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.9),
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Subhead(
+              text: 'Product Attachments',
+              weight: FontWeight.w500,
+              color: Colors.black),
+        ),
         centerTitle: true,
       ),
       body: Container(
@@ -524,7 +517,7 @@ class _AttachmentScreenState extends State<AttachmentScreen> {
       context: context,
       builder: (BuildContext context) {
         return Dialog(
-          backgroundColor: Colors.black,
+          backgroundColor: Colors.grey,
           child: Stack(
             children: [
               Center(
