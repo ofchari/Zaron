@@ -412,7 +412,7 @@ class _AccessoriesState extends State<Accessories> {
 
     try {
       final response = await ioClient.post(
-        Uri.parse("https://demo.zaron.in:8181/ci4/api/baseproducts_search"),
+        Uri.parse("$apiUrl/baseproducts_search"),
         headers: headers,
         body: jsonEncode(data),
       );
@@ -439,6 +439,7 @@ class _AccessoriesState extends State<Accessories> {
     }
   }
 
+  bool isBaseProductUpdated = false;
   Widget _buildBaseProductSearchField() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -517,6 +518,8 @@ class _AccessoriesState extends State<Accessories> {
                         selectedBaseProduct = product.toString();
                         baseProductController.text = selectedBaseProduct!;
                         baseProductResults = [];
+                        isBaseProductUpdated =
+                            false; // Reset update status when new product is selected
                       });
                     },
                     child: Container(
@@ -602,8 +605,108 @@ class _AccessoriesState extends State<Accessories> {
               ],
             ),
           ),
+        if (selectedBaseProduct != null && !isBaseProductUpdated)
+          Container(
+            margin: EdgeInsets.only(top: 8),
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: () {
+                // Replace "1335694" with your actual product ID variable
+                updateSelectedBaseProduct("1335694");
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blue,
+                padding: EdgeInsets.symmetric(vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: Text(
+                "Update Base Product",
+                style: GoogleFonts.figtree(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ),
       ],
     );
+  }
+
+  Future<void> updateBaseProduct(String productId, String baseProduct) async {
+    HttpClient client = HttpClient();
+    client.badCertificateCallback =
+        ((X509Certificate cert, String host, int port) => true);
+    IOClient ioClient = IOClient(client);
+
+    final headers = {"Content-Type": "application/json"};
+    final data = {"id": productId, "base_product": baseProduct};
+
+    try {
+      final response = await ioClient.post(
+        Uri.parse("https://demo.zaron.in:8181/ci4/api/baseproduct_update"),
+        headers: headers,
+        body: jsonEncode(data),
+      );
+
+      if (response.statusCode == 200) {
+        final responseData = jsonDecode(response.body);
+        print("Base product updated successfully: $responseData");
+        print("Product Id  xxxx $productId");
+
+        // Show success message to user
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Base product updated successfully!"),
+            backgroundColor: Colors.green,
+          ),
+        );
+      } else {
+        print(
+            "Failed to update base product. Status code: ${response.statusCode}");
+        print("Response body: ${response.body}");
+
+        // Show error message to user
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Failed to update base product. Please try again."),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      print("Error updating base product: $e");
+
+      // Show error message to user
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Error updating base product: $e"),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      ioClient.close();
+    }
+  }
+
+// Method to call when user wants to update the selected base product
+  void updateSelectedBaseProduct(String productId) {
+    if (selectedBaseProduct != null && selectedBaseProduct!.isNotEmpty) {
+      setState(() {
+        isBaseProductUpdated = true;
+        baseProductController.clear();
+      });
+      updateBaseProduct(productId, selectedBaseProduct!);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Please select a base product first."),
+          backgroundColor: Colors.orange,
+        ),
+      );
+    }
   }
 
   void _submitData() {
@@ -894,6 +997,7 @@ class _AccessoriesState extends State<Accessories> {
               ),
               _buildProductDetailInRows(data),
               Gap(5),
+              _buildBaseProductSearchField(),
             ],
           ),
         );
@@ -1674,7 +1778,6 @@ class _AccessoriesState extends State<Accessories> {
                             icon: Icons.layers_outlined,
                           ),
                           SizedBox(height: 16),
-                          _buildBaseProductSearchField(),
                           SizedBox(height: 24),
                           Container(
                             padding: EdgeInsets.all(16),

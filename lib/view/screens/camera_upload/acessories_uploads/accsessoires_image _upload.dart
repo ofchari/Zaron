@@ -2,10 +2,12 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:gap/gap.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 import 'package:path/path.dart ' as path;
 import 'package:zaron/view/universal_api/api&key.dart';
+import 'package:zaron/view/widgets/subhead.dart';
 
 class AccessoriesImageUpload extends StatefulWidget {
   final String productId;
@@ -20,10 +22,9 @@ class _AccessoriesImageUploadState extends State<AccessoriesImageUpload> {
   File? _selectedImage;
   bool _isUploading = false;
 
-  Future<void> _pickImageAndUpload() async {
+  Future<void> _pickImage() async {
     final picker = ImagePicker();
 
-    // Show dialog to choose between camera and gallery
     final ImageSource? source = await showDialog<ImageSource>(
       context: context,
       builder: (BuildContext dialogContext) => AlertDialog(
@@ -71,13 +72,9 @@ class _AccessoriesImageUploadState extends State<AccessoriesImageUpload> {
       );
 
       if (pickedFile != null) {
-        File imageFile = File(pickedFile.path);
-
         setState(() {
-          _selectedImage = imageFile;
+          _selectedImage = File(pickedFile.path);
         });
-
-        await _uploadImage(imageFile);
       } else {
         debugPrint("No image selected.");
         if (mounted) {
@@ -96,6 +93,12 @@ class _AccessoriesImageUploadState extends State<AccessoriesImageUpload> {
     }
   }
 
+  ///
+  ///
+  ///
+  ///
+  ///
+  ///
   Future<void> _uploadImage(File imageFile) async {
     setState(() {
       _isUploading = true;
@@ -250,107 +253,122 @@ class _AccessoriesImageUploadState extends State<AccessoriesImageUpload> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Upload Product Image"),
-        backgroundColor: Colors.green[600],
+        centerTitle: true,
+        title: Subhead(
+            text: "Upload Product Image",
+            weight: FontWeight.w500,
+            color: Colors.white),
+        backgroundColor: Colors.deepPurple[300],
         foregroundColor: Colors.white,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              "Product ID: ${widget.productId}",
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
+      body: Container(
+        height: double.infinity,
+        width: double.infinity,
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Colors.deepPurple[300]!, Colors.white],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Gap(10),
+              Text(
+                "Product ID: ${widget.productId}",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
-            ),
-            SizedBox(height: 20),
+              // ShaderMask(
+              //   shaderCallback: (bounds) => LinearGradient(
+              //     colors: [Colors.white, Colors.white],
+              //     begin: Alignment.centerLeft,
+              //     end: Alignment.centerRight,
+              //   ).createShader(bounds),
+              //   child: AnimatedDefaultTextStyle(
+              //     duration: Duration(seconds: 1),
+              //     style: TextStyle(
+              //       color: Colors.white,
+              //       fontSize: 20,
+              //       fontWeight: FontWeight.w800,
+              //       letterSpacing: 1.2,
+              //       shadows: [
+              //         Shadow(
+              //           color: Colors.black26,
+              //           offset: Offset(2, 2),
+              //           blurRadius: 4,
+              //         ),
+              //       ],
+              //     ),
+              //     child: Text("Product ID: ${widget.productId}"),
+              //   ),
+              // ),
+              SizedBox(height: 20),
 
-            // Image preview
-            if (_selectedImage != null)
-              Container(
-                height: 300,
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(10),
-                  child: Image.file(
-                    _selectedImage!,
-                    fit: BoxFit.cover,
+              // Image preview
+              if (_selectedImage != null)
+                Container(
+                  height: 300,
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.grey),
+                    borderRadius: BorderRadius.circular(10),
                   ),
-                ),
-              )
-            else
-              Container(
-                height: 300,
-                decoration: BoxDecoration(
-                  border:
-                      Border.all(color: Colors.grey, style: BorderStyle.solid),
-                  borderRadius: BorderRadius.circular(10),
-                  color: Colors.grey[100],
-                ),
-                child: Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.image,
-                        size: 80,
-                        color: Colors.grey[400],
-                      ),
-                      SizedBox(height: 16),
-                      Text(
-                        "No image selected",
-                        style: TextStyle(
-                          color: Colors.grey[600],
-                          fontSize: 16,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(10),
+                    child: Image.file(
+                      _selectedImage!,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                )
+              else
+                Container(
+                  height: 300,
+                  decoration: BoxDecoration(
+                    border: Border.all(
+                        color: Colors.grey, style: BorderStyle.solid),
+                    borderRadius: BorderRadius.circular(10),
+                    color: Colors.grey[100],
+                  ),
+                  child: Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.image,
+                          size: 80,
+                          color: Colors.grey[400],
                         ),
-                      ),
-                    ],
+                        SizedBox(height: 16),
+                        Text(
+                          "No image selected",
+                          style: TextStyle(
+                            color: Colors.grey[600],
+                            fontSize: 16,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-              ),
 
-            SizedBox(height: 20),
+              SizedBox(height: 20),
 
-            // Upload button
-            ElevatedButton.icon(
-              onPressed: _isUploading ? null : _pickImageAndUpload,
-              icon: _isUploading
-                  ? SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : Icon(Icons.camera_alt),
-              label:
-                  Text(_isUploading ? "Uploading..." : "Select & Upload Image"),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green[600],
-                foregroundColor: Colors.white,
-                padding: EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-              ),
-            ),
-
-            SizedBox(height: 10),
-
-            // Alternative upload method button (for testing)
-            if (_selectedImage != null)
+              // Upload button
+              // Select Image button
               ElevatedButton.icon(
-                onPressed: _isUploading
-                    ? null
-                    : () => _uploadImageAsJson(_selectedImage!),
-                icon: Icon(Icons.upload_file),
-                label: Text("Upload as JSON"),
+                onPressed: _isUploading ? null : _pickImage,
+                icon: Icon(Icons.photo_camera_outlined,
+                    color: Colors.white, size: 20),
+                label: Text("Select Image"),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blue[600],
+                  backgroundColor: Colors.blue,
                   foregroundColor: Colors.white,
                   padding: EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
@@ -358,7 +376,41 @@ class _AccessoriesImageUploadState extends State<AccessoriesImageUpload> {
                   ),
                 ),
               ),
-          ],
+              SizedBox(height: 10),
+
+// Upload button (only shown when image is selected)
+              if (_selectedImage != null)
+                ElevatedButton.icon(
+                  onPressed: _isUploading
+                      ? null
+                      : () async {
+                          await _uploadImage(_selectedImage!);
+                        },
+                  icon: _isUploading
+                      ? SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : Icon(
+                          Icons.upload,
+                          color: Colors.white,
+                          size: 20,
+                        ),
+                  label: Text(_isUploading ? "Uploading..." : "Upload Image"),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green[600],
+                    foregroundColor: Colors.white,
+                    padding: EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                ),
+
+              SizedBox(height: 10),
+            ],
+          ),
         ),
       ),
     );

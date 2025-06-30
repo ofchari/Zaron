@@ -35,6 +35,7 @@ class _TotalEnquiryViewState extends State<TotalEnquiryView> {
   List<String> labels = [];
   List<Map<String, dynamic>> data = [];
   Map<String, dynamic> uomOptions = {};
+
   Map<String, dynamic> billingOptions = {};
 
   bool isLoading = true;
@@ -375,14 +376,19 @@ class _TotalEnquiryViewState extends State<TotalEnquiryView> {
     );
 
     if (response.statusCode == 200) {
-      final index = data.indexWhere((row) => row['id'] == itemId);
-      if (index != -1) {
-        setState(() {
-          data.removeAt(index);
-        });
-        print(data);
-        print(itemId);
-      }
+      setState(() {
+        // Remove the item from all data tables
+        for (var table in allDataTables) {
+          List<Map<String, dynamic>> tableData = table['data'];
+          tableData.removeWhere((row) => row['id'] == itemId);
+        }
+
+        // Remove any tables that are now empty
+        allDataTables.removeWhere((table) => table['data'].isEmpty);
+      });
+      print(data);
+      print(itemId);
+
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
             backgroundColor: Colors.green,
@@ -531,321 +537,367 @@ class _TotalEnquiryViewState extends State<TotalEnquiryView> {
         ),
         body: isLoading
             ? const Center(child: CircularProgressIndicator())
-            : Column(
-                children: [
-                  Expanded(
-                    child: Scrollbar(
-                      thumbVisibility: true,
-                      child: SingleChildScrollView(
-                        scrollDirection: Axis.vertical,
-                        child: Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.start,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: allDataTables.map((table) {
-                              List<String> labels =
-                                  List<String>.from(table['labels']);
-                              List<Map<String, dynamic>> data =
-                                  List<Map<String, dynamic>>.from(
-                                      table['data']);
-                              String categoryName = table['categoryName'];
-
-                              // Get UOM/Billing options from first row if available
-                              Map<String, dynamic> uomOptions = {};
-                              Map<String, dynamic> billingOptions = {};
-
-                              if (data.isNotEmpty && data[0]['UOM'] is Map) {
-                                uomOptions = Map<String, dynamic>.from(
-                                    data[0]['UOM']['options']);
-                              }
-                              if (data.isNotEmpty &&
-                                  data[0]['Billing Option'] is Map) {
-                                billingOptions = Map<String, dynamic>.from(
-                                    data[0]['Billing Option']['options']);
-                              }
-
-                              // Each table gets its own horizontal scroll controller
-                              // final ScrollController horizontalController =
-                              //     ScrollController();
-
-                              return Column(
+            : allDataTables.isEmpty
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Container(
+                          width: 200.w,
+                          height: 200.h,
+                          decoration: BoxDecoration(
+                              image: DecorationImage(
+                                  image:
+                                      AssetImage("assets/No data-pana.png"))),
+                        ),
+                        Gap(10),
+                        Text(
+                          "No Data Found",
+                          style: GoogleFonts.outfit(
+                            fontSize: 16.sp,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.grey,
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                : Column(
+                    children: [
+                      Expanded(
+                        child: Scrollbar(
+                          thumbVisibility: true,
+                          child: SingleChildScrollView(
+                            scrollDirection: Axis.vertical,
+                            child: Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.start,
                                 crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Padding(
-                                    padding: const EdgeInsets.all(8.0),
-                                    child: Center(
-                                      child: Text(
-                                        categoryName.isNotEmpty
-                                            ? categoryName
-                                            : 'No Category',
-                                        style: GoogleFonts.outfit(
-                                          textStyle: TextStyle(
-                                            fontSize: 15.sp,
-                                            fontWeight: FontWeight.w500,
-                                            color: Colors.black,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  Gap(10),
-                                  Scrollbar(
-                                    // thumbVisibility: true,
-                                    // controller: horizontalController,
-                                    child: SingleChildScrollView(
-                                      // controller: horizontalController,
-                                      scrollDirection: Axis.horizontal,
-                                      padding: const EdgeInsets.all(16.0),
-                                      child: Container(
-                                        decoration: BoxDecoration(
-                                          color: Colors.white,
-                                          borderRadius:
-                                              BorderRadius.circular(12),
-                                          boxShadow: [
-                                            BoxShadow(
-                                              color:
-                                                  Colors.grey.withOpacity(0.1),
-                                              spreadRadius: 2,
-                                              blurRadius: 5,
-                                              offset: const Offset(0, 3),
-                                            ),
-                                          ],
-                                        ),
-                                        child: DataTable(
-                                          showCheckboxColumn: false,
-                                          border: TableBorder.all(
-                                            color:
-                                                Colors.purple.withOpacity(0.3),
-                                            width: 1,
-                                            borderRadius:
-                                                BorderRadius.circular(12),
-                                          ),
-                                          columnSpacing: 40,
-                                          headingRowHeight: 70,
-                                          columns: labels
-                                              .map((label) => DataColumn(
-                                                    label: MyText(
-                                                      text: label,
-                                                      weight: FontWeight.w600,
-                                                      color: Colors.black,
-                                                    ),
-                                                  ))
-                                              .toList(),
-                                          rows:
-                                              data.asMap().entries.map((entry) {
-                                            int rowIndex = entry.key;
-                                            Map<String, dynamic> row =
-                                                entry.value;
-                                            return DataRow(
-                                              onSelectChanged: (selected) {
-                                                setState(() {
-                                                  if (selected!) {
-                                                    selectedRowIndices[
-                                                            categoryName] =
-                                                        rowIndex;
-                                                  } else {
-                                                    selectedRowIndices
-                                                        .remove(categoryName);
-                                                  }
-                                                });
-                                              },
-                                              color: MaterialStateProperty
-                                                  .resolveWith<Color?>(
-                                                      (Set<MaterialState>
-                                                          state) {
-                                                if (selectedRowIndices[
-                                                        categoryName] ==
-                                                    rowIndex) {
-                                                  return Colors.grey.shade200;
-                                                }
-                                                return null;
-                                              }),
-                                              cells: labels.map((label) {
-                                                var value = row[label];
+                                children: allDataTables.map((table) {
+                                  List<String> labels =
+                                      List<String>.from(table['labels']);
+                                  List<Map<String, dynamic>> data =
+                                      List<Map<String, dynamic>>.from(
+                                          table['data']);
+                                  String categoryName = table['categoryName'];
 
-                                                if (label == "UOM" &&
-                                                    value is Map) {
-                                                  String selectedValue =
-                                                      value['value'];
-                                                  return DataCell(
-                                                    DropdownButton<String>(
-                                                      value: selectedValue,
-                                                      style: GoogleFonts.outfit(
-                                                        textStyle: TextStyle(
-                                                          fontSize: 14.5,
-                                                          fontWeight:
-                                                              FontWeight.w500,
-                                                          color: Colors.black,
-                                                        ),
-                                                      ),
-                                                      onChanged: (newValue) {
-                                                        setState(() {
-                                                          row[label]['value'] =
-                                                              newValue!;
-                                                        });
-                                                      },
-                                                      items: uomOptions.entries
-                                                          .map((entry) =>
-                                                              DropdownMenuItem<
-                                                                  String>(
-                                                                value:
-                                                                    entry.key,
-                                                                child: Text(
-                                                                    entry
-                                                                        .value),
-                                                              ))
-                                                          .toList(),
-                                                    ),
-                                                  );
-                                                } else if (label ==
-                                                        "Billing Option" &&
-                                                    value is Map) {
-                                                  String selectedValue =
-                                                      value['value'];
-                                                  return DataCell(
-                                                    DropdownButton<String>(
-                                                      value: billingOptions
-                                                              .containsKey(
-                                                                  selectedValue)
-                                                          ? selectedValue
-                                                          : billingOptions
-                                                              .keys.first,
-                                                      style: GoogleFonts.outfit(
-                                                        textStyle: TextStyle(
-                                                          fontSize: 14.5,
-                                                          fontWeight:
-                                                              FontWeight.w500,
-                                                          color: Colors.black,
-                                                        ),
-                                                      ),
-                                                      onChanged: (newValue) {
-                                                        setState(() {
-                                                          row[label]['value'] =
-                                                              newValue!;
-                                                        });
-                                                      },
-                                                      items: billingOptions
-                                                          .entries
-                                                          .map((entry) =>
-                                                              DropdownMenuItem<
-                                                                  String>(
-                                                                value:
-                                                                    entry.key,
-                                                                child: Text(
-                                                                    entry
-                                                                        .value),
-                                                              ))
-                                                          .toList(),
-                                                    ),
-                                                  );
-                                                } else if (label == "Length" ||
-                                                    label == "Nos") {
-                                                  return DataCell(
-                                                    SizedBox(
-                                                      width: 80,
-                                                      child: TextFormField(
-                                                        initialValue:
-                                                            value.toString(),
-                                                        keyboardType:
-                                                            TextInputType
-                                                                .number,
-                                                        onChanged: (newVal) {
-                                                          setState(() {
-                                                            row[label] = newVal;
-                                                          });
-                                                        },
-                                                        decoration:
-                                                            const InputDecoration(
-                                                          border:
-                                                              InputBorder.none,
-                                                          contentPadding:
-                                                              EdgeInsets
-                                                                  .symmetric(
-                                                                      horizontal:
-                                                                          8),
-                                                        ),
-                                                      ),
-                                                    ),
-                                                  );
-                                                } else if (label == "Action") {
-                                                  return DataCell(
-                                                    Row(
-                                                      children: [
-                                                        IconButton(
-                                                          icon: Icon(
-                                                              Icons.groups,
-                                                              color:
-                                                                  Colors.blue),
-                                                          onPressed: () {
-                                                            final itemId =
-                                                                row['id'];
-                                                            if (itemId !=
-                                                                null) {
-                                                              openGroupDialog(
-                                                                  itemId);
-                                                            }
-                                                          },
-                                                        ),
-                                                        IconButton(
-                                                          icon: Icon(
-                                                              Icons.delete,
-                                                              color:
-                                                                  Colors.red),
-                                                          onPressed: () {
-                                                            final itemId =
-                                                                row['id'];
-                                                            if (itemId !=
-                                                                null) {
-                                                              deleteItem(
-                                                                  itemId);
-                                                            }
-                                                          },
-                                                        ),
-                                                        IconButton(
-                                                          icon: Icon(
-                                                              Icons.settings,
-                                                              color:
-                                                                  Colors.green),
-                                                          onPressed: () {
-                                                            final itemId =
-                                                                row['id'];
-                                                            if (itemId !=
-                                                                null) {
-                                                              openAdditionalDrawer(
-                                                                  itemId);
-                                                            }
-                                                          },
-                                                        ),
-                                                      ],
-                                                    ),
-                                                  );
-                                                } else {
-                                                  return DataCell(
-                                                    MyText(
-                                                      text: value.toString(),
-                                                      weight: FontWeight.w400,
-                                                      color: Colors.black,
-                                                    ),
-                                                  );
-                                                }
-                                              }).toList(),
-                                            );
-                                          }).toList(),
+                                  // Get UOM/Billing options from first row if available
+                                  Map<String, dynamic> uomOptions = {};
+                                  Map<String, dynamic> billingOptions = {};
+
+                                  if (data.isNotEmpty &&
+                                      data[0]['UOM'] is Map) {
+                                    uomOptions = Map<String, dynamic>.from(
+                                        data[0]['UOM']['options']);
+                                  }
+                                  if (data.isNotEmpty &&
+                                      data[0]['Billing Option'] is Map) {
+                                    billingOptions = Map<String, dynamic>.from(
+                                        data[0]['Billing Option']['options']);
+                                  }
+
+                                  return Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Padding(
+                                        padding: const EdgeInsets.all(8.0),
+                                        child: Center(
+                                          child: Text(
+                                            categoryName.isNotEmpty
+                                                ? categoryName
+                                                : 'No Category',
+                                            style: GoogleFonts.outfit(
+                                              textStyle: TextStyle(
+                                                fontSize: 15.sp,
+                                                fontWeight: FontWeight.w500,
+                                                color: Colors.black,
+                                              ),
+                                            ),
+                                          ),
                                         ),
                                       ),
-                                    ),
-                                  ),
-                                  Gap(35)
-                                ],
-                              );
-                            }).toList(),
+                                      Gap(10),
+                                      Scrollbar(
+                                        child: SingleChildScrollView(
+                                          scrollDirection: Axis.horizontal,
+                                          padding: const EdgeInsets.all(16.0),
+                                          child: Container(
+                                            decoration: BoxDecoration(
+                                              color: Colors.white,
+                                              borderRadius:
+                                                  BorderRadius.circular(12),
+                                              boxShadow: [
+                                                BoxShadow(
+                                                  color: Colors.grey
+                                                      .withOpacity(0.1),
+                                                  spreadRadius: 2,
+                                                  blurRadius: 5,
+                                                  offset: const Offset(0, 3),
+                                                ),
+                                              ],
+                                            ),
+                                            child: DataTable(
+                                              showCheckboxColumn: false,
+                                              border: TableBorder.all(
+                                                color: Colors.purple
+                                                    .withOpacity(0.3),
+                                                width: 1,
+                                                borderRadius:
+                                                    BorderRadius.circular(12),
+                                              ),
+                                              columnSpacing: 40,
+                                              headingRowHeight: 70,
+                                              columns: labels
+                                                  .map((label) => DataColumn(
+                                                        label: MyText(
+                                                          text: label,
+                                                          weight:
+                                                              FontWeight.w600,
+                                                          color: Colors.black,
+                                                        ),
+                                                      ))
+                                                  .toList(),
+                                              rows: data
+                                                  .asMap()
+                                                  .entries
+                                                  .map((entry) {
+                                                int rowIndex = entry.key;
+                                                Map<String, dynamic> row =
+                                                    entry.value;
+                                                return DataRow(
+                                                  onSelectChanged: (selected) {
+                                                    setState(() {
+                                                      if (selected!) {
+                                                        selectedRowIndices[
+                                                                categoryName] =
+                                                            rowIndex;
+                                                      } else {
+                                                        selectedRowIndices
+                                                            .remove(
+                                                                categoryName);
+                                                      }
+                                                    });
+                                                  },
+                                                  color: MaterialStateProperty
+                                                      .resolveWith<Color?>(
+                                                          (Set<MaterialState>
+                                                              state) {
+                                                    if (selectedRowIndices[
+                                                            categoryName] ==
+                                                        rowIndex) {
+                                                      return Colors
+                                                          .grey.shade200;
+                                                    }
+                                                    return null;
+                                                  }),
+                                                  cells: labels.map((label) {
+                                                    var value = row[label];
+
+                                                    if (label == "UOM" &&
+                                                        value is Map) {
+                                                      String selectedValue =
+                                                          value['value'];
+                                                      return DataCell(
+                                                        DropdownButton<String>(
+                                                          value: selectedValue,
+                                                          style: GoogleFonts
+                                                              .outfit(
+                                                            textStyle:
+                                                                TextStyle(
+                                                              fontSize: 14.5,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w500,
+                                                              color:
+                                                                  Colors.black,
+                                                            ),
+                                                          ),
+                                                          onChanged:
+                                                              (newValue) {
+                                                            setState(() {
+                                                              row[label][
+                                                                      'value'] =
+                                                                  newValue!;
+                                                            });
+                                                          },
+                                                          items: uomOptions
+                                                              .entries
+                                                              .map((entry) =>
+                                                                  DropdownMenuItem<
+                                                                      String>(
+                                                                    value: entry
+                                                                        .key,
+                                                                    child: Text(
+                                                                        entry
+                                                                            .value),
+                                                                  ))
+                                                              .toList(),
+                                                        ),
+                                                      );
+                                                    } else if (label ==
+                                                            "Billing Option" &&
+                                                        value is Map) {
+                                                      String selectedValue =
+                                                          value['value'];
+                                                      return DataCell(
+                                                        DropdownButton<String>(
+                                                          value: billingOptions
+                                                                  .containsKey(
+                                                                      selectedValue)
+                                                              ? selectedValue
+                                                              : billingOptions
+                                                                  .keys.first,
+                                                          style: GoogleFonts
+                                                              .outfit(
+                                                            textStyle:
+                                                                TextStyle(
+                                                              fontSize: 14.5,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w500,
+                                                              color:
+                                                                  Colors.black,
+                                                            ),
+                                                          ),
+                                                          onChanged:
+                                                              (newValue) {
+                                                            setState(() {
+                                                              row[label][
+                                                                      'value'] =
+                                                                  newValue!;
+                                                            });
+                                                          },
+                                                          items: billingOptions
+                                                              .entries
+                                                              .map((entry) =>
+                                                                  DropdownMenuItem<
+                                                                      String>(
+                                                                    value: entry
+                                                                        .key,
+                                                                    child: Text(
+                                                                        entry
+                                                                            .value),
+                                                                  ))
+                                                              .toList(),
+                                                        ),
+                                                      );
+                                                    } else if (label ==
+                                                            "Length" ||
+                                                        label == "Nos") {
+                                                      return DataCell(
+                                                        SizedBox(
+                                                          width: 80,
+                                                          child: TextFormField(
+                                                            initialValue: value
+                                                                .toString(),
+                                                            keyboardType:
+                                                                TextInputType
+                                                                    .number,
+                                                            onChanged:
+                                                                (newVal) {
+                                                              setState(() {
+                                                                row[label] =
+                                                                    newVal;
+                                                              });
+                                                            },
+                                                            decoration:
+                                                                const InputDecoration(
+                                                              border:
+                                                                  InputBorder
+                                                                      .none,
+                                                              contentPadding:
+                                                                  EdgeInsets
+                                                                      .symmetric(
+                                                                          horizontal:
+                                                                              8),
+                                                            ),
+                                                          ),
+                                                        ),
+                                                      );
+                                                    } else if (label ==
+                                                        "Action") {
+                                                      return DataCell(
+                                                        Row(
+                                                          children: [
+                                                            IconButton(
+                                                              icon: Icon(
+                                                                  Icons.groups,
+                                                                  color: Colors
+                                                                      .blue),
+                                                              onPressed: () {
+                                                                final itemId =
+                                                                    row['id'];
+                                                                if (itemId !=
+                                                                    null) {
+                                                                  openGroupDialog(
+                                                                      itemId);
+                                                                }
+                                                              },
+                                                            ),
+                                                            IconButton(
+                                                              icon: Icon(
+                                                                  Icons.delete,
+                                                                  color: Colors
+                                                                      .red),
+                                                              onPressed: () {
+                                                                final itemId =
+                                                                    row['id'];
+                                                                if (itemId !=
+                                                                    null) {
+                                                                  deleteItem(
+                                                                      itemId);
+                                                                }
+                                                              },
+                                                            ),
+                                                            IconButton(
+                                                              icon: Icon(
+                                                                  Icons
+                                                                      .settings,
+                                                                  color: Colors
+                                                                      .green),
+                                                              onPressed: () {
+                                                                final itemId =
+                                                                    row['id'];
+                                                                if (itemId !=
+                                                                    null) {
+                                                                  openAdditionalDrawer(
+                                                                      itemId);
+                                                                }
+                                                              },
+                                                            ),
+                                                          ],
+                                                        ),
+                                                      );
+                                                    } else {
+                                                      return DataCell(
+                                                        MyText(
+                                                          text:
+                                                              value.toString(),
+                                                          weight:
+                                                              FontWeight.w400,
+                                                          color: Colors.black,
+                                                        ),
+                                                      );
+                                                    }
+                                                  }).toList(),
+                                                );
+                                              }).toList(),
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                      Gap(35)
+                                    ],
+                                  );
+                                }).toList(),
+                              ),
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                  ),
-                ],
-              ));
+                    ],
+                  ));
   }
 }
