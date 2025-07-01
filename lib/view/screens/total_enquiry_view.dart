@@ -24,10 +24,14 @@ class TotalEnquiryView extends StatefulWidget {
 }
 
 class _TotalEnquiryViewState extends State<TotalEnquiryView> {
+  // Map<String, int?> selectedRowIndices = {};
+  //
+  // String categoryName = '';
+  // final remarkController = TextEditingController();
+  // List<Map<String, dynamic>> allDataTables = [];
   Map<String, int?> selectedRowIndices = {};
-
+  Map<String, TextEditingController> remarkControllers = {}; // Add this line
   String categoryName = '';
-  final remarkController = TextEditingController();
   List<Map<String, dynamic>> allDataTables = [];
   late double height;
   late double width;
@@ -117,6 +121,8 @@ class _TotalEnquiryViewState extends State<TotalEnquiryView> {
   }
 
   void openAdditionalDrawer(String itemId) async {
+    // Create a new controller for this specific item if it doesn't exist
+    remarkControllers.putIfAbsent(itemId, () => TextEditingController());
     await fetchAdditionalInfo(itemId);
 
     var size = MediaQuery.of(context).size;
@@ -171,7 +177,7 @@ class _TotalEnquiryViewState extends State<TotalEnquiryView> {
                   ),
                   const SizedBox(height: 16),
                   TextField(
-                    controller: remarkController,
+                    controller: remarkControllers[itemId]!,
                     decoration: InputDecoration(
                       filled: true,
                       fillColor: Colors.grey[100],
@@ -293,7 +299,7 @@ class _TotalEnquiryViewState extends State<TotalEnquiryView> {
     final headers = {"Content-Type": "application/json"};
     final Map<String, dynamic> payload = {
       "id": itemId,
-      "remarks": remarkController.text,
+      "remarks": remarkControllers[itemId]?.text ?? '',
       ...additionalValues,
     };
     print("User Input Data Fields${payload}");
@@ -321,7 +327,8 @@ class _TotalEnquiryViewState extends State<TotalEnquiryView> {
 
   @override
   void dispose() {
-    remarkController.dispose();
+    // Dispose all controllers
+    remarkControllers.forEach((_, controller) => controller.dispose());
     super.dispose();
   }
 
@@ -669,14 +676,19 @@ class _TotalEnquiryViewState extends State<TotalEnquiryView> {
                                                 return DataRow(
                                                   onSelectChanged: (selected) {
                                                     setState(() {
-                                                      if (selected!) {
-                                                        selectedRowIndices[
-                                                                categoryName] =
-                                                            rowIndex;
-                                                      } else {
+                                                      // Check if this row is already selected
+                                                      if (selectedRowIndices[
+                                                              categoryName] ==
+                                                          rowIndex) {
+                                                        // If yes, deselect it by removing from selectedRowIndices
                                                         selectedRowIndices
                                                             .remove(
                                                                 categoryName);
+                                                      } else {
+                                                        // If no, select it by setting the rowIndex
+                                                        selectedRowIndices[
+                                                                categoryName] =
+                                                            rowIndex;
                                                       }
                                                     });
                                                   },

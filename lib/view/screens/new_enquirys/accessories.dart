@@ -440,19 +440,29 @@ class _AccessoriesState extends State<Accessories> {
   }
 
   bool isBaseProductUpdated = false;
+
   Widget _buildBaseProductSearchField() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          "Base Product",
-          style: GoogleFonts.figtree(
-            fontSize: 16,
-            fontWeight: FontWeight.w500,
-            color: Colors.black87,
-          ),
-        ),
-        SizedBox(height: 8),
+        isGridView
+            ? Text(
+                "Base Product",
+                style: TextStyle(
+                  fontWeight: FontWeight.w500,
+                  color: Colors.grey[700],
+                  fontSize: 15,
+                ),
+              )
+            : Text(
+                "Base Product",
+                style: TextStyle(
+                  fontWeight: FontWeight.w500,
+                  color: Colors.grey[600],
+                  fontSize: 12,
+                ),
+              ),
+        Gap(5),
         Container(
           decoration: BoxDecoration(
             border: Border.all(color: Colors.grey[300]!),
@@ -612,7 +622,7 @@ class _AccessoriesState extends State<Accessories> {
             child: ElevatedButton(
               onPressed: () {
                 // Replace "1335694" with your actual product ID variable
-                updateSelectedBaseProduct("1335694");
+                updateSelectedBaseProduct(currentMainProductId!);
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.blue,
@@ -640,7 +650,6 @@ class _AccessoriesState extends State<Accessories> {
     client.badCertificateCallback =
         ((X509Certificate cert, String host, int port) => true);
     IOClient ioClient = IOClient(client);
-
     final headers = {"Content-Type": "application/json"};
     final data = {"id": productId, "base_product": baseProduct};
 
@@ -903,32 +912,36 @@ class _AccessoriesState extends State<Accessories> {
                       ),
                     ),
                   ),
-                  Container(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.blue[50],
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Text(
-                      "ID: ${data['id']}",
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.blue[700],
-                        fontWeight: FontWeight.w500,
+                  Padding(
+                    padding: const EdgeInsets.all(2.0),
+                    child: Container(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 14,
+                      ),
+                      decoration: BoxDecoration(
+                        // color: Colors.deepPurple[50],
+                        color: Colors.blue[50],
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Text(
+                        "ID: ${data['id']}",
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.blue[700],
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
                     ),
                   ),
                   Padding(
-                    padding: const EdgeInsets.all(4.0),
+                    padding: const EdgeInsets.all(2.0),
                     child: Container(
                       height: 40.h,
                       width: 40.w,
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(10),
-                        color: Colors.green[50],
+                        color: Colors.deepPurple[50],
                       ),
                       child: IconButton(
                         icon: Icon(Icons.attach_file,
@@ -949,10 +962,10 @@ class _AccessoriesState extends State<Accessories> {
                     ),
                   ),
                   Padding(
-                    padding: const EdgeInsets.all(8.0),
+                    padding: const EdgeInsets.only(right: 4.0, left: 2),
                     child: Container(
                       height: 40.h,
-                      width: 50.w,
+                      width: 40.w,
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(10),
                         color: Colors.deepPurple[50],
@@ -997,7 +1010,11 @@ class _AccessoriesState extends State<Accessories> {
               ),
               _buildProductDetailInRows(data),
               Gap(5),
-              _buildBaseProductSearchField(),
+              Padding(
+                padding: const EdgeInsets.only(left: 8.0, right: 8.0),
+                child: _buildBaseProductSearchField(),
+              ),
+              Gap(10),
             ],
           ),
         );
@@ -1182,6 +1199,8 @@ class _AccessoriesState extends State<Accessories> {
                     ),
                   ],
                 ),
+                Gap(10),
+                _buildBaseProductSearchField(),
               ],
             ),
           ),
