@@ -7,6 +7,7 @@ import 'package:zaron/view/screens/entry.dart';
 
 void main() async {
   await Hive.initFlutter();
+  await Hive.openBox('accessories_products'); // Open a box without model
   runApp(const MyApp());
 }
 

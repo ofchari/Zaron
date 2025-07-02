@@ -57,9 +57,7 @@ class _AccessoriesState extends State<Accessories> {
   Map<String, String?> previousUomValues = {};
   Map<String, Map<String, TextEditingController>> fieldControllers = {};
   String? categoryyName;
-
-  // Add Hive box
-  late Box addedProductsBox;
+  final Box _productsBox = Hive.box('accessories_products');
 
   @override
   void initState() {
@@ -67,7 +65,7 @@ class _AccessoriesState extends State<Accessories> {
     editController = TextEditingController();
     _fetchAccessories();
     _fetchBrandData();
-    _loadProducts(); // Load products from Hive
+    _initializeHiveAndLoadData();
   }
 
   @override
@@ -82,11 +80,87 @@ class _AccessoriesState extends State<Accessories> {
     super.dispose();
   }
 
-  // Load products from Hive ///
-  Future<void> _loadProducts() async {
-    addedProductsBox = await Hive.openBox('addedProducts');
+  Future<void> _initializeHiveAndLoadData() async {
+    try {
+      if (!Hive.isBoxOpen('accessories_products')) {
+        await Hive.openBox('accessories_products');
+      }
+
+      final box = Hive.box('accessories_products');
+      final savedProducts = box.values.toList();
+
+      setState(() {
+        responseProducts = savedProducts.map((product) {
+          return {
+            'id': product['id'],
+            'Products': product['Products'],
+            'UOM': {'value': product['UOM']},
+            'Profile': product['Profile'],
+            'Nos': product['Nos'],
+            'Basic Rate': product['Basic Rate'],
+            'R.Ft': product['R.Ft'],
+            'Amount': product['Amount'],
+          };
+        }).toList();
+      });
+    } catch (e) {
+      debugPrint("Error loading Hive data: $e");
+    }
+  }
+
+  // Method to save a product
+  void _saveProduct(Map<String, dynamic> data) {
+    try {
+      final box = Hive.box('accessories_products');
+      final productData = {
+        'id': data['id']?.toString() ?? '',
+        'Products': data['Products']?.toString() ?? '',
+        'category': categoryyName ?? 'Accessories',
+        'UOM': data['UOM'] is Map
+            ? data['UOM']['value']?.toString()
+            : data['UOM']?.toString(),
+        'Profile': data['Profile']?.toString() ?? '0',
+        'Nos': data['Nos']?.toString() ?? '1',
+        'Basic Rate': data['Basic Rate']?.toString() ?? '0',
+        'R.Ft': data['R.Ft']?.toString() ?? '0',
+        'Amount': data['Amount']?.toString() ?? '0',
+        'baseProduct': baseProductController.text,
+        'timestamp': DateTime.now().millisecondsSinceEpoch,
+      };
+      box.put(data['id']?.toString() ?? '', productData);
+    } catch (e) {
+      debugPrint("Error saving product: $e");
+    }
+  }
+
+  void _checkHiveContents() {
+    try {
+      final box = Hive.box('accessories_products');
+      debugPrint("Hive box contains ${box.length} items");
+      box.toMap().forEach((key, value) {
+        debugPrint("$key: $value");
+      });
+    } catch (e) {
+      debugPrint("Error checking Hive: $e");
+    }
+  }
+
+  // Method to load saved products
+  void _loadProducts() {
+    final savedProducts = _productsBox.values.toList();
     setState(() {
-      responseProducts = addedProductsBox.values.toList();
+      responseProducts = savedProducts.map((product) {
+        return {
+          'id': product['id'],
+          'Products': product['Products'],
+          'UOM': {'value': product['UOM']},
+          'Profile': product['Profile'],
+          'Nos': product['Nos'],
+          'Basic Rate': product['Basic Rate'],
+          'R.Ft': product['R.Ft'],
+          'Amount': product['Amount'],
+        };
+      }).toList();
     });
   }
 
@@ -328,11 +402,19 @@ class _AccessoriesState extends State<Accessories> {
   }
 
   Future<void> postAllData() async {
-    HttpClient client = HttpClient();
-    client.badCertificateCallback =
-        ((X509Certificate cert, String host, int port) => true);
-    IOClient ioClient = IOClient(client);
-    final headers = {"Content-Type": "application/json"};
+    if (selectedAccessories == null ||
+        selectedBrands == null ||
+        selectedColors == null ||
+        selectedThickness == null ||
+        selectedCoatingMass == null) {
+      return;
+    }
+
+    final client = IOClient(
+      HttpClient()..badCertificateCallback = (_, __, ___) => true,
+    );
+    final url = Uri.parse('$apiUrl/addbag');
+    final headers = {'Content-Type': 'application/json'};
     final data = {
       "customer_id": UserSession().userId,
       "product_id": 1,
@@ -344,26 +426,14 @@ class _AccessoriesState extends State<Accessories> {
       "category_name": "accessories_name",
     };
 
-    print("This is a body data: $data");
-    final url = "$apiUrl/addbag";
-    final body = jsonEncode(data);
-
     try {
-      final response = await ioClient.post(
-        Uri.parse(url),
+      final response = await client.post(
+        url,
         headers: headers,
-        body: body,
+        body: jsonEncode(data),
       );
 
       debugPrint("This is a response: ${response.body}");
-
-      if (selectedAccessories == null ||
-          selectedBrands == null ||
-          selectedColors == null ||
-          selectedThickness == null ||
-          selectedCoatingMass == null) {
-        return;
-      }
 
       if (response.statusCode == 200) {
         final responseData = jsonDecode(response.body);
@@ -378,20 +448,34 @@ class _AccessoriesState extends State<Accessories> {
             categoryyName = categoryName.isEmpty ? "Accessories" : categoryName;
             debugPrint("Category: $categoryName");
 
-            List<dynamic> newProducts = responseData["lebels"][0]["data"] ?? [];
+            // Safely handle the response data
+            List<dynamic> newProducts = [];
+            if (responseData["lebels"][0]["data"] is List) {
+              newProducts = List<Map<String, dynamic>>.from(
+                  responseData["lebels"][0]["data"].map((item) =>
+                      item is Map ? Map<String, dynamic>.from(item) : {}));
+            }
+
             responseProducts.addAll(newProducts);
 
+            // Save each new product to Hive
             for (var product in newProducts) {
-              addedProductsBox.put(product['id'].toString(), product);
-              if (product["UOM"] != null && product["UOM"]["options"] != null) {
-                uomOptions[product["id"].toString()] = Map<String, String>.from(
-                  product["UOM"]["options"].map(
-                    (key, value) => MapEntry(key.toString(), value.toString()),
-                  ),
-                );
+              if (product is Map<String, dynamic>) {
+                _saveProduct(product);
+
+                if (product["UOM"] != null &&
+                    product["UOM"]["options"] != null) {
+                  uomOptions[product["id"].toString()] =
+                      Map<String, String>.from(
+                    (product["UOM"]["options"] as Map).map(
+                      (key, value) =>
+                          MapEntry(key.toString(), value.toString()),
+                    ),
+                  );
+                }
+                debugPrint(
+                    "Product added: ${product["id"]} - ${product["Products"]}");
               }
-              debugPrint(
-                  "Product added: ${product["id"]} - ${product["Products"]}");
             }
           }
         });
@@ -405,8 +489,6 @@ class _AccessoriesState extends State<Accessories> {
         SnackBar(content: Text("Error adding product: $e")),
       );
       throw Exception("Error posting data: $e");
-    } finally {
-      client.close();
     }
   }
 
@@ -727,7 +809,7 @@ class _AccessoriesState extends State<Accessories> {
 
     try {
       final response = await ioClient.post(
-        Uri.parse("$apiUrl/baseproduct_update"),
+        Uri.parse("https://demo.zaron.in:8181/ci4/api/baseproduct_update"),
         headers: headers,
         body: jsonEncode(data),
       );
@@ -946,7 +1028,6 @@ class _AccessoriesState extends State<Accessories> {
     );
   }
 
-// Modified _buildGridView to include delete icon on top
   Widget _buildGridView() {
     return Column(
       children: responseProducts.asMap().entries.map((entry) {
@@ -959,153 +1040,150 @@ class _AccessoriesState extends State<Accessories> {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
-          child: Stack(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Column(
-                mainAxisAlignment: MainAxisAlignment.start,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.all(4.0),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Container(
-                          height: 60.h,
-                          width: 210.w,
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text('  $categoryyName'),
-                              Text(
-                                "  ${index + 1}.  ${data["Products"]}" ?? "",
-                                overflow: TextOverflow.ellipsis,
-                                style: GoogleFonts.figtree(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.black87,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.all(2.0),
-                          child: Container(
-                            padding: EdgeInsets.symmetric(
-                                horizontal: 8, vertical: 14),
-                            decoration: BoxDecoration(
-                              color: Colors.blue[50],
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: Text(
-                              "ID: ${data['id']}",
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.blue[700],
-                                fontWeight: FontWeight.w500,
-                              ),
+              Padding(
+                padding: const EdgeInsets.all(4.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Container(
+                      // color: Colors.grey,
+                      height: 60.h,
+                      width: 210.w,
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('  $categoryyName'),
+                          Text(
+                            "  ${index + 1}.  ${data["Products"]}" ?? "",
+                            overflow: TextOverflow.ellipsis,
+                            style: GoogleFonts.figtree(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.black87,
                             ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                  _buildProductDetailInRows(data),
-                  Gap(5),
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        _buildBaseProductSearchField(),
-                        Gap(6),
-                        Padding(
-                          padding: const EdgeInsets.all(2.0),
-                          child: Container(
-                            height: 40.h,
-                            width: 40.w,
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(10),
-                              color: Colors.deepPurple[50],
-                            ),
-                            child: IconButton(
-                              icon: Icon(Icons.attach_file,
-                                  color: Colors.green[600], size: 20),
-                              onPressed: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => AttachmentScreen(
-                                      productId: data['id'].toString(),
-                                      mainProductId:
-                                          currentMainProductId ?? "Unknown ID",
-                                    ),
-                                  ),
-                                );
-                              },
-                            ),
+                    Padding(
+                      padding: const EdgeInsets.all(2.0),
+                      child: Container(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 14,
+                        ),
+                        decoration: BoxDecoration(
+                          // color: Colors.deepPurple[50],
+                          color: Colors.blue[50],
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Text(
+                          "ID: ${data['id']}",
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.blue[700],
+                            fontWeight: FontWeight.w500,
                           ),
                         ),
-                        Gap(6),
-                        // Delete button moved to top via Stack
-                      ],
+                      ),
                     ),
-                  ),
-                  Gap(10),
-                ],
-              ),
-              // Delete Icon on Top Right
-              Positioned(
-                top: 8,
-                right: 8,
-                child: Container(
-                  height: 40.h,
-                  width: 40.w,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(10),
-                    color: Colors.red[50],
-                  ),
-                  child: IconButton(
-                    icon: Icon(Icons.delete, color: Colors.redAccent, size: 20),
-                    onPressed: () {
-                      showDialog(
-                        context: context,
-                        builder: (context) {
-                          return AlertDialog(
-                            title: Subhead(
-                              text: "Are you Sure to Delete This Item?",
-                              weight: FontWeight.w500,
-                              color: Colors.black,
-                            ),
-                            actions: [
-                              ElevatedButton(
-                                onPressed: () async {
-                                  await addedProductsBox
-                                      .delete(data['id'].toString());
-                                  setState(() {
-                                    responseProducts.removeAt(index);
-                                  });
-                                  Navigator.pop(context);
-                                },
-                                child: Text("Yes"),
-                              ),
-                              ElevatedButton(
-                                onPressed: () {
-                                  Navigator.pop(context);
-                                },
-                                child: Text("No"),
-                              ),
-                            ],
-                          );
-                        },
-                      );
-                    },
-                  ),
+                  ],
                 ),
               ),
+              _buildProductDetailInRows(data),
+              Gap(5),
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    _buildBaseProductSearchField(),
+                    Gap(6),
+                    Padding(
+                      padding: const EdgeInsets.all(2.0),
+                      child: Container(
+                        height: 40.h,
+                        width: 40.w,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(10),
+                          color: Colors.deepPurple[50],
+                        ),
+                        child: IconButton(
+                          icon: Icon(Icons.attach_file,
+                              color: Colors.green[600], size: 20),
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => AttachmentScreen(
+                                  productId: data['id'].toString(),
+                                  mainProductId:
+                                      currentMainProductId ?? "Unknown ID",
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+                    Gap(6),
+                    Padding(
+                      padding: const EdgeInsets.all(2.0),
+                      child: Container(
+                        height: 40.h,
+                        width: 40.w,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(10),
+                          color: Colors.deepPurple[50],
+                        ),
+                        child: IconButton(
+                          icon: Icon(Icons.delete, color: Colors.redAccent),
+                          onPressed: () {
+                            showDialog(
+                              context: context,
+                              builder: (context) {
+                                return AlertDialog(
+                                  title: Subhead(
+                                    text: "Are you Sure to Delete This Item ?",
+                                    weight: FontWeight.w500,
+                                    color: Colors.black,
+                                  ),
+                                  actions: [
+                                    ElevatedButton(
+                                      onPressed: () {
+                                        setState(() {
+                                          responseProducts.removeAt(index);
+                                        });
+                                        Navigator.pop(context);
+                                      },
+                                      child: Text("Yes"),
+                                    ),
+                                    ElevatedButton(
+                                      onPressed: () {
+                                        Navigator.pop(context);
+                                      },
+                                      child: Text("No"),
+                                    ),
+                                  ],
+                                );
+                              },
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              // In _buildGridView():
+              _buildDeleteButton(index, data),
+              Gap(10),
             ],
           ),
         );
@@ -1113,7 +1191,6 @@ class _AccessoriesState extends State<Accessories> {
     );
   }
 
-  // Modified _buildListView to include delete icon on top
   Widget _buildListView() {
     return Column(
       children: responseProducts.asMap().entries.map((entry) {
@@ -1126,163 +1203,175 @@ class _AccessoriesState extends State<Accessories> {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(8),
           ),
-          child: Stack(
-            children: [
-              Padding(
-                padding: EdgeInsets.all(12),
-                child: Column(
+          child: Padding(
+            padding: EdgeInsets.all(12),
+            child: Column(
+              children: [
+                Row(
                   children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          flex: 3,
-                          child: Text(
-                            "${index + 1}. ${data["Products"]}" ?? "",
-                            style: GoogleFonts.figtree(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.black87,
-                            ),
-                            overflow: TextOverflow.ellipsis,
-                          ),
+                    Expanded(
+                      flex: 3,
+                      child: Text(
+                        "${index + 1}. ${data["Products"]}" ?? "",
+                        style: GoogleFonts.figtree(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.black87,
                         ),
-                        Container(
-                          padding:
-                              EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: Colors.blue[50],
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: Text(
-                            "ID: ${data['id']}",
-                            style: TextStyle(
-                              fontSize: 10,
-                              color: Colors.blue[700],
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    Container(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.blue[50],
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(
+                        "ID: ${data['id']}",
+                        style: TextStyle(
+                          fontSize: 10,
+                          color: Colors.blue[700],
+                          fontWeight: FontWeight.w500,
                         ),
-                        SizedBox(width: 4),
-                        Container(
-                          height: 28,
-                          width: 28,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(6),
-                            color: Colors.green[50],
-                          ),
-                          child: IconButton(
-                            padding: EdgeInsets.zero,
-                            icon: Icon(
-                              Icons.attach_file,
-                              color: Colors.green[600],
-                              size: 16,
-                            ),
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => AttachmentScreen(
-                                    productId: data['id'].toString(),
-                                    mainProductId:
-                                        currentMainProductId ?? "Unknown ID",
-                                  ),
-                                ),
-                              );
-                            },
-                          ),
+                      ),
+                    ),
+                    SizedBox(width: 4),
+                    Container(
+                      height: 28,
+                      width: 28,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(6),
+                        color: Colors.green[50],
+                      ),
+                      child: IconButton(
+                        padding: EdgeInsets.zero,
+                        icon: Icon(
+                          Icons.attach_file,
+                          color: Colors.green[600],
+                          size: 16,
                         ),
-                        SizedBox(width: 4),
-                        // Delete button moved to top via Stack
-                      ],
-                    ),
-                    SizedBox(height: 12),
-                    Row(
-                      children: [
-                        Expanded(
-                            child: _buildCompactField(
-                                "UOM", _uomDropdownFromApi(data))),
-                        SizedBox(width: 8),
-                        Expanded(
-                            child: _buildCompactField(
-                                "Length", _editableTextField(data, "Profile"))),
-                        SizedBox(width: 8),
-                        Expanded(
-                            child: _buildCompactField(
-                                "Nos", _editableTextField(data, "Nos"))),
-                      ],
-                    ),
-                    SizedBox(height: 8),
-                    Row(
-                      children: [
-                        Expanded(
-                            child: _buildCompactField("Basic Rate",
-                                _editableTextField(data, "Basic Rate"))),
-                        SizedBox(width: 8),
-                        Expanded(
-                            child: _buildCompactField(
-                                "R.Ft", _editableTextField(data, "R.Ft"))),
-                        SizedBox(width: 8),
-                        Expanded(
-                            child: _buildCompactField(
-                                "Amount", _editableTextField(data, "Amount"))),
-                      ],
-                    ),
-                    Gap(10),
-                    _buildBaseProductSearchField(),
-                  ],
-                ),
-              ),
-              // Delete Icon on Top Right
-              Positioned(
-                top: 8,
-                right: 8,
-                child: Container(
-                  height: 32,
-                  width: 32,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(6),
-                    color: Colors.red[50],
-                  ),
-                  child: IconButton(
-                    padding: EdgeInsets.zero,
-                    icon: Icon(Icons.delete, color: Colors.redAccent, size: 18),
-                    onPressed: () {
-                      showDialog(
-                        context: context,
-                        builder: (context) {
-                          return AlertDialog(
-                            title: Subhead(
-                              text: "Delete This Item?",
-                              weight: FontWeight.w500,
-                              color: Colors.black,
-                            ),
-                            actions: [
-                              ElevatedButton(
-                                onPressed: () async {
-                                  await addedProductsBox
-                                      .delete(data['id'].toString());
-                                  setState(() {
-                                    responseProducts.removeAt(index);
-                                  });
-                                  Navigator.pop(context);
-                                },
-                                child: Text("Yes"),
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => AttachmentScreen(
+                                productId: data['id'].toString(),
+                                mainProductId:
+                                    currentMainProductId ?? "Unknown ID",
                               ),
-                              ElevatedButton(
-                                onPressed: () {
-                                  Navigator.pop(context);
-                                },
-                                child: Text("No"),
-                              ),
-                            ],
+                            ),
                           );
                         },
-                      );
-                    },
-                  ),
+                      ),
+                    ),
+                    SizedBox(width: 4),
+                    Container(
+                      height: 32,
+                      width: 32,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(6),
+                        color: Colors.red[50],
+                      ),
+                      child: IconButton(
+                        padding: EdgeInsets.zero,
+                        icon: Icon(
+                          Icons.delete,
+                          color: Colors.redAccent,
+                          size: 18,
+                        ),
+                        onPressed: () {
+                          showDialog(
+                            context: context,
+                            builder: (context) {
+                              return AlertDialog(
+                                title: Subhead(
+                                  text: "Delete This Item?",
+                                  weight: FontWeight.w500,
+                                  color: Colors.black,
+                                ),
+                                actions: [
+                                  ElevatedButton(
+                                    onPressed: () {
+                                      setState(() {
+                                        responseProducts.removeAt(index);
+                                      });
+                                      Navigator.pop(context);
+                                    },
+                                    child: Text("Yes"),
+                                  ),
+                                  ElevatedButton(
+                                    onPressed: () {
+                                      Navigator.pop(context);
+                                    },
+                                    child: Text("No"),
+                                  ),
+                                ],
+                              );
+                            },
+                          );
+                        },
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-            ],
+                SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildCompactField(
+                        "UOM",
+                        _uomDropdownFromApi(data),
+                      ),
+                    ),
+                    SizedBox(width: 8),
+                    Expanded(
+                      child: _buildCompactField(
+                        "Length",
+                        _editableTextField(data, "Profile"),
+                      ),
+                    ),
+                    SizedBox(width: 8),
+                    Expanded(
+                      child: _buildCompactField(
+                        "Nos",
+                        _editableTextField(data, "Nos"),
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 8),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildCompactField(
+                        "Basic Rate",
+                        _editableTextField(data, "Basic Rate"),
+                      ),
+                    ),
+                    SizedBox(width: 8),
+                    Expanded(
+                      child: _buildCompactField(
+                        "R.Ft",
+                        _editableTextField(data, "R.Ft"),
+                      ),
+                    ),
+                    SizedBox(width: 8),
+                    Expanded(
+                      child: _buildCompactField(
+                        "Amount",
+                        _editableTextField(data, "Amount"),
+                      ),
+                    ),
+                  ],
+                ),
+                Gap(10),
+                _buildBaseProductSearchField(),
+              ],
+            ),
           ),
         );
       }).toList(),
@@ -1632,6 +1721,7 @@ class _AccessoriesState extends State<Accessories> {
                 fieldControllers[productId]!["Profile"]!.text =
                     responseData["Length"].toString();
               }
+              _saveProduct(data);
             }
             if (responseData["Nos"] != null) {
               String newNos = responseData["Nos"].toString().trim();
@@ -1663,8 +1753,22 @@ class _AccessoriesState extends State<Accessories> {
             }
             previousUomValues[productId] = currentUom;
 
-            // Update Hive with the modified product data
-            addedProductsBox.put(data['id'].toString(), data);
+            // Save updated product to Hive
+            final updatedProductData = {
+              'id': data['id'].toString(),
+              'Products': data['Products']?.toString() ?? '',
+              'category': categoryyName ?? 'Accessories',
+              'UOM': data['UOM'] is Map
+                  ? data['UOM']['value']?.toString()
+                  : data['UOM']?.toString(),
+              'Profile': data['Profile']?.toString() ?? '0',
+              'Nos': data['Nos']?.toString() ?? '1',
+              'Basic Rate': data['Basic Rate']?.toString() ?? '0',
+              'R.Ft': data['R.Ft']?.toString() ?? '0',
+              'Amount': data['Amount']?.toString() ?? '0',
+              'baseProduct': baseProductController.text,
+            };
+            _productsBox.put(data['id'].toString(), updatedProductData);
           });
           print("=== CALCULATION SUCCESS ===");
           print(
@@ -1679,6 +1783,46 @@ class _AccessoriesState extends State<Accessories> {
     } catch (e) {
       print("Calculation API Error: $e");
     }
+  }
+
+  // Update delete functionality
+  Widget _buildDeleteButton(int index, Map<String, dynamic> data) {
+    return IconButton(
+      icon: Icon(Icons.delete, color: Colors.redAccent),
+      onPressed: () {
+        showDialog(
+          context: context,
+          builder: (context) {
+            return AlertDialog(
+              title: Subhead(
+                text: "Are you Sure to Delete This Item ?",
+                weight: FontWeight.w500,
+                color: Colors.black,
+              ),
+              actions: [
+                ElevatedButton(
+                  onPressed: () {
+                    // Delete from Hive
+                    _productsBox.delete(data['id'].toString());
+                    setState(() {
+                      responseProducts.removeAt(index);
+                    });
+                    Navigator.pop(context);
+                  },
+                  child: Text("Yes"),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                  child: Text("No"),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
   }
 
   Widget _buildAnimatedDropdown(
