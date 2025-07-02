@@ -55,6 +55,7 @@ class _AccessoriesState extends State<Accessories> {
   Map<String, dynamic> calculationResults = {};
   Map<String, String?> previousUomValues = {};
   Map<String, Map<String, TextEditingController>> fieldControllers = {};
+  String? categoryyName;
 
   @override
   void initState() {
@@ -360,6 +361,10 @@ class _AccessoriesState extends State<Accessories> {
 
           if (responseData["lebels"] != null &&
               responseData["lebels"].isNotEmpty) {
+            String categoryName = responseData["category_name"] ?? "";
+            categoryyName = categoryName.isEmpty ? "Accessories" : categoryName;
+            debugPrint("Category: $categoryName");
+
             List<dynamic> newProducts = responseData["lebels"][0]["data"] ?? [];
             responseProducts.addAll(newProducts);
 
@@ -463,43 +468,96 @@ class _AccessoriesState extends State<Accessories> {
                 ),
               ),
         Gap(5),
-        Container(
-          decoration: BoxDecoration(
-            border: Border.all(color: Colors.grey[300]!),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: TextField(
-            controller: baseProductController,
-            focusNode: baseProductFocusNode,
-            decoration: InputDecoration(
-              hintText: "Search base product...",
-              prefixIcon: Icon(Icons.search),
-              border: InputBorder.none,
-              contentPadding: EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 12,
-              ),
-              suffixIcon: isSearchingBaseProduct
-                  ? Padding(
-                      padding: EdgeInsets.all(12),
-                      child: SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
+        isGridView
+            ? Container(
+                height: 45.h,
+                width: 215.w,
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey[300]!),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Center(
+                  child: TextField(
+                    controller: baseProductController,
+                    focusNode: baseProductFocusNode,
+                    decoration: InputDecoration(
+                      hintText: "Search base product...",
+                      prefixIcon: Icon(Icons.search),
+                      border: InputBorder.none,
+                      contentPadding: EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
                       ),
-                    )
-                  : null,
-            ),
-            onChanged: (value) {
-              searchBaseProducts(value);
-            },
-            onTap: () {
-              if (baseProductController.text.isNotEmpty) {
-                searchBaseProducts(baseProductController.text);
-              }
-            },
-          ),
-        ),
+                      suffixIcon: isSearchingBaseProduct
+                          ? Padding(
+                              padding: EdgeInsets.all(12),
+                              child: SizedBox(
+                                width: 20,
+                                height: 20,
+                                child:
+                                    CircularProgressIndicator(strokeWidth: 2),
+                              ),
+                            )
+                          : null,
+                    ),
+                    onChanged: (value) {
+                      searchBaseProducts(value);
+                    },
+                    onTap: () {
+                      if (baseProductController.text.isNotEmpty) {
+                        searchBaseProducts(baseProductController.text);
+                      }
+                    },
+                  ),
+                ),
+              )
+            : Align(
+                alignment: Alignment.bottomLeft,
+                child: Container(
+                  height: 30.h,
+                  width: 215.w,
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.grey[300]!),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: TextField(
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.black87,
+                    ),
+                    controller: baseProductController,
+                    focusNode: baseProductFocusNode,
+                    decoration: InputDecoration(
+                      hintText: "Search base product...",
+                      prefixIcon: Icon(Icons.search),
+                      border: InputBorder.none,
+                      contentPadding: EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 7,
+                      ),
+                      suffixIcon: isSearchingBaseProduct
+                          ? Padding(
+                              padding: EdgeInsets.all(12),
+                              child: SizedBox(
+                                width: 20,
+                                height: 20,
+                                child:
+                                    CircularProgressIndicator(strokeWidth: 2),
+                              ),
+                            )
+                          : null,
+                    ),
+                    onChanged: (value) {
+                      searchBaseProducts(value);
+                    },
+                    onTap: () {
+                      if (baseProductController.text.isNotEmpty) {
+                        searchBaseProducts(baseProductController.text);
+                      }
+                    },
+                  ),
+                ),
+              ),
         if (baseProductResults.isNotEmpty)
           Container(
             margin: EdgeInsets.only(top: 8),
@@ -890,129 +948,142 @@ class _AccessoriesState extends State<Accessories> {
             mainAxisAlignment: MainAxisAlignment.start,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.only(top: 15),
-                      child: SizedBox(
-                        height: 40.h,
-                        width: 210.w,
+              Padding(
+                padding: const EdgeInsets.all(4.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Container(
+                      // color: Colors.grey,
+                      height: 60.h,
+                      width: 210.w,
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('  $categoryyName'),
+                          Text(
+                            "  ${index + 1}.  ${data["Products"]}" ?? "",
+                            overflow: TextOverflow.ellipsis,
+                            style: GoogleFonts.figtree(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.black87,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.all(2.0),
+                      child: Container(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 14,
+                        ),
+                        decoration: BoxDecoration(
+                          // color: Colors.deepPurple[50],
+                          color: Colors.blue[50],
+                          borderRadius: BorderRadius.circular(10),
+                        ),
                         child: Text(
-                          "  ${index + 1}.  ${data["Products"]}" ?? "",
-                          overflow: TextOverflow.ellipsis,
-                          style: GoogleFonts.figtree(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.black87,
+                          "ID: ${data['id']}",
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.blue[700],
+                            fontWeight: FontWeight.w500,
                           ),
                         ),
                       ),
                     ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(2.0),
-                    child: Container(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 14,
-                      ),
-                      decoration: BoxDecoration(
-                        // color: Colors.deepPurple[50],
-                        color: Colors.blue[50],
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Text(
-                        "ID: ${data['id']}",
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.blue[700],
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(2.0),
-                    child: Container(
-                      height: 40.h,
-                      width: 40.w,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(10),
-                        color: Colors.deepPurple[50],
-                      ),
-                      child: IconButton(
-                        icon: Icon(Icons.attach_file,
-                            color: Colors.green[600], size: 20),
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => AttachmentScreen(
-                                productId: data['id'].toString(),
-                                mainProductId:
-                                    currentMainProductId ?? "Unknown ID",
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.only(right: 4.0, left: 2),
-                    child: Container(
-                      height: 40.h,
-                      width: 40.w,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(10),
-                        color: Colors.deepPurple[50],
-                      ),
-                      child: IconButton(
-                        icon: Icon(Icons.delete, color: Colors.redAccent),
-                        onPressed: () {
-                          showDialog(
-                            context: context,
-                            builder: (context) {
-                              return AlertDialog(
-                                title: Subhead(
-                                  text: "Are you Sure to Delete This Item ?",
-                                  weight: FontWeight.w500,
-                                  color: Colors.black,
-                                ),
-                                actions: [
-                                  ElevatedButton(
-                                    onPressed: () {
-                                      setState(() {
-                                        responseProducts.removeAt(index);
-                                      });
-                                      Navigator.pop(context);
-                                    },
-                                    child: Text("Yes"),
-                                  ),
-                                  ElevatedButton(
-                                    onPressed: () {
-                                      Navigator.pop(context);
-                                    },
-                                    child: Text("No"),
-                                  ),
-                                ],
-                              );
-                            },
-                          );
-                        },
-                      ),
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
               _buildProductDetailInRows(data),
               Gap(5),
               Padding(
-                padding: const EdgeInsets.only(left: 8.0, right: 8.0),
-                child: _buildBaseProductSearchField(),
+                padding: const EdgeInsets.all(8.0),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    _buildBaseProductSearchField(),
+                    Gap(6),
+                    Padding(
+                      padding: const EdgeInsets.all(2.0),
+                      child: Container(
+                        height: 40.h,
+                        width: 40.w,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(10),
+                          color: Colors.deepPurple[50],
+                        ),
+                        child: IconButton(
+                          icon: Icon(Icons.attach_file,
+                              color: Colors.green[600], size: 20),
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => AttachmentScreen(
+                                  productId: data['id'].toString(),
+                                  mainProductId:
+                                      currentMainProductId ?? "Unknown ID",
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+                    Gap(6),
+                    Padding(
+                      padding: const EdgeInsets.all(2.0),
+                      child: Container(
+                        height: 40.h,
+                        width: 40.w,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(10),
+                          color: Colors.deepPurple[50],
+                        ),
+                        child: IconButton(
+                          icon: Icon(Icons.delete, color: Colors.redAccent),
+                          onPressed: () {
+                            showDialog(
+                              context: context,
+                              builder: (context) {
+                                return AlertDialog(
+                                  title: Subhead(
+                                    text: "Are you Sure to Delete This Item ?",
+                                    weight: FontWeight.w500,
+                                    color: Colors.black,
+                                  ),
+                                  actions: [
+                                    ElevatedButton(
+                                      onPressed: () {
+                                        setState(() {
+                                          responseProducts.removeAt(index);
+                                        });
+                                        Navigator.pop(context);
+                                      },
+                                      child: Text("Yes"),
+                                    ),
+                                    ElevatedButton(
+                                      onPressed: () {
+                                        Navigator.pop(context);
+                                      },
+                                      child: Text("No"),
+                                    ),
+                                  ],
+                                );
+                              },
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
               Gap(10),
             ],
@@ -1310,6 +1381,9 @@ class _AccessoriesState extends State<Accessories> {
     return SizedBox(
       height: 38.h,
       child: TextField(
+        readOnly: (key == "Basic Rate" || key == "Amount" || key == "R.Ft")
+            ? true
+            : false,
         style: GoogleFonts.figtree(
           fontWeight: FontWeight.w500,
           color: Colors.black,
@@ -1695,181 +1769,180 @@ class _AccessoriesState extends State<Accessories> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.05),
-                        blurRadius: 10,
-                        offset: Offset(0, 5),
-                      ),
-                    ],
-                  ),
-                  child: Padding(
-                    padding: EdgeInsets.all(20),
-                    child: Form(
-                      key: _formKey,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          SizedBox(width: 10),
-                          Text(
-                            "Add New Product",
-                            style: GoogleFonts.poppins(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.black87,
-                            ),
-                          ),
-                          SizedBox(height: 24),
-                          _buildAnimatedDropdown(
-                            accessoriesList,
-                            selectedAccessories,
-                            (value) {
-                              setState(() {
-                                selectedAccessories = value;
-                              });
-                            },
-                            label: "Accessories Name",
-                            icon: Icons.category_outlined,
-                          ),
-                          _buildAnimatedDropdown(
-                            brandandList,
-                            selectedBrands,
-                            (value) {
-                              setState(() {
-                                selectedBrands = value;
-                                selectedColors = null;
-                                selectedThickness = null;
-                                selectedCoatingMass = null;
-                                colorandList = [];
-                                thickAndList = [];
-                                coatingAndList = [];
-                              });
-                              _fetchColorData();
-                            },
-                            label: "Brand",
-                            icon: Icons.brightness_auto_outlined,
-                          ),
-                          _buildAnimatedDropdown(
-                            colorandList,
-                            selectedColors,
-                            (value) {
-                              setState(() {
-                                selectedColors = value;
-                                selectedThickness = null;
-                                selectedCoatingMass = null;
-                                thickAndList = [];
-                                coatingAndList = [];
-                              });
-                              _fetchThicknessData();
-                            },
-                            enabled: colorandList.isNotEmpty,
-                            label: "Color",
-                            icon: Icons.color_lens_outlined,
-                          ),
-                          _buildAnimatedDropdown(
-                            thickAndList,
-                            selectedThickness,
-                            (value) {
-                              setState(() {
-                                selectedThickness = value;
-                                selectedCoatingMass = null;
-                                coatingAndList = [];
-                              });
-                              _fetchCoatingMassData();
-                            },
-                            enabled: thickAndList.isNotEmpty,
-                            label: "Thickness",
-                            icon: Icons.straighten_outlined,
-                          ),
-                          _buildAnimatedDropdown(
-                            coatingAndList,
-                            selectedCoatingMass,
-                            (value) {
-                              setState(() {
-                                selectedCoatingMass = value;
-                              });
-                            },
-                            enabled: coatingAndList.isNotEmpty,
-                            label: "Coating Mass",
-                            icon: Icons.layers_outlined,
-                          ),
-                          SizedBox(height: 16),
-                          SizedBox(height: 24),
-                          Container(
-                            padding: EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              color: Colors.grey[100],
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(
-                                color: Colors.deepPurple[400]!,
-                                width: 1.5,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 10,
+                          offset: Offset(0, 5),
+                        ),
+                      ],
+                    ),
+                    child: Padding(
+                      padding: EdgeInsets.all(20),
+                      child: Form(
+                        key: _formKey,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            SizedBox(width: 10),
+                            Text(
+                              "Add New Product",
+                              style: GoogleFonts.poppins(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.black87,
                               ),
                             ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  "Selected Product Details",
-                                  style: GoogleFonts.poppins(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
-                                    color: Colors.deepPurple[400],
-                                  ),
-                                ),
-                                SizedBox(height: 8),
-                                Text(
-                                  _selectedItems(),
-                                  style: GoogleFonts.poppins(
-                                    fontSize: 13.5,
-                                    color: Colors.black,
-                                    height: 1.5,
-                                  ),
-                                ),
-                              ],
+                            SizedBox(height: 24),
+                            _buildAnimatedDropdown(
+                              accessoriesList,
+                              selectedAccessories,
+                              (value) {
+                                setState(() {
+                                  selectedAccessories = value;
+                                });
+                              },
+                              label: "Accessories Name",
+                              icon: Icons.category_outlined,
                             ),
-                          ),
-                          SizedBox(height: 24),
-                          AnimatedContainer(
-                            duration: Duration(milliseconds: 300),
-                            width: double.infinity,
-                            height: 54.h,
-                            child: ElevatedButton(
-                              onPressed: _submitData,
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.deepPurple[400],
-                                foregroundColor: Colors.white,
-                                elevation: 0,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
+                            _buildAnimatedDropdown(
+                              brandandList,
+                              selectedBrands,
+                              (value) {
+                                setState(() {
+                                  selectedBrands = value;
+                                  selectedColors = null;
+                                  selectedThickness = null;
+                                  selectedCoatingMass = null;
+                                  colorandList = [];
+                                  thickAndList = [];
+                                  coatingAndList = [];
+                                });
+                                _fetchColorData();
+                              },
+                              label: "Brand",
+                              icon: Icons.brightness_auto_outlined,
+                            ),
+                            _buildAnimatedDropdown(
+                              colorandList,
+                              selectedColors,
+                              (value) {
+                                setState(() {
+                                  selectedColors = value;
+                                  selectedThickness = null;
+                                  selectedCoatingMass = null;
+                                  thickAndList = [];
+                                  coatingAndList = [];
+                                });
+                                _fetchThicknessData();
+                              },
+                              enabled: colorandList.isNotEmpty,
+                              label: "Color",
+                              icon: Icons.color_lens_outlined,
+                            ),
+                            _buildAnimatedDropdown(
+                              thickAndList,
+                              selectedThickness,
+                              (value) {
+                                setState(() {
+                                  selectedThickness = value;
+                                  selectedCoatingMass = null;
+                                  coatingAndList = [];
+                                });
+                                _fetchCoatingMassData();
+                              },
+                              enabled: thickAndList.isNotEmpty,
+                              label: "Thickness",
+                              icon: Icons.straighten_outlined,
+                            ),
+                            _buildAnimatedDropdown(
+                              coatingAndList,
+                              selectedCoatingMass,
+                              (value) {
+                                setState(() {
+                                  selectedCoatingMass = value;
+                                });
+                              },
+                              enabled: coatingAndList.isNotEmpty,
+                              label: "Coating Mass",
+                              icon: Icons.layers_outlined,
+                            ),
+                            SizedBox(height: 16),
+                            SizedBox(height: 24),
+                            Container(
+                              padding: EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: Colors.grey[100],
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: Colors.deepPurple[400]!,
+                                  width: 1.5,
                                 ),
                               ),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Icon(
-                                    Icons.add_shopping_cart_outlined,
-                                    color: Colors.white,
-                                  ),
-                                  SizedBox(width: 10),
                                   Text(
-                                    "Add Product",
+                                    "Selected Product Details",
                                     style: GoogleFonts.poppins(
                                       fontSize: 16,
                                       fontWeight: FontWeight.w600,
+                                      color: Colors.deepPurple[400],
+                                    ),
+                                  ),
+                                  SizedBox(height: 8),
+                                  Text(
+                                    _selectedItems(),
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 13.5,
+                                      color: Colors.black,
+                                      height: 1.5,
                                     ),
                                   ),
                                 ],
                               ),
                             ),
-                          ),
-                        ],
+                            SizedBox(height: 24),
+                            AnimatedContainer(
+                              duration: Duration(milliseconds: 300),
+                              width: double.infinity,
+                              height: 54.h,
+                              child: ElevatedButton(
+                                onPressed: _submitData,
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.deepPurple[400],
+                                  foregroundColor: Colors.white,
+                                  elevation: 0,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      Icons.add_shopping_cart_outlined,
+                                      color: Colors.white,
+                                    ),
+                                    SizedBox(width: 10),
+                                    Text(
+                                      "Add Product",
+                                      style: GoogleFonts.poppins(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                  ),
-                ),
+                    )),
                 if (responseProducts.isNotEmpty) ...[
                   SizedBox(height: 24),
                   Padding(

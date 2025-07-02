@@ -945,6 +945,9 @@ class _RollSheetState extends State<RollSheet> {
     return SizedBox(
       height: 38.h,
       child: TextField(
+        readOnly: (key == "Basic Rate" || key == "Amount" || key == "SQMtr")
+            ? true
+            : false,
         style: GoogleFonts.figtree(
           fontWeight: FontWeight.w500,
           color: Colors.black,
@@ -955,9 +958,9 @@ class _RollSheetState extends State<RollSheet> {
                 key == "Nos" ||
                 key == "Basic Rate" ||
                 key == "Amount" ||
-                key == "sqmtr")
+                key == "SQMtr")
             ? TextInputType.numberWithOptions(decimal: true)
-            : TextInputType.text,
+            : TextInputType.numberWithOptions(decimal: true),
         onChanged: (val) {
           setState(() {
             data[key] = val;

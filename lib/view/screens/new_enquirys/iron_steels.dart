@@ -866,7 +866,10 @@ class _IronSteelState extends State<IronSteel> {
               ),
               SizedBox(width: 10),
               Expanded(
-                child: _buildDetailItem("Nos", _editableTextField(data, "Nos")),
+                child: _buildDetailItem(
+                  "Crimp",
+                  _editableTextField(data, "height"),
+                ),
               ),
             ],
           ),
@@ -876,6 +879,10 @@ class _IronSteelState extends State<IronSteel> {
           padding: const EdgeInsets.all(8.0),
           child: Row(
             children: [
+              Expanded(
+                child: _buildDetailItem("Nos", _editableTextField(data, "Nos")),
+              ),
+              SizedBox(width: 10),
               Expanded(
                 child: _buildDetailItem(
                   "Basic Rate",
@@ -890,27 +897,27 @@ class _IronSteelState extends State<IronSteel> {
                 ),
               ),
               SizedBox(width: 10),
-              Expanded(
-                child: _buildDetailItem(
-                  "Amount",
-                  _editableTextField(data, "Amount"),
-                ),
-              ),
             ],
           ),
         ),
-        Gap(5.h),
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Row(
-            children: [
-              Expanded(
-                child: _buildDetailItem(
-                  "Crimp",
-                  _editableTextField(data, "height"),
-                ),
+        Gap(5),
+        Align(
+          alignment: Alignment.bottomLeft,
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: SizedBox(
+              width: 100.w,
+              child: Row(
+                children: [
+                  Expanded(
+                    child: _buildDetailItem(
+                      "Amount",
+                      _editableTextField(data, "Amount"),
+                    ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
         ),
       ],
@@ -1077,6 +1084,9 @@ class _IronSteelState extends State<IronSteel> {
     return SizedBox(
       height: 38.h,
       child: TextField(
+        readOnly: (key == "Basic Rate" || key == "Amount" || key == "SQMtr")
+            ? true
+            : false,
         style: GoogleFonts.figtree(
           fontWeight: FontWeight.w500,
           color: Colors.black,
@@ -1087,9 +1097,9 @@ class _IronSteelState extends State<IronSteel> {
                 key == "Nos" ||
                 key == "Basic Rate" ||
                 key == "Amount" ||
-                key == "sqmtr")
+                key == "SQMtr")
             ? TextInputType.numberWithOptions(decimal: true)
-            : TextInputType.text,
+            : TextInputType.numberWithOptions(decimal: true),
         onChanged: (val) {
           setState(() {
             data[key] = val;

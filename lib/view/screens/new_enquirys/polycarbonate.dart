@@ -731,6 +731,9 @@ class _PolycarbonateState extends State<Polycarbonate> {
     return SizedBox(
       height: 38.h,
       child: TextField(
+        readOnly: (key == "Basic Rate" || key == "Amount" || key == "SQMtr")
+            ? true
+            : false,
         style: GoogleFonts.figtree(
           fontWeight: FontWeight.w500,
           color: Colors.black,
@@ -741,9 +744,9 @@ class _PolycarbonateState extends State<Polycarbonate> {
                 key == "Nos" ||
                 key == "Basic Rate" ||
                 key == "Amount" ||
-                key == "sqmtr")
+                key == "SQMtr")
             ? TextInputType.numberWithOptions(decimal: true)
-            : TextInputType.text,
+            : TextInputType.numberWithOptions(decimal: true),
         onChanged: (val) {
           setState(() {
             data[key] = val;
@@ -1326,7 +1329,10 @@ class _PolycarbonateState extends State<Polycarbonate> {
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  Icon(Icons.add_shopping_cart_outlined),
+                                  Icon(
+                                    Icons.add_shopping_cart_outlined,
+                                    color: Colors.white,
+                                  ),
                                   SizedBox(width: 10),
                                   Text(
                                     "Add Product",

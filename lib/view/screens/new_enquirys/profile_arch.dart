@@ -997,6 +997,9 @@ class _ProfileRidgeAndArchState extends State<ProfileRidgeAndArch> {
     return SizedBox(
       height: 38.h,
       child: TextField(
+        readOnly: (key == "Basic Rate" || key == "Amount" || key == "SQMtr")
+            ? true
+            : false,
         style: GoogleFonts.figtree(
           fontWeight: FontWeight.w500,
           color: Colors.black,
@@ -1007,7 +1010,7 @@ class _ProfileRidgeAndArchState extends State<ProfileRidgeAndArch> {
                 key == "Nos" ||
                 key == "Basic Rate" ||
                 key == "Amount" ||
-                key == "sqmtr")
+                key == "SQMtr")
             ? TextInputType.numberWithOptions(decimal: true)
             : TextInputType.numberWithOptions(decimal: true),
         onChanged: (val) {
