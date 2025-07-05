@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:dropdown_search/dropdown_search.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:gap/gap.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/io_client.dart';
 import 'package:zaron/view/universal_api/api&key.dart';
@@ -691,25 +692,8 @@ class _ScrewState extends State<Screw> {
   Widget _buildApiResponseRows(Map<String, dynamic> data) {
     return Column(
       children: [
-        Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Row(
-            children: [
-              // Expanded(
-              //   child: _buildDetailItem("UOM", _uomDropdownFromApi(data)),
-              // ),
-              // SizedBox(width: 10),
-              // Expanded(
-              //   child: _buildDetailItem(
-              //       "Length", _editableTextField(data, "Length")),
-              // ),
-              // SizedBox(width: 10),
-              SizedBox(
-                width: 148.w,
-                child: _buildDetailItem("Nos", _editableTextField(data, "Nos")),
-              ),
-            ],
-          ),
+        Row(
+          children: [],
         ),
         Padding(
           padding: const EdgeInsets.all(16.0),
@@ -721,18 +705,17 @@ class _ScrewState extends State<Screw> {
                   _editableTextField(data, "Basic Rate"),
                 ),
               ),
-              SizedBox(width: 10),
+              Gap(5),
+              Expanded(
+                child: _buildDetailItem("Nos", _editableTextField(data, "Nos")),
+              ),
+              Gap(5),
               Expanded(
                 child: _buildDetailItem(
                   "Amount",
                   _editableTextField(data, "Amount"),
                 ),
               ),
-              SizedBox(width: 10),
-              // Expanded(
-              //   child: _buildDetailItem(
-              //       "Billing Options", _billingOptionsDropdown(data)),
-              // ),
             ],
           ),
         ),
@@ -749,6 +732,7 @@ class _ScrewState extends State<Screw> {
     return SizedBox(
       height: 38.h,
       child: TextField(
+        readOnly: (key == "Basic Rate" || key == "Amount") ? true : false,
         style: GoogleFonts.figtree(
           fontWeight: FontWeight.w500,
           color: Colors.black,
@@ -761,7 +745,7 @@ class _ScrewState extends State<Screw> {
                 key == "Amount" ||
                 key == "R.Ft")
             ? TextInputType.numberWithOptions(decimal: true)
-            : TextInputType.text,
+            : TextInputType.numberWithOptions(decimal: true),
         onChanged: (val) {
           setState(() {
             data[key] = val;

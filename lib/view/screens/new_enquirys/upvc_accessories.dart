@@ -771,6 +771,7 @@ class _UpvcAccessoriesState extends State<UpvcAccessories> {
     return SizedBox(
       height: 38.h,
       child: TextField(
+        readOnly: (key == "Basic Rate" || key == "Amount") ? true : false,
         controller: controller,
         onChanged: (val) {
           product[key] = val;

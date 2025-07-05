@@ -747,6 +747,10 @@ class _UpvcTilesState extends State<UpvcTiles> {
         SizedBox(
           height: 38.h,
           child: TextField(
+            readOnly:
+                (key == "Basic Rate" || key == "Amount" || key == "Sq.Mtr")
+                    ? true
+                    : false,
             style: GoogleFonts.figtree(
               fontWeight: FontWeight.w500,
               color: Colors.black,

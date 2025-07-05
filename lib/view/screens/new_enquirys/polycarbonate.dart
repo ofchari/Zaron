@@ -150,6 +150,7 @@ class _PolycarbonateState extends State<Polycarbonate> {
 
     try {
       final client = IOClient(
+
         HttpClient()..badCertificateCallback = (_, __, ___) => true,
       );
       final response = await client.post(
@@ -191,7 +192,7 @@ class _PolycarbonateState extends State<Polycarbonate> {
           if (idData is List && idData.isNotEmpty && idData.first is Map) {
             selectedProductBaseId = idData.first["id"]?.toString();
             selectedBaseProductName =
-                idData.first["base_product_id"]?.toString(); // <-- New line
+                idData.first["base_product_id"]?.toString(); 
             debugPrint("Selected Base Product ID: $selectedProductBaseId");
             debugPrint(
               "Base Product Name: $selectedBaseProductName",

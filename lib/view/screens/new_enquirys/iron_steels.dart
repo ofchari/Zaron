@@ -861,7 +861,7 @@ class _IronSteelState extends State<IronSteel> {
               Expanded(
                 child: _buildDetailItem(
                   "Profile",
-                  _editableTextField(data, "Profile"),
+                  _editableTextField(data, "Length"),
                 ),
               ),
               SizedBox(width: 10),
@@ -1234,18 +1234,18 @@ class _IronSteelState extends State<IronSteel> {
     String? profileText;
 
     if (fieldControllers.containsKey(productId) &&
-        fieldControllers[productId]!.containsKey("Profile")) {
-      profileText = fieldControllers[productId]!["Profile"]!.text;
-      print("Profile from controller: $profileText");
-    }
-
-    if (profileText == null || profileText.isEmpty) {
-      profileText = data["Profile"]?.toString();
-      print("Profile from data: $profileText");
+        fieldControllers[productId]!.containsKey("Length")) {
+      profileText = data["Length"]?.toString(); // First check the latest data
+      if (profileText == null || profileText.isEmpty) {
+        profileText = fieldControllers[productId]!["Length"]!
+            .text; // Then check controller
+      }
+      print("Length/Profile from data/controller: $profileText");
     }
 
     if (profileText != null && profileText.isNotEmpty) {
       profileValue = double.tryParse(profileText);
+      print("Parsed profile value: $profileValue");
     }
 
     // Get Nos value from controller
@@ -1318,11 +1318,15 @@ class _IronSteelState extends State<IronSteel> {
             calculationResults[productId] = responseData;
 
             // Update Profile/Length
-            if (responseData["Length"] != null) {
-              data["Profile"] = responseData["Length"].toString();
-              if (fieldControllers[productId]?["Profile"] != null) {
-                fieldControllers[productId]!["Profile"]!.text =
-                    responseData["Length"].toString();
+            if (responseData["profile"] != null) {
+              String newProfile = responseData["profile"].toString();
+              // Only update if calculation returned different value
+              if (data["Length"]?.toString() != newProfile) {
+                data["Length"] = newProfile;
+                if (fieldControllers[productId]?["Length"] != null) {
+                  fieldControllers[productId]!["Length"]!.text = newProfile;
+                }
+                print("Length/Profile updated to: $newProfile");
               }
             }
 
