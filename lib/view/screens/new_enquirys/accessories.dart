@@ -7,11 +7,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:gap/gap.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:hive/hive.dart';
 import 'package:http/io_client.dart';
 import 'package:zaron/view/universal_api/api&key.dart';
 import 'package:zaron/view/widgets/subhead.dart';
 
+import '../../widgets/text.dart';
 import '../camera_upload/acessories_uploads/accessories_attahment.dart';
 import '../global_user/global_user.dart';
 
@@ -53,11 +53,11 @@ class _AccessoriesState extends State<Accessories> {
   FocusNode baseProductFocusNode = FocusNode();
   String? currentMainProductId;
   Timer? _debounceTimer;
+  String? categoryyName;
+  String? orderNoo;
   Map<String, dynamic> calculationResults = {};
   Map<String, String?> previousUomValues = {};
   Map<String, Map<String, TextEditingController>> fieldControllers = {};
-  String? categoryyName;
-  final Box _productsBox = Hive.box('accessories_products');
 
   @override
   void initState() {
@@ -65,7 +65,6 @@ class _AccessoriesState extends State<Accessories> {
     editController = TextEditingController();
     _fetchAccessories();
     _fetchBrandData();
-    _initializeHiveAndLoadData();
   }
 
   @override
@@ -78,90 +77,6 @@ class _AccessoriesState extends State<Accessories> {
       controllers.forEach((_, controller) => controller.dispose());
     });
     super.dispose();
-  }
-
-  Future<void> _initializeHiveAndLoadData() async {
-    try {
-      if (!Hive.isBoxOpen('accessories_products')) {
-        await Hive.openBox('accessories_products');
-      }
-
-      final box = Hive.box('accessories_products');
-      final savedProducts = box.values.toList();
-
-      setState(() {
-        responseProducts = savedProducts.map((product) {
-          return {
-            'id': product['id'],
-            'Products': product['Products'],
-            'UOM': {'value': product['UOM']},
-            'Profile': product['Profile'],
-            'Nos': product['Nos'],
-            'Basic Rate': product['Basic Rate'],
-            'R.Ft': product['R.Ft'],
-            'Amount': product['Amount'],
-          };
-        }).toList();
-      });
-    } catch (e) {
-      debugPrint("Error loading Hive data: $e");
-    }
-  }
-
-  // Method to save a product
-  void _saveProduct(Map<String, dynamic> data) {
-    try {
-      final box = Hive.box('accessories_products');
-      final productData = {
-        'id': data['id']?.toString() ?? '',
-        'Products': data['Products']?.toString() ?? '',
-        'category': categoryyName ?? 'Accessories',
-        'UOM': data['UOM'] is Map
-            ? data['UOM']['value']?.toString()
-            : data['UOM']?.toString(),
-        'Profile': data['Profile']?.toString() ?? '0',
-        'Nos': data['Nos']?.toString() ?? '1',
-        'Basic Rate': data['Basic Rate']?.toString() ?? '0',
-        'R.Ft': data['R.Ft']?.toString() ?? '0',
-        'Amount': data['Amount']?.toString() ?? '0',
-        'baseProduct': baseProductController.text,
-        'timestamp': DateTime.now().millisecondsSinceEpoch,
-      };
-      box.put(data['id']?.toString() ?? '', productData);
-    } catch (e) {
-      debugPrint("Error saving product: $e");
-    }
-  }
-
-  void _checkHiveContents() {
-    try {
-      final box = Hive.box('accessories_products');
-      debugPrint("Hive box contains ${box.length} items");
-      box.toMap().forEach((key, value) {
-        debugPrint("$key: $value");
-      });
-    } catch (e) {
-      debugPrint("Error checking Hive: $e");
-    }
-  }
-
-  // Method to load saved products
-  void _loadProducts() {
-    final savedProducts = _productsBox.values.toList();
-    setState(() {
-      responseProducts = savedProducts.map((product) {
-        return {
-          'id': product['id'],
-          'Products': product['Products'],
-          'UOM': {'value': product['UOM']},
-          'Profile': product['Profile'],
-          'Nos': product['Nos'],
-          'Basic Rate': product['Basic Rate'],
-          'R.Ft': product['R.Ft'],
-          'Amount': product['Amount'],
-        };
-      }).toList();
-    });
   }
 
   Future<void> _fetchAccessories() async {
@@ -446,6 +361,9 @@ class _AccessoriesState extends State<Accessories> {
               responseData["lebels"].isNotEmpty) {
             String categoryName = responseData["category_name"] ?? "";
             categoryyName = categoryName.isEmpty ? "Accessories" : categoryName;
+            String orderNos = responseData["order_no"]?.toString() ?? "Unknown";
+            orderNoo = orderNos.isEmpty ? "Unknown" : orderNos;
+            debugPrint("Order No xxxxxx : $orderNos");
             debugPrint("Category: $categoryName");
 
             // Safely handle the response data
@@ -461,8 +379,6 @@ class _AccessoriesState extends State<Accessories> {
             // Save each new product to Hive
             for (var product in newProducts) {
               if (product is Map<String, dynamic>) {
-                _saveProduct(product);
-
                 if (product["UOM"] != null &&
                     product["UOM"]["options"] != null) {
                   uomOptions[product["id"].toString()] =
@@ -542,13 +458,24 @@ class _AccessoriesState extends State<Accessories> {
 
   bool isBaseProductUpdated = false;
 
-  Widget _buildBaseProductSearchField() {
+  Widget _buildBaseProductSearchField({
+    required TextEditingController controller,
+    required FocusNode focusNode,
+    required List<dynamic> searchResults,
+    required String? selectedProduct,
+    required bool isSearching,
+    required bool isUpdated,
+    required Function(String) onSearchChanged,
+    required Function(String) onProductSelected,
+    required VoidCallback onClearSelection,
+    required VoidCallback onUpdatePressed,
+  }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         isGridView
             ? Text(
-                "Base Product",
+                "  Base Product",
                 style: TextStyle(
                   fontWeight: FontWeight.w500,
                   color: Colors.grey[700],
@@ -564,97 +491,45 @@ class _AccessoriesState extends State<Accessories> {
                 ),
               ),
         Gap(5),
-        isGridView
-            ? Container(
-                height: 45.h,
-                width: 215.w,
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey[300]!),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Center(
-                  child: TextField(
-                    controller: baseProductController,
-                    focusNode: baseProductFocusNode,
-                    decoration: InputDecoration(
-                      hintText: "Search base product...",
-                      prefixIcon: Icon(Icons.search),
-                      border: InputBorder.none,
-                      contentPadding: EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 12,
-                      ),
-                      suffixIcon: isSearchingBaseProduct
-                          ? Padding(
-                              padding: EdgeInsets.all(12),
-                              child: SizedBox(
-                                width: 20,
-                                height: 20,
-                                child:
-                                    CircularProgressIndicator(strokeWidth: 2),
-                              ),
-                            )
-                          : null,
-                    ),
-                    onChanged: (value) {
-                      searchBaseProducts(value);
-                    },
-                    onTap: () {
-                      if (baseProductController.text.isNotEmpty) {
-                        searchBaseProducts(baseProductController.text);
-                      }
-                    },
-                  ),
-                ),
-              )
-            : Align(
-                alignment: Alignment.bottomLeft,
-                child: Container(
-                  height: 30.h,
-                  width: 215.w,
-                  decoration: BoxDecoration(
-                    border: Border.all(color: Colors.grey[300]!),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: TextField(
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.black87,
-                    ),
-                    controller: baseProductController,
-                    focusNode: baseProductFocusNode,
-                    decoration: InputDecoration(
-                      hintText: "Search base product...",
-                      prefixIcon: Icon(Icons.search),
-                      border: InputBorder.none,
-                      contentPadding: EdgeInsets.symmetric(
-                        horizontal: 14,
-                        vertical: 7,
-                      ),
-                      suffixIcon: isSearchingBaseProduct
-                          ? Padding(
-                              padding: EdgeInsets.all(12),
-                              child: SizedBox(
-                                width: 20,
-                                height: 20,
-                                child:
-                                    CircularProgressIndicator(strokeWidth: 2),
-                              ),
-                            )
-                          : null,
-                    ),
-                    onChanged: (value) {
-                      searchBaseProducts(value);
-                    },
-                    onTap: () {
-                      if (baseProductController.text.isNotEmpty) {
-                        searchBaseProducts(baseProductController.text);
-                      }
-                    },
-                  ),
-                ),
+        Container(
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.grey[300]!),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: TextField(
+            controller: controller,
+            focusNode: focusNode,
+            decoration: InputDecoration(
+              hintText: "Search base product...",
+              prefixIcon: Icon(Icons.search),
+              border: InputBorder.none,
+              contentPadding: EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 12,
               ),
-        if (baseProductResults.isNotEmpty)
+              suffixIcon: isSearching
+                  ? Padding(
+                      padding: EdgeInsets.all(12),
+                      child: SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                    )
+                  : null,
+            ),
+            onChanged: (value) {
+              onSearchChanged(value);
+            },
+            onTap: () {
+              if (controller.text.isNotEmpty) {
+                onSearchChanged(controller.text);
+              }
+            },
+          ),
+        ),
+        // Only show search results if there's no selected product
+        if (searchResults.isNotEmpty && selectedProduct == null)
           Container(
             margin: EdgeInsets.only(top: 8),
             padding: EdgeInsets.all(12),
@@ -675,16 +550,13 @@ class _AccessoriesState extends State<Accessories> {
                   ),
                 ),
                 SizedBox(height: 8),
-                ...baseProductResults.map((product) {
+                ...searchResults.map((product) {
                   return GestureDetector(
                     onTap: () {
-                      setState(() {
-                        selectedBaseProduct = product.toString();
-                        baseProductController.text = selectedBaseProduct!;
-                        baseProductResults = [];
-                        isBaseProductUpdated =
-                            false; // Reset update status when new product is selected
-                      });
+                      // Clear the search field and focus
+                      controller.clear();
+                      focusNode.unfocus();
+                      onProductSelected(product.toString());
                     },
                     child: Container(
                       width: double.infinity,
@@ -733,7 +605,7 @@ class _AccessoriesState extends State<Accessories> {
               ],
             ),
           ),
-        if (selectedBaseProduct != null)
+        if (selectedProduct != null)
           Container(
             margin: EdgeInsets.only(top: 8),
             padding: EdgeInsets.all(12),
@@ -748,7 +620,7 @@ class _AccessoriesState extends State<Accessories> {
                 SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    "Selected: $selectedBaseProduct",
+                    "Selected: $selectedProduct",
                     style: GoogleFonts.figtree(
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
@@ -757,27 +629,18 @@ class _AccessoriesState extends State<Accessories> {
                   ),
                 ),
                 GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      selectedBaseProduct = null;
-                      baseProductController.clear();
-                      baseProductResults = [];
-                    });
-                  },
+                  onTap: onClearSelection,
                   child: Icon(Icons.close, color: Colors.grey[600], size: 20),
                 ),
               ],
             ),
           ),
-        if (selectedBaseProduct != null && !isBaseProductUpdated)
+        if (selectedProduct != null && !isUpdated)
           Container(
             margin: EdgeInsets.only(top: 8),
             width: double.infinity,
             child: ElevatedButton(
-              onPressed: () {
-                // Replace "1335694" with your actual product ID variable
-                updateSelectedBaseProduct(currentMainProductId!);
-              },
+              onPressed: onUpdatePressed,
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.blue,
                 padding: EdgeInsets.symmetric(vertical: 12),
@@ -814,7 +677,7 @@ class _AccessoriesState extends State<Accessories> {
         body: jsonEncode(data),
       );
 
-      if (response.statusCode == 200) {
+      if (response.statusCode == 200 || response.statusCode == 201) {
         final responseData = jsonDecode(response.body);
         print("Base product updated successfully: $responseData");
         print("Product Id  xxxx $productId");
@@ -1044,145 +907,175 @@ class _AccessoriesState extends State<Accessories> {
             mainAxisAlignment: MainAxisAlignment.start,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Padding(
-                padding: const EdgeInsets.all(4.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Container(
-                      // color: Colors.grey,
-                      height: 60.h,
-                      width: 210.w,
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('  $categoryyName'),
-                          Text(
-                            "  ${index + 1}.  ${data["Products"]}" ?? "",
-                            overflow: TextOverflow.ellipsis,
-                            style: GoogleFonts.figtree(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.black87,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.all(2.0),
-                      child: Container(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 14,
-                        ),
-                        decoration: BoxDecoration(
-                          // color: Colors.deepPurple[50],
-                          color: Colors.blue[50],
-                          borderRadius: BorderRadius.circular(10),
-                        ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.only(top: 15),
+                      child: SizedBox(
+                        height: 40.h,
+                        width: 210.w,
                         child: Text(
-                          "ID: ${data['id']}",
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.blue[700],
-                            fontWeight: FontWeight.w500,
+                          "  ${index + 1}.  ${data["Products"]}" ?? "",
+                          overflow: TextOverflow.ellipsis,
+                          style: GoogleFonts.figtree(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.black87,
                           ),
                         ),
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(2.0),
+                    child: Container(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 14,
+                      ),
+                      decoration: BoxDecoration(
+                        // color: Colors.deepPurple[50],
+                        color: Colors.blue[50],
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Text(
+                        "ID: ${data['id']}",
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.blue[700],
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
-              _buildProductDetailInRows(data),
               Gap(5),
               Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    _buildBaseProductSearchField(),
-                    Gap(6),
-                    Padding(
-                      padding: const EdgeInsets.all(2.0),
-                      child: Container(
-                        height: 40.h,
-                        width: 40.w,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(10),
-                          color: Colors.deepPurple[50],
-                        ),
-                        child: IconButton(
-                          icon: Icon(Icons.attach_file,
-                              color: Colors.green[600], size: 20),
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => AttachmentScreen(
-                                  productId: data['id'].toString(),
-                                  mainProductId:
-                                      currentMainProductId ?? "Unknown ID",
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                    ),
-                    Gap(6),
-                    Padding(
-                      padding: const EdgeInsets.all(2.0),
-                      child: Container(
-                        height: 40.h,
-                        width: 40.w,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(10),
-                          color: Colors.deepPurple[50],
-                        ),
-                        child: IconButton(
-                          icon: Icon(Icons.delete, color: Colors.redAccent),
-                          onPressed: () {
-                            showDialog(
-                              context: context,
-                              builder: (context) {
-                                return AlertDialog(
-                                  title: Subhead(
-                                    text: "Are you Sure to Delete This Item ?",
-                                    weight: FontWeight.w500,
-                                    color: Colors.black,
-                                  ),
-                                  actions: [
-                                    ElevatedButton(
-                                      onPressed: () {
-                                        setState(() {
-                                          responseProducts.removeAt(index);
-                                        });
-                                        Navigator.pop(context);
-                                      },
-                                      child: Text("Yes"),
-                                    ),
-                                    ElevatedButton(
-                                      onPressed: () {
-                                        Navigator.pop(context);
-                                      },
-                                      child: Text("No"),
-                                    ),
-                                  ],
-                                );
-                              },
-                            );
-                          },
-                        ),
-                      ),
-                    ),
-                  ],
+                padding: EdgeInsets.only(left: 15.0),
+                child: Text(
+                  "  Enquiry Id : $orderNoo",
+                  overflow: TextOverflow.ellipsis,
+                  style: GoogleFonts.figtree(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.blueAccent,
+                  ),
                 ),
               ),
-              // In _buildGridView():
-              _buildDeleteButton(index, data),
+              Gap(5),
+              _buildProductDetailInRows(data),
+              Gap(5),
+              Row(
+                children: [
+                  Expanded(
+                      child: _buildBaseProductSearchField(
+                    controller: baseProductController,
+                    focusNode: baseProductFocusNode,
+                    searchResults: baseProductResults,
+                    selectedProduct: selectedBaseProduct,
+                    isSearching: isSearchingBaseProduct,
+                    isUpdated: isBaseProductUpdated,
+                    onSearchChanged: (value) {
+                      searchBaseProducts(value);
+                    },
+                    onProductSelected: (product) {
+                      setState(() {
+                        selectedBaseProduct = product;
+                        isBaseProductUpdated = false;
+                      });
+                      baseProductController.text = product;
+                      print("Selected Base Product: $product");
+                    },
+                    onClearSelection: () {
+                      setState(() {
+                        selectedBaseProduct = null;
+                        isBaseProductUpdated = false;
+                        baseProductController.clear();
+                      });
+                    },
+                    onUpdatePressed: () {
+                      updateSelectedBaseProduct(data['id'].toString());
+                    },
+                  )),
+                  Padding(
+                    padding: EdgeInsets.only(top: 5.0, right: 4.0, left: 2),
+                    child: Container(
+                      height: 40.h,
+                      width: 40.w,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(10),
+                        color: Colors.deepPurple[50],
+                      ),
+                      child: IconButton(
+                        icon: Icon(Icons.attach_file,
+                            color: Colors.green[600], size: 20),
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => AttachmentScreen(
+                                productId: data['id'].toString(),
+                                mainProductId:
+                                    currentMainProductId ?? "Unknown ID",
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                  Padding(
+                    padding:
+                        const EdgeInsets.only(top: 5.0, right: 4.0, left: 2),
+                    child: Container(
+                      height: 40.h,
+                      width: 40.w,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(10),
+                        color: Colors.deepPurple[50],
+                      ),
+                      child: IconButton(
+                        icon: Icon(Icons.delete, color: Colors.redAccent),
+                        onPressed: () {
+                          showDialog(
+                            context: context,
+                            builder: (context) {
+                              return AlertDialog(
+                                title: Subhead(
+                                  text: "Are you Sure to Delete This Item ?",
+                                  weight: FontWeight.w500,
+                                  color: Colors.black,
+                                ),
+                                actions: [
+                                  ElevatedButton(
+                                    onPressed: () {
+                                      setState(() {
+                                        responseProducts.removeAt(index);
+                                      });
+                                      Navigator.pop(context);
+                                    },
+                                    child: Text("Yes"),
+                                  ),
+                                  ElevatedButton(
+                                    onPressed: () {
+                                      Navigator.pop(context);
+                                    },
+                                    child: Text("No"),
+                                  ),
+                                ],
+                              );
+                            },
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                ],
+              ),
               Gap(10),
             ],
           ),
@@ -1369,7 +1262,35 @@ class _AccessoriesState extends State<Accessories> {
                   ],
                 ),
                 Gap(10),
-                _buildBaseProductSearchField(),
+                _buildBaseProductSearchField(
+                  controller: baseProductController,
+                  focusNode: baseProductFocusNode,
+                  searchResults: baseProductResults,
+                  selectedProduct: selectedBaseProduct,
+                  isSearching: isSearchingBaseProduct,
+                  isUpdated: isBaseProductUpdated,
+                  onSearchChanged: (value) {
+                    searchBaseProducts(value);
+                  },
+                  onProductSelected: (product) {
+                    setState(() {
+                      selectedBaseProduct = product;
+                      isBaseProductUpdated = false;
+                    });
+                    baseProductController.text = product;
+                    print("Selected base product: $selectedBaseProduct");
+                  },
+                  onClearSelection: () {
+                    setState(() {
+                      selectedBaseProduct = null;
+                      isBaseProductUpdated = false;
+                      baseProductController.clear();
+                    });
+                  },
+                  onUpdatePressed: () {
+                    updateSelectedBaseProduct(data['id'].toString());
+                  },
+                )
               ],
             ),
           ),
@@ -1488,7 +1409,7 @@ class _AccessoriesState extends State<Accessories> {
           fontSize: 15.sp,
         ),
         controller: controller,
-        keyboardType: (key == "Length" ||
+        keyboardType: (key == "Profile" || // Changed from "Length"
                 key == "Nos" ||
                 key == "Basic Rate" ||
                 key == "Amount" ||
@@ -1502,7 +1423,9 @@ class _AccessoriesState extends State<Accessories> {
           print("Field $key changed to: $val");
           print("Controller text: ${controller.text}");
           print("Data after change: ${data[key]}");
-          if (key == "Length" || key == "Nos" || key == "Basic Rate") {
+
+          // Fixed condition - use actual key "Profile" instead of "Length"
+          if (key == "Profile" || key == "Nos" || key == "Basic Rate") {
             print("Triggering calculation for $key with value: $val");
             _debounceCalculation(data);
           }
@@ -1547,7 +1470,7 @@ class _AccessoriesState extends State<Accessories> {
               SizedBox(width: 10),
               Expanded(
                 child: _buildDetailItem(
-                  "Length",
+                  "Profile", // Changed from "Length" to match the actual key
                   _editableTextField(data, "Profile"),
                 ),
               ),
@@ -1721,7 +1644,6 @@ class _AccessoriesState extends State<Accessories> {
                 fieldControllers[productId]!["Profile"]!.text =
                     responseData["Length"].toString();
               }
-              _saveProduct(data);
             }
             if (responseData["Nos"] != null) {
               String newNos = responseData["Nos"].toString().trim();
@@ -1752,23 +1674,6 @@ class _AccessoriesState extends State<Accessories> {
               }
             }
             previousUomValues[productId] = currentUom;
-
-            // Save updated product to Hive
-            final updatedProductData = {
-              'id': data['id'].toString(),
-              'Products': data['Products']?.toString() ?? '',
-              'category': categoryyName ?? 'Accessories',
-              'UOM': data['UOM'] is Map
-                  ? data['UOM']['value']?.toString()
-                  : data['UOM']?.toString(),
-              'Profile': data['Profile']?.toString() ?? '0',
-              'Nos': data['Nos']?.toString() ?? '1',
-              'Basic Rate': data['Basic Rate']?.toString() ?? '0',
-              'R.Ft': data['R.Ft']?.toString() ?? '0',
-              'Amount': data['Amount']?.toString() ?? '0',
-              'baseProduct': baseProductController.text,
-            };
-            _productsBox.put(data['id'].toString(), updatedProductData);
           });
           print("=== CALCULATION SUCCESS ===");
           print(
@@ -1783,46 +1688,6 @@ class _AccessoriesState extends State<Accessories> {
     } catch (e) {
       print("Calculation API Error: $e");
     }
-  }
-
-  // Update delete functionality
-  Widget _buildDeleteButton(int index, Map<String, dynamic> data) {
-    return IconButton(
-      icon: Icon(Icons.delete, color: Colors.redAccent),
-      onPressed: () {
-        showDialog(
-          context: context,
-          builder: (context) {
-            return AlertDialog(
-              title: Subhead(
-                text: "Are you Sure to Delete This Item ?",
-                weight: FontWeight.w500,
-                color: Colors.black,
-              ),
-              actions: [
-                ElevatedButton(
-                  onPressed: () {
-                    // Delete from Hive
-                    _productsBox.delete(data['id'].toString());
-                    setState(() {
-                      responseProducts.removeAt(index);
-                    });
-                    Navigator.pop(context);
-                  },
-                  child: Text("Yes"),
-                ),
-                ElevatedButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                  child: Text("No"),
-                ),
-              ],
-            );
-          },
-        );
-      },
-    );
   }
 
   Widget _buildAnimatedDropdown(
@@ -1925,180 +1790,181 @@ class _AccessoriesState extends State<Accessories> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
-                          blurRadius: 10,
-                          offset: Offset(0, 5),
-                        ),
-                      ],
-                    ),
-                    child: Padding(
-                      padding: EdgeInsets.all(20),
-                      child: Form(
-                        key: _formKey,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            SizedBox(width: 10),
-                            Text(
-                              "Add New Product",
-                              style: GoogleFonts.poppins(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.black87,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 10,
+                        offset: Offset(0, 5),
+                      ),
+                    ],
+                  ),
+                  child: Padding(
+                    padding: EdgeInsets.all(20),
+                    child: Form(
+                      key: _formKey,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          SizedBox(width: 10),
+                          Text(
+                            "Add New Product",
+                            style: GoogleFonts.poppins(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.black87,
+                            ),
+                          ),
+                          SizedBox(height: 24),
+                          _buildAnimatedDropdown(
+                            accessoriesList,
+                            selectedAccessories,
+                            (value) {
+                              setState(() {
+                                selectedAccessories = value;
+                              });
+                            },
+                            label: "Accessories Name",
+                            icon: Icons.category_outlined,
+                          ),
+                          _buildAnimatedDropdown(
+                            brandandList,
+                            selectedBrands,
+                            (value) {
+                              setState(() {
+                                selectedBrands = value;
+                                selectedColors = null;
+                                selectedThickness = null;
+                                selectedCoatingMass = null;
+                                colorandList = [];
+                                thickAndList = [];
+                                coatingAndList = [];
+                              });
+                              _fetchColorData();
+                            },
+                            label: "Brand",
+                            icon: Icons.brightness_auto_outlined,
+                          ),
+                          _buildAnimatedDropdown(
+                            colorandList,
+                            selectedColors,
+                            (value) {
+                              setState(() {
+                                selectedColors = value;
+                                selectedThickness = null;
+                                selectedCoatingMass = null;
+                                thickAndList = [];
+                                coatingAndList = [];
+                              });
+                              _fetchThicknessData();
+                            },
+                            enabled: colorandList.isNotEmpty,
+                            label: "Color",
+                            icon: Icons.color_lens_outlined,
+                          ),
+                          _buildAnimatedDropdown(
+                            thickAndList,
+                            selectedThickness,
+                            (value) {
+                              setState(() {
+                                selectedThickness = value;
+                                selectedCoatingMass = null;
+                                coatingAndList = [];
+                              });
+                              _fetchCoatingMassData();
+                            },
+                            enabled: thickAndList.isNotEmpty,
+                            label: "Thickness",
+                            icon: Icons.straighten_outlined,
+                          ),
+                          _buildAnimatedDropdown(
+                            coatingAndList,
+                            selectedCoatingMass,
+                            (value) {
+                              setState(() {
+                                selectedCoatingMass = value;
+                              });
+                            },
+                            enabled: coatingAndList.isNotEmpty,
+                            label: "Coating Mass",
+                            icon: Icons.layers_outlined,
+                          ),
+                          SizedBox(height: 16),
+                          SizedBox(height: 24),
+                          Container(
+                            padding: EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: Colors.grey[100],
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: Colors.deepPurple[400]!,
+                                width: 1.5,
                               ),
                             ),
-                            SizedBox(height: 24),
-                            _buildAnimatedDropdown(
-                              accessoriesList,
-                              selectedAccessories,
-                              (value) {
-                                setState(() {
-                                  selectedAccessories = value;
-                                });
-                              },
-                              label: "Accessories Name",
-                              icon: Icons.category_outlined,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  "Selected Product Details",
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.deepPurple[400],
+                                  ),
+                                ),
+                                SizedBox(height: 8),
+                                Text(
+                                  _selectedItems(),
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 13.5,
+                                    color: Colors.black,
+                                    height: 1.5,
+                                  ),
+                                ),
+                              ],
                             ),
-                            _buildAnimatedDropdown(
-                              brandandList,
-                              selectedBrands,
-                              (value) {
-                                setState(() {
-                                  selectedBrands = value;
-                                  selectedColors = null;
-                                  selectedThickness = null;
-                                  selectedCoatingMass = null;
-                                  colorandList = [];
-                                  thickAndList = [];
-                                  coatingAndList = [];
-                                });
-                                _fetchColorData();
-                              },
-                              label: "Brand",
-                              icon: Icons.brightness_auto_outlined,
-                            ),
-                            _buildAnimatedDropdown(
-                              colorandList,
-                              selectedColors,
-                              (value) {
-                                setState(() {
-                                  selectedColors = value;
-                                  selectedThickness = null;
-                                  selectedCoatingMass = null;
-                                  thickAndList = [];
-                                  coatingAndList = [];
-                                });
-                                _fetchThicknessData();
-                              },
-                              enabled: colorandList.isNotEmpty,
-                              label: "Color",
-                              icon: Icons.color_lens_outlined,
-                            ),
-                            _buildAnimatedDropdown(
-                              thickAndList,
-                              selectedThickness,
-                              (value) {
-                                setState(() {
-                                  selectedThickness = value;
-                                  selectedCoatingMass = null;
-                                  coatingAndList = [];
-                                });
-                                _fetchCoatingMassData();
-                              },
-                              enabled: thickAndList.isNotEmpty,
-                              label: "Thickness",
-                              icon: Icons.straighten_outlined,
-                            ),
-                            _buildAnimatedDropdown(
-                              coatingAndList,
-                              selectedCoatingMass,
-                              (value) {
-                                setState(() {
-                                  selectedCoatingMass = value;
-                                });
-                              },
-                              enabled: coatingAndList.isNotEmpty,
-                              label: "Coating Mass",
-                              icon: Icons.layers_outlined,
-                            ),
-                            SizedBox(height: 16),
-                            SizedBox(height: 24),
-                            Container(
-                              padding: EdgeInsets.all(16),
-                              decoration: BoxDecoration(
-                                color: Colors.grey[100],
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(
-                                  color: Colors.deepPurple[400]!,
-                                  width: 1.5,
+                          ),
+                          SizedBox(height: 24),
+                          AnimatedContainer(
+                            duration: Duration(milliseconds: 300),
+                            width: double.infinity,
+                            height: 54.h,
+                            child: ElevatedButton(
+                              onPressed: _submitData,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.deepPurple[400],
+                                foregroundColor: Colors.white,
+                                elevation: 0,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
                                 ),
                               ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
+                                  Icon(
+                                    Icons.add_shopping_cart_outlined,
+                                    color: Colors.white,
+                                  ),
+                                  SizedBox(width: 10),
                                   Text(
-                                    "Selected Product Details",
+                                    "Add Product",
                                     style: GoogleFonts.poppins(
                                       fontSize: 16,
                                       fontWeight: FontWeight.w600,
-                                      color: Colors.deepPurple[400],
-                                    ),
-                                  ),
-                                  SizedBox(height: 8),
-                                  Text(
-                                    _selectedItems(),
-                                    style: GoogleFonts.poppins(
-                                      fontSize: 13.5,
-                                      color: Colors.black,
-                                      height: 1.5,
                                     ),
                                   ),
                                 ],
                               ),
                             ),
-                            SizedBox(height: 24),
-                            AnimatedContainer(
-                              duration: Duration(milliseconds: 300),
-                              width: double.infinity,
-                              height: 54.h,
-                              child: ElevatedButton(
-                                onPressed: _submitData,
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.deepPurple[400],
-                                  foregroundColor: Colors.white,
-                                  elevation: 0,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                ),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Icon(
-                                      Icons.add_shopping_cart_outlined,
-                                      color: Colors.white,
-                                    ),
-                                    SizedBox(width: 10),
-                                    Text(
-                                      "Add Product",
-                                      style: GoogleFonts.poppins(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
-                    )),
+                    ),
+                  ),
+                ),
                 if (responseProducts.isNotEmpty) ...[
                   SizedBox(height: 24),
                   Padding(
@@ -2121,7 +1987,11 @@ class _AccessoriesState extends State<Accessories> {
                       ],
                     ),
                   ),
-                  SizedBox(height: 12),
+                  MyText(
+                    text: categoryyName ?? "Accessories",
+                    weight: FontWeight.w500,
+                    color: Colors.grey.shade600,
+                  ),
                   _buildSubmittedDataList(),
                 ],
               ],

@@ -1,0 +1,2 @@
+C:/Users/Hp/Zaron/android/app/.cxx/RelWithDebInfo/6h1l2o4u/x86/CMakeFiles/edit_cache.dir
+C:/Users/Hp/Zaron/android/app/.cxx/RelWithDebInfo/6h1l2o4u/x86/CMakeFiles/rebuild_cache.dir

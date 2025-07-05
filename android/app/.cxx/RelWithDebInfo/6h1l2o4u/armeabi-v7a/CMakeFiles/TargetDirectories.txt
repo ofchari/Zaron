@@ -1,0 +1,2 @@
+C:/Users/Hp/Zaron/android/app/.cxx/RelWithDebInfo/6h1l2o4u/armeabi-v7a/CMakeFiles/edit_cache.dir
+C:/Users/Hp/Zaron/android/app/.cxx/RelWithDebInfo/6h1l2o4u/armeabi-v7a/CMakeFiles/rebuild_cache.dir

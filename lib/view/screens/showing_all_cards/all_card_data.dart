@@ -115,7 +115,7 @@ class _ProductsViewState extends State<ProductsView> {
 
     try {
       final response = await ioClient.post(
-        Uri.parse("https://demo.zaron.in:8181/ci4/api/baseproduct_update"),
+        Uri.parse("$apiUrl/baseproduct_update"),
         headers: headers,
         body: jsonEncode(data),
       );
