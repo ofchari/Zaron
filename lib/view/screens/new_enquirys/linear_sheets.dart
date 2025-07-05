@@ -934,7 +934,7 @@ class _LinerSheetPageState extends State<LinerSheetPage> {
               Expanded(
                 child: _buildDetailItem(
                   "Profile",
-                  _editableTextField(data, "Profile"),
+                  _editableTextField(data, "Length"),
                 ),
               ),
               SizedBox(width: 10),
@@ -1201,8 +1201,8 @@ class _LinerSheetPageState extends State<LinerSheetPage> {
     String? profileText;
 
     if (fieldControllers.containsKey(productId) &&
-        fieldControllers[productId]!.containsKey("Profile")) {
-      profileText = fieldControllers[productId]!["Profile"]!.text;
+        fieldControllers[productId]!.containsKey("Length")) {
+      profileText = fieldControllers[productId]!["Length"]!.text;
       print("Profile from controller: $profileText");
     }
 
@@ -1250,9 +1250,7 @@ class _LinerSheetPageState extends State<LinerSheetPage> {
       "nos": nosValue,
       "basic_rate": double.tryParse(data["Basic Rate"]?.toString() ?? "0") ?? 0,
     };
-
     print("Request Body: ${jsonEncode(requestBody)}");
-
     try {
       final response = await client.post(
         url,
