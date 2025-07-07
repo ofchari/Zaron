@@ -381,14 +381,17 @@ class _TotalEnquiryPageState extends State<TotalEnquiryPage> {
                                         return Colors.grey.shade300;
                                       }
                                       return null;
-                                      // index % 2 == 0
-                                      //   ? Colors.white
-                                      //   : Colors.grey.shade200;
                                     },
                                   ), // Row tap logic
                                   onSelectChanged: (_) {
                                     setState(() {
-                                      selectedRowIndex = index;
+                                      if (selectedRowIndex == index) {
+                                        selectedRowIndex =
+                                            null; // Deselect if already selected
+                                      } else {
+                                        selectedRowIndex =
+                                            index; // Select new row
+                                      }
                                     });
                                   },
                                   cells: [

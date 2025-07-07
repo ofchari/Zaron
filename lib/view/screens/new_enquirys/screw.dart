@@ -601,15 +601,15 @@ class _ScrewState extends State<Screw> {
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
             ),
-            child: Column(
-              children: [
-                // Header with product name and delete button
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(
-                      child: Padding(
-                        padding: const EdgeInsets.all(16.0),
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Column(
+                children: [
+                  // Header with product name and delete button
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
                         child: Text(
                           "${index + 1}. ${data["Products"] ?? 'N/A'}",
                           style: GoogleFonts.figtree(
@@ -619,68 +619,68 @@ class _ScrewState extends State<Screw> {
                           ),
                         ),
                       ),
-                    ),
-                    Container(
-                      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: Colors.blue[50],
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Text(
-                        "ID: ${data['id']}",
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.blue[700],
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Container(
-                        height: 40.h,
-                        width: 50.w,
+                      Container(
+                        padding:
+                            EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(10),
-                          color: Colors.deepPurple[50],
+                          color: Colors.blue[50],
+                          borderRadius: BorderRadius.circular(6),
                         ),
-                        child: IconButton(
-                          icon: Icon(Icons.delete, color: Colors.redAccent),
-                          onPressed: () {
-                            showDialog(
-                              context: context,
-                              builder: (context) => AlertDialog(
-                                title: Text("Delete Item"),
-                                content: Text(
-                                  "Are you sure you want to delete this item?",
-                                ),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () => Navigator.pop(context),
-                                    child: Text("Cancel"),
-                                  ),
-                                  ElevatedButton(
-                                    onPressed: () {
-                                      setState(() {
-                                        responseData.removeAt(index);
-                                      });
-                                      Navigator.pop(context);
-                                    },
-                                    child: Text("Delete"),
-                                  ),
-                                ],
-                              ),
-                            );
-                          },
+                        child: Text(
+                          "ID: ${data['id']}",
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.blue[700],
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
                       ),
-                    ),
-                  ],
-                ),
-
-                // Editable fields in organized rows
-                _buildApiResponseRows(data),
-              ],
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Container(
+                          height: 40.h,
+                          width: 50.w,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(10),
+                            color: Colors.deepPurple[50],
+                          ),
+                          child: IconButton(
+                            icon: Icon(Icons.delete, color: Colors.redAccent),
+                            onPressed: () {
+                              showDialog(
+                                context: context,
+                                builder: (context) => AlertDialog(
+                                  title: Text("Delete Item"),
+                                  content: Text(
+                                    "Are you sure you want to delete this item?",
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () => Navigator.pop(context),
+                                      child: Text("Cancel"),
+                                    ),
+                                    ElevatedButton(
+                                      onPressed: () {
+                                        setState(() {
+                                          responseData.removeAt(index);
+                                        });
+                                        Navigator.pop(context);
+                                      },
+                                      child: Text("Delete"),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  // Editable fields in organized rows
+                  _buildApiResponseRows(data),
+                ],
+              ),
             ),
           );
         }).toList(),
@@ -693,31 +693,25 @@ class _ScrewState extends State<Screw> {
     return Column(
       children: [
         Row(
-          children: [],
-        ),
-        Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Row(
-            children: [
-              Expanded(
-                child: _buildDetailItem(
-                  "Basic Rate",
-                  _editableTextField(data, "Basic Rate"),
-                ),
+          children: [
+            Expanded(
+              child: _buildDetailItem(
+                "Basic Rate",
+                _editableTextField(data, "Basic Rate"),
               ),
-              Gap(5),
-              Expanded(
-                child: _buildDetailItem("Nos", _editableTextField(data, "Nos")),
+            ),
+            Gap(5),
+            Expanded(
+              child: _buildDetailItem("Nos", _editableTextField(data, "Nos")),
+            ),
+            Gap(5),
+            Expanded(
+              child: _buildDetailItem(
+                "Amount",
+                _editableTextField(data, "Amount"),
               ),
-              Gap(5),
-              Expanded(
-                child: _buildDetailItem(
-                  "Amount",
-                  _editableTextField(data, "Amount"),
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
         SizedBox(height: 16),
       ],
@@ -725,7 +719,7 @@ class _ScrewState extends State<Screw> {
   }
 
   /// 6. ADD NEW HELPER METHODS:
-  ///
+
   Widget _editableTextField(Map<String, dynamic> data, String key) {
     final controller = _getController(data, key);
 

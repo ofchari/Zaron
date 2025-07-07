@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:dropdown_search/dropdown_search.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:gap/gap.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/io_client.dart';
 import 'package:zaron/view/universal_api/api&key.dart';
@@ -518,15 +519,15 @@ class _UpvcTilesState extends State<UpvcTiles> {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
-          child: Column(
-            children: [
-              // Header with product name and delete button
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Column(
+              children: [
+                // Header with product name and delete button
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
                       child: Text(
                         "${data["S.No"]}. ${data["Products"]}",
                         style: GoogleFonts.figtree(
@@ -536,64 +537,64 @@ class _UpvcTilesState extends State<UpvcTiles> {
                         ),
                       ),
                     ),
-                  ),
-                  Container(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.blue[50],
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Text(
-                      "ID: ${data['id']}",
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.blue[700],
-                        fontWeight: FontWeight.w500,
+                    Container(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.blue[50],
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        "ID: ${data['id']}",
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.blue[700],
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
                     ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: IconButton(
-                      icon: Icon(Icons.delete, color: Colors.redAccent),
-                      onPressed: () {
-                        showDialog(
-                          context: context,
-                          builder: (context) => AlertDialog(
-                            title: Text("Delete Product"),
-                            content: Text(
-                              "Are you sure you want to delete this item?",
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: IconButton(
+                        icon: Icon(Icons.delete, color: Colors.redAccent),
+                        onPressed: () {
+                          showDialog(
+                            context: context,
+                            builder: (context) => AlertDialog(
+                              title: Text("Delete Product"),
+                              content: Text(
+                                "Are you sure you want to delete this item?",
+                              ),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.pop(context),
+                                  child: Text("Cancel"),
+                                ),
+                                ElevatedButton(
+                                  onPressed: () {
+                                    setState(() {
+                                      apiResponseData.removeAt(index);
+                                    });
+                                    Navigator.pop(context);
+                                  },
+                                  child: Text("Delete"),
+                                ),
+                              ],
                             ),
-                            actions: [
-                              TextButton(
-                                onPressed: () => Navigator.pop(context),
-                                child: Text("Cancel"),
-                              ),
-                              ElevatedButton(
-                                onPressed: () {
-                                  setState(() {
-                                    apiResponseData.removeAt(index);
-                                  });
-                                  Navigator.pop(context);
-                                },
-                                child: Text("Delete"),
-                              ),
-                            ],
-                          ),
-                        );
-                      },
+                          );
+                        },
+                      ),
                     ),
-                  ),
-                ],
-              ),
+                  ],
+                ),
 
-              // Editable fields in rows
-              _buildApiResponseFields(data),
-              SizedBox(height: 16),
-            ],
+                // Editable fields in rows
+                _buildApiResponseFields(data),
+                SizedBox(height: 16),
+              ],
+            ),
           ),
         );
       }).toList(),
@@ -602,52 +603,43 @@ class _UpvcTilesState extends State<UpvcTiles> {
 
   // 4. ADD this new method:
   Widget _buildApiResponseFields(Map<String, dynamic> data) {
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        children: [
-          // Row 1: UOM and Length
-          Row(
-            children: [
-              Expanded(child: _buildUOMDropdownFromAPI(data)),
-              SizedBox(width: 12),
-              Expanded(
-                child: _buildEditableFieldFromAPI("Length", data, "Length"),
-              ),
-            ],
-          ),
-          SizedBox(height: 12),
+    return Column(
+      children: [
+        // Row 1: UOM and Length
+        Row(
+          children: [
+            Expanded(child: _buildUOMDropdownFromAPI(data)),
+            SizedBox(width: 12),
+            Expanded(
+              child: _buildEditableFieldFromAPI("Length", data, "Length"),
+            ),
+            Gap(10),
+            Expanded(child: _buildEditableFieldFromAPI("Nos", data, "Nos")),
+          ],
+        ),
+        SizedBox(height: 12),
 
-          // Row 2: Nos and Basic Rate
-          Row(
-            children: [
-              Expanded(child: _buildEditableFieldFromAPI("Nos", data, "Nos")),
-              SizedBox(width: 12),
-              Expanded(
-                child: _buildEditableFieldFromAPI(
-                  "Basic Rate",
-                  data,
-                  "Basic Rate",
-                ),
+        // Row 2: Nos and Basic Rate
+        Row(
+          children: [
+            Expanded(
+              child: _buildEditableFieldFromAPI(
+                "Basic Rate",
+                data,
+                "Basic Rate",
               ),
-            ],
-          ),
-          SizedBox(height: 12),
-
-          // Row 3: Sq.Mtr and Amount
-          Row(
-            children: [
-              Expanded(
-                child: _buildEditableFieldFromAPI("Sq.Mtr", data, "Sq.Mtr"),
-              ),
-              SizedBox(width: 12),
-              Expanded(
-                child: _buildEditableFieldFromAPI("Amount", data, "Amount"),
-              ),
-            ],
-          ),
-        ],
-      ),
+            ),
+            Gap(10),
+            Expanded(
+              child: _buildEditableFieldFromAPI("Sq.Mtr", data, "Sq.Mtr"),
+            ),
+            Gap(10),
+            Expanded(
+              child: _buildEditableFieldFromAPI("Amount", data, "Amount"),
+            ),
+          ],
+        ),
+      ],
     );
   }
 

@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:dropdown_search/dropdown_search.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:gap/gap.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/io_client.dart';
@@ -704,14 +705,14 @@ class _UpvcAccessoriesState extends State<UpvcAccessories> {
                 _buildReadOnlyField(product, "Basic Rate"),
               ),
             ),
-            SizedBox(width: 10),
+            Gap(10),
             Expanded(
               child: _buildDetailItem(
                 "Nos",
                 _buildEditableField(product, "Nos"),
               ),
             ),
-            SizedBox(width: 10),
+            Gap(10),
             Expanded(
               child: _buildDetailItem(
                 "Amount",

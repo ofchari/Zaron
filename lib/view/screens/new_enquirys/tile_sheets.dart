@@ -700,28 +700,21 @@ class _TileSheetPageState extends State<TileSheetPage> {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.only(top: 15),
-                      child: SizedBox(
-                        height: 40.h,
-                        width: 210.w,
-                        child: Text(
-                          "  ${index + 1}.  ${data["Products"]}" ?? "",
-                          overflow: TextOverflow.ellipsis,
-                          style: GoogleFonts.figtree(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.black87,
-                          ),
+                    child: SizedBox(
+                      height: 40.h,
+                      width: 210.w,
+                      child: Text(
+                        "  ${index + 1}.  ${data["Products"]}" ?? "",
+                        overflow: TextOverflow.ellipsis,
+                        style: GoogleFonts.figtree(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.black87,
                         ),
                       ),
                     ),
                   ),
                   Container(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
-                    ),
                     decoration: BoxDecoration(
                       color: Colors.blue[50],
                       borderRadius: BorderRadius.circular(6),
@@ -806,7 +799,7 @@ class _TileSheetPageState extends State<TileSheetPage> {
               Expanded(
                 child: _buildDetailItem(
                   "Length",
-                  _editableTextField(data, "Profile"),
+                  _editableTextField(data, "Length"),
                 ),
               ),
               SizedBox(width: 10),
@@ -1143,23 +1136,23 @@ class _TileSheetPageState extends State<TileSheetPage> {
     print("Current UOM: $currentUom");
     print("Previous UOM: ${previousUomValues[productId]}");
 
-    // Get Profile value from controller
-    double? profileValue;
-    String? profileText;
+    // Get Length value from controller
+    double lengthValue = 0;
+    String? lengthText;
 
     if (fieldControllers.containsKey(productId) &&
-        fieldControllers[productId]!.containsKey("Profile")) {
-      profileText = fieldControllers[productId]!["Profile"]!.text;
-      print("Profile from controller: $profileText");
+        fieldControllers[productId]!.containsKey("Length")) {
+      lengthText = fieldControllers[productId]!["Length"]!.text;
+      print("Length from controller: $lengthText");
     }
 
-    if (profileText == null || profileText.isEmpty) {
-      profileText = data["Profile"]?.toString();
-      print("Profile from data: $profileText");
+    if (lengthText == null || lengthText.isEmpty) {
+      lengthText = data["Length"]?.toString();
+      print("Length from data: $lengthText");
     }
 
-    if (profileText != null && profileText.isNotEmpty) {
-      profileValue = double.tryParse(profileText);
+    if (lengthText != null && lengthText.isNotEmpty) {
+      lengthValue = double.tryParse(lengthText) ?? 0;
     }
 
     // Get Nos value from controller
@@ -1181,7 +1174,7 @@ class _TileSheetPageState extends State<TileSheetPage> {
       nosValue = int.tryParse(nosText) ?? 1;
     }
 
-    print("Final Profile Value: $profileValue");
+    print("Final Profile Value: $lengthValue");
     print("Final Nos Value: $nosValue");
 
     final requestBody = {
@@ -1193,7 +1186,7 @@ class _TileSheetPageState extends State<TileSheetPage> {
           ? int.tryParse(previousUomValues[productId]!)
           : null,
       "current_uom": currentUom != null ? int.tryParse(currentUom) : null,
-      "length": profileValue ?? 0,
+      "length": lengthValue,
       "nos": nosValue,
       "basic_rate": double.tryParse(data["Basic Rate"]?.toString() ?? "0") ?? 0,
     };
@@ -1217,12 +1210,14 @@ class _TileSheetPageState extends State<TileSheetPage> {
           setState(() {
             calculationResults[productId] = responseData;
 
-            if (responseData["Length"] != null) {
-              data["Profile"] = responseData["Length"].toString();
-              if (fieldControllers[productId]?["Profile"] != null) {
-                fieldControllers[productId]!["Profile"]!.text =
-                    responseData["Length"].toString();
+            // Handle Length update
+            if (responseData["length"] != null) {
+              String newLength = responseData["length"].toString().trim();
+              data["Length"] = newLength;
+              if (fieldControllers[productId]?["Length"] != null) {
+                fieldControllers[productId]!["Length"]!.text = newLength;
               }
+              print("Length field updated to: $newLength");
             }
 
             if (responseData["Nos"] != null) {

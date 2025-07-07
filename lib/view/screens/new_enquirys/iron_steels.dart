@@ -1382,13 +1382,12 @@ class _IronSteelState extends State<IronSteel> {
                     responseData["Amount"].toString();
               }
             }
-
             previousUomValues[productId] = currentUom;
           });
 
           print("=== CALCULATION SUCCESS ===");
           print(
-            "Updated data: Length=${data["Profile"]}, Nos=${data["Nos"]}, Height=${data["height"]}, Amount=${data["Amount"]}",
+            "Updated data: Length=${data["Profile"]}, Nos=${data["Nos"]}, Height=${data["Crimp"]}, Amount=${data["Amount"]}",
           );
         } else {
           print("API returned error status: ${responseData["status"]}");
