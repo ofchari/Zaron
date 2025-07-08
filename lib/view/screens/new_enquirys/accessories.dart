@@ -1755,7 +1755,7 @@ class _AccessoriesState extends State<Accessories> {
         title: Text(
           'Accessories',
           style: GoogleFonts.poppins(
-            fontSize: 21,
+            fontSize: 20,
             fontWeight: FontWeight.w600,
             color: Colors.black87,
           ),
