@@ -959,8 +959,9 @@ class _RollSheetState extends State<RollSheet> {
                 key == "Basic Rate" ||
                 key == "Amount" ||
                 key == "SQMtr")
-            ? TextInputType.numberWithOptions(decimal: true)
-            : TextInputType.numberWithOptions(decimal: true),
+            ? TextInputType.numberWithOptions(decimal: false)
+            : TextInputType.numberWithOptions(decimal: false),
+        // inputFormatters: [FilteringTextInputFormatter.digitsOnly],
         onChanged: (val) {
           setState(() {
             data[key] = val;
@@ -975,7 +976,7 @@ class _RollSheetState extends State<RollSheet> {
           //   controller.text = val;
           // }
 
-          if (key == "Length" || key == "Nos" || key == "Basic Rate") {
+          if (key == "Profile" || key == "Nos" || key == "Basic Rate") {
             print("Triggering calculation for $key with value: $val");
             _debounceCalculation(data);
           }

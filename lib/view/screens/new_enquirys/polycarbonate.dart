@@ -150,7 +150,6 @@ class _PolycarbonateState extends State<Polycarbonate> {
 
     try {
       final client = IOClient(
-
         HttpClient()..badCertificateCallback = (_, __, ___) => true,
       );
       final response = await client.post(
@@ -192,7 +191,7 @@ class _PolycarbonateState extends State<Polycarbonate> {
           if (idData is List && idData.isNotEmpty && idData.first is Map) {
             selectedProductBaseId = idData.first["id"]?.toString();
             selectedBaseProductName =
-                idData.first["base_product_id"]?.toString(); 
+                idData.first["base_product_id"]?.toString();
             debugPrint("Selected Base Product ID: $selectedProductBaseId");
             debugPrint(
               "Base Product Name: $selectedBaseProductName",
@@ -757,12 +756,10 @@ class _PolycarbonateState extends State<Polycarbonate> {
           print("Controller text: ${controller.text}");
           print("Data after change: ${data[key]}");
 
-          // 🚫 DO NOT forcefully reset controller.text here!
-          // if (controller.text != val) {
-          //   controller.text = val;
-          // }
-
-          if (key == "Length" || key == "Nos" || key == "Basic Rate") {
+          if (key == "Length" ||
+              key == "Nos" ||
+              key == "Basic Rate" ||
+              key == "Profile") {
             print("Triggering calculation for $key with value: $val");
             _debounceCalculation(data);
           }

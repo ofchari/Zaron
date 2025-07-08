@@ -716,12 +716,12 @@ class _UpvcTilesState extends State<UpvcTiles> {
     );
   }
 
-  // REPLACE your existing _buildEditableFieldFromAPI method with this:
   Widget _buildEditableFieldFromAPI(
     String label,
     Map<String, dynamic> data,
     String key,
   ) {
+    // Only assign controller value if data[key] is not empty or null
     TextEditingController controller = getController(data, key);
 
     return Column(
@@ -740,9 +740,7 @@ class _UpvcTilesState extends State<UpvcTiles> {
           height: 38.h,
           child: TextField(
             readOnly:
-                (key == "Basic Rate" || key == "Amount" || key == "Sq.Mtr")
-                    ? true
-                    : false,
+                (key == "Basic Rate" || key == "Amount" || key == "Sq.Mtr"),
             style: GoogleFonts.figtree(
               fontWeight: FontWeight.w500,
               color: Colors.black,
@@ -750,15 +748,23 @@ class _UpvcTilesState extends State<UpvcTiles> {
             ),
             controller: controller,
             onChanged: (val) {
-              data[key] = val;
-              // Trigger calculation for specific fields
+              // If the user clears the dropdown or text
+              if (key == "Nos" && val.trim().isEmpty) {
+                return;
+              } //Don't post it at all
+              else {
+                data[key] = val;
+              }
+
+              // Trigger calculation only for valid fields
               if (key == "Length" || key == "Nos" || key == "Basic Rate") {
                 debounceCalculation(data);
               }
             },
             keyboardType: _getKeyboardType(key),
             decoration: InputDecoration(
-              contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 0),
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(6),
                 borderSide: BorderSide(color: Colors.grey[300]!),
@@ -793,7 +799,7 @@ class _UpvcTilesState extends State<UpvcTiles> {
       case "Amount":
         return TextInputType.numberWithOptions(decimal: true);
       default:
-        return TextInputType.text;
+        return TextInputType.numberWithOptions(decimal: true);
     }
   }
 

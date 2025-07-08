@@ -293,7 +293,7 @@ class _AluminumState extends State<Aluminum> {
               responseData['lebels'][0]['data'],
             );
             // Update responseProducts with the new data
-            responseProducts = List<dynamic>.from(apiProductsList);
+            responseProducts.addAll(List<dynamic>.from(apiProductsList));
           }
         });
       }
@@ -331,7 +331,7 @@ class _AluminumState extends State<Aluminum> {
               Gap(10),
               Expanded(
                 child: _buildDetailItem(
-                  "Profile",
+                  "Length",
                   _editableTextField(data, "Length"),
                 ),
               ),

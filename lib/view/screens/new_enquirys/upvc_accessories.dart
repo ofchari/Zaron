@@ -774,6 +774,11 @@ class _UpvcAccessoriesState extends State<UpvcAccessories> {
       child: TextField(
         readOnly: (key == "Basic Rate" || key == "Amount") ? true : false,
         controller: controller,
+        style: GoogleFonts.figtree(
+          fontSize: 15.sp,
+          color: Colors.black87,
+          fontWeight: FontWeight.w500,
+        ),
         onChanged: (val) {
           product[key] = val;
           // Trigger calculation API when Nos changes

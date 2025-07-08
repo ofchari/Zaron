@@ -61,7 +61,7 @@ class _TotalEnquiryViewState extends State<TotalEnquiryView> {
         final jsonData = json.decode(response.body);
         final categories = jsonData['categories'];
 
-        print(response.body);
+        debugPrint("thisss r ${response.body}");
 
         setState(() {
           isLoading = false;
