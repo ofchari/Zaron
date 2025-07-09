@@ -1,9 +1,11 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
 import 'package:dropdown_search/dropdown_search.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:gap/gap.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/io_client.dart';
@@ -321,7 +323,7 @@ class _PurlinState extends State<Purlin> {
   }
 
   // 1. ADD THESE VARIABLES after your existing variables (around line 25)
-  List<Map<String, dynamic>> apiResponseData = [];
+  Map<String, dynamic> apiResponseData = {};
   Map<String, dynamic>? apiResponse;
 
   // 2. MODIFY the postAllData() method - REPLACE the existing postAllData method with this:
@@ -353,42 +355,26 @@ class _PurlinState extends State<Purlin> {
 
       debugPrint("This is a response: ${response.body}");
       if (response.statusCode == 200) {
+        // Parse and store the API response
         final responseData = jsonDecode(response.body);
-        if (responseData is Map<String, dynamic> &&
-            responseData['status'] == true) {
-          setState(() {
-            apiResponse = responseData;
-            apiResponseData = [];
-            // Safely parse lebels and data
-            if (responseData['lebels'] is List &&
-                responseData['lebels'].isNotEmpty) {
-              for (var label in responseData['lebels']) {
-                if (label['data'] is List) {
-                  apiResponseData.addAll(
-                    (label['data'] as List).cast<Map<String, dynamic>>(),
-                  );
-                }
+        setState(() {
+          apiResponseData = responseData;
+          if (responseData["lebels"] != null &&
+              responseData["lebels"].isNotEmpty) {
+            responseProducts.addAll(responseData["lebels"][0]["data"] ?? []);
+
+            // Store UOM options for each product
+            for (var product in responseProducts) {
+              if (product["UOM"] != null && product["UOM"]["options"] != null) {
+                uomOptions[product["id"].toString()] = Map<String, String>.from(
+                  product["UOM"]["options"].map(
+                    (key, value) => MapEntry(key.toString(), value.toString()),
+                  ),
+                );
               }
             }
-            print("Updated apiResponseData: $apiResponseData");
-          });
-          Get.snackbar(
-            "Data Added",
-            "Successfully",
-            colorText: Colors.white,
-            backgroundColor: Colors.green,
-            snackPosition: SnackPosition.BOTTOM,
-          );
-        } else {
-          print("API response status is false or invalid: ${response.body}");
-          Get.snackbar(
-            "Error",
-            "Failed to add product: Invalid response",
-            colorText: Colors.white,
-            backgroundColor: Colors.red,
-            snackPosition: SnackPosition.BOTTOM,
-          );
-        }
+          }
+        });
       } else {
         print(
           "API request failed with status ${response.statusCode}: ${response.body}",
@@ -418,234 +404,11 @@ class _PurlinState extends State<Purlin> {
   bool isSearchingBaseProduct = false;
   String? selectedBaseProduct;
   FocusNode baseProductFocusNode = FocusNode();
-
-  // Add this method for searching base products
-  Future<void> searchBaseProducts(String query) async {
-    if (query.isEmpty) {
-      setState(() {
-        baseProductResults = [];
-      });
-      return;
-    }
-
-    setState(() {
-      isSearchingBaseProduct = true;
-    });
-
-    HttpClient client = HttpClient();
-    client.badCertificateCallback =
-        ((X509Certificate cert, String host, int port) => true);
-    IOClient ioClient = IOClient(client);
-    final headers = {"Content-Type": "application/json"};
-    final data = {"category_id": "5", "searchbase": query};
-
-    try {
-      final response = await ioClient.post(
-        Uri.parse("https://demo.zaron.in:8181/ci4/api/baseproducts_search"),
-        headers: headers,
-        body: jsonEncode(data),
-      );
-
-      if (response.statusCode == 200) {
-        final responseData = jsonDecode(response.body);
-        print("Base product response: $responseData"); // Debug print
-        setState(() {
-          baseProductResults = responseData['base_products'] ?? [];
-          isSearchingBaseProduct = false;
-        });
-      } else {
-        setState(() {
-          baseProductResults = [];
-          isSearchingBaseProduct = false;
-        });
-      }
-    } catch (e) {
-      print("Error searching base products: $e");
-      setState(() {
-        baseProductResults = [];
-        isSearchingBaseProduct = false;
-      });
-    }
-  }
-
-  // Add this method to build the base product search field
-  Widget _buildBaseProductSearchField() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          "Base Product",
-          style: GoogleFonts.figtree(
-            fontSize: 16,
-            fontWeight: FontWeight.w500,
-            color: Colors.black87,
-          ),
-        ),
-        SizedBox(height: 8),
-        Container(
-          decoration: BoxDecoration(
-            border: Border.all(color: Colors.grey[300]!),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: TextField(
-            controller: baseProductController,
-            focusNode: baseProductFocusNode,
-            decoration: InputDecoration(
-              hintText: "Search base product...",
-              prefixIcon: Icon(Icons.search),
-              border: InputBorder.none,
-              contentPadding: EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 12,
-              ),
-              suffixIcon: isSearchingBaseProduct
-                  ? Padding(
-                      padding: EdgeInsets.all(12),
-                      child: SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      ),
-                    )
-                  : null,
-            ),
-            onChanged: (value) {
-              searchBaseProducts(value);
-            },
-            onTap: () {
-              if (baseProductController.text.isNotEmpty) {
-                searchBaseProducts(baseProductController.text);
-              }
-            },
-          ),
-        ),
-
-        // Search Results Display (line by line, not dropdown)
-        if (baseProductResults.isNotEmpty)
-          Container(
-            margin: EdgeInsets.only(top: 8),
-            padding: EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.grey[50],
-              border: Border.all(color: Colors.grey[300]!),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  "Search Results:",
-                  style: GoogleFonts.figtree(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.black87,
-                  ),
-                ),
-                SizedBox(height: 8),
-                ...baseProductResults.map((product) {
-                  return GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        selectedBaseProduct = product.toString();
-                        baseProductController.text = selectedBaseProduct!;
-                        baseProductResults = [];
-                      });
-                    },
-                    child: Container(
-                      width: double.infinity,
-                      padding: EdgeInsets.symmetric(
-                        vertical: 12,
-                        horizontal: 12,
-                      ),
-                      margin: EdgeInsets.only(bottom: 6),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(6),
-                        border: Border.all(color: Colors.grey[300]!),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.grey.withOpacity(0.1),
-                            spreadRadius: 1,
-                            blurRadius: 2,
-                            offset: Offset(0, 1),
-                          ),
-                        ],
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(Icons.inventory_2, size: 16, color: Colors.blue),
-                          SizedBox(width: 10),
-                          Expanded(
-                            child: Text(
-                              product.toString(),
-                              style: GoogleFonts.figtree(
-                                fontSize: 14,
-                                color: Colors.black87,
-                                fontWeight: FontWeight.w400,
-                              ),
-                            ),
-                          ),
-                          Icon(
-                            Icons.arrow_forward_ios,
-                            size: 12,
-                            color: Colors.grey[400],
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                }).toList(),
-              ],
-            ),
-          ),
-
-        // Selected Base Product Display
-        if (selectedBaseProduct != null)
-          Container(
-            margin: EdgeInsets.only(top: 8),
-            padding: EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.blue[50],
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.blue[200]!),
-            ),
-            child: Row(
-              children: [
-                Icon(Icons.check_circle, color: Colors.green, size: 20),
-                SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    "Selected: $selectedBaseProduct",
-                    style: GoogleFonts.figtree(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.black87,
-                    ),
-                  ),
-                ),
-                GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      selectedBaseProduct = null;
-                      baseProductController.clear();
-                      baseProductResults = [];
-                    });
-                  },
-                  child: Icon(Icons.close, color: Colors.grey[600], size: 20),
-                ),
-              ],
-            ),
-          ),
-      ],
-    );
-  }
-
-  // 3. REPLACE the existing _buildSubmittedDataList() method with this:
-  // REPLACE your existing _buildSubmittedDataList() method with this:
+  // Map<String, dynamic>? apiResponseData;
+  List<dynamic> responseProducts = [];
+  Map<String, Map<String, String>> uomOptions = {};
   Widget _buildSubmittedDataList() {
-    print("apiResponseData length: ${apiResponseData.length}");
-
-    if (apiResponseData.isEmpty) {
+    if (responseProducts.isEmpty) {
       return Container(
         padding: EdgeInsets.symmetric(vertical: 40),
         alignment: Alignment.center,
@@ -663,9 +426,9 @@ class _PurlinState extends State<Purlin> {
     }
 
     return Column(
-      children: apiResponseData.asMap().entries.map((entry) {
+      children: responseProducts.asMap().entries.map((entry) {
         int index = entry.key;
-        Map<String, dynamic> data = entry.value;
+        Map<String, dynamic> data = Map<String, dynamic>.from(entry.value);
 
         return Card(
           margin: EdgeInsets.symmetric(vertical: 10),
@@ -674,20 +437,27 @@ class _PurlinState extends State<Purlin> {
             borderRadius: BorderRadius.circular(12),
           ),
           child: Column(
+            mainAxisAlignment: MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header with product name and delete button
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Expanded(
                     child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Text(
-                        "${data["S.No"] ?? (index + 1)}. ${data["Products"] ?? 'Product'}",
-                        style: GoogleFonts.figtree(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.black87,
+                      padding: const EdgeInsets.only(top: 15),
+                      child: SizedBox(
+                        height: 40.h,
+                        width: 210.w,
+                        child: Text(
+                          "  ${index + 1}.  ${data["Products"]}" ?? "",
+                          overflow: TextOverflow.ellipsis,
+                          style: GoogleFonts.figtree(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.black87,
+                          ),
                         ),
                       ),
                     ),
@@ -702,7 +472,7 @@ class _PurlinState extends State<Purlin> {
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(
-                      "ID: ${data['id'] ?? 'N/A'}",
+                      "ID: ${data['id']}",
                       style: TextStyle(
                         fontSize: 12,
                         color: Colors.blue[700],
@@ -712,42 +482,53 @@ class _PurlinState extends State<Purlin> {
                   ),
                   Padding(
                     padding: const EdgeInsets.all(8.0),
-                    child: IconButton(
-                      icon: Icon(Icons.delete, color: Colors.redAccent),
-                      onPressed: () {
-                        showDialog(
-                          context: context,
-                          builder: (context) => AlertDialog(
-                            title: Text("Delete Product"),
-                            content: Text(
-                              "Are you sure you want to delete this item?",
-                            ),
-                            actions: [
-                              TextButton(
-                                onPressed: () => Navigator.pop(context),
-                                child: Text("Cancel"),
-                              ),
-                              ElevatedButton(
-                                onPressed: () {
-                                  setState(() {
-                                    apiResponseData.removeAt(index);
-                                  });
-                                  Navigator.pop(context);
-                                },
-                                child: Text("Delete"),
-                              ),
-                            ],
-                          ),
-                        );
-                      },
+                    child: Container(
+                      height: 40.h,
+                      width: 50.w,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(10),
+                        color: Colors.deepPurple[50],
+                      ),
+                      child: IconButton(
+                        icon: Icon(Icons.delete, color: Colors.redAccent),
+                        onPressed: () {
+                          showDialog(
+                            context: context,
+                            builder: (context) {
+                              return AlertDialog(
+                                title: Subhead(
+                                  text: "Are you Sure to Delete This Item ?",
+                                  weight: FontWeight.w500,
+                                  color: Colors.black,
+                                ),
+                                actions: [
+                                  ElevatedButton(
+                                    onPressed: () {
+                                      setState(() {
+                                        responseProducts.removeAt(index);
+                                      });
+                                      Navigator.pop(context);
+                                    },
+                                    child: Text("Yes"),
+                                  ),
+                                  ElevatedButton(
+                                    onPressed: () {
+                                      Navigator.pop(context);
+                                    },
+                                    child: Text("No"),
+                                  ),
+                                ],
+                              );
+                            },
+                          );
+                        },
+                      ),
                     ),
                   ),
                 ],
               ),
-
-              // Editable fields in rows
-              _buildApiResponseFields(data),
-              SizedBox(height: 16),
+              _buildProductDetailInRows(data),
+              Gap(5),
             ],
           ),
         );
@@ -756,20 +537,21 @@ class _PurlinState extends State<Purlin> {
   }
 
   // ADD this new method for the editable fields:
-  Widget _buildApiResponseFields(Map<String, dynamic> data) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0),
-      child: Column(
-        children: [
-          // Row 1: UOM, Length, Nos
-          Row(
+  Widget _buildProductDetailInRows(Map<String, dynamic> data) {
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Row(
             children: [
-              Expanded(child: _buildDetailItem("UOM", _buildUomDropdown(data))),
+              Expanded(
+                child: _buildDetailItem("UOM", _uomDropdownFromApi(data)),
+              ),
               SizedBox(width: 10),
               Expanded(
                 child: _buildDetailItem(
                   "Length",
-                  _editableTextField(data, "Length"),
+                  _editableTextField(data, "Profile"),
                 ),
               ),
               SizedBox(width: 10),
@@ -778,9 +560,11 @@ class _PurlinState extends State<Purlin> {
               ),
             ],
           ),
-          SizedBox(height: 12),
-          // Row 2: Basic Rate, Kg, Amount
-          Row(
+        ),
+        Gap(5),
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Row(
             children: [
               Expanded(
                 child: _buildDetailItem(
@@ -792,58 +576,87 @@ class _PurlinState extends State<Purlin> {
               Expanded(
                 child: _buildDetailItem(
                   "Kg",
-                  Text(
-                    data['Kg']?.toString() ?? '0',
-                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
-                  ),
+                  _editableTextField(data, "kg"),
                 ),
               ),
               SizedBox(width: 10),
               Expanded(
                 child: _buildDetailItem(
                   "Amount",
-                  Text(
-                    data['Amount']?.toString() ?? '0',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.green[600],
-                    ),
-                  ),
+                  _editableTextField(data, "Amount"),
                 ),
               ),
             ],
           ),
-        ],
-      ),
+        ),
+        Gap(5.h),
+      ],
+    );
+  }
+
+  Widget _buildDetailItem(String label, Widget field) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            fontWeight: FontWeight.w500,
+            color: Colors.grey[700],
+            fontSize: 15,
+          ),
+        ),
+        SizedBox(height: 6),
+        field,
+      ],
     );
   }
 
   // 5. ADD this new method after _buildApiProductDetailInRows():
   Widget _editableTextField(Map<String, dynamic> data, String key) {
+    final controller = _getController(data, key);
+
     return SizedBox(
       height: 38.h,
       child: TextField(
+        readOnly: (key == "Basic Rate" || key == "Amount" || key == "kg")
+            ? true
+            : false,
         style: GoogleFonts.figtree(
           fontWeight: FontWeight.w500,
           color: Colors.black,
-          fontSize: 14.sp,
+          fontSize: 15.sp,
         ),
-        controller: TextEditingController(text: data[key]?.toString() ?? ''),
+        controller: controller,
+        keyboardType: (key == "Length" ||
+                key == "Nos" ||
+                key == "Basic Rate" ||
+                key == "Amount" ||
+                key == "SQMtr")
+            ? TextInputType.numberWithOptions(decimal: true)
+            : TextInputType.numberWithOptions(decimal: true),
         onChanged: (val) {
           setState(() {
-            data[key] = val.isEmpty ? '0' : val; // Default to '0' if empty
-            // Optional: Calculate Amount client-side
-            double length = double.tryParse(data['Length'] ?? '0') ?? 0;
-            double nos = double.tryParse(data['Nos'] ?? '0') ?? 0;
-            double rate = double.tryParse(data['Basic Rate'] ?? '0') ?? 0;
-            data['Amount'] = (length * nos * rate).toStringAsFixed(2);
-            // Note: Kg calculation requires a formula; left as read-only
+            data[key] = val;
           });
+
+          print("Field $key changed to: $val");
+          print("Controller text: ${controller.text}");
+          print("Data after change: ${data[key]}");
+
+          if (key == "Length" ||
+              key == "Nos" ||
+              key == "Basic Rate" ||
+              key == "Profile") {
+            print("Triggering calculation for $key with value: $val");
+            _debounceCalculation(data);
+          }
         },
-        keyboardType: TextInputType.number,
         decoration: InputDecoration(
-          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 0),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 12,
+            vertical: 0,
+          ),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(6),
             borderSide: BorderSide(color: Colors.grey[300]!),
@@ -867,35 +680,43 @@ class _PurlinState extends State<Purlin> {
   }
 
   // 6. ADD this new method after _apiEditableTextField():
-  Widget _buildUomDropdown(Map<String, dynamic> data) {
-    List<String> uomOptions = ['FEET', 'MM', 'MTR', 'INCH']; // Fallback options
-    String? selectedValue =
-        data['UOM']?['value'] == '3' ? 'FEET' : data['UOM']?['value'];
+  Widget _uomDropdownFromApi(Map<String, dynamic> data) {
+    String productId = data["id"].toString();
+    Map<String, String>? options = uomOptions[productId];
 
-    try {
-      if (data['UOM'] != null &&
-          data['UOM']['options'] is Map<String, String>) {
-        uomOptions = (data['UOM']['options'] as Map<String, String>)
-            .entries
-            .map((e) => e.value)
-            .toList();
-      }
-    } catch (e) {
-      print("Error parsing UOM options: $e");
+    if (options == null || options.isEmpty) {
+      return _editableTextField(data, "UOM");
+    }
+
+    String? currentValue;
+    if (data["UOM"] is Map) {
+      currentValue = data["UOM"]["value"]?.toString();
+    } else {
+      currentValue = data["UOM"]?.toString();
     }
 
     return SizedBox(
       height: 40.h,
       child: DropdownButtonFormField<String>(
-        value: uomOptions.contains(selectedValue) ? selectedValue : null,
-        items: uomOptions
-            .map((uom) => DropdownMenuItem(value: uom, child: Text(uom)))
+        value: currentValue,
+        items: options.entries
+            .map(
+              (entry) => DropdownMenuItem(
+                value: entry.key,
+                child: Text(entry.value),
+              ),
+            )
             .toList(),
         onChanged: (val) {
           setState(() {
-            data['UOM'] = data['UOM'] ?? {};
-            data['UOM']['value'] = val == 'FEET' ? '3' : val;
+            data["UOM"] = {"value": val, "options": options};
           });
+          print("UOM changed to: $val"); // Debug print
+          print(
+            "Product data: ${data["Products"]}, ID: ${data["id"]}",
+          ); // Debug print
+          // Trigger calculation with debounce
+          _debounceCalculation(data);
         },
         decoration: InputDecoration(
           contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 0),
@@ -991,24 +812,6 @@ class _PurlinState extends State<Purlin> {
     });
   }
 
-  Widget _buildDetailItem(String label, Widget field) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: TextStyle(
-            fontWeight: FontWeight.w500,
-            color: Colors.grey[700],
-            fontSize: 15,
-          ),
-        ),
-        SizedBox(height: 6),
-        field,
-      ],
-    );
-  }
-
   String _selectedItems() {
     List<String> values = [
       if (selectProduct != null) "Product: $selectProduct",
@@ -1018,6 +821,222 @@ class _PurlinState extends State<Purlin> {
       if (selectedBrand != null) "Brand: $selectedBrand",
     ];
     return values.isEmpty ? "No Selections yet" : values.join(", ");
+  }
+
+  Timer? _debounceTimer;
+  Map<String, dynamic> calculationResults = {};
+  Map<String, String?> previousUomValues = {}; // Track previous UOM values
+  Map<String, Map<String, TextEditingController>> fieldControllers =
+      {}; // Store controllers
+
+  // Method to get or create controller for each field
+  TextEditingController _getController(Map<String, dynamic> data, String key) {
+    String productId = data["id"].toString();
+
+    // Initialize controllers map for this product ID
+    fieldControllers.putIfAbsent(productId, () => {});
+
+    // If controller for this key doesn't exist, create it
+    if (!fieldControllers[productId]!.containsKey(key)) {
+      String initialValue = (data[key] != null && data[key].toString() != "0")
+          ? data[key].toString()
+          : ""; // Avoid initializing with "0"
+
+      fieldControllers[productId]![key] = TextEditingController(
+        text: initialValue,
+      );
+
+      print("Created controller for [$key] with value: '$initialValue'");
+    } else {
+      // Existing controller: check if it needs sync from data
+      final controller = fieldControllers[productId]![key]!;
+
+      final dataValue = data[key]?.toString() ?? "";
+
+      // If the controller is empty but data has a value, sync it
+      if (controller.text.isEmpty && dataValue.isNotEmpty && dataValue != "0") {
+        controller.text = dataValue;
+        print("Synced controller for [$key] to: '$dataValue'");
+      }
+    }
+
+    return fieldControllers[productId]![key]!;
+  }
+
+  // Add this method for debounced calculation
+  void _debounceCalculation(Map<String, dynamic> data) {
+    _debounceTimer?.cancel();
+    _debounceTimer = Timer(Duration(seconds: 1), () {
+      _performCalculation(data);
+    });
+  }
+
+  Future<void> _performCalculation(Map<String, dynamic> data) async {
+    print("=== STARTING CALCULATION API ===");
+    print("Data received: $data");
+
+    final client = IOClient(
+      HttpClient()..badCertificateCallback = (_, __, ___) => true,
+    );
+    final url = Uri.parse('$apiUrl/calculation');
+
+    String productId = data["id"].toString();
+
+    // Get current UOM value
+    String? currentUom;
+    if (data["UOM"] is Map) {
+      currentUom = data["UOM"]["value"]?.toString();
+    } else {
+      currentUom = data["UOM"]?.toString();
+    }
+
+    print("Current UOM: $currentUom");
+    print("Previous UOM: ${previousUomValues[productId]}");
+
+    // Get Profile value from controller
+    double? profileValue;
+    String? profileText;
+
+    if (fieldControllers.containsKey(productId) &&
+        fieldControllers[productId]!.containsKey("Profile")) {
+      profileText = fieldControllers[productId]!["Profile"]!.text;
+      print("Profile from controller: $profileText");
+    }
+
+    if (profileText == null || profileText.isEmpty) {
+      profileText = data["Profile"]?.toString();
+      print("Profile from data: $profileText");
+    }
+
+    if (profileText != null && profileText.isNotEmpty) {
+      profileValue = double.tryParse(profileText);
+    }
+
+    // Get Nos value from controller
+    int nosValue = 0;
+    String? nosText;
+
+    if (fieldControllers.containsKey(productId) &&
+        fieldControllers[productId]!.containsKey("Nos")) {
+      nosText = fieldControllers[productId]!["Nos"]!.text;
+      print("Nos from controller: $nosText");
+    }
+
+    if (nosText == null || nosText.isEmpty) {
+      nosText = data["Nos"]?.toString();
+      print("Nos from data: $nosText");
+    }
+
+    if (nosText != null && nosText.isNotEmpty) {
+      nosValue = int.tryParse(nosText) ?? 1;
+    }
+
+    print("Final Profile Value: $profileValue");
+    print("Final Nos Value: $nosValue");
+
+    final requestBody = {
+      "id": int.tryParse(data["id"].toString()) ?? 0,
+      "category_id": 5,
+      "product": data["Products"]?.toString() ?? "",
+      "height": null,
+      "previous_uom": previousUomValues[productId] != null
+          ? int.tryParse(previousUomValues[productId]!)
+          : null,
+      "current_uom": currentUom != null ? int.tryParse(currentUom) : null,
+      "length": profileValue ?? 0,
+      "nos": nosValue,
+      "basic_rate": double.tryParse(data["Basic Rate"]?.toString() ?? "0") ?? 0,
+    };
+
+    print("Request Body: ${jsonEncode(requestBody)}");
+
+    try {
+      final response = await client.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(requestBody),
+      );
+
+      print("Response Status: ${response.statusCode}");
+      print("Response Body: ${response.body}");
+
+      if (response.statusCode == 200) {
+        final responseData = jsonDecode(response.body);
+
+        if (responseData["status"] == "success") {
+          setState(() {
+            calculationResults[productId] = responseData;
+
+            if (responseData["Length"] != null) {
+              data["Profile"] = responseData["Length"].toString();
+              if (fieldControllers[productId]?["Profile"] != null) {
+                fieldControllers[productId]!["Profile"]!.text =
+                    responseData["Length"].toString();
+              }
+            }
+
+            // if (responseData["kg"] != null) {
+            //   String kgValue = responseData["kg"].toString();
+            //   print("KG value: $kgValue");
+            //
+            //   // ✅ Store KG in your data map
+            //   data["KG"] = kgValue;
+            //
+            //   // ✅ If you have a KG field in UI, update it
+            //   if (fieldControllers[productId]?["KG"] != null) {
+            //     fieldControllers[productId]!["KG"]!.text = kgValue;
+            //   }
+            // }
+
+            if (responseData["Nos"] != null) {
+              String newNos = responseData["Nos"].toString().trim();
+              String currentInput =
+                  fieldControllers[productId]!["Nos"]!.text.trim();
+
+              if (currentInput.isEmpty || currentInput == "0") {
+                data["Nos"] = newNos;
+                if (fieldControllers[productId]?["Nos"] != null) {
+                  fieldControllers[productId]!["Nos"]!.text = newNos;
+                }
+                print("Nos field updated to: $newNos");
+              } else {
+                print("Nos NOT updated because user input = '$currentInput'");
+              }
+            }
+
+            if (responseData["kg"] != null) {
+              data["kg"] = responseData["kg"].toString();
+              if (fieldControllers[productId]?["kg"] != null) {
+                fieldControllers[productId]!["kg"]!.text =
+                    responseData["kg"].toString();
+              }
+            }
+            print("KG value updated: ${data["kg"]}");
+
+            if (responseData["Amount"] != null) {
+              data["Amount"] = responseData["Amount"].toString();
+              if (fieldControllers[productId]?["Amount"] != null) {
+                fieldControllers[productId]!["Amount"]!.text =
+                    responseData["Amount"].toString();
+              }
+            }
+
+            previousUomValues[productId] = currentUom;
+          });
+
+          print("=== CALCULATION SUCCESS ===");
+          print(
+            "Updated data: Length=${data["Profile"]}, Nos=${data["Nos"]}, KGG=${data["kg"]}, Amount=${data["Amount"]}",
+          );
+        } else {
+          print("API returned error status: ${responseData["status"]}");
+        }
+      } else {
+        print("HTTP Error: ${response.statusCode}");
+      }
+    } catch (e) {
+      print("Calculation API Error: $e");
+    }
   }
 
   Widget _buildAnimatedDropdown(
@@ -1214,8 +1233,6 @@ class _PurlinState extends State<Purlin> {
                             label: "Brand",
                             icon: Icons.brightness_auto_outlined,
                           ),
-                          SizedBox(height: 24),
-                          _buildBaseProductSearchField(),
                           SizedBox(height: 16),
                           Container(
                             padding: EdgeInsets.all(16),
