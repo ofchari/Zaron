@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:gap/gap.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:zaron/view/screens/cancel_quotation.dart';
@@ -66,7 +67,7 @@ class _DashboardState extends State<Dashboard> {
       {
         "title": "New Enquiry",
         "icon": FontAwesomeIcons.plus,
-        "color": const Color(0xFF4CAF50),
+        "color": Colors.green,
         "route": NewEnquiry()
       },
       {
@@ -212,6 +213,7 @@ class _DashboardState extends State<Dashboard> {
                   );
                 },
               ),
+              Gap(8.h),
             ],
           ),
         ),
@@ -238,7 +240,7 @@ class _DashboardState extends State<Dashboard> {
           borderRadius: BorderRadius.circular(16.r),
           boxShadow: [
             BoxShadow(
-              color: bgColor.withOpacity(0.1),
+              color: bgColor.withOpacity(0.15),
               blurRadius: 8,
               offset: const Offset(0, 4),
             ),
