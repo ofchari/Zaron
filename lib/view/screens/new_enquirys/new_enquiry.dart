@@ -5,13 +5,13 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
+import 'package:zaron/view/screens/new_enquirys/CutToLengthSheet.dart';
 import 'package:zaron/view/screens/new_enquirys/accessories.dart';
 import 'package:zaron/view/screens/new_enquirys/aluminum.dart';
 import 'package:zaron/view/screens/new_enquirys/decking_sheets.dart';
 import 'package:zaron/view/screens/new_enquirys/gl_gutter.dart';
 import 'package:zaron/view/screens/new_enquirys/gl_stiffner.dart';
 import 'package:zaron/view/screens/new_enquirys/iron_steels.dart';
-import 'package:zaron/view/screens/new_enquirys/CutToLengthSheet.dart';
 import 'package:zaron/view/screens/new_enquirys/polycarbonate.dart';
 import 'package:zaron/view/screens/new_enquirys/profile_arch.dart';
 import 'package:zaron/view/screens/new_enquirys/purlin.dart';
@@ -258,6 +258,7 @@ class _NewEnquiryState extends State<NewEnquiry> {
   // Build grid view
   Widget _buildGridView() {
     return GridView.builder(
+      physics: BouncingScrollPhysics(),
       padding: const EdgeInsets.symmetric(horizontal: 20.0),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
@@ -280,6 +281,7 @@ class _NewEnquiryState extends State<NewEnquiry> {
   // Build list view
   Widget _buildListView() {
     return ListView.builder(
+      physics: BouncingScrollPhysics(),
       padding: const EdgeInsets.symmetric(horizontal: 20.0),
       itemCount: categories.length,
       itemBuilder: (context, index) {
