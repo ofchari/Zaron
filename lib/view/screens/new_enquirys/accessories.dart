@@ -26,6 +26,7 @@ class Accessories extends StatefulWidget {
 
 class _AccessoriesState extends State<Accessories> {
   late TextEditingController editController;
+  int? orderIDD;
   String? selectedAccessories;
   String? selectedBrands;
   String? selectedColors;
@@ -319,6 +320,101 @@ class _AccessoriesState extends State<Accessories> {
     }
   }
 
+  // Future<void> postAllData() async {
+  //   if (selectedAccessories == null ||
+  //       selectedBrands == null ||
+  //       selectedColors == null ||
+  //       selectedThickness == null ||
+  //       selectedCoatingMass == null) {
+  //     return;
+  //   }
+  //
+  //   final client = IOClient(
+  //     HttpClient()..badCertificateCallback = (_, __, ___) => true,
+  //   );
+  //   final url = Uri.parse('$apiUrl/addbag');
+  //   final headers = {'Content-Type': 'application/json'};
+  //   final data = {
+  //     "customer_id": UserSession().userId,
+  //     "product_id": 1,
+  //     "product_name": selectedAccessories,
+  //     "product_base_id": null,
+  //     "product_base_name":
+  //         "$selectedBrands,$selectedColors,$selectedThickness,$selectedCoatingMass,",
+  //     "category_id": 1,
+  //     "category_name": "accessories_name",
+  //     "OrderID": (orderIDD != null) ? orderIDD : null
+  //   };
+  //
+  //   try {
+  //     final response = await client.post(
+  //       url,
+  //       headers: headers,
+  //       body: jsonEncode(data),
+  //     );
+  //
+  //     debugPrint("This is a response: ${response.body}");
+  //
+  //     if (response.statusCode == 200) {
+  //       final responseData = jsonDecode(response.body);
+  //
+  //       setState(() {
+  //         final String orderID = responseData["order_id"].toString();
+  //         print("Order IDDDD: $orderID");
+  //         orderIDD = int.parse(orderID);
+  //         apiResponseData = responseData;
+  //         currentMainProductId = responseData["product_id"]?.toString();
+  //         debugPrint("Stored main product_id: $currentMainProductId");
+  //
+  //         if (responseData["lebels"] != null &&
+  //             responseData["lebels"].isNotEmpty) {
+  //           String categoryName = responseData["category_name"] ?? "";
+  //           categoryyName = categoryName.isEmpty ? "Accessories" : categoryName;
+  //           String orderNos = responseData["order_no"]?.toString() ?? "Unknown";
+  //           orderNoo = orderNos.isEmpty ? "Unknown" : orderNos;
+  //           debugPrint("Order No xxxxxx : $orderNos");
+  //           debugPrint("Category: $categoryName");
+  //           // Safely handle the response data
+  //           List<dynamic> newProducts = [];
+  //           if (responseData["lebels"][0]["data"] is List) {
+  //             newProducts = List<Map<String, dynamic>>.from(
+  //                 responseData["lebels"][0]["data"].map((item) =>
+  //                     item is Map ? Map<String, dynamic>.from(item) : {}));
+  //           }
+  //           responseProducts.addAll(newProducts);
+  //
+  //           // Save each new product to Hive
+  //           for (var product in newProducts) {
+  //             if (product is Map<String, dynamic>) {
+  //               if (product["UOM"] != null &&
+  //                   product["UOM"]["options"] != null) {
+  //                 uomOptions[product["id"].toString()] =
+  //                     Map<String, String>.from(
+  //                   (product["UOM"]["options"] as Map).map(
+  //                     (key, value) =>
+  //                         MapEntry(key.toString(), value.toString()),
+  //                   ),
+  //                 );
+  //               }
+  //               debugPrint(
+  //                   "Product added: ${product["id"]} - ${product["Products"]}");
+  //             }
+  //           }
+  //         }
+  //       });
+  //     } else {
+  //       debugPrint("Error response: ${response.statusCode} - ${response.body}");
+  //       throw Exception("Server returned ${response.statusCode}");
+  //     }
+  //   } catch (e) {
+  //     debugPrint("Exception in postAllData: $e");
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       SnackBar(content: Text("Error adding product: $e")),
+  //     );
+  //     throw Exception("Error posting data: $e");
+  //   }
+  // }
+
   Future<void> postAllData() async {
     if (selectedAccessories == null ||
         selectedBrands == null ||
@@ -331,8 +427,10 @@ class _AccessoriesState extends State<Accessories> {
     final client = IOClient(
       HttpClient()..badCertificateCallback = (_, __, ___) => true,
     );
+
     final url = Uri.parse('$apiUrl/addbag');
     final headers = {'Content-Type': 'application/json'};
+
     final data = {
       "customer_id": UserSession().userId,
       "product_id": 1,
@@ -342,6 +440,7 @@ class _AccessoriesState extends State<Accessories> {
           "$selectedBrands,$selectedColors,$selectedThickness,$selectedCoatingMass,",
       "category_id": 1,
       "category_name": "accessories_name",
+      "OrderID": (orderIDD != null) ? orderIDD : null
     };
 
     try {
@@ -355,33 +454,45 @@ class _AccessoriesState extends State<Accessories> {
 
       if (response.statusCode == 200) {
         final responseData = jsonDecode(response.body);
+
         setState(() {
+          final String orderID = responseData["order_id"].toString();
+          print("Order IDDDD: $orderID");
+          orderIDD = int.parse(orderID); // save for next posts
           apiResponseData = responseData;
           currentMainProductId = responseData["product_id"]?.toString();
           debugPrint("Stored main product_id: $currentMainProductId");
 
+          // Optional: set order number and category name
           if (responseData["lebels"] != null &&
               responseData["lebels"].isNotEmpty) {
             String categoryName = responseData["category_name"] ?? "";
             categoryyName = categoryName.isEmpty ? "Accessories" : categoryName;
+
             String orderNos = responseData["order_no"]?.toString() ?? "Unknown";
             orderNoo = orderNos.isEmpty ? "Unknown" : orderNos;
+
             debugPrint("Order No xxxxxx : $orderNos");
             debugPrint("Category: $categoryName");
 
-// Safely handle the response data
-            List<dynamic> newProducts = [];
-            if (responseData["lebels"][0]["data"] is List) {
-              newProducts = List<Map<String, dynamic>>.from(
-                  responseData["lebels"][0]["data"].map((item) =>
-                      item is Map ? Map<String, dynamic>.from(item) : {}));
-            }
+            // Safely handle the response data
+            List<dynamic> fullList = responseData["lebels"][0]["data"];
+            List<Map<String, dynamic>> newProducts = [];
 
-            responseProducts.addAll(newProducts);
+            for (var item in fullList) {
+              if (item is Map<String, dynamic>) {
+                Map<String, dynamic> product = Map<String, dynamic>.from(item);
 
-// Save each new product to Hive
-            for (var product in newProducts) {
-              if (product is Map<String, dynamic>) {
+                // ✅ Prevent duplicates
+                String productId = product["id"].toString();
+                bool alreadyExists = responseProducts
+                    .any((existing) => existing["id"].toString() == productId);
+
+                if (!alreadyExists) {
+                  newProducts.add(product);
+                }
+
+                // Save UOM options if present
                 if (product["UOM"] != null &&
                     product["UOM"]["options"] != null) {
                   uomOptions[product["id"].toString()] =
@@ -392,10 +503,14 @@ class _AccessoriesState extends State<Accessories> {
                     ),
                   );
                 }
+
                 debugPrint(
                     "Product added: ${product["id"]} - ${product["Products"]}");
               }
             }
+
+            // ✅ Add only new (non-duplicate) products
+            responseProducts.addAll(newProducts);
           }
         });
       } else {
