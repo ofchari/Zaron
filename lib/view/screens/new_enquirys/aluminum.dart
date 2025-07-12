@@ -942,7 +942,7 @@ class _AluminumState extends State<Aluminum> {
     return fieldControllers[productId]![key]!;
   }
 
-  // Add this method for debounced calculation
+  /// Add this method for debounced calculation
   void _debounceCalculation(Map<String, dynamic> data) {
     _debounceTimer?.cancel();
     _debounceTimer = Timer(Duration(seconds: 1), () {
