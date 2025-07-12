@@ -689,7 +689,6 @@ class _AluminumState extends State<Aluminum> {
       children: responseProducts.asMap().entries.map((entry) {
         int index = entry.key;
         Map<String, dynamic> data = Map<String, dynamic>.from(entry.value);
-
         return Card(
           margin: EdgeInsets.symmetric(vertical: 10),
           elevation: 2,
@@ -1408,7 +1407,7 @@ class _AluminumState extends State<Aluminum> {
                     ),
                   ),
                 ),
-                if (apiProductsList.isNotEmpty) ...[
+                if (responseProducts.isNotEmpty) ...[
                   SizedBox(height: 24),
                   Padding(
                     padding: EdgeInsets.symmetric(horizontal: 4),

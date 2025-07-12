@@ -483,7 +483,7 @@ class _AccessoriesState extends State<Accessories> {
               if (item is Map<String, dynamic>) {
                 Map<String, dynamic> product = Map<String, dynamic>.from(item);
 
-                // ✅ Prevent duplicates
+                // Prevent duplicates
                 String productId = product["id"].toString();
                 bool alreadyExists = responseProducts
                     .any((existing) => existing["id"].toString() == productId);
