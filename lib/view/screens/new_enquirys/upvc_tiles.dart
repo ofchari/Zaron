@@ -232,6 +232,7 @@ class _UpvcTilesState extends State<UpvcTiles> {
       "product_base_name": "$selectedBaseProductName",
       "category_id": 631,
       "category_name": "UPVC Tiles",
+      "OrderID": null
     };
     print("User input Data $data");
     final url = "$apiUrl/addbag";
@@ -1051,6 +1052,7 @@ class _UpvcTilesState extends State<UpvcTiles> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                          SizedBox(width: 10),
                           Text(
                             "Add New Product",
                             style: GoogleFonts.poppins(
@@ -1074,7 +1076,7 @@ class _UpvcTilesState extends State<UpvcTiles> {
                               _fetchColor();
                             },
                             label: "Material Type",
-                            icon: Icons.difference_outlined,
+                            icon: Icons.category_outlined,
                           ),
                           _buildAnimatedDropdown(
                             colorsList,
@@ -1103,9 +1105,7 @@ class _UpvcTilesState extends State<UpvcTiles> {
                             label: "Thickness",
                             icon: Icons.straighten_outlined,
                           ),
-                          // SizedBox(height: 24),
-                          // _buildBaseProductSearchField(),
-                          SizedBox(height: 16),
+                          SizedBox(height: 24),
                           Container(
                             padding: EdgeInsets.all(16),
                             decoration: BoxDecoration(
@@ -1180,28 +1180,112 @@ class _UpvcTilesState extends State<UpvcTiles> {
                 ),
                 if (apiResponseData.isNotEmpty) ...[
                   SizedBox(height: 24),
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 4),
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.shopping_bag_outlined,
-                          color: Colors.grey.shade700,
-                        ),
-                        SizedBox(width: 8),
-                        Text(
-                          "Added Products",
-                          style: GoogleFonts.poppins(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.grey.shade800,
-                          ),
+                  Container(
+                    padding: EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          Colors.deepPurple.shade100,
+                          Colors.blue.shade50
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: Colors.deepPurple.shade100),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 10,
+                          offset: Offset(0, 4),
                         ),
                       ],
                     ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Container(
+                              padding: EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color:
+                                    Colors.deepPurple.shade100.withOpacity(0.5),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Icon(
+                                Icons.shopping_bag_outlined,
+                                color: Colors.deepPurple.shade700,
+                                size: 20,
+                              ),
+                            ),
+                            SizedBox(width: 12),
+                            Text(
+                              "Added Products",
+                              style: GoogleFonts.poppins(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.deepPurple,
+                              ),
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: 16),
+                        Container(
+                          padding:
+                              EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: Colors.white60,
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(color: Colors.grey.shade200),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                "UPVC Tiles",
+                                style: GoogleFonts.poppins(
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.grey.shade700,
+                                ),
+                              ),
+                              Container(
+                                padding: EdgeInsets.symmetric(
+                                    horizontal: 10, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: Colors.blue.shade50,
+                                  borderRadius: BorderRadius.circular(20),
+                                  border:
+                                      Border.all(color: Colors.blue.shade200),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      Icons.receipt_outlined,
+                                      size: 14,
+                                      color: Colors.blue.shade700,
+                                    ),
+                                    SizedBox(width: 4),
+                                    Text(
+                                      "Category: 631",
+                                      style: GoogleFonts.figtree(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.blue.shade700,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        SizedBox(height: 16),
+                        _buildSubmittedDataList(),
+                      ],
+                    ),
                   ),
-                  SizedBox(height: 12),
-                  _buildSubmittedDataList(),
                 ],
               ],
             ),
