@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -9,7 +10,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:http/io_client.dart';
 import 'package:zaron/view/universal_api/api&key.dart';
 import 'package:zaron/view/widgets/subhead.dart';
-import 'package:zaron/view/widgets/text.dart';
 
 import '../global_user/global_user.dart';
 
@@ -23,6 +23,7 @@ class GIStiffner extends StatefulWidget {
 }
 
 class _GIStiffnerState extends State<GIStiffner> {
+  int? orderIDD;
   late TextEditingController editController;
   String? selectedProduct;
   String? selectedMeterial;
@@ -355,8 +356,10 @@ class _GIStiffnerState extends State<GIStiffner> {
   }
 
   // 1. ADD THESE NEW VARIABLES at the top of your _GIStiffnerState class (around line 25)
+  // Add these variables after line 25 (after the existing List declarations)
   Map<String, dynamic>? apiResponseData;
   List<dynamic> responseProducts = [];
+  Map<String, Map<String, String>> uomOptions = {};
 
   // 2. MODIFY the postAllData() method - REPLACE the existing method with this:
   Future<void> postAllData() async {
@@ -373,6 +376,7 @@ class _GIStiffnerState extends State<GIStiffner> {
       "product_base_name": "$selectedBaseProductId",
       "category_id": 627,
       "category_name": "GI Stiffner",
+      "OrderID": (orderIDD != null) ? orderIDD : null,
     };
 
     print("This is a body data: $data");
@@ -391,6 +395,9 @@ class _GIStiffnerState extends State<GIStiffner> {
         // PARSE THE API RESPONSE
         final responseData = jsonDecode(response.body);
         setState(() {
+          final String orderID = responseData["order_id"].toString();
+          print("Order IDDDD: $orderID");
+          orderIDD = int.parse(orderID);
           apiResponseData = responseData;
           // Extract the products from the response
           if (responseData['lebels'] != null &&
@@ -467,6 +474,7 @@ class _GIStiffnerState extends State<GIStiffner> {
     });
   }
 
+  /// Base View Products data //
   TextEditingController baseProductController = TextEditingController();
   List<dynamic> baseProductResults = [];
   bool isSearchingBaseProduct = false;
@@ -713,11 +721,12 @@ class _GIStiffnerState extends State<GIStiffner> {
       );
     }
 
+    ///old column
+
     return Column(
       children: responseProducts.asMap().entries.map((entry) {
         int index = entry.key;
-        Map<String, dynamic> data = entry.value;
-
+        Map<String, dynamic> data = Map<String, dynamic>.from(entry.value);
         return Card(
           margin: EdgeInsets.symmetric(vertical: 10),
           elevation: 2,
@@ -739,7 +748,7 @@ class _GIStiffnerState extends State<GIStiffner> {
                         height: 40.h,
                         width: 210.w,
                         child: Text(
-                          "  ${data["S.No"]}.  ${data["Products"]}" ?? "",
+                          "  ${index + 1}.  ${data["Products"]}" ?? "",
                           overflow: TextOverflow.ellipsis,
                           style: GoogleFonts.figtree(
                             fontSize: 18,
@@ -816,112 +825,113 @@ class _GIStiffnerState extends State<GIStiffner> {
                 ],
               ),
               _buildProductDetailInRows(data),
-              Padding(
-                padding: const EdgeInsets.only(top: 8.0, left: 8),
-                child: Container(
-                  height: 40.h,
-                  width: double.infinity.w,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Container(
-                        height: 40.h,
-                        width: 280.w,
-                        child: TextField(
-                          style: TextStyle(
-                            fontSize: 13.sp,
-                            color: Colors.black87,
-                            fontWeight: FontWeight.w500,
-                          ),
-                          decoration: InputDecoration(
-                            enabledBorder: InputBorder.none,
-                            focusedBorder: InputBorder.none,
-                          ),
-                          controller: TextEditingController(
-                            text: " ${data["Base Product"]}",
-                          ),
-                          readOnly: true,
-                        ),
-                      ),
-                      Gap(5),
-                      Container(
-                        height: 30.h,
-                        width: 30.w,
-                        decoration: BoxDecoration(
-                          color: Colors.grey[200],
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: IconButton(
-                          onPressed: () {
-                            editController.text = data["Base Product"];
-                            showDialog(
-                              context: context,
-                              builder: (context) {
-                                return AlertDialog(
-                                  title: Text("Edit Your GI Stiffner"),
-                                  content: Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Container(
-                                        height: 40.h,
-                                        width: double.infinity.w,
-                                        decoration: BoxDecoration(
-                                          borderRadius:
-                                              BorderRadius.circular(10),
-                                          color: Colors.white,
-                                        ),
-                                        child: Padding(
-                                          padding: const EdgeInsets.only(
-                                            left: 7.0,
-                                          ),
-                                          child: TextField(
-                                            decoration: InputDecoration(
-                                              enabledBorder: InputBorder.none,
-                                              focusedBorder: InputBorder.none,
-                                            ),
-                                            controller: editController,
-                                            onSubmitted: (value) {
-                                              setState(() {
-                                                data["Base Product"] = value;
-                                              });
-                                              Navigator.pop(context);
-                                            },
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  actions: [
-                                    ElevatedButton(
-                                      onPressed: () {
-                                        setState(() {
-                                          data["Base Product"] =
-                                              editController.text;
-                                        });
-                                        Navigator.pop(context);
-                                      },
-                                      child: MyText(
-                                        text: "Save",
-                                        weight: FontWeight.w500,
-                                        color: Colors.black,
-                                      ),
-                                    ),
-                                  ],
-                                );
-                              },
-                            );
-                          },
-                          icon: Icon(Icons.edit, size: 15),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              Gap(5),
+              // Padding(
+              //   padding: const EdgeInsets.only(top: 8.0, left: 8),
+              //   child: Container(
+              //     height: 40.h,
+              //     width: double.infinity.w,
+              //     decoration: BoxDecoration(
+              //       borderRadius: BorderRadius.circular(10),
+              //     ),
+              //     child: Row(
+              //       crossAxisAlignment: CrossAxisAlignment.center,
+              //       children: [
+              //         Container(
+              //           height: 40.h,
+              //           width: 280.w,
+              //           child: TextField(
+              //             style: TextStyle(
+              //               fontSize: 13.sp,
+              //               color: Colors.black87,
+              //               fontWeight: FontWeight.w500,
+              //             ),
+              //             decoration: InputDecoration(
+              //               enabledBorder: InputBorder.none,
+              //               focusedBorder: InputBorder.none,
+              //             ),
+              //             controller: TextEditingController(
+              //               text: " ${data["Material Specification"]}",
+              //             ),
+              //             readOnly: true,
+              //           ),
+              //         ),
+              //         Gap(5),
+              //         Container(
+              //           height: 30.h,
+              //           width: 30.w,
+              //           decoration: BoxDecoration(
+              //             color: Colors.grey[200],
+              //             borderRadius: BorderRadius.circular(10),
+              //           ),
+              //           child: IconButton(
+              //             onPressed: () {
+              //               editController.text =
+              //                   data["Material Specification"].toString();
+              //               showDialog(
+              //                 context: context,
+              //                 builder: (context) {
+              //                   return AlertDialog(
+              //                     title: Text("Edit Your Liner Sheet"),
+              //                     content: Column(
+              //                       mainAxisSize: MainAxisSize.min,
+              //                       children: [
+              //                         Container(
+              //                           height: 40.h,
+              //                           width: double.infinity.w,
+              //                           decoration: BoxDecoration(
+              //                             borderRadius:
+              //                                 BorderRadius.circular(10),
+              //                             color: Colors.white,
+              //                           ),
+              //                           child: Padding(
+              //                             padding: const EdgeInsets.only(
+              //                               left: 7.0,
+              //                             ),
+              //                             child: TextField(
+              //                               decoration: InputDecoration(
+              //                                 enabledBorder: InputBorder.none,
+              //                                 focusedBorder: InputBorder.none,
+              //                               ),
+              //                               controller: editController,
+              //                               onSubmitted: (value) {
+              //                                 setState(() {
+              //                                   data["Material Specification"] =
+              //                                       value;
+              //                                 });
+              //                                 Navigator.pop(context);
+              //                               },
+              //                             ),
+              //                           ),
+              //                         ),
+              //                       ],
+              //                     ),
+              //                     actions: [
+              //                       ElevatedButton(
+              //                         onPressed: () {
+              //                           setState(() {
+              //                             data["Material Specification"] =
+              //                                 editController.text;
+              //                           });
+              //                           Navigator.pop(context);
+              //                         },
+              //                         child: MyText(
+              //                           text: "Save",
+              //                           weight: FontWeight.w500,
+              //                           color: Colors.black,
+              //                         ),
+              //                       ),
+              //                     ],
+              //                   );
+              //                 },
+              //               );
+              //             },
+              //             icon: Icon(Icons.edit, size: 15),
+              //           ),
+              //         ),
+              //       ],
+              //     ),
+              //   ),
+              // ),
             ],
           ),
         );
@@ -938,21 +948,18 @@ class _GIStiffnerState extends State<GIStiffner> {
           child: Row(
             children: [
               Expanded(
-                child: _buildDetailItem(
-                  "Billing Option",
-                  _billingOptionDropdown(data),
-                ),
+                child: _buildDetailItem("UOM", _uomDropdownFromApi(data)),
               ),
-              SizedBox(width: 10),
+              Gap(10),
+              Expanded(
+                  child: _buildDetailItem(
+                      "Billing Option", _buildApiBillingDropdown(data))),
+              Gap(10),
               Expanded(
                 child: _buildDetailItem(
                   "Length",
                   _editableTextField(data, "Length"),
                 ),
-              ),
-              SizedBox(width: 10),
-              Expanded(
-                child: _buildDetailItem("Nos", _editableTextField(data, "Nos")),
               ),
             ],
           ),
@@ -963,16 +970,27 @@ class _GIStiffnerState extends State<GIStiffner> {
           child: Row(
             children: [
               Expanded(
+                child: _buildDetailItem("Nos", _editableTextField(data, "Nos")),
+              ),
+              Gap(10),
+              Expanded(
                 child: _buildDetailItem(
                   "Basic Rate",
                   _editableTextField(data, "Basic Rate"),
                 ),
               ),
-              SizedBox(width: 10),
+              Gap(10),
               Expanded(
-                child: _buildDetailItem("Qty", _editableTextField(data, "Qty")),
+                child: _buildDetailItem("Qty", _editableTextField(data, "qty")),
               ),
-              SizedBox(width: 10),
+            ],
+          ),
+        ),
+        Gap(5.h),
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Row(
+            children: [
               Expanded(
                 child: _buildDetailItem(
                   "Amount",
@@ -982,45 +1000,106 @@ class _GIStiffnerState extends State<GIStiffner> {
             ],
           ),
         ),
-        Gap(5.h),
       ],
     );
   }
 
   // 6. ADD this new method for the billing option dropdown:
-  Widget _billingOptionDropdown(Map<String, dynamic> data) {
-    Map<String, String> billingOptions = {};
-    String? currentValue;
+  Widget _buildApiBillingDropdown(Map<String, dynamic> data) {
+    Map<String, dynamic> billingData = data['Billing Option'] ?? {};
+    String currentValue = billingData['value']?.toString() ?? "";
+    Map<String, dynamic> options = billingData['options'] ?? {};
 
-    if (data["Billing Option"] is Map) {
-      Map billingData = data["Billing Option"];
-      currentValue = billingData["value"]?.toString();
-      if (billingData["options"] is Map) {
-        Map options = billingData["options"];
-        billingOptions = options.map(
-          (key, value) => MapEntry(key.toString(), value.toString()),
-        );
-      }
+    return Container(
+      height: 40,
+      child: DropdownButtonFormField<String>(
+        isExpanded: true,
+        value: currentValue.isNotEmpty ? currentValue : null,
+        items: options.entries.map((entry) {
+          return DropdownMenuItem<String>(
+            value: entry.key.toString(),
+            child: Text(
+              entry.value.toString(),
+              style: GoogleFonts.figtree(
+                fontSize: 15,
+                color: Colors.black,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          );
+        }).toList(),
+        onChanged: (val) {
+          setState(() {
+            if (data['Billing Option'] is! Map) {
+              data['Billing Option'] = {};
+            }
+            data['Billing Option']['value'] = val;
+            data['Billing Option']['options'] = options;
+          });
+          // Trigger calculation when billing option changes
+          _debounceCalculation(data);
+        },
+        decoration: InputDecoration(
+          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(6),
+            borderSide: BorderSide(color: Colors.grey[300]!),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(6),
+            borderSide: BorderSide(color: Colors.grey[300]!),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(6),
+            borderSide: BorderSide(color: Colors.deepPurple[400]!, width: 2),
+          ),
+          filled: true,
+          fillColor: Colors.white,
+        ),
+      ),
+    );
+  }
+
+  Widget _uomDropdownFromApi(Map<String, dynamic> data) {
+    // Extract UOM data from the product data
+    Map<String, dynamic>? uomData = data['UOM'];
+    String? currentValue = uomData?['value']?.toString();
+    Map<String, dynamic>? options =
+        uomData?['options'] as Map<String, dynamic>?;
+
+    if (options == null || options.isEmpty) {
+      return _editableTextField(data, "UOM");
     }
 
     return SizedBox(
-      height: 40.h,
+      height: 38.h,
       child: DropdownButtonFormField<String>(
-        value: currentValue?.isEmpty == true ? null : currentValue,
-        items: billingOptions.entries
+        value: currentValue,
+        items: options.entries
             .map(
               (entry) => DropdownMenuItem(
                 value: entry.key,
-                child: Text(entry.value),
+                child: Text(
+                  entry.value.toString(),
+                  style: GoogleFonts.figtree(
+                    fontSize: 14.sp,
+                    color: Colors.black,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
               ),
             )
             .toList(),
         onChanged: (val) {
           setState(() {
-            if (data["Billing Option"] is Map) {
-              data["Billing Option"]["value"] = val;
+            if (data['UOM'] is! Map) {
+              data['UOM'] = {};
             }
+            data['UOM']['value'] = val;
+            data['UOM']['options'] = options;
           });
+          print("UOM changed to: $val");
+          _debounceCalculation(data);
         },
         decoration: InputDecoration(
           contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 0),
@@ -1065,18 +1144,54 @@ class _GIStiffnerState extends State<GIStiffner> {
   }
 
   Widget _editableTextField(Map<String, dynamic> data, String key) {
+    final controller = _getController(data, key);
+
     return SizedBox(
       height: 38.h,
       child: TextField(
+        readOnly: (key == "Basic Rate" || key == "Amount" || key == "qty")
+            ? true
+            : false,
         style: GoogleFonts.figtree(
           fontWeight: FontWeight.w500,
           color: Colors.black,
           fontSize: 15.sp,
         ),
-        controller: TextEditingController(text: data[key]),
-        onChanged: (val) => data[key] = val,
+        controller: controller,
+        keyboardType: (key == "Length" ||
+                key == "Nos" ||
+                key == "Basic Rate" ||
+                key == "Amount" ||
+                key == "SQMtr")
+            ? TextInputType.numberWithOptions(decimal: true)
+            : TextInputType.numberWithOptions(decimal: true),
+        onChanged: (val) {
+          setState(() {
+            data[key] = val;
+          });
+
+          print("Field $key changed to: $val");
+          print("Controller text: ${controller.text}");
+          print("Data after change: ${data[key]}");
+
+          // 🚫 DO NOT forcefully reset controller.text here!
+          // if (controller.text != val) {
+          //   controller.text = val;
+          // }
+
+          if (key == "Length" ||
+              key == "Nos" ||
+              key == "Basic Rate" ||
+              key == "qty") {
+            print("Triggering calculation for $key with value: $val");
+            _debounceCalculation(data);
+          }
+        },
         decoration: InputDecoration(
-          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 0),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 12,
+            vertical: 0,
+          ),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(6),
             borderSide: BorderSide(color: Colors.grey[300]!),
@@ -1108,6 +1223,250 @@ class _GIStiffnerState extends State<GIStiffner> {
       if (selectedBrand != null) "Brand: $selectedBrand",
     ];
     return values.isEmpty ? "No Selections yet" : values.join(", ");
+  }
+
+  Timer? _debounceTimer;
+  Map<String, dynamic> calculationResults = {};
+  Map<String, String?> previousUomValues = {}; // Track previous UOM values
+  Map<String, Map<String, TextEditingController>> fieldControllers =
+      {}; // Store controllers
+
+  // Method to get or create controller for each field
+  TextEditingController _getController(Map<String, dynamic> data, String key) {
+    String productId = data["id"].toString();
+
+    // Initialize controllers map for this product ID
+    fieldControllers.putIfAbsent(productId, () => {});
+
+    // If controller for this key doesn't exist, create it
+    if (!fieldControllers[productId]!.containsKey(key)) {
+      String initialValue = (data[key] != null && data[key].toString() != "0")
+          ? data[key].toString()
+          : ""; // Avoid initializing with "0"
+
+      fieldControllers[productId]![key] = TextEditingController(
+        text: initialValue,
+      );
+
+      print("Created controller for [$key] with value: '$initialValue'");
+    } else {
+      // Existing controller: check if it needs sync from data
+      final controller = fieldControllers[productId]![key]!;
+
+      final dataValue = data[key]?.toString() ?? "";
+
+      // If the controller is empty but data has a value, sync it
+      if (controller.text.isEmpty && dataValue.isNotEmpty && dataValue != "0") {
+        controller.text = dataValue;
+        print("Synced controller for [$key] to: '$dataValue'");
+      }
+    }
+
+    return fieldControllers[productId]![key]!;
+  }
+
+  // Add this method for debounced calculation
+  void _debounceCalculation(Map<String, dynamic> data) {
+    _debounceTimer?.cancel();
+    _debounceTimer = Timer(Duration(seconds: 1), () {
+      _performCalculation(data);
+    });
+  }
+
+  Future<void> _performCalculation(Map<String, dynamic> data) async {
+    print("=== STARTING CALCULATION API ===");
+    print("Data received: $data");
+
+    final client = IOClient(
+      HttpClient()..badCertificateCallback = (_, __, ___) => true,
+    );
+    final url = Uri.parse('$apiUrl/calculation');
+
+    String productId = data["id"].toString();
+
+    // Get current UOM value
+    String? currentUom;
+    if (data["UOM"] is Map) {
+      currentUom = data["UOM"]["value"]?.toString();
+    } else {
+      currentUom = data["UOM"]?.toString();
+    }
+
+    print("Current UOM: $currentUom");
+    print("Previous UOM: ${previousUomValues[productId]}");
+
+    // Get Profile value from controller
+    double? profileValue;
+    String? profileText;
+
+    if (fieldControllers.containsKey(productId) &&
+        fieldControllers[productId]!.containsKey("Length")) {
+      profileText = data["Length"]?.toString(); // First check the latest data
+      if (profileText == null || profileText.isEmpty) {
+        profileText = fieldControllers[productId]!["Length"]!
+            .text; // Then check controller
+      }
+      print("Length/Profile from data/controller: $profileText");
+    }
+
+    if (profileText != null && profileText.isNotEmpty) {
+      profileValue = double.tryParse(profileText);
+      print("Parsed profile value: $profileValue");
+    }
+
+    // Get Nos value from controller
+    int nosValue = 0;
+    String? nosText;
+
+    if (fieldControllers.containsKey(productId) &&
+        fieldControllers[productId]!.containsKey("Nos")) {
+      nosText = fieldControllers[productId]!["Nos"]!.text;
+      print("Nos from controller: $nosText");
+    }
+
+    if (nosText == null || nosText.isEmpty) {
+      nosText = data["Nos"]?.toString();
+      print("Nos from data: $nosText");
+    }
+
+    if (nosText != null && nosText.isNotEmpty) {
+      nosValue = int.tryParse(nosText) ?? 1;
+    }
+
+    // Get Crimp value
+    double? crimpValue;
+    String? crimpText = data["Crimp"]?.toString();
+
+    if (crimpText == null || crimpText.isEmpty || crimpText == "0") {
+      if (fieldControllers.containsKey(productId) &&
+          fieldControllers[productId]!.containsKey("Crimp")) {
+        crimpText = fieldControllers[productId]!["Crimp"]!.text.trim();
+      }
+    }
+
+    if (crimpText != null && crimpText.isNotEmpty) {
+      crimpValue = double.tryParse(crimpText);
+      print("Using crimp value: $crimpValue from text: $crimpText");
+    }
+
+    print("Final Profile Value: $profileValue");
+    print("Final Nos Value: $nosValue");
+
+    final requestBody = {
+      "id": int.tryParse(data["id"].toString()) ?? 0,
+      "category_id": 627,
+      "product": data["Products"]?.toString() ?? "",
+      "height": null,
+      "previous_uom": previousUomValues[productId] != null
+          ? int.tryParse(previousUomValues[productId]!)
+          : null,
+      "current_uom": currentUom != null ? int.tryParse(currentUom) : null,
+      "length": profileValue ?? 0,
+      "nos": nosValue,
+      "basic_rate": double.tryParse(data["Basic Rate"]?.toString() ?? "0") ?? 0,
+      "billing_option": data["Billing Option"] is Map
+          ? int.tryParse(data["Billing Option"]["value"]?.toString() ?? "2")
+          : null,
+    };
+
+    print("Request Body: ${jsonEncode(requestBody)}");
+
+    try {
+      final response = await client.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(requestBody),
+      );
+
+      print("Response Status: ${response.statusCode}");
+      print("Response Body: ${response.body}");
+
+      if (response.statusCode == 200) {
+        final responseData = jsonDecode(response.body);
+
+        if (responseData["status"] == "success") {
+          setState(() {
+            calculationResults[productId] = responseData;
+
+            // Update Profile/Length
+            if (responseData["profile"] != null) {
+              String newProfile = responseData["profile"].toString();
+              // Only update if calculation returned different value
+              if (data["Length"]?.toString() != newProfile) {
+                data["Length"] = newProfile;
+                if (fieldControllers[productId]?["Length"] != null) {
+                  fieldControllers[productId]!["Length"]!.text = newProfile;
+                }
+                print("Length/Profile updated to: $newProfile");
+              }
+            }
+
+            // Update Nos
+            if (responseData["Nos"] != null) {
+              String newNos = responseData["Nos"].toString().trim();
+              String currentInput =
+                  fieldControllers[productId]!["Nos"]!.text.trim();
+
+              if (currentInput.isEmpty || currentInput == "0") {
+                data["Nos"] = newNos;
+                if (fieldControllers[productId]?["Nos"] != null) {
+                  fieldControllers[productId]!["Nos"]!.text = newNos;
+                }
+                print("Nos field updated to: $newNos");
+              } else {
+                print("Nos NOT updated because user input = '$currentInput'");
+              }
+            }
+
+            // Update Crimp
+            if (responseData["crimp"] != null) {
+              String newCrimp = responseData["crimp"].toString();
+              if (newCrimp != "0" && newCrimp != "0.0") {
+                data["Crimp"] = newCrimp;
+                if (fieldControllers[productId]?["Crimp"] != null) {
+                  String currentCrimp =
+                      fieldControllers[productId]!["Crimp"]!.text.trim();
+                  if (currentCrimp.isEmpty || currentCrimp == "0") {
+                    fieldControllers[productId]!["Crimp"]!.text = newCrimp;
+                    print("Crimp field updated to: $newCrimp");
+                  }
+                }
+              }
+            }
+
+            // Update SQMtr
+            if (responseData["qty"] != null) {
+              data["qty"] = responseData["qty"].toString();
+              if (fieldControllers[productId]?["qty"] != null) {
+                fieldControllers[productId]!["qty"]!.text =
+                    responseData["qty"].toString();
+              }
+            }
+
+            // Update Amount
+            if (responseData["Amount"] != null) {
+              data["Amount"] = responseData["Amount"].toString();
+              if (fieldControllers[productId]?["Amount"] != null) {
+                fieldControllers[productId]!["Amount"]!.text =
+                    responseData["Amount"].toString();
+              }
+            }
+            previousUomValues[productId] = currentUom;
+          });
+
+          print("=== CALCULATION SUCCESS ===");
+          print(
+            "Updated data: Length=${data["Profile"]}, Nos=${data["Nos"]}, Height=${data["Crimp"]}, Amount=${data["Amount"]}",
+          );
+        } else {
+          print("API returned error status: ${responseData["status"]}");
+        }
+      } else {
+        print("HTTP Error: ${response.statusCode}");
+      }
+    } catch (e) {
+      print("Calculation API Error: $e");
+    }
   }
 
   Widget _buildAnimatedDropdown(
