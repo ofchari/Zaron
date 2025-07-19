@@ -36,10 +36,24 @@ class _DeckingSheetsState extends State<DeckingSheets> {
   List<String> coatingMassList = [];
   List<String> yieldStrengthList = [];
   List<String> brandList = [];
-  List<Map<String, dynamic>> submittedData = [];
+  Map<String, dynamic>? apiResponseData;
+  List<dynamic> responseProducts = [];
+  Map<String, Map<String, String>> uomOptions = {};
 
   // Form key for validation
   final _formKey = GlobalKey<FormState>();
+
+  Timer? _debounceTimer;
+  Map<String, dynamic> calculationResults = {};
+  Map<String, String?> previousUomValues = {};
+  Map<String, Map<String, TextEditingController>> fieldControllers = {};
+
+  // Base Product Search
+  TextEditingController baseProductController = TextEditingController();
+  List<dynamic> baseProductResults = [];
+  bool isSearchingBaseProduct = false;
+  String? selectedBaseProduct;
+  FocusNode baseProductFocusNode = FocusNode();
 
   @override
   void initState() {
@@ -51,6 +65,12 @@ class _DeckingSheetsState extends State<DeckingSheets> {
   @override
   void dispose() {
     editController.dispose();
+    baseProductController.dispose();
+    baseProductFocusNode.dispose();
+    fieldControllers.forEach((_, controllers) {
+      controllers.forEach((_, controller) => controller.dispose());
+    });
+    _debounceTimer?.cancel();
     super.dispose();
   }
 
@@ -71,8 +91,7 @@ class _DeckingSheetsState extends State<DeckingSheets> {
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         final meterialType = data["message"]["message"][1];
-        print(response.body);
-        debugPrint(response.body);
+        print("Material Type Response: ${response.body}");
 
         if (meterialType is List) {
           setState(() {
@@ -83,13 +102,16 @@ class _DeckingSheetsState extends State<DeckingSheets> {
                 .toList();
           });
         }
+      } else {
+        print("Failed to fetch material types: ${response.statusCode}");
       }
     } catch (e) {
-      print("Exception fetching brands: $e");
+      print("Exception fetching material types: $e");
+    } finally {
+      client.close();
     }
   }
 
-  /// fetch colors Api's //
   Future<void> _fetchThick() async {
     if (selectedMaterialType == null) return;
 
@@ -121,9 +143,7 @@ class _DeckingSheetsState extends State<DeckingSheets> {
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         final selectedThickness = data["message"]["message"][0];
-        print("Fetching colors for brand: $selectedThickness");
-        print("API response: ${response.body}");
-        debugPrint(response.body);
+        print("Thickness Response: ${response.body}");
 
         if (selectedThickness is List) {
           setState(() {
@@ -134,13 +154,16 @@ class _DeckingSheetsState extends State<DeckingSheets> {
                 .toList();
           });
         }
+      } else {
+        print("Failed to fetch thickness: ${response.statusCode}");
       }
     } catch (e) {
-      print("Exception fetching colors: $e");
+      print("Exception fetching thickness: $e");
+    } finally {
+      client.close();
     }
   }
 
-  /// fetch Thickness Api's ///
   Future<void> _fetchCoat() async {
     if (selectedThickness == null) return;
 
@@ -172,9 +195,7 @@ class _DeckingSheetsState extends State<DeckingSheets> {
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         final thickness = data["message"]["message"][0];
-        print("Fetching colors for brand: $selectedThickness");
-        print("API response: ${response.body}");
-        debugPrint(response.body);
+        print("Coating Mass Response: ${response.body}");
 
         if (thickness is List) {
           setState(() {
@@ -185,13 +206,16 @@ class _DeckingSheetsState extends State<DeckingSheets> {
                 .toList();
           });
         }
+      } else {
+        print("Failed to fetch coating mass: ${response.statusCode}");
       }
     } catch (e) {
-      print("Exception fetching thickness: $e");
+      print("Exception fetching coating mass: $e");
+    } finally {
+      client.close();
     }
   }
 
-  /// fetch Coating Mass Api's ///
   Future<void> _yieldStrength() async {
     if (selectCoatingMass == null) return;
 
@@ -227,9 +251,7 @@ class _DeckingSheetsState extends State<DeckingSheets> {
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         final coating = data["message"]["message"][0];
-        print("Fetching colors for brand: $selectedThickness");
-        print("API response: ${response.body}");
-        debugPrint(response.body);
+        print("Yield Strength Response: ${response.body}");
 
         if (coating is List) {
           setState(() {
@@ -240,13 +262,16 @@ class _DeckingSheetsState extends State<DeckingSheets> {
                 .toList();
           });
         }
+      } else {
+        print("Failed to fetch yield strength: ${response.statusCode}");
       }
     } catch (e) {
-      print("Exception fetching coating mass: $e");
+      print("Exception fetching yield strength: $e");
+    } finally {
+      client.close();
     }
   }
 
-  /// fetch Brand Api's ///
   Future<void> _fetchBrand() async {
     if (selectedYieldStrength == null) return;
 
@@ -304,23 +329,23 @@ class _DeckingSheetsState extends State<DeckingSheets> {
         // Extract product_base_id
         final idData = message.length > 1 ? message[1] : null;
         if (idData is List && idData.isNotEmpty && idData.first is Map) {
-          selectedProductBaseId = idData.first["id"]?.toString();
-          print("Selected Base Product ID: $selectedProductBaseId");
+          setState(() {
+            selectedProductBaseId = idData.first["id"]?.toString();
+            print("Selected Base Product ID: $selectedProductBaseId");
+          });
         }
 
-        print("API response: ${response.body}");
+        print("Brand Response: ${response.body}");
+      } else {
+        print("Failed to fetch brands: ${response.statusCode}");
       }
     } catch (e) {
       print("Exception fetching brands: $e");
+    } finally {
+      client.close();
     }
   }
 
-  // Add these variables after line 25 (after the existing List declarations)
-  Map<String, dynamic>? apiResponseData;
-  List<dynamic> responseProducts = [];
-  Map<String, Map<String, String>> uomOptions = {};
-
-  // 2. Modify the postAllData() method to store the response:
   Future<void> postAllData() async {
     HttpClient client = HttpClient();
     client.badCertificateCallback =
@@ -333,57 +358,64 @@ class _DeckingSheetsState extends State<DeckingSheets> {
       "product_name": null,
       "product_base_id": selectedProductBaseId,
       "product_base_name":
-          "$selectedMaterialType,$selectedThickness,$selectCoatingMass$selectedYieldStrength$selectedBrand",
+          "$selectedMaterialType,$selectedThickness,$selectCoatingMass,$selectedYieldStrength,$selectedBrand",
       "category_id": 34,
       "category_name": "Decking sheets",
       "OrderID": (orderIDD != null) ? orderIDD : null,
     };
 
-    print("This is a body data: $data");
+    print("Request Body: $data");
 
     final url = "$apiUrl/addbag";
 
-    final body = jsonEncode(data);
     try {
       final response = await ioClient.post(
         Uri.parse(url),
         headers: headers,
-        body: body,
+        body: jsonEncode(data),
       );
 
-      debugPrint("This is a response: ${response.body}");
+      print("Response Status: ${response.statusCode}");
+      print("Response Body: ${response.body}");
 
-      // Store the API response
       if (response.statusCode == 200) {
         final responseData = jsonDecode(response.body);
+        print("Parsed Response Data: $responseData");
 
         setState(() {
+          apiResponseData = responseData;
           final String orderID = responseData["order_id"].toString();
           print("Order IDDDD: $orderID");
           orderIDD = int.parse(orderID);
-          apiResponseData = jsonDecode(response.body);
-          if (apiResponseData!['lebels'] != null &&
-              apiResponseData!['lebels'].isNotEmpty) {
-            responseProducts = apiResponseData!['lebels'][0]['data'] ?? [];
+
+          if (responseData['lebels'] != null &&
+              responseData['lebels'].isNotEmpty) {
+            responseProducts = responseData['lebels'][0]['data'] ?? [];
+            print("Updated responseProducts: $responseProducts");
+          } else {
+            print("No 'lebels' data found in response");
+            responseProducts = [];
           }
         });
-      }
-
-      if (selectedMaterialType == null ||
-          selectedThickness == null ||
-          selectCoatingMass == null ||
-          selectedYieldStrength == null ||
-          selectedBrand == null) {
-        return;
+      } else {
+        print("API Error: Status ${response.statusCode}");
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Failed to add product: Server error")),
+        );
       }
     } catch (e) {
-      throw Exception("Error posting data: $e");
+      print("Error posting data: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error adding product: $e")),
+      );
+    } finally {
+      ioClient.close();
     }
   }
 
-  // 5. Modify the _submitData() method to not add local data:
   void _submitData() {
-    if (selectedMaterialType == null ||
+    if (!_formKey.currentState!.validate() ||
+        selectedMaterialType == null ||
         selectedThickness == null ||
         selectCoatingMass == null ||
         selectedYieldStrength == null ||
@@ -392,9 +424,7 @@ class _DeckingSheetsState extends State<DeckingSheets> {
         context: context,
         builder: (context) => AlertDialog(
           title: Text('Incomplete Form'),
-          content: Text(
-            'Please fill all required fields to add a product.',
-          ),
+          content: Text('Please fill all required fields to add a product.'),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
@@ -407,21 +437,6 @@ class _DeckingSheetsState extends State<DeckingSheets> {
     }
 
     postAllData().then((_) {
-      // Reset form fields
-      setState(() {
-        selectedMaterialType = null;
-        selectedThickness = null;
-        selectCoatingMass = null;
-        selectedYieldStrength = null;
-        selectedBrand = null;
-        materialTypeList = [];
-        thicknessList = [];
-        coatingMassList = [];
-        yieldStrengthList = [];
-        brandList = [];
-        _fetchMaterialType(); // Re-fetch material types for the next selection
-      });
-
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Row(
@@ -438,38 +453,55 @@ class _DeckingSheetsState extends State<DeckingSheets> {
           duration: Duration(seconds: 2),
         ),
       );
+
+      setState(() {
+        selectedMaterialType = null;
+        selectedThickness = null;
+        selectCoatingMass = null;
+        selectedYieldStrength = null;
+        selectedBrand = null;
+        materialTypeList = [];
+        thicknessList = [];
+        coatingMassList = [];
+        yieldStrengthList = [];
+        brandList = [];
+        _fetchMaterialType();
+      });
+    }).catchError((e) {
+      print("Error in submitData: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Failed to add product: $e"),
+          backgroundColor: Colors.red,
+        ),
+      );
     });
   }
 
-  // 4. Add these new methods:
   Widget _buildProductDetailInRows(Map<String, dynamic> data) {
-    return Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Row(
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: Column(
+        children: [
+          Row(
             children: [
               Expanded(
                 child: _buildDetailItem("UOM", _uomDropdownFromApi(data)),
               ),
               Gap(10),
               Expanded(
-                  child: _buildDetailItem(
-                      "Billing Option", _buildApiBillingDropdown(data))),
+                child: _buildDetailItem(
+                    "Billing Option", _buildApiBillingDropdown(data)),
+              ),
               Gap(10),
               Expanded(
                 child: _buildDetailItem(
-                  "Length",
-                  _editableTextField(data, "Length"),
-                ),
+                    "Length", _editableTextField(data, "Length")),
               ),
             ],
           ),
-        ),
-        Gap(5),
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Row(
+          Gap(5),
+          Row(
             children: [
               Expanded(
                 child: _buildDetailItem("Nos", _editableTextField(data, "Nos")),
@@ -477,9 +509,7 @@ class _DeckingSheetsState extends State<DeckingSheets> {
               Gap(10),
               Expanded(
                 child: _buildDetailItem(
-                  "Basic Rate",
-                  _editableTextField(data, "Basic Rate"),
-                ),
+                    "Basic Rate", _editableTextField(data, "Basic Rate")),
               ),
               Gap(10),
               Expanded(
@@ -487,27 +517,23 @@ class _DeckingSheetsState extends State<DeckingSheets> {
               ),
             ],
           ),
-        ),
-        Gap(5.h),
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Row(
+          Gap(5.h),
+          Row(
             children: [
               Expanded(
                 child: _buildDetailItem(
-                  "Amount",
-                  _editableTextField(data, "Amount"),
-                ),
+                    "Amount", _editableTextField(data, "Amount")),
               ),
             ],
           ),
-        ),
-      ],
+          Gap(5.h),
+          _buildBaseProductSearchField(),
+        ],
+      ),
     );
   }
 
   Widget _uomDropdownFromApi(Map<String, dynamic> data) {
-    // Extract UOM data from the product data
     Map<String, dynamic>? uomData = data['UOM'];
     String? currentValue = uomData?['value']?.toString();
     Map<String, dynamic>? options =
@@ -601,7 +627,6 @@ class _DeckingSheetsState extends State<DeckingSheets> {
             data['Billing Option']['value'] = val;
             data['Billing Option']['options'] = options;
           });
-          // Trigger calculation when billing option changes
           _debounceCalculation(data);
         },
         decoration: InputDecoration(
@@ -656,11 +681,6 @@ class _DeckingSheetsState extends State<DeckingSheets> {
           print("Controller text: ${controller.text}");
           print("Data after change: ${data[key]}");
 
-          // 🚫 DO NOT forcefully reset controller.text here!
-          // if (controller.text != val) {
-          //   controller.text = val;
-          // }
-
           if (key == "Length" ||
               key == "Nos" ||
               key == "Basic Rate" ||
@@ -697,34 +717,6 @@ class _DeckingSheetsState extends State<DeckingSheets> {
     );
   }
 
-  Widget _buildReadOnlyField(Map<String, dynamic> data, String key) {
-    return SizedBox(
-      height: 38.h,
-      child: TextField(
-        style: GoogleFonts.figtree(
-          fontWeight: FontWeight.w500,
-          color: Colors.grey[600],
-          fontSize: 15.sp,
-        ),
-        controller: TextEditingController(text: data[key].toString()),
-        readOnly: true,
-        decoration: InputDecoration(
-          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 0),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(6),
-            borderSide: BorderSide(color: Colors.grey[300]!),
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(6),
-            borderSide: BorderSide(color: Colors.grey[300]!),
-          ),
-          filled: true,
-          fillColor: Colors.grey[100],
-        ),
-      ),
-    );
-  }
-
   Widget _buildDetailItem(String label, Widget field) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -743,14 +735,6 @@ class _DeckingSheetsState extends State<DeckingSheets> {
     );
   }
 
-  /// Base View Products data //
-  TextEditingController baseProductController = TextEditingController();
-  List<dynamic> baseProductResults = [];
-  bool isSearchingBaseProduct = false;
-  String? selectedBaseProduct;
-  FocusNode baseProductFocusNode = FocusNode();
-
-  // Add this method for searching base products
   Future<void> searchBaseProducts(String query) async {
     if (query.isEmpty) {
       setState(() {
@@ -779,12 +763,13 @@ class _DeckingSheetsState extends State<DeckingSheets> {
 
       if (response.statusCode == 200) {
         final responseData = jsonDecode(response.body);
-        print("Base product response: $responseData"); // Debug print
+        print("Base product response: $responseData");
         setState(() {
           baseProductResults = responseData['base_products'] ?? [];
           isSearchingBaseProduct = false;
         });
       } else {
+        print("Failed to search base products: ${response.statusCode}");
         setState(() {
           baseProductResults = [];
           isSearchingBaseProduct = false;
@@ -796,23 +781,24 @@ class _DeckingSheetsState extends State<DeckingSheets> {
         baseProductResults = [];
         isSearchingBaseProduct = false;
       });
+    } finally {
+      ioClient.close();
     }
   }
 
-  // Add this method to build the base product search field
   Widget _buildBaseProductSearchField() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           "Base Product",
-          style: GoogleFonts.figtree(
-            fontSize: 16,
+          style: TextStyle(
             fontWeight: FontWeight.w500,
-            color: Colors.black87,
+            color: Colors.grey[700],
+            fontSize: 15,
           ),
         ),
-        SizedBox(height: 8),
+        SizedBox(height: 4),
         Container(
           decoration: BoxDecoration(
             border: Border.all(color: Colors.grey[300]!),
@@ -850,8 +836,6 @@ class _DeckingSheetsState extends State<DeckingSheets> {
             },
           ),
         ),
-
-        // Search Results Display (line by line, not dropdown)
         if (baseProductResults.isNotEmpty)
           Container(
             margin: EdgeInsets.only(top: 8),
@@ -929,8 +913,6 @@ class _DeckingSheetsState extends State<DeckingSheets> {
               ],
             ),
           ),
-
-        // Selected Base Product Display
         if (selectedBaseProduct != null)
           Container(
             margin: EdgeInsets.only(top: 8),
@@ -971,7 +953,6 @@ class _DeckingSheetsState extends State<DeckingSheets> {
     );
   }
 
-  // Helper method to format the preview text
   String _selectedItems() {
     List<String> selectedValues = [
       if (selectedMaterialType != null) "Material: $selectedMaterialType",
@@ -987,6 +968,9 @@ class _DeckingSheetsState extends State<DeckingSheets> {
   }
 
   Widget _buildSubmittedDataList() {
+    print(
+        "Rendering submitted data list with responseProducts: $responseProducts");
+
     if (responseProducts.isEmpty) {
       return Container(
         padding: EdgeInsets.symmetric(vertical: 40),
@@ -1004,12 +988,12 @@ class _DeckingSheetsState extends State<DeckingSheets> {
       );
     }
 
-    ///old column
-
     return Column(
       children: responseProducts.asMap().entries.map((entry) {
         int index = entry.key;
         Map<String, dynamic> data = Map<String, dynamic>.from(entry.value);
+        print("Rendering product $index: $data");
+
         return Card(
           margin: EdgeInsets.symmetric(vertical: 10),
           elevation: 2,
@@ -1031,7 +1015,7 @@ class _DeckingSheetsState extends State<DeckingSheets> {
                         height: 40.h,
                         width: 210.w,
                         child: Text(
-                          "  ${index + 1}.  ${data["Products"]}" ?? "",
+                          "  ${index + 1}.  ${data["Products"] ?? "Unknown Product"}",
                           overflow: TextOverflow.ellipsis,
                           style: GoogleFonts.figtree(
                             fontSize: 18,
@@ -1043,16 +1027,13 @@ class _DeckingSheetsState extends State<DeckingSheets> {
                     ),
                   ),
                   Container(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
-                    ),
+                    padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
                       color: Colors.blue[50],
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(
-                      "ID: ${data['id']}",
+                      "ID: ${data['id'] ?? "N/A"}",
                       style: TextStyle(
                         fontSize: 12,
                         color: Colors.blue[700],
@@ -1108,113 +1089,6 @@ class _DeckingSheetsState extends State<DeckingSheets> {
                 ],
               ),
               _buildProductDetailInRows(data),
-              // Padding(
-              //   padding: const EdgeInsets.only(top: 8.0, left: 8),
-              //   child: Container(
-              //     height: 40.h,
-              //     width: double.infinity.w,
-              //     decoration: BoxDecoration(
-              //       borderRadius: BorderRadius.circular(10),
-              //     ),
-              //     child: Row(
-              //       crossAxisAlignment: CrossAxisAlignment.center,
-              //       children: [
-              //         Container(
-              //           height: 40.h,
-              //           width: 280.w,
-              //           child: TextField(
-              //             style: TextStyle(
-              //               fontSize: 13.sp,
-              //               color: Colors.black87,
-              //               fontWeight: FontWeight.w500,
-              //             ),
-              //             decoration: InputDecoration(
-              //               enabledBorder: InputBorder.none,
-              //               focusedBorder: InputBorder.none,
-              //             ),
-              //             controller: TextEditingController(
-              //               text: " ${data["Material Specification"]}",
-              //             ),
-              //             readOnly: true,
-              //           ),
-              //         ),
-              //         Gap(5),
-              //         Container(
-              //           height: 30.h,
-              //           width: 30.w,
-              //           decoration: BoxDecoration(
-              //             color: Colors.grey[200],
-              //             borderRadius: BorderRadius.circular(10),
-              //           ),
-              //           child: IconButton(
-              //             onPressed: () {
-              //               editController.text =
-              //                   data["Material Specification"].toString();
-              //               showDialog(
-              //                 context: context,
-              //                 builder: (context) {
-              //                   return AlertDialog(
-              //                     title: Text("Edit Your Liner Sheet"),
-              //                     content: Column(
-              //                       mainAxisSize: MainAxisSize.min,
-              //                       children: [
-              //                         Container(
-              //                           height: 40.h,
-              //                           width: double.infinity.w,
-              //                           decoration: BoxDecoration(
-              //                             borderRadius:
-              //                                 BorderRadius.circular(10),
-              //                             color: Colors.white,
-              //                           ),
-              //                           child: Padding(
-              //                             padding: const EdgeInsets.only(
-              //                               left: 7.0,
-              //                             ),
-              //                             child: TextField(
-              //                               decoration: InputDecoration(
-              //                                 enabledBorder: InputBorder.none,
-              //                                 focusedBorder: InputBorder.none,
-              //                               ),
-              //                               controller: editController,
-              //                               onSubmitted: (value) {
-              //                                 setState(() {
-              //                                   data["Material Specification"] =
-              //                                       value;
-              //                                 });
-              //                                 Navigator.pop(context);
-              //                               },
-              //                             ),
-              //                           ),
-              //                         ),
-              //                       ],
-              //                     ),
-              //                     actions: [
-              //                       ElevatedButton(
-              //                         onPressed: () {
-              //                           setState(() {
-              //                             data["Material Specification"] =
-              //                                 editController.text;
-              //                           });
-              //                           Navigator.pop(context);
-              //                         },
-              //                         child: MyText(
-              //                           text: "Save",
-              //                           weight: FontWeight.w500,
-              //                           color: Colors.black,
-              //                         ),
-              //                       ),
-              //                     ],
-              //                   );
-              //                 },
-              //               );
-              //             },
-              //             icon: Icon(Icons.edit, size: 15),
-              //           ),
-              //         ),
-              //       ],
-              //     ),
-              //   ),
-              // ),
             ],
           ),
         );
@@ -1222,37 +1096,21 @@ class _DeckingSheetsState extends State<DeckingSheets> {
     );
   }
 
-  Timer? _debounceTimer;
-  Map<String, dynamic> calculationResults = {};
-  Map<String, String?> previousUomValues = {}; // Track previous UOM values
-  Map<String, Map<String, TextEditingController>> fieldControllers =
-      {}; // Store controllers
-
-  // Method to get or create controller for each field
   TextEditingController _getController(Map<String, dynamic> data, String key) {
     String productId = data["id"].toString();
 
-    // Initialize controllers map for this product ID
     fieldControllers.putIfAbsent(productId, () => {});
 
-    // If controller for this key doesn't exist, create it
     if (!fieldControllers[productId]!.containsKey(key)) {
       String initialValue = (data[key] != null && data[key].toString() != "0")
           ? data[key].toString()
-          : ""; // Avoid initializing with "0"
-
-      fieldControllers[productId]![key] = TextEditingController(
-        text: initialValue,
-      );
-
+          : "";
+      fieldControllers[productId]![key] =
+          TextEditingController(text: initialValue);
       print("Created controller for [$key] with value: '$initialValue'");
     } else {
-      // Existing controller: check if it needs sync from data
       final controller = fieldControllers[productId]![key]!;
-
       final dataValue = data[key]?.toString() ?? "";
-
-      // If the controller is empty but data has a value, sync it
       if (controller.text.isEmpty && dataValue.isNotEmpty && dataValue != "0") {
         controller.text = dataValue;
         print("Synced controller for [$key] to: '$dataValue'");
@@ -1262,7 +1120,6 @@ class _DeckingSheetsState extends State<DeckingSheets> {
     return fieldControllers[productId]![key]!;
   }
 
-  // Add this method for debounced calculation
   void _debounceCalculation(Map<String, dynamic> data) {
     _debounceTimer?.cancel();
     _debounceTimer = Timer(Duration(seconds: 1), () {
@@ -1281,7 +1138,6 @@ class _DeckingSheetsState extends State<DeckingSheets> {
 
     String productId = data["id"].toString();
 
-    // Get current UOM value
     String? currentUom;
     if (data["UOM"] is Map) {
       currentUom = data["UOM"]["value"]?.toString();
@@ -1292,16 +1148,14 @@ class _DeckingSheetsState extends State<DeckingSheets> {
     print("Current UOM: $currentUom");
     print("Previous UOM: ${previousUomValues[productId]}");
 
-    // Get Profile value from controller
     double? profileValue;
     String? profileText;
 
     if (fieldControllers.containsKey(productId) &&
         fieldControllers[productId]!.containsKey("Length")) {
-      profileText = data["Length"]?.toString(); // First check the latest data
+      profileText = data["Length"]?.toString();
       if (profileText == null || profileText.isEmpty) {
-        profileText = fieldControllers[productId]!["Length"]!
-            .text; // Then check controller
+        profileText = fieldControllers[productId]!["Length"]!.text;
       }
       print("Length/Profile from data/controller: $profileText");
     }
@@ -1311,7 +1165,6 @@ class _DeckingSheetsState extends State<DeckingSheets> {
       print("Parsed profile value: $profileValue");
     }
 
-    // Get Nos value from controller
     int nosValue = 0;
     String? nosText;
 
@@ -1330,7 +1183,6 @@ class _DeckingSheetsState extends State<DeckingSheets> {
       nosValue = int.tryParse(nosText) ?? 1;
     }
 
-    // Get Crimp value
     double? crimpValue;
     String? crimpText = data["Crimp"]?.toString();
 
@@ -1366,7 +1218,7 @@ class _DeckingSheetsState extends State<DeckingSheets> {
           : null,
     };
 
-    print("Request Body: ${jsonEncode(requestBody)}");
+    print("Calculation Request Body: ${jsonEncode(requestBody)}");
 
     try {
       final response = await client.post(
@@ -1375,8 +1227,8 @@ class _DeckingSheetsState extends State<DeckingSheets> {
         body: jsonEncode(requestBody),
       );
 
-      print("Response Status: ${response.statusCode}");
-      print("Response Body: ${response.body}");
+      print("Calculation Response Status: ${response.statusCode}");
+      print("Calculation Response Body: ${response.body}");
 
       if (response.statusCode == 200) {
         final responseData = jsonDecode(response.body);
@@ -1385,10 +1237,8 @@ class _DeckingSheetsState extends State<DeckingSheets> {
           setState(() {
             calculationResults[productId] = responseData;
 
-            // Update Profile/Length
             if (responseData["profile"] != null) {
               String newProfile = responseData["profile"].toString();
-              // Only update if calculation returned different value
               if (data["Length"]?.toString() != newProfile) {
                 data["Length"] = newProfile;
                 if (fieldControllers[productId]?["Length"] != null) {
@@ -1398,7 +1248,6 @@ class _DeckingSheetsState extends State<DeckingSheets> {
               }
             }
 
-            // Update Nos
             if (responseData["Nos"] != null) {
               String newNos = responseData["Nos"].toString().trim();
               String currentInput =
@@ -1415,7 +1264,6 @@ class _DeckingSheetsState extends State<DeckingSheets> {
               }
             }
 
-            // Update Crimp
             if (responseData["crimp"] != null) {
               String newCrimp = responseData["crimp"].toString();
               if (newCrimp != "0" && newCrimp != "0.0") {
@@ -1431,7 +1279,6 @@ class _DeckingSheetsState extends State<DeckingSheets> {
               }
             }
 
-            // Update SQMtr
             if (responseData["qty"] != null) {
               data["qty"] = responseData["qty"].toString();
               if (fieldControllers[productId]?["qty"] != null) {
@@ -1440,7 +1287,6 @@ class _DeckingSheetsState extends State<DeckingSheets> {
               }
             }
 
-            // Update Amount
             if (responseData["Amount"] != null) {
               data["Amount"] = responseData["Amount"].toString();
               if (fieldControllers[productId]?["Amount"] != null) {
@@ -1453,16 +1299,18 @@ class _DeckingSheetsState extends State<DeckingSheets> {
 
           print("=== CALCULATION SUCCESS ===");
           print(
-            "Updated data: Length=${data["Profile"]}, Nos=${data["Nos"]}, Height=${data["Crimp"]}, Amount=${data["Amount"]}",
+            "Updated data: Length=${data["Length"]}, Nos=${data["Nos"]}, Crimp=${data["Crimp"]}, Amount=${data["Amount"]}",
           );
         } else {
           print("API returned error status: ${responseData["status"]}");
         }
       } else {
-        print("HTTP Error: ${response.statusCode}");
+        print("Calculation HTTP Error: ${response.statusCode}");
       }
     } catch (e) {
       print("Calculation API Error: $e");
+    } finally {
+      client.close();
     }
   }
 
@@ -1524,7 +1372,6 @@ class _DeckingSheetsState extends State<DeckingSheets> {
               ),
             ),
             constraints: BoxConstraints(maxHeight: 300),
-            // borderRadius: BorderRadius.circular(12),
           ),
         ),
       ),
@@ -1545,19 +1392,31 @@ class _DeckingSheetsState extends State<DeckingSheets> {
         backgroundColor: Colors.white,
       ),
       body: Container(
-        color: Colors.grey[50],
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Colors.white, Colors.grey.shade50],
+          ),
+        ),
         child: Padding(
-          padding: EdgeInsets.all(16),
+          padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
           child: SingleChildScrollView(
             physics: BouncingScrollPhysics(),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Card(
-                  elevation: 2,
-                  color: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 10,
+                        offset: Offset(0, 5),
+                      ),
+                    ],
                   ),
                   child: Padding(
                     padding: EdgeInsets.all(16),
@@ -1578,7 +1437,6 @@ class _DeckingSheetsState extends State<DeckingSheets> {
                             (value) {
                               setState(() {
                                 selectedMaterialType = value;
-                                // Clear dependent fields
                                 selectedThickness = null;
                                 selectCoatingMass = null;
                                 selectedYieldStrength = null;
@@ -1599,8 +1457,6 @@ class _DeckingSheetsState extends State<DeckingSheets> {
                             (value) {
                               setState(() {
                                 selectedThickness = value;
-                                // Clear dependent
-                                // fields
                                 selectCoatingMass = null;
                                 selectedYieldStrength = null;
                                 selectedBrand = null;
@@ -1620,7 +1476,6 @@ class _DeckingSheetsState extends State<DeckingSheets> {
                             (value) {
                               setState(() {
                                 selectCoatingMass = value;
-                                // Clear dependent fields
                                 selectedYieldStrength = null;
                                 selectedBrand = null;
                                 yieldStrengthList = [];
@@ -1638,7 +1493,6 @@ class _DeckingSheetsState extends State<DeckingSheets> {
                             (value) {
                               setState(() {
                                 selectedYieldStrength = value;
-                                // Clear dependent fields
                                 selectedBrand = null;
                                 brandList = [];
                               });
@@ -1660,8 +1514,6 @@ class _DeckingSheetsState extends State<DeckingSheets> {
                             label: "Brand",
                             icon: Icons.brightness_auto_outlined,
                           ),
-                          SizedBox(height: 24),
-                          _buildBaseProductSearchField(),
                           SizedBox(height: 16),
                           Container(
                             padding: EdgeInsets.all(16),
@@ -1735,15 +1587,115 @@ class _DeckingSheetsState extends State<DeckingSheets> {
                     ),
                   ),
                 ),
-                SizedBox(height: 24),
-                if (submittedData.isNotEmpty)
-                  Subhead(
-                    text: "   Added Products",
-                    weight: FontWeight.w600,
-                    color: Colors.black,
+                if (responseProducts.isNotEmpty) ...[
+                  SizedBox(height: 24),
+                  Container(
+                    padding: EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          Colors.deepPurple.shade100,
+                          Colors.blue.shade50
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: Colors.deepPurple.shade100),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 10,
+                          offset: Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Container(
+                              padding: EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color:
+                                    Colors.deepPurple.shade100.withOpacity(0.5),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Icon(
+                                Icons.shopping_bag_outlined,
+                                color: Colors.deepPurple.shade700,
+                                size: 20,
+                              ),
+                            ),
+                            SizedBox(width: 12),
+                            Text(
+                              "Added Products",
+                              style: GoogleFonts.poppins(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.deepPurple,
+                              ),
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: 16),
+                        Container(
+                          padding:
+                              EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: Colors.white60,
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(color: Colors.grey.shade200),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                "Decking Sheets",
+                                style: GoogleFonts.poppins(
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.grey.shade700,
+                                ),
+                              ),
+                              Container(
+                                padding: EdgeInsets.symmetric(
+                                    horizontal: 10, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: Colors.blue.shade50,
+                                  borderRadius: BorderRadius.circular(20),
+                                  border:
+                                      Border.all(color: Colors.blue.shade200),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      Icons.receipt_outlined,
+                                      size: 14,
+                                      color: Colors.blue.shade700,
+                                    ),
+                                    SizedBox(width: 4),
+                                    Text(
+                                      "Category: 34",
+                                      style: GoogleFonts.figtree(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.blue.shade700,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        SizedBox(height: 16),
+                        _buildSubmittedDataList(),
+                      ],
+                    ),
                   ),
-                SizedBox(height: 8),
-                _buildSubmittedDataList(),
+                ],
               ],
             ),
           ),

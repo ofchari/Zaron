@@ -378,7 +378,6 @@ class _GIStiffnerState extends State<GIStiffner> {
       "category_name": "GI Stiffner",
       "OrderID": (orderIDD != null) ? orderIDD : null,
     };
-
     print("This is a body data: $data");
     final url = "$apiUrl/addbag";
     final body = jsonEncode(data);
@@ -537,13 +536,13 @@ class _GIStiffnerState extends State<GIStiffner> {
       children: [
         Text(
           "Base Product",
-          style: GoogleFonts.figtree(
-            fontSize: 16,
+          style: TextStyle(
             fontWeight: FontWeight.w500,
-            color: Colors.black87,
+            color: Colors.grey[700],
+            fontSize: 15,
           ),
         ),
-        SizedBox(height: 8),
+        SizedBox(height: 4),
         Container(
           decoration: BoxDecoration(
             border: Border.all(color: Colors.grey[300]!),
@@ -825,113 +824,6 @@ class _GIStiffnerState extends State<GIStiffner> {
                 ],
               ),
               _buildProductDetailInRows(data),
-              // Padding(
-              //   padding: const EdgeInsets.only(top: 8.0, left: 8),
-              //   child: Container(
-              //     height: 40.h,
-              //     width: double.infinity.w,
-              //     decoration: BoxDecoration(
-              //       borderRadius: BorderRadius.circular(10),
-              //     ),
-              //     child: Row(
-              //       crossAxisAlignment: CrossAxisAlignment.center,
-              //       children: [
-              //         Container(
-              //           height: 40.h,
-              //           width: 280.w,
-              //           child: TextField(
-              //             style: TextStyle(
-              //               fontSize: 13.sp,
-              //               color: Colors.black87,
-              //               fontWeight: FontWeight.w500,
-              //             ),
-              //             decoration: InputDecoration(
-              //               enabledBorder: InputBorder.none,
-              //               focusedBorder: InputBorder.none,
-              //             ),
-              //             controller: TextEditingController(
-              //               text: " ${data["Material Specification"]}",
-              //             ),
-              //             readOnly: true,
-              //           ),
-              //         ),
-              //         Gap(5),
-              //         Container(
-              //           height: 30.h,
-              //           width: 30.w,
-              //           decoration: BoxDecoration(
-              //             color: Colors.grey[200],
-              //             borderRadius: BorderRadius.circular(10),
-              //           ),
-              //           child: IconButton(
-              //             onPressed: () {
-              //               editController.text =
-              //                   data["Material Specification"].toString();
-              //               showDialog(
-              //                 context: context,
-              //                 builder: (context) {
-              //                   return AlertDialog(
-              //                     title: Text("Edit Your Liner Sheet"),
-              //                     content: Column(
-              //                       mainAxisSize: MainAxisSize.min,
-              //                       children: [
-              //                         Container(
-              //                           height: 40.h,
-              //                           width: double.infinity.w,
-              //                           decoration: BoxDecoration(
-              //                             borderRadius:
-              //                                 BorderRadius.circular(10),
-              //                             color: Colors.white,
-              //                           ),
-              //                           child: Padding(
-              //                             padding: const EdgeInsets.only(
-              //                               left: 7.0,
-              //                             ),
-              //                             child: TextField(
-              //                               decoration: InputDecoration(
-              //                                 enabledBorder: InputBorder.none,
-              //                                 focusedBorder: InputBorder.none,
-              //                               ),
-              //                               controller: editController,
-              //                               onSubmitted: (value) {
-              //                                 setState(() {
-              //                                   data["Material Specification"] =
-              //                                       value;
-              //                                 });
-              //                                 Navigator.pop(context);
-              //                               },
-              //                             ),
-              //                           ),
-              //                         ),
-              //                       ],
-              //                     ),
-              //                     actions: [
-              //                       ElevatedButton(
-              //                         onPressed: () {
-              //                           setState(() {
-              //                             data["Material Specification"] =
-              //                                 editController.text;
-              //                           });
-              //                           Navigator.pop(context);
-              //                         },
-              //                         child: MyText(
-              //                           text: "Save",
-              //                           weight: FontWeight.w500,
-              //                           color: Colors.black,
-              //                         ),
-              //                       ),
-              //                     ],
-              //                   );
-              //                 },
-              //               );
-              //             },
-              //             icon: Icon(Icons.edit, size: 15),
-              //           ),
-              //         ),
-              //       ],
-              //     ),
-              //   ),
-              // ),
             ],
           ),
         );
@@ -941,11 +833,11 @@ class _GIStiffnerState extends State<GIStiffner> {
 
   // 5. REPLACE the _buildProductDetailInRows method with this:
   Widget _buildProductDetailInRows(Map<String, dynamic> data) {
-    return Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Row(
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: Column(
+        children: [
+          Row(
             children: [
               Expanded(
                 child: _buildDetailItem("UOM", _uomDropdownFromApi(data)),
@@ -963,11 +855,8 @@ class _GIStiffnerState extends State<GIStiffner> {
               ),
             ],
           ),
-        ),
-        Gap(5),
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Row(
+          Gap(5),
+          Row(
             children: [
               Expanded(
                 child: _buildDetailItem("Nos", _editableTextField(data, "Nos")),
@@ -985,22 +874,21 @@ class _GIStiffnerState extends State<GIStiffner> {
               ),
             ],
           ),
-        ),
-        Gap(5.h),
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Row(
+          Gap(5.h),
+          Row(
             children: [
               Expanded(
                 child: _buildDetailItem(
                   "Amount",
-                  _editableTextField(data, "Amount"),
+                  _editableTextField(data, " "),
                 ),
               ),
             ],
           ),
-        ),
-      ],
+          Gap(5.h),
+          _buildBaseProductSearchField(),
+        ],
+      ),
     );
   }
 
@@ -1174,7 +1062,7 @@ class _GIStiffnerState extends State<GIStiffner> {
           print("Controller text: ${controller.text}");
           print("Data after change: ${data[key]}");
 
-          // 🚫 DO NOT forcefully reset controller.text here!
+          // DO NOT forcefully reset controller.text here!
           // if (controller.text != val) {
           //   controller.text = val;
           // }
@@ -1548,19 +1436,31 @@ class _GIStiffnerState extends State<GIStiffner> {
         backgroundColor: Colors.white,
       ),
       body: Container(
-        color: Colors.grey[50],
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Colors.white, Colors.grey.shade50],
+          ),
+        ),
         child: Padding(
-          padding: EdgeInsets.all(16),
+          padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
           child: SingleChildScrollView(
             physics: BouncingScrollPhysics(),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Card(
-                  elevation: 2,
-                  color: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 10,
+                        offset: Offset(0, 5),
+                      ),
+                    ],
                   ),
                   child: Padding(
                     padding: EdgeInsets.all(16),
@@ -1681,8 +1581,6 @@ class _GIStiffnerState extends State<GIStiffner> {
                             label: "Brand",
                             icon: Icons.brightness_auto_outlined,
                           ),
-                          SizedBox(height: 24),
-                          _buildBaseProductSearchField(),
                           SizedBox(height: 16),
                           Container(
                             padding: EdgeInsets.all(16),
@@ -1757,14 +1655,115 @@ class _GIStiffnerState extends State<GIStiffner> {
                   ),
                 ),
                 SizedBox(height: 24),
-                if (responseProducts.isNotEmpty)
-                  Subhead(
-                    text: "   Added Products",
-                    weight: FontWeight.w600,
-                    color: Colors.black,
+                if (responseProducts.isNotEmpty) ...[
+                  SizedBox(height: 24),
+                  Container(
+                    padding: EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          Colors.deepPurple.shade100,
+                          Colors.blue.shade50
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: Colors.deepPurple.shade100),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 10,
+                          offset: Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Container(
+                              padding: EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color:
+                                    Colors.deepPurple.shade100.withOpacity(0.5),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Icon(
+                                Icons.shopping_bag_outlined,
+                                color: Colors.deepPurple.shade700,
+                                size: 20,
+                              ),
+                            ),
+                            SizedBox(width: 12),
+                            Text(
+                              "Added Products",
+                              style: GoogleFonts.poppins(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.deepPurple,
+                              ),
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: 16),
+                        Container(
+                          padding:
+                              EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: Colors.white60,
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(color: Colors.grey.shade200),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                "GI Stiffner",
+                                style: GoogleFonts.poppins(
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.grey.shade700,
+                                ),
+                              ),
+                              Container(
+                                padding: EdgeInsets.symmetric(
+                                    horizontal: 10, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: Colors.blue.shade50,
+                                  borderRadius: BorderRadius.circular(20),
+                                  border:
+                                      Border.all(color: Colors.blue.shade200),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      Icons.receipt_outlined,
+                                      size: 14,
+                                      color: Colors.blue.shade700,
+                                    ),
+                                    SizedBox(width: 4),
+                                    Text(
+                                      "Category: 36",
+                                      style: GoogleFonts.figtree(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.blue.shade700,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        SizedBox(height: 16),
+                        _buildSubmittedDataList(),
+                      ],
+                    ),
                   ),
-                SizedBox(height: 8),
-                _buildSubmittedDataList(),
+                ],
               ],
             ),
           ),
