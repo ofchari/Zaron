@@ -527,7 +527,7 @@ class _DeckingSheetsState extends State<DeckingSheets> {
             ],
           ),
           Gap(5.h),
-          _buildBaseProductSearchField(),
+          // _buildBaseProductSearchField(),
         ],
       ),
     );

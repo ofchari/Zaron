@@ -1386,7 +1386,7 @@ class _GIGlutterState extends State<GIGlutter> {
                             icon: Icons.brightness_auto_outlined,
                           ),
                           SizedBox(height: 24),
-                          _buildBaseProductSearchField(),
+                          // _buildBaseProductSearchField(),
                           SizedBox(height: 16),
                           Container(
                             padding: EdgeInsets.all(16),
