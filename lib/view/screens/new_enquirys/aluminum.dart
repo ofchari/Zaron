@@ -23,6 +23,7 @@ class Aluminum extends StatefulWidget {
 }
 
 class _AluminumState extends State<Aluminum> {
+  int? orderIDD;
   late TextEditingController editController;
 
   String? selectedBrand;
@@ -269,7 +270,7 @@ class _AluminumState extends State<Aluminum> {
       "product_base_name": "$selectedBaseProductName",
       "category_id": 36,
       "category_name": "Aluminum",
-      "OrderID": null
+      "OrderID": (orderIDD != null) ? orderIDD : null
     };
 
     print("This is a body data: $data");
@@ -287,14 +288,50 @@ class _AluminumState extends State<Aluminum> {
       if (response.statusCode == 200) {
         final responseData = jsonDecode(response.body);
         setState(() {
+          final String orderID = responseData["order_id"].toString();
+          print("Order IDDDD: $orderID");
+          orderIDD = int.parse(orderID);
           apiResponseData = responseData;
+
           if (responseData['lebels'] != null &&
               responseData['lebels'].isNotEmpty) {
             apiProductsList = List<Map<String, dynamic>>.from(
               responseData['lebels'][0]['data'],
             );
-            // Update responseProducts with the new data
-            responseProducts.addAll(List<dynamic>.from(apiProductsList));
+
+            List<dynamic> fullList = responseData["lebels"][0]["data"];
+            List<Map<String, dynamic>> newProducts = [];
+
+            for (var item in fullList) {
+              if (item is Map<String, dynamic>) {
+                Map<String, dynamic> product = Map<String, dynamic>.from(item);
+                String productId = product["id"].toString();
+
+                bool alreadyExists = responseProducts
+                    .any((existing) => existing["id"].toString() == productId);
+
+                if (!alreadyExists) {
+                  newProducts.add(product);
+                }
+
+                if (product["UOM"] != null &&
+                    product["UOM"]["options"] != null) {
+                  uomOptions[product["id"].toString()] =
+                      Map<String, String>.from(
+                    (product["UOM"]["options"] as Map).map(
+                      (key, value) =>
+                          MapEntry(key.toString(), value.toString()),
+                    ),
+                  );
+                }
+
+                debugPrint(
+                    "Product added: ${product["id"]} - ${product["Products"]}");
+              }
+            }
+
+            // Only add non-duplicate products
+            responseProducts.addAll(newProducts);
           }
         });
       }
@@ -1394,7 +1431,7 @@ class _AluminumState extends State<Aluminum> {
                                     ),
                                     SizedBox(width: 4),
                                     Text(
-                                      "Category: 36",
+                                      "ID: $orderIDD",
                                       style: GoogleFonts.figtree(
                                         fontSize: 13,
                                         fontWeight: FontWeight.w600,

@@ -23,6 +23,7 @@ class CutToLengthSheet extends StatefulWidget {
 }
 
 class _CutToLengthSheetState extends State<CutToLengthSheet> {
+  String? orderNO;
   int? orderIDD;
   late TextEditingController editController;
   String? selectedProduct;
@@ -428,6 +429,8 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
           final String orderID = responseData["order_id"].toString();
           print("Order IDDDD: $orderID");
           orderIDD = int.parse(orderID);
+          String orderNos = responseData["order_no"]?.toString() ?? "Unknown";
+          orderNO = orderNos.isEmpty ? "Unknown" : orderNos;
           showApiResponse = true;
         });
       }
@@ -1709,7 +1712,7 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
                         SizedBox(height: 16),
                         Container(
                           padding:
-                              EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                              EdgeInsets.symmetric(horizontal: 5, vertical: 8),
                           decoration: BoxDecoration(
                             color: Colors.white60,
                             borderRadius: BorderRadius.circular(10),
@@ -1727,7 +1730,7 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
                               ),
                               Container(
                                 padding: EdgeInsets.symmetric(
-                                    horizontal: 10, vertical: 4),
+                                    horizontal: 5, vertical: 4),
                                 decoration: BoxDecoration(
                                   color: Colors.blue.shade50,
                                   borderRadius: BorderRadius.circular(20),
@@ -1744,7 +1747,8 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
                                     ),
                                     SizedBox(width: 4),
                                     Text(
-                                      "Category: 36",
+                                      "ID: $orderNO",
+                                      overflow: TextOverflow.ellipsis,
                                       style: GoogleFonts.figtree(
                                         fontSize: 13,
                                         fontWeight: FontWeight.w600,

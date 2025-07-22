@@ -38,6 +38,7 @@ class _AccessoriesState extends State<Accessories> {
   List<String> colorandList = [];
   List<String> thickAndList = [];
   List<String> coatingAndList = [];
+  List<dynamic> rawAccessoriesData = []; // Add this line at class level
   List<Map<String, dynamic>> submittedData = [];
   Map<String, dynamic>? apiResponseData;
   List<dynamic> responseProducts = [];
@@ -102,6 +103,7 @@ class _AccessoriesState extends State<Accessories> {
         final accessories = data["message"]["message"][1];
         debugPrint("Accessories:::$accessories");
         debugPrint(response.body, wrapWidth: 1024);
+        rawAccessoriesData = accessories;
 
         if (accessories is List) {
           setState(() {
@@ -333,6 +335,18 @@ class _AccessoriesState extends State<Accessories> {
       HttpClient()..badCertificateCallback = (_, __, ___) => true,
     );
 
+    // Find the matching item from rawAccessoriesData
+    final matchingAccessory = rawAccessoriesData.firstWhere(
+      (item) => item["accessories_name"] == selectedAccessories,
+      orElse: () => null,
+    );
+
+// Extract values
+    final categoryId = matchingAccessory?["id"];
+    final categoryName = matchingAccessory?["accessories_name"];
+    print("this os $categoryId");
+    print("this os $categoryName");
+
     final url = Uri.parse('$apiUrl/addbag');
     final headers = {'Content-Type': 'application/json'};
 
@@ -343,7 +357,7 @@ class _AccessoriesState extends State<Accessories> {
       "product_base_id": null,
       "product_base_name":
           "$selectedBrands,$selectedColors,$selectedThickness,$selectedCoatingMass,",
-      "category_id": 1,
+      "category_id": categoryId,
       "category_name": "accessories_name",
       "OrderID": (orderIDD != null) ? orderIDD : null,
     };
@@ -354,12 +368,9 @@ class _AccessoriesState extends State<Accessories> {
         headers: headers,
         body: jsonEncode(data),
       );
-
       debugPrint("This is a response: ${response.body}");
-
       if (response.statusCode == 200) {
         final responseData = jsonDecode(response.body);
-
         setState(() {
           final String orderID = responseData["order_id"].toString();
           print("Order IDDDD: $orderID");
@@ -373,11 +384,9 @@ class _AccessoriesState extends State<Accessories> {
               responseData["lebels"].isNotEmpty) {
             String categoryName = responseData["category_name"] ?? "";
             categoryyName = categoryName.isEmpty ? "Accessories" : categoryName;
-
             String orderNos = responseData["order_no"]?.toString() ?? "Unknown";
             orderNoo = orderNos.isEmpty ? "Unknown" : orderNos;
-
-            debugPrint("Order No xxxxxx : $orderNos");
+            debugPrint("Order No : $orderNos");
             debugPrint("Category: $categoryName");
 
             // Safely handle the response data
@@ -414,7 +423,7 @@ class _AccessoriesState extends State<Accessories> {
               }
             }
 
-            // ✅ Add only new (non-duplicate) products
+            //Add only new (non-duplicate) products
             responseProducts.addAll(newProducts);
           }
         });
@@ -1410,7 +1419,10 @@ class _AccessoriesState extends State<Accessories> {
     return SizedBox(
       height: 38.h,
       child: TextField(
-        readOnly: (key == "Basic Rate" || key == "Amount" || key == "R.Ft")
+        readOnly: (key == "Basic Rate" ||
+                key == "Amount" ||
+                key == "R.Ft" ||
+                key == "bill_total")
             ? true
             : false,
         style: GoogleFonts.figtree(
@@ -1438,7 +1450,10 @@ class _AccessoriesState extends State<Accessories> {
                 print("Controller text: ${controller.text}");
                 print("Data after change: ${data[key]}");
 
-                if (key == "Profile" || key == "Nos" || key == "Basic Rate") {
+                if (key == "Profile" ||
+                    key == "Nos" ||
+                    key == "Basic Rate" ||
+                    key == "bill_total") {
                   print("Triggering calculation for $key with value: $val");
                   _debounceCalculation(data);
                 }
@@ -1524,6 +1539,17 @@ class _AccessoriesState extends State<Accessories> {
           ],
         ),
         Gap(5.h),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Expanded(
+              child: _buildDetailItem(
+                "Bill Total",
+                _editableTextField(data, "bill_total"),
+              ),
+            ),
+          ],
+        ),
       ],
     );
   }
@@ -1678,6 +1704,13 @@ class _AccessoriesState extends State<Accessories> {
               if (fieldControllers[productId]?["R.Ft"] != null) {
                 fieldControllers[productId]!["R.Ft"]!.text =
                     responseData["R.Ft"].toString();
+              }
+            }
+            if (responseData["bill_total"] != null) {
+              data["bill_total"] = responseData["bill_total"].toString();
+              if (fieldControllers[productId]?["bill_total"] != null) {
+                fieldControllers[productId]!["bill_total"]!.text =
+                    responseData["bill_total"].toString();
               }
             }
             if (responseData["Amount"] != null) {

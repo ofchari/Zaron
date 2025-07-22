@@ -24,6 +24,8 @@ class LinerSheetPage extends StatefulWidget {
 }
 
 class _LinerSheetPageState extends State<LinerSheetPage> {
+  String? orderNo;
+  int? orderIDD;
   late TextEditingController editController;
   String? selectedProduct;
   String? selectedBrands;
@@ -311,6 +313,7 @@ class _LinerSheetPageState extends State<LinerSheetPage> {
   Map<String, Map<String, String>> uomOptions = {};
 
   ///post All Data
+
   Future<void> postAllData() async {
     HttpClient client = HttpClient();
     client.badCertificateCallback =
@@ -325,7 +328,7 @@ class _LinerSheetPageState extends State<LinerSheetPage> {
       "product_base_name": "$selectedBaseProductId",
       "category_id": 590,
       "category_name": "Liner Sheets",
-      "OrderID": null
+      "OrderID": (orderIDD != null) ? orderIDD : null,
     };
 
     print("This is a body data: $data");
@@ -352,13 +355,26 @@ class _LinerSheetPageState extends State<LinerSheetPage> {
 
         setState(() {
           apiResponseData = responseData;
+
           if (responseData["lebels"] != null &&
               responseData["lebels"].isNotEmpty) {
-            // Append new products to the existing list
             final newProducts = responseData["lebels"][0]["data"] ?? [];
-            responseProducts.addAll(newProducts);
 
-            // Store UOM options for each product
+            // ✅ Filter duplicates
+            final uniqueNewProducts = newProducts.where((newItem) {
+              final newId = newItem["id"].toString();
+              return !responseProducts
+                  .any((existing) => existing["id"].toString() == newId);
+            }).toList();
+
+            responseProducts.addAll(uniqueNewProducts);
+
+            final String orderID = responseData["order_id"].toString();
+            print("Order IDDDD: $orderID");
+            orderIDD = int.parse(orderID);
+
+            String orderNos = responseData["order_no"]?.toString() ?? "Unknown";
+            orderNo = orderNos.isEmpty ? "Unknown" : orderNos;
 
             for (var product in responseProducts) {
               if (product["UOM"] != null && product["UOM"]["options"] != null) {
@@ -1474,7 +1490,7 @@ class _LinerSheetPageState extends State<LinerSheetPage> {
                                     ),
                                     SizedBox(width: 4),
                                     Text(
-                                      "ID: sssssss",
+                                      "ID: $orderNo",
                                       style: GoogleFonts.figtree(
                                         fontSize: 13,
                                         fontWeight: FontWeight.w600,

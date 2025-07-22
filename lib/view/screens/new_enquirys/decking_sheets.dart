@@ -23,6 +23,7 @@ class DeckingSheets extends StatefulWidget {
 
 class _DeckingSheetsState extends State<DeckingSheets> {
   int? orderIDD;
+  String? orderNO;
   late TextEditingController editController;
   String? selectedMaterialType;
   String? selectedThickness;
@@ -387,6 +388,9 @@ class _DeckingSheetsState extends State<DeckingSheets> {
           final String orderID = responseData["order_id"].toString();
           print("Order IDDDD: $orderID");
           orderIDD = int.parse(orderID);
+
+          String orderNos = responseData["order_no"]?.toString() ?? "Unknown";
+          orderNO = orderNos.isEmpty ? "Unknown" : orderNos;
 
           if (responseData['lebels'] != null &&
               responseData['lebels'].isNotEmpty) {
@@ -784,173 +788,6 @@ class _DeckingSheetsState extends State<DeckingSheets> {
     } finally {
       ioClient.close();
     }
-  }
-
-  Widget _buildBaseProductSearchField() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          "Base Product",
-          style: TextStyle(
-            fontWeight: FontWeight.w500,
-            color: Colors.grey[700],
-            fontSize: 15,
-          ),
-        ),
-        SizedBox(height: 4),
-        Container(
-          decoration: BoxDecoration(
-            border: Border.all(color: Colors.grey[300]!),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: TextField(
-            controller: baseProductController,
-            focusNode: baseProductFocusNode,
-            decoration: InputDecoration(
-              hintText: "Search base product...",
-              prefixIcon: Icon(Icons.search),
-              border: InputBorder.none,
-              contentPadding: EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 12,
-              ),
-              suffixIcon: isSearchingBaseProduct
-                  ? Padding(
-                      padding: EdgeInsets.all(12),
-                      child: SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      ),
-                    )
-                  : null,
-            ),
-            onChanged: (value) {
-              searchBaseProducts(value);
-            },
-            onTap: () {
-              if (baseProductController.text.isNotEmpty) {
-                searchBaseProducts(baseProductController.text);
-              }
-            },
-          ),
-        ),
-        if (baseProductResults.isNotEmpty)
-          Container(
-            margin: EdgeInsets.only(top: 8),
-            padding: EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.grey[50],
-              border: Border.all(color: Colors.grey[300]!),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  "Search Results:",
-                  style: GoogleFonts.figtree(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.black87,
-                  ),
-                ),
-                SizedBox(height: 8),
-                ...baseProductResults.map((product) {
-                  return GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        selectedBaseProduct = product.toString();
-                        baseProductController.text = selectedBaseProduct!;
-                        baseProductResults = [];
-                      });
-                    },
-                    child: Container(
-                      width: double.infinity,
-                      padding: EdgeInsets.symmetric(
-                        vertical: 12,
-                        horizontal: 12,
-                      ),
-                      margin: EdgeInsets.only(bottom: 6),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(6),
-                        border: Border.all(color: Colors.grey[300]!),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.grey.withOpacity(0.1),
-                            spreadRadius: 1,
-                            blurRadius: 2,
-                            offset: Offset(0, 1),
-                          ),
-                        ],
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(Icons.inventory_2, size: 16, color: Colors.blue),
-                          SizedBox(width: 10),
-                          Expanded(
-                            child: Text(
-                              product.toString(),
-                              style: GoogleFonts.figtree(
-                                fontSize: 14,
-                                color: Colors.black87,
-                                fontWeight: FontWeight.w400,
-                              ),
-                            ),
-                          ),
-                          Icon(
-                            Icons.arrow_forward_ios,
-                            size: 12,
-                            color: Colors.grey[400],
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                }).toList(),
-              ],
-            ),
-          ),
-        if (selectedBaseProduct != null)
-          Container(
-            margin: EdgeInsets.only(top: 8),
-            padding: EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.blue[50],
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.blue[200]!),
-            ),
-            child: Row(
-              children: [
-                Icon(Icons.check_circle, color: Colors.green, size: 20),
-                SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    "Selected: $selectedBaseProduct",
-                    style: GoogleFonts.figtree(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.black87,
-                    ),
-                  ),
-                ),
-                GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      selectedBaseProduct = null;
-                      baseProductController.clear();
-                      baseProductResults = [];
-                    });
-                  },
-                  child: Icon(Icons.close, color: Colors.grey[600], size: 20),
-                ),
-              ],
-            ),
-          ),
-      ],
-    );
   }
 
   String _selectedItems() {
@@ -1677,7 +1514,7 @@ class _DeckingSheetsState extends State<DeckingSheets> {
                                     ),
                                     SizedBox(width: 4),
                                     Text(
-                                      "Category: 34",
+                                      "ID: $orderNO",
                                       style: GoogleFonts.figtree(
                                         fontSize: 13,
                                         fontWeight: FontWeight.w600,

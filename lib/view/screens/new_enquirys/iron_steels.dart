@@ -24,6 +24,8 @@ class IronSteel extends StatefulWidget {
 }
 
 class _IronSteelState extends State<IronSteel> {
+  String? orderNo;
+  int? orderIDD;
   late TextEditingController editController;
 
   String? selectedBrand;
@@ -275,7 +277,7 @@ class _IronSteelState extends State<IronSteel> {
       "product_base_name": "$selectedBaseProductName",
       "category_id": 3,
       "category_name": "Iron And Steel Corrugated Sheet",
-      "OrderID": null
+      "OrderID": (orderIDD != null) ? orderIDD : null,
     };
 
     print("This is a body data: $data");
@@ -298,15 +300,28 @@ class _IronSteelState extends State<IronSteel> {
         final responseData = jsonDecode(response.body);
         if (responseData['status'] == true && responseData['lebels'] != null) {
           setState(() {
+            final String orderID = responseData["order_id"].toString();
+            print("Order IDDDD: $orderID");
+            orderIDD = int.parse(orderID);
+
+            String orderNos = responseData["order_no"]?.toString() ?? "Unknown";
+            orderNo = orderNos.isEmpty ? "Unknown" : orderNos;
+
             // Get the new data
             List<Map<String, dynamic>> newData =
                 List<Map<String, dynamic>>.from(
-              responseData['lebels'][0]['data'],
-            );
+                    responseData['lebels'][0]['data']);
 
-            // Append new data to existing lists
-            apiResponseData.addAll(newData);
-            responseProducts.addAll(newData);
+            // Remove duplicates
+            List<Map<String, dynamic>> uniqueNewData = newData.where((item) {
+              final newId = item['id'].toString();
+              return !responseProducts
+                  .any((existing) => existing['id'].toString() == newId);
+            }).toList();
+
+            // Add only unique items
+            apiResponseData.addAll(uniqueNewData);
+            responseProducts.addAll(uniqueNewData);
           });
         }
       }
@@ -1473,7 +1488,7 @@ class _IronSteelState extends State<IronSteel> {
                                           SizedBox(width: 4),
                                           Text(
                                             // "ID: $orderNoo",
-                                            "sssssssss",
+                                            "ID: $orderNo",
                                             style: GoogleFonts.figtree(
                                               fontSize: 13,
                                               fontWeight: FontWeight.w600,

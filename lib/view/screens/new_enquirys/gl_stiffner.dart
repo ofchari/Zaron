@@ -23,6 +23,7 @@ class GIStiffner extends StatefulWidget {
 }
 
 class _GIStiffnerState extends State<GIStiffner> {
+  String? orderNo;
   int? orderIDD;
   late TextEditingController editController;
   String? selectedProduct;
@@ -397,6 +398,8 @@ class _GIStiffnerState extends State<GIStiffner> {
           final String orderID = responseData["order_id"].toString();
           print("Order IDDDD: $orderID");
           orderIDD = int.parse(orderID);
+          String orderNos = responseData["order_no"]?.toString() ?? "Unknown";
+          orderNo = orderNos.isEmpty ? "Unknown" : orderNos;
           apiResponseData = responseData;
           // Extract the products from the response
           if (responseData['lebels'] != null &&
@@ -880,7 +883,7 @@ class _GIStiffnerState extends State<GIStiffner> {
               Expanded(
                 child: _buildDetailItem(
                   "Amount",
-                  _editableTextField(data, " "),
+                  _editableTextField(data, "Amount"),
                 ),
               ),
             ],
@@ -1033,7 +1036,6 @@ class _GIStiffnerState extends State<GIStiffner> {
 
   Widget _editableTextField(Map<String, dynamic> data, String key) {
     final controller = _getController(data, key);
-
     return SizedBox(
       height: 38.h,
       child: TextField(
@@ -1745,7 +1747,7 @@ class _GIStiffnerState extends State<GIStiffner> {
                                     ),
                                     SizedBox(width: 4),
                                     Text(
-                                      "Category: 36",
+                                      "ID: $orderNo",
                                       style: GoogleFonts.figtree(
                                         fontSize: 13,
                                         fontWeight: FontWeight.w600,
