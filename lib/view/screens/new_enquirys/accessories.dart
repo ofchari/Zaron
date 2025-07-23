@@ -352,15 +352,16 @@ class _AccessoriesState extends State<Accessories> {
 
     final data = {
       "customer_id": UserSession().userId,
-      "product_id": 1,
+      "product_id": categoryId,
       "product_name": selectedAccessories,
       "product_base_id": null,
       "product_base_name":
           "$selectedBrands,$selectedColors,$selectedThickness,$selectedCoatingMass,",
       "category_id": categoryId,
-      "category_name": "accessories_name",
+      "category_name": categoryName,
       "OrderID": (orderIDD != null) ? orderIDD : null,
     };
+    print("this is a body feed data$data");
 
     try {
       final response = await client.post(
@@ -370,6 +371,7 @@ class _AccessoriesState extends State<Accessories> {
       );
       debugPrint("This is a response: ${response.body}");
       if (response.statusCode == 200) {
+        print("this is a body feeded data$data");
         final responseData = jsonDecode(response.body);
         setState(() {
           final String orderID = responseData["order_id"].toString();
@@ -1534,18 +1536,6 @@ class _AccessoriesState extends State<Accessories> {
               child: _buildDetailItem(
                 "Amount",
                 _editableTextField(data, "Amount"),
-              ),
-            ),
-          ],
-        ),
-        Gap(5.h),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Expanded(
-              child: _buildDetailItem(
-                "Bill Total",
-                _editableTextField(data, "bill_total"),
               ),
             ),
           ],

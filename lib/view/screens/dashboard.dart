@@ -16,6 +16,7 @@ import 'cancel_enquiry.dart';
 
 class Dashboard extends StatefulWidget {
   const Dashboard({super.key, required this.userid});
+
   final String userid;
 
   @override
@@ -107,9 +108,26 @@ class _DashboardState extends State<Dashboard> {
       appBar: AppBar(
         leading: IconButton(
             onPressed: () {
-              Get.offAll(Login());
+              showDialog(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                        title: Text("Logout"),
+                        content: Text("Are you sure you want to logout?"),
+                        actions: [
+                          ElevatedButton(
+                              onPressed: () {
+                                Navigator.pop(context);
+                              },
+                              child: Text("Cancel")),
+                          ElevatedButton(
+                              onPressed: () {
+                                Get.offAll(Login());
+                              },
+                              child: Text("Yes"))
+                        ],
+                      ));
             },
-            icon: const Icon(Icons.logout, color: Colors.black)),
+            icon: Icon(Icons.logout)),
         title: Subhead(
             text: "Dashboard", weight: FontWeight.w600, color: Colors.black),
         centerTitle: true,

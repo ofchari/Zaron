@@ -10,6 +10,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:http/io_client.dart';
 import 'package:zaron/view/universal_api/api&key.dart';
 
+import '../../widgets/text.dart';
 import '../global_user/global_user.dart';
 
 class UpvcAccessories extends StatefulWidget {
@@ -24,7 +25,8 @@ class UpvcAccessories extends StatefulWidget {
 class _UpvcAccessoriesState extends State<UpvcAccessories> {
   late TextEditingController editController;
   String? selectedProductBaseId;
-
+  int? orderIDD;
+  String? orderNO;
   String? selectedBrand;
   String? selectedColor;
   String? selectProductNameBase;
@@ -294,7 +296,7 @@ class _UpvcAccessoriesState extends State<UpvcAccessories> {
       "product_base_name": "$selectedBaseProductName",
       "category_id": 15,
       "category_name": "UPVC Accessories",
-      "OrderID": null
+      "OrderID": (orderIDD != null) ? orderIDD : null
     };
 
     print("This is a body data: $data");
@@ -314,13 +316,38 @@ class _UpvcAccessoriesState extends State<UpvcAccessories> {
           selectedSize == null) return;
 
       if (response.statusCode == 200) {
-        // NEW CODE: Parse and store the API response
         final responseData = jsonDecode(response.body);
         setState(() {
+          final String orderID = responseData["order_id"]?.toString() ?? "";
+          orderIDD = int.tryParse(orderID);
+          orderNO = responseData["order_no"]?.toString() ?? "Unknown";
           apiResponseData = responseData;
+
+          // Safely handle the response data
           if (responseData['lebels'] != null &&
               responseData['lebels'].isNotEmpty) {
-            responseProducts.addAll(responseData['lebels'][0]['data'] ?? []);
+            List<dynamic> fullList = responseData["lebels"][0]["data"];
+            List<Map<String, dynamic>> newProducts = [];
+
+            for (var item in fullList) {
+              if (item is Map<String, dynamic>) {
+                Map<String, dynamic> product = Map<String, dynamic>.from(item);
+
+                // Prevent duplicates using product["id"]
+                String productId = product["id"].toString();
+                bool alreadyExists = responseProducts
+                    .any((existing) => existing["id"].toString() == productId);
+
+                if (!alreadyExists) {
+                  newProducts.add(product);
+                  debugPrint(
+                      "Product added: ${product["id"]} - ${product["Products"]}");
+                }
+              }
+            }
+
+            // Append only non-duplicate products
+            responseProducts.addAll(newProducts);
           }
         });
       }
@@ -1205,44 +1232,48 @@ class _UpvcAccessoriesState extends State<UpvcAccessories> {
                             borderRadius: BorderRadius.circular(10),
                             border: Border.all(color: Colors.grey.shade200),
                           ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
-                                "UPVC Accessories",
-                                style: GoogleFonts.poppins(
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.grey.shade700,
-                                ),
-                              ),
-                              Container(
-                                padding: EdgeInsets.symmetric(
-                                    horizontal: 10, vertical: 4),
-                                decoration: BoxDecoration(
-                                  color: Colors.blue.shade50,
-                                  borderRadius: BorderRadius.circular(20),
-                                  border:
-                                      Border.all(color: Colors.blue.shade200),
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(
-                                      Icons.receipt_outlined,
-                                      size: 14,
-                                      color: Colors.blue.shade700,
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  MyText(
+                                    text: "UPVC Accessories",
+                                    weight: FontWeight.w600,
+                                    color: Colors.grey.shade700,
+                                  ),
+                                  Container(
+                                    padding: EdgeInsets.symmetric(
+                                        horizontal: 10, vertical: 4),
+                                    decoration: BoxDecoration(
+                                      color: Colors.blue.shade50,
+                                      borderRadius: BorderRadius.circular(20),
+                                      border: Border.all(
+                                          color: Colors.blue.shade200),
                                     ),
-                                    SizedBox(width: 4),
-                                    Text(
-                                      "Category: 15",
-                                      style: GoogleFonts.figtree(
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.w600,
-                                        color: Colors.blue.shade700,
-                                      ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(
+                                          Icons.receipt_outlined,
+                                          size: 14,
+                                          color: Colors.blue.shade700,
+                                        ),
+                                        SizedBox(width: 4),
+                                        Text(
+                                          "ID: $orderNO",
+                                          style: GoogleFonts.figtree(
+                                            fontSize: 13,
+                                            fontWeight: FontWeight.w600,
+                                            color: Colors.blue.shade700,
+                                          ),
+                                        ),
+                                      ],
                                     ),
-                                  ],
-                                ),
+                                  ),
+                                ],
                               ),
                             ],
                           ),

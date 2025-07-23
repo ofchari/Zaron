@@ -21,7 +21,8 @@ class ScrewAccessories extends StatefulWidget {
 
 class _ScrewAccessoriesState extends State<ScrewAccessories> {
   late TextEditingController editController;
-
+  int? orderIDD;
+  String? orderNO;
   String? selectedProduct;
   String? selectedColor;
   String? selsectedBrand;
@@ -220,6 +221,7 @@ class _ScrewAccessoriesState extends State<ScrewAccessories> {
       "product_base_name": "$selectedBaseProductName",
       "category_id": 9,
       "category_name": "Screw accessories",
+      "OrderID": (orderIDD != null) ? orderIDD : null
     };
 
     print("User input Data $data");
@@ -238,6 +240,9 @@ class _ScrewAccessoriesState extends State<ScrewAccessories> {
       if (response.statusCode == 200) {
         final jsonResponse = jsonDecode(response.body);
         setState(() {
+          final String orderID = jsonResponse["order_id"]?.toString() ?? "";
+          orderIDD = int.tryParse(orderID);
+          orderNO = jsonResponse["order_no"]?.toString() ?? "Unknown";
           apiResponse = jsonResponse;
           // Extract the data from first category
           if (jsonResponse['lebels'] != null &&

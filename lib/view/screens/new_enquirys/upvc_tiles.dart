@@ -23,7 +23,8 @@ class UpvcTiles extends StatefulWidget {
 
 class _UpvcTilesState extends State<UpvcTiles> {
   late TextEditingController editController;
-
+  int? orderIDD;
+  String? orderNO;
   String? selectMaterial;
   String? selectedColor;
   String? selectThickness;
@@ -232,11 +233,14 @@ class _UpvcTilesState extends State<UpvcTiles> {
       "product_base_name": "$selectedBaseProductName",
       "category_id": 631,
       "category_name": "UPVC Tiles",
-      "OrderID": null
+      "OrderID": (orderIDD != null) ? orderIDD : null
     };
+
     print("User input Data $data");
+
     final url = "$apiUrl/addbag";
     final body = jsonEncode(data);
+
     try {
       final response = await ioClient.post(
         Uri.parse(url),
@@ -246,15 +250,29 @@ class _UpvcTilesState extends State<UpvcTiles> {
       debugPrint("This is a response: ${response.body}");
 
       if (response.statusCode == 200) {
-        // Parse the API response
         final responseData = jsonDecode(response.body);
+
         setState(() {
+          final String orderID = responseData["order_id"]?.toString() ?? "";
+          orderIDD = int.tryParse(orderID);
+          orderNO = responseData["order_no"]?.toString() ?? "Unknown";
+
           apiResponse = responseData;
+
           if (responseData['lebels'] != null &&
               responseData['lebels'].isNotEmpty) {
-            apiResponseData = List<Map<String, dynamic>>.from(
-              responseData['lebels'][0]['data'] ?? [],
-            );
+            List<Map<String, dynamic>> newItems =
+                List<Map<String, dynamic>>.from(
+                    responseData['lebels'][0]['data'] ?? []);
+
+            // Filter out items already in apiResponseData based on a unique key
+            for (var item in newItems) {
+              final alreadyExists = apiResponseData.any((existingItem) =>
+                  existingItem["product_base_id"] == item["product_base_id"]);
+              if (!alreadyExists) {
+                apiResponseData.add(item); // only add if not duplicate
+              }
+            }
           }
         });
       }
@@ -269,228 +287,6 @@ class _UpvcTilesState extends State<UpvcTiles> {
   String? selectedBaseProduct;
   FocusNode baseProductFocusNode = FocusNode();
 
-  // // Add this method for searching base products
-  // Future<void> searchBaseProducts(String query) async {
-  //   if (query.isEmpty) {
-  //     setState(() {
-  //       baseProductResults = [];
-  //     });
-  //     return;
-  //   }
-  //
-  //   setState(() {
-  //     isSearchingBaseProduct = true;
-  //   });
-  //
-  //   HttpClient client = HttpClient();
-  //   client.badCertificateCallback =
-  //       ((X509Certificate cert, String host, int port) => true);
-  //   IOClient ioClient = IOClient(client);
-  //   final headers = {"Content-Type": "application/json"};
-  //   final data = {"category_id": "631", "searchbase": query};
-  //
-  //   try {
-  //     final response = await ioClient.post(
-  //       Uri.parse("https://demo.zaron.in:8181/ci4/api/baseproducts_search"),
-  //       headers: headers,
-  //       body: jsonEncode(data),
-  //     );
-  //
-  //     if (response.statusCode == 200) {
-  //       final responseData = jsonDecode(response.body);
-  //       print("Base product response: $responseData"); // Debug print
-  //       setState(() {
-  //         baseProductResults = responseData['base_products'] ?? [];
-  //         isSearchingBaseProduct = false;
-  //       });
-  //     } else {
-  //       setState(() {
-  //         baseProductResults = [];
-  //         isSearchingBaseProduct = false;
-  //       });
-  //     }
-  //   } catch (e) {
-  //     print("Error searching base products: $e");
-  //     setState(() {
-  //       baseProductResults = [];
-  //       isSearchingBaseProduct = false;
-  //     });
-  //   }
-  // }
-  //
-  // // Add this method to build the base product search field
-  // Widget _buildBaseProductSearchField() {
-  //   return Column(
-  //     crossAxisAlignment: CrossAxisAlignment.start,
-  //     children: [
-  //       Text(
-  //         "Base Product",
-  //         style: GoogleFonts.figtree(
-  //           fontSize: 16,
-  //           fontWeight: FontWeight.w500,
-  //           color: Colors.black87,
-  //         ),
-  //       ),
-  //       SizedBox(height: 8),
-  //       Container(
-  //         decoration: BoxDecoration(
-  //           border: Border.all(color: Colors.grey[300]!),
-  //           borderRadius: BorderRadius.circular(8),
-  //         ),
-  //         child: TextField(
-  //           controller: baseProductController,
-  //           focusNode: baseProductFocusNode,
-  //           decoration: InputDecoration(
-  //             hintText: "Search base product...",
-  //             prefixIcon: Icon(Icons.search),
-  //             border: InputBorder.none,
-  //             contentPadding: EdgeInsets.symmetric(
-  //               horizontal: 16,
-  //               vertical: 12,
-  //             ),
-  //             suffixIcon: isSearchingBaseProduct
-  //                 ? Padding(
-  //                     padding: EdgeInsets.all(12),
-  //                     child: SizedBox(
-  //                       width: 20,
-  //                       height: 20,
-  //                       child: CircularProgressIndicator(strokeWidth: 2),
-  //                     ),
-  //                   )
-  //                 : null,
-  //           ),
-  //           onChanged: (value) {
-  //             searchBaseProducts(value);
-  //           },
-  //           onTap: () {
-  //             if (baseProductController.text.isNotEmpty) {
-  //               searchBaseProducts(baseProductController.text);
-  //             }
-  //           },
-  //         ),
-  //       ),
-  //
-  //       // Search Results Display (line by line, not dropdown)
-  //       if (baseProductResults.isNotEmpty)
-  //         Container(
-  //           margin: EdgeInsets.only(top: 8),
-  //           padding: EdgeInsets.all(12),
-  //           decoration: BoxDecoration(
-  //             color: Colors.grey[50],
-  //             border: Border.all(color: Colors.grey[300]!),
-  //             borderRadius: BorderRadius.circular(8),
-  //           ),
-  //           child: Column(
-  //             crossAxisAlignment: CrossAxisAlignment.start,
-  //             children: [
-  //               Text(
-  //                 "Search Results:",
-  //                 style: GoogleFonts.figtree(
-  //                   fontSize: 14,
-  //                   fontWeight: FontWeight.w600,
-  //                   color: Colors.black87,
-  //                 ),
-  //               ),
-  //               SizedBox(height: 8),
-  //               ...baseProductResults.map((product) {
-  //                 return GestureDetector(
-  //                   onTap: () {
-  //                     setState(() {
-  //                       selectedBaseProduct = product.toString();
-  //                       baseProductController.text = selectedBaseProduct!;
-  //                       baseProductResults = [];
-  //                     });
-  //                   },
-  //                   child: Container(
-  //                     width: double.infinity,
-  //                     padding: EdgeInsets.symmetric(
-  //                       vertical: 12,
-  //                       horizontal: 12,
-  //                     ),
-  //                     margin: EdgeInsets.only(bottom: 6),
-  //                     decoration: BoxDecoration(
-  //                       color: Colors.white,
-  //                       borderRadius: BorderRadius.circular(6),
-  //                       border: Border.all(color: Colors.grey[300]!),
-  //                       boxShadow: [
-  //                         BoxShadow(
-  //                           color: Colors.grey.withOpacity(0.1),
-  //                           spreadRadius: 1,
-  //                           blurRadius: 2,
-  //                           offset: Offset(0, 1),
-  //                         ),
-  //                       ],
-  //                     ),
-  //                     child: Row(
-  //                       children: [
-  //                         Icon(Icons.inventory_2, size: 16, color: Colors.blue),
-  //                         SizedBox(width: 10),
-  //                         Expanded(
-  //                           child: Text(
-  //                             product.toString(),
-  //                             style: GoogleFonts.figtree(
-  //                               fontSize: 14,
-  //                               color: Colors.black87,
-  //                               fontWeight: FontWeight.w400,
-  //                             ),
-  //                           ),
-  //                         ),
-  //                         Icon(
-  //                           Icons.arrow_forward_ios,
-  //                           size: 12,
-  //                           color: Colors.grey[400],
-  //                         ),
-  //                       ],
-  //                     ),
-  //                   ),
-  //                 );
-  //               }).toList(),
-  //             ],
-  //           ),
-  //         ),
-  //
-  //       // Selected Base Product Display
-  //       if (selectedBaseProduct != null)
-  //         Container(
-  //           margin: EdgeInsets.only(top: 8),
-  //           padding: EdgeInsets.all(12),
-  //           decoration: BoxDecoration(
-  //             color: Colors.blue[50],
-  //             borderRadius: BorderRadius.circular(8),
-  //             border: Border.all(color: Colors.blue[200]!),
-  //           ),
-  //           child: Row(
-  //             children: [
-  //               Icon(Icons.check_circle, color: Colors.green, size: 20),
-  //               SizedBox(width: 8),
-  //               Expanded(
-  //                 child: Text(
-  //                   "Selected: $selectedBaseProduct",
-  //                   style: GoogleFonts.figtree(
-  //                     fontSize: 14,
-  //                     fontWeight: FontWeight.w500,
-  //                     color: Colors.black87,
-  //                   ),
-  //                 ),
-  //               ),
-  //               GestureDetector(
-  //                 onTap: () {
-  //                   setState(() {
-  //                     selectedBaseProduct = null;
-  //                     baseProductController.clear();
-  //                     baseProductResults = [];
-  //                   });
-  //                 },
-  //                 child: Icon(Icons.close, color: Colors.grey[600], size: 20),
-  //               ),
-  //             ],
-  //           ),
-  //         ),
-  //     ],
-  //   );
-  // }
-
-  // 3. REPLACE the _buildSubmittedDataList() method with this:
   Widget _buildSubmittedDataList() {
     if (apiResponseData.isEmpty) {
       return Container(
@@ -1268,7 +1064,7 @@ class _UpvcTilesState extends State<UpvcTiles> {
                                     ),
                                     SizedBox(width: 4),
                                     Text(
-                                      "Category: 631",
+                                      "ID:$orderNO",
                                       style: GoogleFonts.figtree(
                                         fontSize: 13,
                                         fontWeight: FontWeight.w600,
