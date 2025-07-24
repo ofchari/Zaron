@@ -23,6 +23,7 @@ class Aluminum extends StatefulWidget {
 }
 
 class _AluminumState extends State<Aluminum> {
+  String? orderNO;
   int? orderIDD;
   late TextEditingController editController;
 
@@ -288,9 +289,12 @@ class _AluminumState extends State<Aluminum> {
       if (response.statusCode == 200) {
         final responseData = jsonDecode(response.body);
         setState(() {
+          final responseData = jsonDecode(response.body);
           final String orderID = responseData["order_id"].toString();
           print("Order IDDDD: $orderID");
           orderIDD = int.parse(orderID);
+          String orderNos = responseData["order_no"]?.toString() ?? "Unknown";
+          orderNO = orderNos.isEmpty ? "Unknown" : orderNos;
           apiResponseData = responseData;
 
           if (responseData['lebels'] != null &&
@@ -1431,7 +1435,7 @@ class _AluminumState extends State<Aluminum> {
                                     ),
                                     SizedBox(width: 4),
                                     Text(
-                                      "ID: $orderIDD",
+                                      "ID: ${orderNO ?? orderIDD}",
                                       style: GoogleFonts.figtree(
                                         fontSize: 13,
                                         fontWeight: FontWeight.w600,

@@ -25,6 +25,7 @@ class Accessories extends StatefulWidget {
 }
 
 class _AccessoriesState extends State<Accessories> {
+  int? billamt;
   late TextEditingController editController;
   int? orderIDD;
   String? selectedAccessories;
@@ -38,6 +39,7 @@ class _AccessoriesState extends State<Accessories> {
   List<String> colorandList = [];
   List<String> thickAndList = [];
   List<String> coatingAndList = [];
+  Map<String, dynamic>? categoryMeta;
   List<dynamic> rawAccessoriesData = []; // Add this line at class level
   List<Map<String, dynamic>> submittedData = [];
   Map<String, dynamic>? apiResponseData;
@@ -107,6 +109,12 @@ class _AccessoriesState extends State<Accessories> {
 
         if (accessories is List) {
           setState(() {
+            ///  Extract category info (message[0][0])
+            final categoryInfoList = data["message"]["message"][0];
+            if (categoryInfoList is List && categoryInfoList.isNotEmpty) {
+              categoryMeta = Map<String, dynamic>.from(categoryInfoList[0]);
+            }
+
             accessoriesList = accessories
                 .whereType<Map>()
                 .map((e) => e["accessories_name"]?.toString())
@@ -342,8 +350,14 @@ class _AccessoriesState extends State<Accessories> {
     );
 
 // Extract values
-    final categoryId = matchingAccessory?["id"];
-    final categoryName = matchingAccessory?["accessories_name"];
+    final accessoryID = matchingAccessory?["id"];
+    final accessoryName = matchingAccessory?["accessories_name"];
+    print("this os $accessoryID");
+    print("this os $accessoryName");
+
+    // From saved categoryMeta
+    final categoryId = categoryMeta?["category_id"];
+    final categoryName = categoryMeta?["categories"];
     print("this os $categoryId");
     print("this os $categoryName");
 
@@ -352,7 +366,7 @@ class _AccessoriesState extends State<Accessories> {
 
     final data = {
       "customer_id": UserSession().userId,
-      "product_id": categoryId,
+      "product_id": accessoryID,
       "product_name": selectedAccessories,
       "product_base_id": null,
       "product_base_name":
@@ -873,69 +887,158 @@ class _AccessoriesState extends State<Accessories> {
 
     return Column(
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            Container(
-              decoration: BoxDecoration(
-                color: Colors.grey[100],
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        isGridView = true;
-                      });
-                    },
-                    child: Container(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 8,
-                      ),
-                      decoration: BoxDecoration(
-                        color: isGridView ? Colors.blue : Colors.transparent,
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Icon(
-                        Icons.grid_view,
-                        color: isGridView ? Colors.white : Colors.grey[600],
-                        size: 20,
-                      ),
-                    ),
-                  ),
-                  SizedBox(width: 4),
-                  GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        isGridView = false;
-                      });
-                    },
-                    child: Container(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 8,
-                      ),
-                      decoration: BoxDecoration(
-                        color: !isGridView ? Colors.blue : Colors.transparent,
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Icon(
-                        Icons.list,
-                        color: !isGridView ? Colors.white : Colors.grey[600],
-                        size: 20,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+        Container(
+          margin: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Colors.deepPurple.shade500, Colors.deepPurple.shade200],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
             ),
-          ],
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.blue.withOpacity(0.3),
+                blurRadius: 8,
+                offset: Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Padding(
+            padding: EdgeInsets.all(10),
+            child: Row(
+              children: [
+                // Total Amount Section - Fixed width to prevent overflow
+                Expanded(
+                  flex: 3,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "TOTAL AMOUNT",
+                        style: TextStyle(
+                          color: Colors.white70,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                      SizedBox(height: 4),
+                      Text(
+                        "₹${billamt ?? 0}",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+
+                SizedBox(width: 12),
+
+                // View Toggle Section - Fixed width
+                Expanded(
+                  flex: 2,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: Colors.white.withOpacity(0.2),
+                        width: 1,
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                isGridView = true;
+                              });
+                            },
+                            child: AnimatedContainer(
+                              duration: Duration(milliseconds: 200),
+                              padding: EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 10,
+                              ),
+                              decoration: BoxDecoration(
+                                color: isGridView
+                                    ? Colors.white.withOpacity(0.25)
+                                    : Colors.transparent,
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Icon(
+                                Icons.grid_view_rounded,
+                                color:
+                                    isGridView ? Colors.white : Colors.white70,
+                                size: 18,
+                              ),
+                            ),
+                          ),
+                        ),
+                        SizedBox(width: 2),
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                isGridView = false;
+                              });
+                            },
+                            child: AnimatedContainer(
+                              duration: Duration(milliseconds: 500),
+                              padding: EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 10,
+                              ),
+                              decoration: BoxDecoration(
+                                color: !isGridView
+                                    ? Colors.white.withOpacity(0.25)
+                                    : Colors.transparent,
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Icon(
+                                Icons.view_list_rounded,
+                                color:
+                                    !isGridView ? Colors.white : Colors.white70,
+                                size: 18,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
+
         SizedBox(height: 16),
-        isGridView ? _buildGridView() : _buildListView(),
+
+        // Content with smooth transition
+        AnimatedSwitcher(
+          duration: Duration(milliseconds: 300),
+          transitionBuilder: (Widget child, Animation<double> animation) {
+            return FadeTransition(
+              opacity: animation,
+              child: SlideTransition(
+                position: Tween<Offset>(
+                  begin: Offset(0.0, 0.1),
+                  end: Offset.zero,
+                ).animate(animation),
+                child: child,
+              ),
+            );
+          },
+          child: isGridView ? _buildGridView() : _buildListView(),
+        ),
       ],
     );
   }
@@ -1540,6 +1643,7 @@ class _AccessoriesState extends State<Accessories> {
             ),
           ],
         ),
+        Gap(5),
       ],
     );
   }
@@ -1661,12 +1765,14 @@ class _AccessoriesState extends State<Accessories> {
       );
 
       print("Response Status: ${response.statusCode}");
-      print("Response Body: ${response.body}");
+      print("Response Bodyyyy: ${response.body}");
 
       if (response.statusCode == 200) {
         final responseData = jsonDecode(response.body);
         if (responseData["status"] == "success") {
           setState(() {
+            billamt = responseData["bill_total"] ?? 0;
+            print("billamt updated to: $billamt");
             calculationResults[productId] = responseData;
             if (responseData["Length"] != null) {
               data["Profile"] = responseData["Length"].toString();
@@ -2109,7 +2215,7 @@ class _AccessoriesState extends State<Accessories> {
                             ],
                           ),
                         ),
-                        SizedBox(height: 16),
+                        SizedBox(height: 15),
                         _buildSubmittedDataList(),
                       ],
                     ),
