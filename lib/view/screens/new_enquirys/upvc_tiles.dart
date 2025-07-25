@@ -10,6 +10,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:http/io_client.dart';
 import 'package:zaron/view/universal_api/api&key.dart';
 
+import '../global_user/global_oredrID.dart';
 import '../global_user/global_user.dart';
 
 class UpvcTiles extends StatefulWidget {
@@ -22,6 +23,8 @@ class UpvcTiles extends StatefulWidget {
 }
 
 class _UpvcTilesState extends State<UpvcTiles> {
+  Map<String, dynamic>? categoryMeta;
+  int? billamt;
   late TextEditingController editController;
   int? orderIDD;
   String? orderNO;
@@ -82,6 +85,12 @@ class _UpvcTilesState extends State<UpvcTiles> {
 
         if (material is List) {
           setState(() {
+            ///  Extract category info (message[0][0])
+            final categoryInfoList = data["message"]["message"][0];
+            if (categoryInfoList is List && categoryInfoList.isNotEmpty) {
+              categoryMeta = Map<String, dynamic>.from(categoryInfoList[0]);
+            }
+
             materialList = material
                 .whereType<Map>()
                 .map((e) => e["material_type"]?.toString())
@@ -218,12 +227,19 @@ class _UpvcTilesState extends State<UpvcTiles> {
   List<Map<String, dynamic>> apiResponseData = [];
   Map<String, dynamic>? apiResponse;
 
+  int? newOrderId = GlobalOrderSession().getNewOrderId();
   // 2. MODIFY the postUPVCData() method - REPLACE the existing method with this:
   Future<void> postUPVCData() async {
     HttpClient client = HttpClient();
     client.badCertificateCallback =
         ((X509Certificate cert, String host, int port) => true);
     IOClient ioClient = IOClient(client);
+
+    final categoryId = categoryMeta?["category_id"];
+    final categoryName = categoryMeta?["categories"];
+    print("this os $categoryId");
+    print("this os $categoryName");
+
     final headers = {"Content-Type": "application/json"};
     final data = {
       "customer_id": UserSession().userId,
@@ -231,9 +247,9 @@ class _UpvcTilesState extends State<UpvcTiles> {
       "product_name": null,
       "product_base_id": selectedProductBaseId,
       "product_base_name": "$selectedBaseProductName",
-      "category_id": 631,
-      "category_name": "UPVC Tiles",
-      "OrderID": (orderIDD != null) ? orderIDD : null
+      "category_id": categoryId,
+      "category_name": categoryName,
+      "OrderID": newOrderId
     };
 
     print("User input Data $data");
@@ -757,6 +773,8 @@ class _UpvcTilesState extends State<UpvcTiles> {
 
           if (responseData["status"] == "success") {
             setState(() {
+              billamt = responseData["bill_total"] ?? 0;
+              print("billamt updated to: $billamt");
               // Update fields based on API response - match exact field names from API
               if (responseData["length"] != null) {
                 data["Length"] = responseData["length"].toString();
@@ -1078,6 +1096,62 @@ class _UpvcTilesState extends State<UpvcTiles> {
                           ),
                         ),
                         SizedBox(height: 16),
+                        Container(
+                          margin: EdgeInsets.symmetric(vertical: 4),
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                Colors.deepPurple.shade500,
+                                Colors.deepPurple.shade200
+                              ],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.blue.withOpacity(0.3),
+                                blurRadius: 8,
+                                offset: Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: Padding(
+                            padding: EdgeInsets.all(10),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  flex: 3,
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        "TOTAL AMOUNT",
+                                        style: TextStyle(
+                                          color: Colors.white70,
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w500,
+                                          letterSpacing: 0.5,
+                                        ),
+                                      ),
+                                      SizedBox(height: 4),
+                                      Text(
+                                        "₹${billamt ?? 0}",
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 20,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
                         _buildSubmittedDataList(),
                       ],
                     ),

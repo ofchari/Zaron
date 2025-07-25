@@ -13,6 +13,7 @@ import 'package:zaron/view/widgets/subhead.dart';
 
 import '../../widgets/text.dart';
 import '../camera_upload/acessories_uploads/accessories_attahment.dart';
+import '../global_user/global_oredrID.dart';
 import '../global_user/global_user.dart';
 
 class Accessories extends StatefulWidget {
@@ -124,7 +125,7 @@ class _AccessoriesState extends State<Accessories> {
         }
       }
     } catch (e) {
-      print("Exception fetching accessories: $e");
+      print("Exception fetching accessories:$e");
     }
   }
 
@@ -330,6 +331,8 @@ class _AccessoriesState extends State<Accessories> {
     }
   }
 
+  int? newOrderId = GlobalOrderSession().getNewOrderId();
+
   Future<void> postAllData() async {
     if (selectedAccessories == null ||
         selectedBrands == null ||
@@ -349,7 +352,7 @@ class _AccessoriesState extends State<Accessories> {
       orElse: () => null,
     );
 
-// Extract values
+    // Extract values
     final accessoryID = matchingAccessory?["id"];
     final accessoryName = matchingAccessory?["accessories_name"];
     print("this os $accessoryID");
@@ -373,7 +376,7 @@ class _AccessoriesState extends State<Accessories> {
           "$selectedBrands,$selectedColors,$selectedThickness,$selectedCoatingMass,",
       "category_id": categoryId,
       "category_name": categoryName,
-      "OrderID": (orderIDD != null) ? orderIDD : null,
+      "OrderID": newOrderId
     };
     print("this is a body feed data$data");
 
@@ -509,7 +512,7 @@ class _AccessoriesState extends State<Accessories> {
   Widget _buildBaseProductSearchField(Map<String, dynamic> data) {
     String productId = data["id"].toString();
 
-    // Create a unique controller for this product if it doesn't exist
+// Create a unique controller for this product if it doesn't exist
     if (!baseProductControllers.containsKey(productId)) {
       baseProductControllers[productId] = TextEditingController();
       baseProductFocusNodes[productId] = FocusNode();
@@ -782,12 +785,13 @@ class _AccessoriesState extends State<Accessories> {
 
 // Method to call when user wants to update the selected base product
   void updateSelectedBaseProduct(String productId) {
-    if (selectedBaseProduct != null && selectedBaseProduct!.isNotEmpty) {
+    if (selectedBaseProducts[productId] != null &&
+        selectedBaseProducts[productId]!.isNotEmpty) {
       setState(() {
         isBaseProductUpdated = true;
-        baseProductController.clear();
+// baseProductController.clear();
       });
-      updateBaseProduct(productId, selectedBaseProduct!);
+      updateBaseProduct(productId, selectedBaseProducts[productId]!);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -888,7 +892,7 @@ class _AccessoriesState extends State<Accessories> {
     return Column(
       children: [
         Container(
-          margin: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          margin: EdgeInsets.symmetric(vertical: 4),
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: [Colors.deepPurple.shade500, Colors.deepPurple.shade200],
@@ -939,7 +943,7 @@ class _AccessoriesState extends State<Accessories> {
 
                 SizedBox(width: 12),
 
-                // View Toggle Section - Fixed width
+// View Toggle Section - Fixed width
                 Expanded(
                   flex: 2,
                   child: Container(
@@ -1022,7 +1026,7 @@ class _AccessoriesState extends State<Accessories> {
 
         SizedBox(height: 16),
 
-        // Content with smooth transition
+// Content with smooth transition
         AnimatedSwitcher(
           duration: Duration(milliseconds: 300),
           transitionBuilder: (Widget child, Animation<double> animation) {
@@ -1067,7 +1071,7 @@ class _AccessoriesState extends State<Accessories> {
                   children: [
                     Expanded(
                       child: Container(
-                        // color: Colors.red,
+// color: Colors.red,
                         height: 65.h,
                         width: 200.w,
                         child: Column(
@@ -1075,7 +1079,7 @@ class _AccessoriesState extends State<Accessories> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              "${index + 1}.  ${data["Products"]}" ?? "",
+                              "${index + 1}.  ${data["Products"] ?? ""}",
                               overflow: TextOverflow.ellipsis,
                               style: GoogleFonts.figtree(
                                 fontSize: 18,
@@ -1095,7 +1099,7 @@ class _AccessoriesState extends State<Accessories> {
                           vertical: 14,
                         ),
                         decoration: BoxDecoration(
-                          // color: Colors.deepPurple[50],
+// color: Colors.deepPurple[50],
                           color: Colors.blue[50],
                           borderRadius: BorderRadius.circular(10),
                         ),
@@ -1224,7 +1228,7 @@ class _AccessoriesState extends State<Accessories> {
                     Expanded(
                       flex: 3,
                       child: Text(
-                        "${index + 1}. ${data["Products"]}" ?? "",
+                        "${index + 1}. ${data["Products"] ?? ""}",
                         style: GoogleFonts.figtree(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
@@ -1545,9 +1549,9 @@ class _AccessoriesState extends State<Accessories> {
             : TextInputType.numberWithOptions(decimal: true),
         onChanged: (val) {
           setState(() {
-            // Only update the data if the value is not empty
+// Only update the data if the value is not empty
             if (val.trim().isNotEmpty) {
-              // Convert to double and check if it's not zero
+// Convert to double and check if it's not zero
               final numVal = double.tryParse(val);
               if (numVal != null && numVal != 0) {
                 data[key] = val;
@@ -1564,7 +1568,7 @@ class _AccessoriesState extends State<Accessories> {
                 }
               }
             } else {
-              // Remove the key from data if value is empty
+// Remove the key from data if value is empty
               data.remove(key);
               print("Removed empty field $key from data");
             }
