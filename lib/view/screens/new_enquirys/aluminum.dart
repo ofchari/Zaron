@@ -12,6 +12,7 @@ import 'package:zaron/view/screens/global_user/global_user.dart';
 import 'package:zaron/view/universal_api/api&key.dart';
 
 import '../../widgets/subhead.dart';
+import '../global_user/global_oredrID.dart';
 
 class Aluminum extends StatefulWidget {
   const Aluminum({super.key, required this.data});
@@ -264,6 +265,7 @@ class _AluminumState extends State<Aluminum> {
     }
   }
 
+  int? newOrderId = GlobalOrderSession().getNewOrderId();
   Future<void> postAllData() async {
     HttpClient client = HttpClient();
     client.badCertificateCallback =
@@ -285,7 +287,7 @@ class _AluminumState extends State<Aluminum> {
       "product_base_name": "$selectedBaseProductName",
       "category_id": categoryId,
       "category_name": categoryName,
-      "OrderID": (orderIDD != null) ? orderIDD : null
+      "OrderID": newOrderId
     };
 
     print("This is a body data: $data");

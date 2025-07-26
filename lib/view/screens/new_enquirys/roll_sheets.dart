@@ -11,6 +11,7 @@ import 'package:http/io_client.dart';
 import 'package:zaron/view/universal_api/api&key.dart';
 import 'package:zaron/view/widgets/subhead.dart';
 
+import '../global_user/global_oredrID.dart';
 import '../global_user/global_user.dart';
 
 class RollSheet extends StatefulWidget {
@@ -23,6 +24,8 @@ class RollSheet extends StatefulWidget {
 }
 
 class _RollSheetState extends State<RollSheet> {
+  Map<String, dynamic>? categoryMeta;
+  int? billamt;
   int? orderIDD;
   String? orderNO;
   late TextEditingController editController;
@@ -40,6 +43,7 @@ class _RollSheetState extends State<RollSheet> {
   List<String> thicknessList = [];
   List<String> coatingMassList = [];
   List<Map<String, dynamic>> submittedData = [];
+  List<dynamic> rawRollsheet = [];
 
   // Form key for validation
   final _formKey = GlobalKey<FormState>();
@@ -77,9 +81,15 @@ class _RollSheetState extends State<RollSheet> {
         final products = data["message"]["message"][1];
         debugPrint("PRoduct:::${products}");
         debugPrint(response.body, wrapWidth: 1024);
+        rawRollsheet = products;
 
         if (products is List) {
           setState(() {
+            ///  Extract category info (message[0][0])
+            final categoryInfoList = data["message"]["message"][0];
+            if (categoryInfoList is List && categoryInfoList.isNotEmpty) {
+              categoryMeta = Map<String, dynamic>.from(categoryInfoList[0]);
+            }
             productList = products
                 .whereType<Map>()
                 .map((e) => e["product_name"]?.toString())
@@ -89,7 +99,7 @@ class _RollSheetState extends State<RollSheet> {
         }
       }
     } catch (e) {
-      print("Exception fetching brands: $e");
+      print("Exception fetching products: $e");
     }
   }
 
@@ -127,7 +137,6 @@ class _RollSheetState extends State<RollSheet> {
     }
   }
 
-  /// fetch colors Api's //
   Future<void> _fetchColors() async {
     if (selectedBrand == null) return;
 
@@ -146,10 +155,6 @@ class _RollSheetState extends State<RollSheet> {
         url,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-          // "category_id": "3",
-          // "selectedlabel": "brand",
-          // "selectedvalue": selectedBrand,
-          // "label_name": "color",
           "product_label": "color",
           "product_filters": [selectedProduct],
           "product_label_filters": ["product_name"],
@@ -181,7 +186,6 @@ class _RollSheetState extends State<RollSheet> {
     }
   }
 
-  /// fetch Thickness Api's ///
   Future<void> _fetchThickness() async {
     if (selectedBrand == null) return;
 
@@ -200,10 +204,6 @@ class _RollSheetState extends State<RollSheet> {
         url,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-          // "category_id": "3",
-          // "selectedlabel": "color",
-          // "selectedvalue": selectedColor,
-          // "label_name": "thickness",
           "product_label": "thickness",
           "product_filters": [selectedProduct],
           "product_label_filters": ["product_name"],
@@ -217,7 +217,7 @@ class _RollSheetState extends State<RollSheet> {
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         final thickness = data["message"]["message"][0];
-        print("Fetching colors for brand: $selectedBrand");
+        print("Fetching thickness for brand: $selectedBrand");
         print("API response: ${response.body}");
 
         if (thickness is List) {
@@ -235,7 +235,6 @@ class _RollSheetState extends State<RollSheet> {
     }
   }
 
-  /// fetch Thickness Api's ///
   Future<void> _fetchCoatingMass() async {
     if (selectedBrand == null ||
         selectedColor == null ||
@@ -293,12 +292,11 @@ class _RollSheetState extends State<RollSheet> {
 
           if (idData is List && idData.isNotEmpty && idData.first is Map) {
             selectedBaseProductID = idData.first["id"]?.toString();
-            selectedProductBaseId =
-                idData.first["base_product_id"]?.toString(); // <-- Added line
+            selectedProductBaseId = idData.first["base_product_id"]?.toString();
             debugPrint("Selected Base Product ID: $selectedBaseProductID");
             debugPrint(
               "Base Product ID (base_product_id): $selectedProductBaseId",
-            ); // <-- Optional
+            );
           }
         } else {
           debugPrint("Unexpected message format for coating mass.");
@@ -311,27 +309,40 @@ class _RollSheetState extends State<RollSheet> {
     }
   }
 
-  // Add these variables after line 25 (after the existing List declarations)
   Map<String, dynamic>? apiResponseData;
   List<dynamic> responseProducts = [];
   Map<String, Map<String, String>> uomOptions = {};
-
-  // 2. MODIFY the postAllData() method - REPLACE the existing method with this:
+  int? newOrderId = GlobalOrderSession().getNewOrderId();
   Future<void> postAllData() async {
     HttpClient client = HttpClient();
     client.badCertificateCallback =
         ((X509Certificate cert, String host, int port) => true);
     IOClient ioClient = IOClient(client);
+
+    // From saved categoryMeta
+    final categoryId = categoryMeta?["category_id"];
+    final categoryName = categoryMeta?["categories"];
+    print("this os $categoryId");
+    print("this os $categoryName");
+
+    // Find the matching item from rawAccessoriesData
+    final matchingAccessory = rawRollsheet.firstWhere(
+      (item) => item["product_name"] == selectedProduct,
+      orElse: () => null,
+    );
+    // Extract values
+    final rollsheetProID = matchingAccessory?["id"];
+    print("this os $rollsheetProID");
     final headers = {"Content-Type": "application/json"};
     final data = {
       "customer_id": UserSession().userId,
-      "product_id": 689,
+      "product_id": rollsheetProID,
       "product_name": selectedProduct,
       "product_base_id": selectedBaseProductID,
       "product_base_name": "$selectedProductBaseId",
-      "category_id": 591,
-      "category_name": "Roll Sheet",
-      "OrderID": (orderIDD != null) ? orderIDD : null
+      "category_id": categoryId,
+      "category_name": categoryName,
+      "OrderID": newOrderId
     };
 
     print("This is a body data: $data");
@@ -352,7 +363,6 @@ class _RollSheetState extends State<RollSheet> {
           selectedCoatingMass == null) return;
 
       if (response.statusCode == 200) {
-        // PARSE THE API RESPONSE
         final responseData = jsonDecode(response.body);
         setState(() {
           final String orderID = responseData["order_id"]?.toString() ?? "";
@@ -393,8 +403,11 @@ class _RollSheetState extends State<RollSheet> {
               }
             }
 
-            //  Add only unique new products
+            // Add only unique new products
             responseProducts.addAll(newProducts);
+
+            // Update submittedData to reflect responseProducts
+            submittedData = List<Map<String, dynamic>>.from(responseProducts);
           }
         });
       }
@@ -409,7 +422,6 @@ class _RollSheetState extends State<RollSheet> {
   String? selectedBaseProduct;
   FocusNode baseProductFocusNode = FocusNode();
 
-  // Add this method for searching base products
   Future<void> searchBaseProducts(String query) async {
     if (query.isEmpty) {
       setState(() {
@@ -438,7 +450,7 @@ class _RollSheetState extends State<RollSheet> {
 
       if (response.statusCode == 200) {
         final responseData = jsonDecode(response.body);
-        print("Base product response: $responseData"); // Debug print
+        print("Base product response: $responseData");
         setState(() {
           baseProductResults = responseData['base_products'] ?? [];
           isSearchingBaseProduct = false;
@@ -458,7 +470,6 @@ class _RollSheetState extends State<RollSheet> {
     }
   }
 
-  // Add this method to build the base product search field
   Widget _buildBaseProductSearchField() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -509,8 +520,6 @@ class _RollSheetState extends State<RollSheet> {
             },
           ),
         ),
-
-        // Search Results Display (line by line, not dropdown)
         if (baseProductResults.isNotEmpty)
           Container(
             margin: EdgeInsets.only(top: 8),
@@ -588,8 +597,6 @@ class _RollSheetState extends State<RollSheet> {
               ],
             ),
           ),
-
-        // Selected Base Product Display
         if (selectedBaseProduct != null)
           Container(
             margin: EdgeInsets.only(top: 8),
@@ -630,7 +637,6 @@ class _RollSheetState extends State<RollSheet> {
     );
   }
 
-  // 3. MODIFY the _submitData() method - REPLACE the existing method with this:
   void _submitData() {
     if (selectedProduct == null ||
         selectedBrand == null ||
@@ -656,7 +662,6 @@ class _RollSheetState extends State<RollSheet> {
     }
 
     postAllData().then((_) {
-      // Reset selections after adding
       setState(() {
         selectedProduct = null;
         selectedBrand = null;
@@ -672,7 +677,6 @@ class _RollSheetState extends State<RollSheet> {
         _fetchBrands();
       });
 
-      // Show success message
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Row(
@@ -692,9 +696,8 @@ class _RollSheetState extends State<RollSheet> {
     });
   }
 
-  // 4. REPLACE the _buildSubmittedDataList() method with this:
   Widget _buildSubmittedDataList() {
-    if (responseProducts.isEmpty) {
+    if (submittedData.isEmpty) {
       return Container(
         padding: EdgeInsets.symmetric(vertical: 40),
         alignment: Alignment.center,
@@ -712,7 +715,7 @@ class _RollSheetState extends State<RollSheet> {
     }
 
     return Column(
-      children: responseProducts.asMap().entries.map((entry) {
+      children: submittedData.asMap().entries.map((entry) {
         int index = entry.key;
         Map<String, dynamic> data = Map<String, dynamic>.from(entry.value);
 
@@ -737,7 +740,7 @@ class _RollSheetState extends State<RollSheet> {
                         height: 40.h,
                         width: 210.w,
                         child: Text(
-                          "  ${index + 1}.  ${data["Products"]}" ?? "",
+                          "  ${index + 1}.  ${data["Products"] ?? ""}",
                           overflow: TextOverflow.ellipsis,
                           style: GoogleFonts.figtree(
                             fontSize: 18,
@@ -791,6 +794,7 @@ class _RollSheetState extends State<RollSheet> {
                                   ElevatedButton(
                                     onPressed: () {
                                       setState(() {
+                                        submittedData.removeAt(index);
                                         responseProducts.removeAt(index);
                                       });
                                       Navigator.pop(context);
@@ -822,7 +826,6 @@ class _RollSheetState extends State<RollSheet> {
     );
   }
 
-  // 5. REPLACE the _buildProductDetailInRows() method with this:
   Widget _buildProductDetailInRows(Map<String, dynamic> data) {
     return Padding(
       padding: const EdgeInsets.all(8.0),
@@ -878,7 +881,6 @@ class _RollSheetState extends State<RollSheet> {
     );
   }
 
-  // 6. ADD this NEW method for UOM dropdown from API:
   Widget _uomDropdownFromApi(Map<String, dynamic> data) {
     String productId = data["id"].toString();
     Map<String, String>? options = uomOptions[productId];
@@ -893,11 +895,6 @@ class _RollSheetState extends State<RollSheet> {
     } else {
       currentValue = data["UOM"]?.toString();
     }
-    // if (data["UOM"] is Map) {
-    //   currentValue = data["UOM"]["value"]?.toString();
-    // } else {
-    //   currentValue = data["UOM"]?.toString();
-    // }
 
     return SizedBox(
       height: 40.h,
@@ -915,11 +912,10 @@ class _RollSheetState extends State<RollSheet> {
           setState(() {
             data["UOM"] = {"value": val, "options": options};
           });
-          print("UOM changed to: $val"); // Debug print
+          print("UOM changed to: $val");
           print(
             "Product data: ${data["Products"]}, ID: ${data["id"]}",
-          ); // Debug print
-          // Trigger calculation with debounce
+          );
           _debounceCalculation(data);
         },
         decoration: InputDecoration(
@@ -986,7 +982,6 @@ class _RollSheetState extends State<RollSheet> {
                 key == "SQMtr")
             ? TextInputType.numberWithOptions(decimal: false)
             : TextInputType.numberWithOptions(decimal: false),
-        // inputFormatters: [FilteringTextInputFormatter.digitsOnly],
         onChanged: (val) {
           setState(() {
             data[key] = val;
@@ -995,11 +990,6 @@ class _RollSheetState extends State<RollSheet> {
           print("Field $key changed to: $val");
           print("Controller text: ${controller.text}");
           print("Data after change: ${data[key]}");
-
-          // 🚫 DO NOT forcefully reset controller.text here!
-          // if (controller.text != val) {
-          //   controller.text = val;
-          // }
 
           if (key == "Profile" || key == "Nos" || key == "Basic Rate") {
             print("Triggering calculation for $key with value: $val");
@@ -1046,22 +1036,18 @@ class _RollSheetState extends State<RollSheet> {
 
   Timer? _debounceTimer;
   Map<String, dynamic> calculationResults = {};
-  Map<String, String?> previousUomValues = {}; // Track previous UOM values
-  Map<String, Map<String, TextEditingController>> fieldControllers =
-      {}; // Store controllers
+  Map<String, String?> previousUomValues = {};
+  Map<String, Map<String, TextEditingController>> fieldControllers = {};
 
-  // Method to get or create controller for each field
   TextEditingController _getController(Map<String, dynamic> data, String key) {
     String productId = data["id"].toString();
 
-    // Initialize controllers map for this product ID
     fieldControllers.putIfAbsent(productId, () => {});
 
-    // If controller for this key doesn't exist, create it
     if (!fieldControllers[productId]!.containsKey(key)) {
       String initialValue = (data[key] != null && data[key].toString() != "0")
           ? data[key].toString()
-          : ""; // Avoid initializing with "0"
+          : "";
 
       fieldControllers[productId]![key] = TextEditingController(
         text: initialValue,
@@ -1069,12 +1055,9 @@ class _RollSheetState extends State<RollSheet> {
 
       print("Created controller for [$key] with value: '$initialValue'");
     } else {
-      // Existing controller: check if it needs sync from data
       final controller = fieldControllers[productId]![key]!;
-
       final dataValue = data[key]?.toString() ?? "";
 
-      // If the controller is empty but data has a value, sync it
       if (controller.text.isEmpty && dataValue.isNotEmpty && dataValue != "0") {
         controller.text = dataValue;
         print("Synced controller for [$key] to: '$dataValue'");
@@ -1084,7 +1067,6 @@ class _RollSheetState extends State<RollSheet> {
     return fieldControllers[productId]![key]!;
   }
 
-  // Add this method for debounced calculation
   void _debounceCalculation(Map<String, dynamic> data) {
     _debounceTimer?.cancel();
     _debounceTimer = Timer(Duration(seconds: 1), () {
@@ -1103,7 +1085,6 @@ class _RollSheetState extends State<RollSheet> {
 
     String productId = data["id"].toString();
 
-    // Get current UOM value
     String? currentUom;
     if (data["UOM"] is Map) {
       currentUom = data["UOM"]["value"]?.toString();
@@ -1114,7 +1095,6 @@ class _RollSheetState extends State<RollSheet> {
     print("Current UOM: $currentUom");
     print("Previous UOM: ${previousUomValues[productId]}");
 
-    // Get Profile value from controller
     double? profileValue;
     String? profileText;
 
@@ -1133,7 +1113,6 @@ class _RollSheetState extends State<RollSheet> {
       profileValue = double.tryParse(profileText);
     }
 
-    // Get Nos value from controller
     int nosValue = 0;
     String? nosText;
 
@@ -1186,6 +1165,8 @@ class _RollSheetState extends State<RollSheet> {
 
         if (responseData["status"] == "success") {
           setState(() {
+            billamt = responseData["bill_total"] ?? 0;
+            print("billamt updated to: $billamt");
             calculationResults[productId] = responseData;
 
             if (responseData["Length"] != null) {
@@ -1212,13 +1193,6 @@ class _RollSheetState extends State<RollSheet> {
               }
             }
 
-            // if (responseData["R.Ft"] != null) {
-            //   data["R.Ft"] = responseData["R.Ft"].toString();
-            //   if (fieldControllers[productId]?["R.Ft"] != null) {
-            //     fieldControllers[productId]!["R.Ft"]!.text =
-            //         responseData["R.Ft"].toString();
-            //   }
-            // }
             if (responseData["sqmtr"] != null) {
               data["SQMtr"] = responseData["sqmtr"].toString();
               if (fieldControllers[productId]?["SQMtr"] != null) {
@@ -1240,7 +1214,7 @@ class _RollSheetState extends State<RollSheet> {
 
           print("=== CALCULATION SUCCESS ===");
           print(
-            "Updated data: Length=${data["Profile"]}, Nos=${data["Nos"]}, R.Ft=${data["R.Ft"]}, Amount=${data["Amount"]}",
+            "Updated data: Length=${data["Profile"]}, Nos=${data["Nos"]}, SQMtr=${data["SQMtr"]}, Amount=${data["Amount"]}",
           );
         } else {
           print("API returned error status: ${responseData["status"]}");
@@ -1311,7 +1285,6 @@ class _RollSheetState extends State<RollSheet> {
               ),
             ),
             constraints: BoxConstraints(maxHeight: 300),
-            // borderRadius: BorderRadius.circular(12),
           ),
         ),
       ),
@@ -1378,9 +1351,7 @@ class _RollSheetState extends State<RollSheet> {
                               setState(() {
                                 selectedProduct = value;
                               });
-                              // _fetchProductName();
                             },
-                            // enabled: productList.isNotEmpty,
                             label: "Product Name",
                             icon: Icons.category_outlined,
                           ),
@@ -1390,8 +1361,6 @@ class _RollSheetState extends State<RollSheet> {
                             (value) {
                               setState(() {
                                 selectedBrand = value;
-
-                                ///clear fields
                                 selectedColor = null;
                                 selectedThickness = null;
                                 selectedCoatingMass = null;
@@ -1410,8 +1379,6 @@ class _RollSheetState extends State<RollSheet> {
                             (value) {
                               setState(() {
                                 selectedColor = value;
-
-                                ///clear fields
                                 selectedThickness = null;
                                 selectedCoatingMass = null;
                                 thicknessList = [];
@@ -1429,8 +1396,6 @@ class _RollSheetState extends State<RollSheet> {
                             (value) {
                               setState(() {
                                 selectedThickness = value;
-
-                                ///clear fields
                                 selectedCoatingMass = null;
                                 coatingMassList = [];
                               });
@@ -1526,8 +1491,7 @@ class _RollSheetState extends State<RollSheet> {
                   ),
                 ),
                 SizedBox(height: 24),
-                if (submittedData.isNotEmpty) Gap(30),
-                ...[
+                if (submittedData.isNotEmpty) ...[
                   SizedBox(height: 24),
                   Container(
                     padding: EdgeInsets.all(16),
@@ -1631,6 +1595,62 @@ class _RollSheetState extends State<RollSheet> {
                           ),
                         ),
                         SizedBox(height: 16),
+                        Container(
+                          margin: EdgeInsets.symmetric(vertical: 4),
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                Colors.deepPurple.shade500,
+                                Colors.deepPurple.shade200
+                              ],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.blue.withOpacity(0.3),
+                                blurRadius: 8,
+                                offset: Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: Padding(
+                            padding: EdgeInsets.all(10),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  flex: 3,
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        "TOTAL AMOUNT",
+                                        style: TextStyle(
+                                          color: Colors.white70,
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w500,
+                                          letterSpacing: 0.5,
+                                        ),
+                                      ),
+                                      SizedBox(height: 4),
+                                      Text(
+                                        "₹${billamt ?? 0}",
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 20,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
                         _buildSubmittedDataList(),
                       ],
                     ),

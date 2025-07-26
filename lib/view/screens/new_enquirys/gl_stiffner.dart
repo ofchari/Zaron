@@ -11,6 +11,7 @@ import 'package:http/io_client.dart';
 import 'package:zaron/view/universal_api/api&key.dart';
 import 'package:zaron/view/widgets/subhead.dart';
 
+import '../global_user/global_oredrID.dart';
 import '../global_user/global_user.dart';
 
 class GIStiffner extends StatefulWidget {
@@ -23,6 +24,8 @@ class GIStiffner extends StatefulWidget {
 }
 
 class _GIStiffnerState extends State<GIStiffner> {
+  Map<String, dynamic>? categoryMeta;
+  int? billamt;
   String? orderNo;
   int? orderIDD;
   late TextEditingController editController;
@@ -42,6 +45,7 @@ class _GIStiffnerState extends State<GIStiffner> {
   List<String> yieldsListt = [];
   List<String> brandList = [];
   List<Map<String, dynamic>> submittedData = [];
+  List<dynamic> rawGIStiffer = [];
 
   // Form key for validation
   final _formKey = GlobalKey<FormState>();
@@ -79,9 +83,15 @@ class _GIStiffnerState extends State<GIStiffner> {
         final products = data["message"]["message"][1];
         debugPrint("PRoduct:::${products}");
         debugPrint(response.body, wrapWidth: 1024);
+        rawGIStiffer = products;
 
         if (products is List) {
           setState(() {
+            ///  Extract category info (message[0][0])
+            final categoryInfoList = data["message"]["message"][0];
+            if (categoryInfoList is List && categoryInfoList.isNotEmpty) {
+              categoryMeta = Map<String, dynamic>.from(categoryInfoList[0]);
+            }
             productList = products
                 .whereType<Map>()
                 .map((e) => e["product_name"]?.toString())
@@ -362,22 +372,39 @@ class _GIStiffnerState extends State<GIStiffner> {
   List<dynamic> responseProducts = [];
   Map<String, Map<String, String>> uomOptions = {};
 
+  int? newOrderId = GlobalOrderSession().getNewOrderId();
+
   // 2. MODIFY the postAllData() method - REPLACE the existing method with this:
   Future<void> postAllData() async {
     HttpClient client = HttpClient();
     client.badCertificateCallback =
         ((X509Certificate cert, String host, int port) => true);
     IOClient ioClient = IOClient(client);
+    // From saved categoryMeta
+    final categoryId = categoryMeta?["category_id"];
+    final categoryName = categoryMeta?["categories"];
+    print("this os $categoryId");
+    print("this os $categoryName");
+
+    // Find the matching item from rawAccessoriesData
+    final matchingAccessory = rawGIStiffer.firstWhere(
+      (item) => item["product_name"] == selectedProduct,
+      orElse: () => null,
+    );
+    // Extract values
+    final giStifferID = matchingAccessory?["id"];
+    print("this os $giStifferID");
+
     final headers = {"Content-Type": "application/json"};
     final data = {
       "customer_id": UserSession().userId,
-      "product_id": 1330,
+      "product_id": giStifferID,
       "product_name": selectedProduct,
       "product_base_id": selectedProductBaseId,
       "product_base_name": "$selectedBaseProductId",
-      "category_id": 627,
-      "category_name": "GI Stiffner",
-      "OrderID": (orderIDD != null) ? orderIDD : null,
+      "category_id": categoryId,
+      "category_name": categoryName,
+      "OrderID": newOrderId
     };
     print("This is a body data: $data");
     final url = "$apiUrl/addbag";
@@ -1276,6 +1303,8 @@ class _GIStiffnerState extends State<GIStiffner> {
 
         if (responseData["status"] == "success") {
           setState(() {
+            billamt = responseData["bill_total"] ?? 0;
+            print("billamt updated to: $billamt");
             calculationResults[productId] = responseData;
 
             // Update Profile/Length
@@ -1761,6 +1790,62 @@ class _GIStiffnerState extends State<GIStiffner> {
                           ),
                         ),
                         SizedBox(height: 16),
+                        Container(
+                          margin: EdgeInsets.symmetric(vertical: 4),
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                Colors.deepPurple.shade500,
+                                Colors.deepPurple.shade200
+                              ],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.blue.withOpacity(0.3),
+                                blurRadius: 8,
+                                offset: Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: Padding(
+                            padding: EdgeInsets.all(10),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  flex: 3,
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        "TOTAL AMOUNT",
+                                        style: TextStyle(
+                                          color: Colors.white70,
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w500,
+                                          letterSpacing: 0.5,
+                                        ),
+                                      ),
+                                      SizedBox(height: 4),
+                                      Text(
+                                        "₹${billamt ?? 0}",
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 20,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
                         _buildSubmittedDataList(),
                       ],
                     ),

@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:zaron/view/screens/login.dart';
-import 'package:zaron/view/widgets/buttons.dart';
 
 class Entry extends StatefulWidget {
   const Entry({super.key});
@@ -85,19 +84,61 @@ class _EntryState extends State<Entry> {
             ),
           ),
           Positioned(
-              bottom: 160,
-              right: 50,
+            bottom: 80,
+            left: 0,
+            right: 0,
+            child: Center(
               child: GestureDetector(
-                  onTap: () {
-                    Get.off(Login());
-                  },
-                  child: Buttons(
-                      text: "Get Started here ✈",
-                      weight: FontWeight.w500,
-                      color: Colors.grey[500]!,
-                      height: height / 16.h,
-                      width: width / 1.3.w,
-                      radius: BorderRadius.circular(26.r))))
+                onTap: () {
+                  Get.off(Login());
+                },
+                child: AnimatedContainer(
+                  duration: Duration(milliseconds: 300),
+                  curve: Curves.easeInOut,
+                  height: height / 16.h,
+                  width: width / 1.25.w,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(30.r),
+                    gradient: LinearGradient(
+                      colors: [Colors.orange.shade300, Colors.orange.shade100],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.deepPurple,
+                        blurRadius: 5,
+                        offset: Offset(0, 0.5),
+                      ),
+                      BoxShadow(
+                        color: Colors.white.withOpacity(0.05),
+                        blurRadius: 20,
+                        offset: Offset(-5, -5),
+                      ),
+                    ],
+                  ),
+                  child: Center(
+                    child: Text(
+                      "Get Started here ✈",
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 17.sp,
+                        letterSpacing: 1.2,
+                        shadows: [
+                          Shadow(
+                            color: Colors.black.withOpacity(0.3),
+                            offset: Offset(0, 1),
+                            blurRadius: 2,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
         ],
       ),
     );

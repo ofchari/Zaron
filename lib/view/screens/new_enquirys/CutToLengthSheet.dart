@@ -11,6 +11,7 @@ import 'package:http/io_client.dart';
 import 'package:zaron/view/universal_api/api&key.dart';
 import 'package:zaron/view/widgets/subhead.dart';
 
+import '../global_user/global_oredrID.dart';
 import '../global_user/global_user.dart';
 
 class CutToLengthSheet extends StatefulWidget {
@@ -45,6 +46,7 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
   List<String> yieldsListt = [];
   List<String> brandList = [];
   List<Map<String, dynamic>> submittedData = [];
+  List<dynamic> rawCUTtoLength = [];
 
   // Form key for validation
   final _formKey = GlobalKey<FormState>();
@@ -82,6 +84,7 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
         final products = data["message"]["message"][1];
         debugPrint("PRoduct:::$products");
         debugPrint(response.body, wrapWidth: 1024);
+        rawCUTtoLength = products;
 
         if (products is List) {
           setState(() {
@@ -89,12 +92,6 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
             final categoryInfoList = data["message"]["message"][0];
             if (categoryInfoList is List && categoryInfoList.isNotEmpty) {
               categoryMeta = Map<String, dynamic>.from(categoryInfoList[0]);
-            }
-
-            ///  Extract category info (message[0][0])
-            final categoryInfo = data["message"]["message"][1];
-            if (categoryInfo is List && categoryInfo.isNotEmpty) {
-              categoryProductsMeta = Map<String, dynamic>.from(categoryInfo[0]);
             }
 
             productList = products
@@ -395,6 +392,8 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
   bool showApiResponse = false;
 
   // 2. MODIFY the postAllData() method to store the response (replace your existing postAllData method)
+  int? newOrderId = GlobalOrderSession().getNewOrderId();
+
   Future<void> postAllData() async {
     HttpClient client = HttpClient();
     client.badCertificateCallback =
@@ -407,21 +406,25 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
     print("this os $categoryId");
     print("this os $categoryName");
 
-    final productId = categoryProductsMeta?["id"];
-    final productNamee = categoryProductsMeta?["categories"];
-    print("this oss $productId");
-    print("this os $productNamee");
+    // Find the matching item from rawAccessoriesData
+    final matchingAccessory = rawCUTtoLength.firstWhere(
+      (item) => item["product_name"] == selectedProduct,
+      orElse: () => null,
+    );
+    // Extract values
+    final CuttolengthproID = matchingAccessory?["id"];
+    print("this os $CuttolengthproID");
 
     final headers = {"Content-Type": "application/json"};
     final data = {
       "customer_id": UserSession().userId,
-      "product_id": productId,
+      "product_id": CuttolengthproID,
       "product_name": selectedProduct,
       "product_base_id": selectedProductBaseId,
       "product_base_name": "$selectedBaseProductName",
       "category_id": categoryId,
       "category_name": categoryName,
-      "OrderID": (orderIDD != null) ? orderIDD : null,
+      "OrderID": newOrderId
     };
 
     print("This is a body data: $data");
@@ -1775,7 +1778,7 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
                                     ),
                                     SizedBox(width: 4),
                                     Text(
-                                      "ID: $orderNO",
+                                      "ID: ${orderNO ?? 0.0}",
                                       overflow: TextOverflow.ellipsis,
                                       style: GoogleFonts.figtree(
                                         fontSize: 13,
