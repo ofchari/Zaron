@@ -566,23 +566,88 @@ class _TotalQuoationViewState extends State<TotalQuoationView> {
         backgroundColor: Colors.white,
         appBar: AppBar(
           centerTitle: true,
-          backgroundColor: Colors.white,
-          title: Subhead(
-              text: "Total Quotation View",
-              weight: FontWeight.w500,
-              color: Colors.black),
+          elevation: 0,
+          backgroundColor: Colors.transparent,
+          flexibleSpace: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  Colors.deepPurple.shade200,
+                  Colors.deepPurple,
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.only(
+                bottomLeft: Radius.circular(25),
+                bottomRight: Radius.circular(25),
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 5,
+                  offset: Offset(0, 5),
+                ),
+              ],
+            ),
+          ),
+          title: Container(
+            width: width * 0.4, // Give more width to title
+            padding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: Colors.white.withOpacity(0.3)),
+            ),
+            child: MyText(
+                text: "Total Quotation View",
+                weight: FontWeight.w600,
+                color: Colors.white),
+          ),
           actions: [
-            GestureDetector(
-                onTap: () {
-                  postCreateQuotation();
-                },
-                child: Buttons(
-                    text: "Create Quotation",
-                    weight: FontWeight.w500,
-                    color: Colors.blue,
-                    height: height / 18.h,
-                    width: width / 2.8,
-                    radius: BorderRadius.circular(10)))
+            Container(
+              width: width * 0.17.w,
+              height: height * 0.04.h,
+              margin: EdgeInsets.only(right: 15, top: 8, bottom: 8),
+              child: GestureDetector(
+                  onTap: () {
+                    postCreateQuotation();
+                  },
+                  child: Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          Colors.white.withOpacity(0.2),
+                          Colors.white.withOpacity(0.1),
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(25),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.deepPurple.withOpacity(0.4),
+                          blurRadius: 8,
+                          offset: Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.add_circle_outline_rounded,
+                          color: Colors.white,
+                          size: 25,
+                        ),
+                        MyText(
+                            text: "Create",
+                            weight: FontWeight.w500,
+                            color: Colors.white)
+                      ],
+                    ),
+                  )),
+            )
           ],
         ),
         body: isLoading
