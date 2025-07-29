@@ -8,46 +8,51 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:gap/gap.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/io_client.dart';
-import 'package:zaron/view/universal_api/api&key.dart';
+import 'package:zaron/view/widgets/subhead.dart';
 
-import '../global_user/global_oredrID.dart';
-import '../global_user/global_user.dart';
+import '../../../universal_api/api&key.dart';
+import '../../global_user/global_oredrID.dart';
 
-class Screw extends StatefulWidget {
-  const Screw({super.key, required this.data});
-
+class Polycarbonate extends StatefulWidget {
+  const Polycarbonate({super.key, required this.data});
   final Map<String, dynamic> data;
 
   @override
-  State<Screw> createState() => _ScrewState();
+  State<Polycarbonate> createState() => _PolycarbonateState();
 }
 
-class _ScrewState extends State<Screw> {
+class _PolycarbonateState extends State<Polycarbonate> {
   Map<String, dynamic>? categoryMeta;
   int? billamt;
-  late TextEditingController editController;
   int? orderIDD;
   String? orderNO;
+  late TextEditingController editController;
+
   String? selectedBrand;
-  String? selectedScrew;
-  String? selectedThread;
+  String? selectedColor;
+  String? selectedThickness;
   String? selectedProductBaseId;
   String? selectedBaseProductName;
 
-  List<String> brandList = [];
-  List<String> screwLengthList = [];
-  List<String> threadList = [];
-  List<dynamic> responseProducts = [];
-  Map<String, Map<String, String>> uomOptions = {};
-  Map<String, dynamic>? apiResponse;
+  List<String> brandsList = [];
+  List<String> colorsList = [];
+  List<String> thicknessList = [];
+  List<Map<String, dynamic>> submittedData = [];
+  bool isLoading = false;
 
   final _formKey = GlobalKey<FormState>();
+
+  Map<String, dynamic>? apiResponseData;
+  List<dynamic> responseProducts = [];
+  Map<String, Map<String, String>> uomOptions = {};
 
   @override
   void initState() {
     super.initState();
-    editController = TextEditingController(text: widget.data["Base Product"]);
-    _fetchBrand();
+    editController = TextEditingController(
+      text: widget.data["Base Product"] ?? "",
+    );
+    _fetchBrands();
   }
 
   @override
@@ -55,161 +60,152 @@ class _ScrewState extends State<Screw> {
     editController.dispose();
     baseProductController.dispose();
     baseProductFocusNode.dispose();
+    // Dispose controllers in fieldControllers
     fieldControllers.forEach((_, controllers) {
       controllers.forEach((_, controller) => controller.dispose());
     });
     super.dispose();
   }
 
-  Future<void> _fetchBrand() async {
-    setState(() {
-      brandList = [];
-      selectedBrand = null;
-    });
-
-    final client = IOClient(
-      HttpClient()..badCertificateCallback = (_, __, ___) => true,
-    );
-    final url = Uri.parse('$apiUrl/showlables/7');
-
+  Future<void> _fetchBrands() async {
+    if (!mounted) return;
+    setState(() => isLoading = true);
     try {
-      final response = await client.get(url);
+      final client = IOClient(
+        HttpClient()..badCertificateCallback = (_, __, ___) => true,
+      );
+      final response = await client.get(Uri.parse('$apiUrl/showlables/19'));
+
+      if (!mounted) return;
+
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final message = data["message"]["message"];
-        debugPrint("Brand API Response: ${response.body}");
+        debugPrint("Brands API Response: ${response.body}");
 
-        if (message is List && message.length > 1) {
-          final brands = message[1];
-          if (brands is List) {
+        final message = data["message"]["message"];
+        if (message is List && message.length >= 2) {
+          final brandsData = message[1];
+          if (brandsData is List) {
             setState(() {
               ///  Extract category info (message[0][0])
               final categoryInfoList = data["message"]["message"][0];
               if (categoryInfoList is List && categoryInfoList.isNotEmpty) {
                 categoryMeta = Map<String, dynamic>.from(categoryInfoList[0]);
               }
-
-              brandList = brands
+              brandsList = brandsData
                   .whereType<Map>()
-                  .map((e) => e["brand"]?.toString())
-                  .whereType<String>()
+                  .map((e) => e["type_of_panel"]?.toString() ?? "")
+                  .where((e) => e.isNotEmpty)
                   .toList();
             });
           }
-        } else {
-          _showErrorSnackBar("Invalid brand data format");
         }
       } else {
         _showErrorSnackBar("Failed to load brands: ${response.statusCode}");
       }
     } catch (e) {
-      debugPrint("Exception fetching brand: $e");
+      debugPrint("Brands Error: $e");
       _showErrorSnackBar("Error loading brands");
+    } finally {
+      if (mounted) setState(() => isLoading = false);
     }
   }
 
-  Future<void> _fetchScrew() async {
-    if (selectedBrand == null) return;
-
-    setState(() {
-      screwLengthList = [];
-      selectedScrew = null;
-    });
-
-    final client = IOClient(
-      HttpClient()..badCertificateCallback = (_, __, ___) => true,
-    );
-    final url = Uri.parse('$apiUrl/labelinputdata');
-
+  Future<void> _fetchColors() async {
+    if (selectedBrand == null || !mounted) return;
+    setState(() => isLoading = true);
     try {
+      final client = IOClient(
+        HttpClient()..badCertificateCallback = (_, __, ___) => true,
+      );
       final response = await client.post(
-        url,
+        Uri.parse('$apiUrl/labelinputdata'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-          "product_label": "length_of_screw",
+          "product_label": "color",
           "product_filters": null,
           "product_label_filters": null,
           "product_category_id": null,
           "base_product_filters": [selectedBrand],
-          "base_label_filters": ["brand"],
-          "base_category_id": "7",
+          "base_label_filters": ["type_of_panel"],
+          "base_category_id": "19",
         }),
       );
+
+      if (!mounted) return;
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         final message = data["message"]["message"];
-        debugPrint("Screw API Response: ${response.body}");
+        debugPrint("Colors API Response: ${response.body}");
 
-        if (message is List && message.length > 1) {
-          final screws = message[0];
-          if (screws is List) {
+        if (message is List && message.length >= 2) {
+          final colorData = message[0];
+          if (colorData is List) {
             setState(() {
-              screwLengthList = screws
+              colorsList = colorData
                   .whereType<Map>()
-                  .map((e) => e["length_of_screw"]?.toString())
-                  .whereType<String>()
+                  .map((e) => e["color"]?.toString() ?? "")
+                  .where((e) => e.isNotEmpty)
                   .toList();
             });
           }
-        } else {
-          _showErrorSnackBar("Invalid screw data format");
         }
       } else {
-        _showErrorSnackBar("Failed to load screws: ${response.statusCode}");
+        _showErrorSnackBar("Failed to load colors: ${response.statusCode}");
       }
     } catch (e) {
-      debugPrint("Exception fetching screw: $e");
-      _showErrorSnackBar("Error loading screws");
+      debugPrint("Colors Error: $e");
+      _showErrorSnackBar("Error loading colors");
+    } finally {
+      if (mounted) setState(() => isLoading = false);
     }
   }
 
-  Future<void> _fetchThreads() async {
-    if (selectedBrand == null || selectedScrew == null) return;
+  Future<void> _fetchThickness() async {
+    if (selectedBrand == null || selectedColor == null || !mounted) return;
 
-    setState(() {
-      threadList = [];
-      selectedThread = null;
-    });
-
-    final client = IOClient(
-      HttpClient()..badCertificateCallback = (_, __, ___) => true,
-    );
-    final url = Uri.parse('$apiUrl/labelinputdata');
+    setState(() => isLoading = true);
 
     try {
+      final client = IOClient(
+        HttpClient()..badCertificateCallback = (_, __, ___) => true,
+      );
       final response = await client.post(
-        url,
+        Uri.parse('$apiUrl/labelinputdata'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-          "product_label": "type_of_thread",
+          "product_label": "thickness",
           "product_filters": null,
           "product_label_filters": null,
           "product_category_id": null,
-          "base_product_filters": [selectedBrand, selectedScrew],
-          "base_label_filters": ["brand", "length_of_screw"],
-          "base_category_id": "7",
+          "base_product_filters": [selectedBrand, selectedColor],
+          "base_label_filters": ["type_of_panel", "color"],
+          "base_category_id": "19",
         }),
       );
 
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        debugPrint("Thread API Response: ${response.body}");
+      if (!mounted) return;
 
+      if (response.statusCode == 200) {
+        debugPrint("Thickness API Response: ${response.body}");
+        final data = jsonDecode(response.body);
         final message = data["message"]["message"];
-        if (message is List && message.isNotEmpty) {
-          final threadTypes = message[0];
-          if (threadTypes is List) {
+
+        if (message is List && message.length >= 2) {
+          final thicknessData = message[0];
+          final idData = message[1];
+
+          if (thicknessData is List) {
             setState(() {
-              threadList = threadTypes
+              thicknessList = thicknessData
                   .whereType<Map>()
-                  .map((e) => e["type_of_thread"]?.toString())
-                  .whereType<String>()
+                  .map((e) => e["thickness"]?.toString() ?? "")
+                  .where((e) => e.isNotEmpty)
                   .toList();
             });
           }
 
-          final idData = message.length > 1 ? message[1] : null;
           if (idData is List && idData.isNotEmpty && idData.first is Map) {
             selectedProductBaseId = idData.first["id"]?.toString();
             selectedBaseProductName =
@@ -217,15 +213,15 @@ class _ScrewState extends State<Screw> {
             debugPrint("Selected Base Product ID: $selectedProductBaseId");
             debugPrint("Base Product Name: $selectedBaseProductName");
           }
-        } else {
-          _showErrorSnackBar("Invalid thread data format");
         }
       } else {
-        _showErrorSnackBar("Failed to load threads: ${response.statusCode}");
+        _showErrorSnackBar("Failed to load thickness: ${response.statusCode}");
       }
     } catch (e) {
-      debugPrint("Exception fetching thread types: $e");
-      _showErrorSnackBar("Error loading threads");
+      debugPrint("Thickness Error: $e");
+      _showErrorSnackBar("Error loading thickness");
+    } finally {
+      if (mounted) setState(() => isLoading = false);
     }
   }
 
@@ -250,8 +246,8 @@ class _ScrewState extends State<Screw> {
 
   int? newOrderId = GlobalOrderSession().getNewOrderId();
 
-  Future<void> postScrewData() async {
-    debugPrint("Posting screw data...");
+  Future<void> postPolycarbonateData() async {
+    debugPrint("Posting polycarbonate data...");
     HttpClient client = HttpClient();
     client.badCertificateCallback =
         ((X509Certificate cert, String host, int port) => true);
@@ -264,14 +260,14 @@ class _ScrewState extends State<Screw> {
     print("this os $categoryName");
     final headers = {"Content-Type": "application/json"};
     final data = {
-      "customer_id": UserSession().userId,
+      "customer_id": 377423,
       "product_id": null,
       "product_name": null,
       "product_base_id": selectedProductBaseId,
-      "product_base_name": selectedBaseProductName,
+      "product_base_name": "$selectedBaseProductName",
       "category_id": categoryId,
       "category_name": categoryName,
-      "OrderID": newOrderId,
+      "OrderID": newOrderId
     };
 
     debugPrint("Request Body: $data");
@@ -280,63 +276,61 @@ class _ScrewState extends State<Screw> {
     try {
       final response = await ioClient.post(
         Uri.parse(url),
-        body: body,
         headers: headers,
+        body: body,
       );
 
       debugPrint("API Response Status: ${response.statusCode}");
       debugPrint("API Response Body: ${response.body}");
 
       if (selectedBrand == null ||
-          selectedScrew == null ||
-          selectedThread == null) {
+          selectedColor == null ||
+          selectedThickness == null) {
         _showErrorSnackBar("Please select all required fields");
         return;
       }
 
       if (response.statusCode == 200) {
-        final decodedResponse = jsonDecode(response.body);
+        final responseData = jsonDecode(response.body);
         setState(() {
-          final String orderID = decodedResponse["order_id"]?.toString() ?? "";
+          final String orderID = responseData["order_id"]?.toString() ?? "";
           orderIDD = int.tryParse(orderID);
-          orderNO = decodedResponse["order_no"]?.toString() ?? "Unknown";
-          apiResponse = decodedResponse;
+          orderNO = responseData["order_no"]?.toString() ?? "Unknown";
+          apiResponseData = responseData;
 
-          if (decodedResponse["lebels"] != null &&
-              decodedResponse["lebels"].isNotEmpty) {
-            final categoryData = decodedResponse["lebels"][0];
-            if (categoryData["data"] != null) {
-              List<dynamic> fullList = categoryData["data"];
-              List<Map<String, dynamic>> newProducts = [];
+          if (responseData["lebels"] != null &&
+              responseData["lebels"].isNotEmpty) {
+            List<dynamic> fullList = responseData["lebels"][0]["data"];
+            List<Map<String, dynamic>> newProducts = [];
 
-              for (var item in fullList) {
-                if (item is Map<String, dynamic>) {
-                  Map<String, dynamic> product =
-                      Map<String, dynamic>.from(item);
-                  String productId = product["id"].toString();
-                  bool alreadyExists = responseProducts.any(
-                      (existing) => existing["id"].toString() == productId);
+            for (var item in fullList) {
+              if (item is Map<String, dynamic>) {
+                Map<String, dynamic> product = Map<String, dynamic>.from(item);
+                String productId = product["id"].toString();
 
-                  if (!alreadyExists) {
-                    newProducts.add(product);
-                    if (product["UOM"] != null &&
-                        product["UOM"]["options"] != null) {
-                      uomOptions[product["id"].toString()] =
-                          Map<String, String>.from(
-                        (product["UOM"]["options"] as Map).map(
-                          (key, value) =>
-                              MapEntry(key.toString(), value.toString()),
-                        ),
-                      );
-                    }
-                    debugPrint(
-                        "Product added: ${product["id"]} - ${product["Products"]}");
+                bool alreadyExists = responseProducts
+                    .any((existing) => existing["id"].toString() == productId);
+
+                if (!alreadyExists) {
+                  newProducts.add(product);
+                  debugPrint(
+                      "Product added: ${product["id"]} - ${product["Products"]}");
+
+                  // Add UOM options if available
+                  if (product["UOM"] != null &&
+                      product["UOM"]["options"] != null) {
+                    uomOptions[product["id"].toString()] =
+                        Map<String, String>.from((product["UOM"]["options"]
+                                as Map)
+                            .map((key, value) =>
+                                MapEntry(key.toString(), value.toString())));
                   }
                 }
               }
-              responseProducts.addAll(newProducts);
-              debugPrint("Updated responseProducts: $responseProducts");
             }
+
+            // Add only non-duplicate products
+            responseProducts.addAll(newProducts);
           }
         });
       } else {
@@ -383,61 +377,69 @@ class _ScrewState extends State<Screw> {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
-          child: Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Column(
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(
-                      child: Text(
-                        "${index + 1}. ${data["Products"] ?? 'N/A'}",
-                        style: GoogleFonts.figtree(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.black87,
-                        ),
-                      ),
-                    ),
-                    Container(
-                      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: Colors.blue[50],
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Text(
-                        "ID: ${data['id'] ?? 'N/A'}",
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.blue[700],
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Container(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.only(top: 15),
+                      child: SizedBox(
                         height: 40.h,
-                        width: 50.w,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(10),
-                          color: Colors.deepPurple[50],
+                        width: 210.w,
+                        child: Text(
+                          "  ${index + 1}.  ${data["Products"] ?? "Unknown Product"}",
+                          overflow: TextOverflow.ellipsis,
+                          style: GoogleFonts.figtree(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.black87,
+                          ),
                         ),
-                        child: IconButton(
-                          icon: Icon(Icons.delete, color: Colors.redAccent),
-                          onPressed: () {
-                            showDialog(
-                              context: context,
-                              builder: (context) => AlertDialog(
-                                title: Text("Delete Item"),
-                                content: Text(
-                                    "Are you sure you want to delete this item?"),
+                      ),
+                    ),
+                  ),
+                  Container(
+                    padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.blue[50],
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      "ID: ${data['id'] ?? 'N/A'}",
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.blue[700],
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Container(
+                      height: 40.h,
+                      width: 50.w,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(10),
+                        color: Colors.deepPurple[50],
+                      ),
+                      child: IconButton(
+                        icon: Icon(Icons.delete, color: Colors.redAccent),
+                        onPressed: () {
+                          showDialog(
+                            context: context,
+                            builder: (context) {
+                              return AlertDialog(
+                                title: Subhead(
+                                  text: "Are you Sure to Delete This Item ?",
+                                  weight: FontWeight.w500,
+                                  color: Colors.black,
+                                ),
                                 actions: [
-                                  TextButton(
-                                    onPressed: () => Navigator.pop(context),
-                                    child: Text("Cancel"),
-                                  ),
                                   ElevatedButton(
                                     onPressed: () {
                                       setState(() {
@@ -447,87 +449,121 @@ class _ScrewState extends State<Screw> {
                                       });
                                       Navigator.pop(context);
                                     },
-                                    child: Text("Delete"),
+                                    child: Text("Yes"),
+                                  ),
+                                  ElevatedButton(
+                                    onPressed: () {
+                                      Navigator.pop(context);
+                                    },
+                                    child: Text("No"),
                                   ),
                                 ],
-                              ),
-                            );
-                          },
-                        ),
+                              );
+                            },
+                          );
+                        },
                       ),
                     ),
-                  ],
-                ),
-                _buildApiResponseRows(data),
-              ],
-            ),
+                  ),
+                ],
+              ),
+              _buildProductDetailInRows(data),
+              Gap(5),
+            ],
           ),
         );
       }).toList(),
     );
   }
 
-  Widget _buildApiResponseRows(Map<String, dynamic> data) {
+  Widget _buildProductDetailInRows(Map<String, dynamic> data) {
     debugPrint("Product details: $data");
     return Column(
       children: [
-        Row(
-          children: [
-            Expanded(
-              child: _buildDetailItem(
-                  "Basic Rate", _editableTextField(data, "Basic Rate")),
-            ),
-            Gap(5),
-            Expanded(
-              child: _buildDetailItem("Nos", _editableTextField(data, "Nos")),
-            ),
-            Gap(5),
-            Expanded(
-              child: _buildDetailItem(
-                  "Amount", _editableTextField(data, "Amount")),
-            ),
-          ],
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Row(
+            children: [
+              Expanded(
+                child: _buildDetailItem("UOM", _uomDropdownFromApi(data)),
+              ),
+              SizedBox(width: 10),
+              Expanded(
+                child: _buildDetailItem(
+                    "Length", _editableTextField(data, "Profile")),
+              ),
+              SizedBox(width: 10),
+              Expanded(
+                child: _buildDetailItem("Nos", _editableTextField(data, "Nos")),
+              ),
+            ],
+          ),
         ),
-        SizedBox(height: 16),
+        Gap(5),
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Row(
+            children: [
+              Expanded(
+                child: _buildDetailItem(
+                    "Basic Rate", _editableTextField(data, "Basic Rate")),
+              ),
+              SizedBox(width: 10),
+              Expanded(
+                child: _buildDetailItem(
+                    "SQMtr", _editableTextField(data, "SQMtr")),
+              ),
+              SizedBox(width: 10),
+              Expanded(
+                child: _buildDetailItem(
+                    "Amount", _editableTextField(data, "Amount")),
+              ),
+            ],
+          ),
+        ),
+        Gap(5.h),
       ],
     );
   }
 
   Widget _buildDetailItem(String label, Widget field) {
-    return Container(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            label,
-            style: TextStyle(
-              fontWeight: FontWeight.w500,
-              color: Colors.grey[700],
-              fontSize: 15,
-            ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            fontWeight: FontWeight.w500,
+            color: Colors.grey[700],
+            fontSize: 15,
           ),
-          SizedBox(height: 6),
-          field,
-        ],
-      ),
+        ),
+        SizedBox(height: 6),
+        field,
+      ],
     );
   }
 
   Widget _editableTextField(Map<String, dynamic> data, String key) {
     final controller = _getController(data, key);
+
     return SizedBox(
       height: 38.h,
       child: TextField(
-        readOnly: (key == "Basic Rate" || key == "Amount"),
+        readOnly: (key == "Basic Rate" || key == "Amount" || key == "SQMtr"),
         style: GoogleFonts.figtree(
           fontWeight: FontWeight.w500,
           color: Colors.black,
           fontSize: 15.sp,
         ),
         controller: controller,
-        keyboardType: (key == "Nos" || key == "Basic Rate" || key == "Amount")
+        keyboardType: (key == "Length" ||
+                key == "Nos" ||
+                key == "Basic Rate" ||
+                key == "Amount" ||
+                key == "SQMtr")
             ? TextInputType.numberWithOptions(decimal: true)
-            : TextInputType.text,
+            : TextInputType.numberWithOptions(decimal: true),
         onChanged: (val) {
           setState(() {
             data[key] = val;
@@ -535,7 +571,11 @@ class _ScrewState extends State<Screw> {
           debugPrint("Field $key changed to: $val");
           debugPrint("Controller text: ${controller.text}");
           debugPrint("Data after change: ${data[key]}");
-          if (key == "Nos" || key == "Basic Rate") {
+
+          if (key == "Length" ||
+              key == "Nos" ||
+              key == "Basic Rate" ||
+              key == "Profile") {
             debugPrint("Triggering calculation for $key with value: $val");
             _debounceCalculation(data);
           }
@@ -565,10 +605,67 @@ class _ScrewState extends State<Screw> {
     );
   }
 
+  Widget _uomDropdownFromApi(Map<String, dynamic> data) {
+    String productId = data["id"].toString();
+    Map<String, String>? options = uomOptions[productId];
+
+    if (options == null || options.isEmpty) {
+      return _editableTextField(data, "UOM");
+    }
+
+    String? currentValue;
+    if (data["UOM"] is Map) {
+      currentValue = data["UOM"]["value"]?.toString();
+    } else {
+      currentValue = data["UOM"]?.toString();
+    }
+
+    return SizedBox(
+      height: 40.h,
+      child: DropdownButtonFormField<String>(
+        value: currentValue,
+        items: options.entries
+            .map((entry) => DropdownMenuItem(
+                  value: entry.key,
+                  child: Text(entry.value),
+                ))
+            .toList(),
+        onChanged: (val) {
+          setState(() {
+            data["UOM"] = {"value": val, "options": options};
+          });
+          debugPrint("UOM changed to: $val");
+          debugPrint("Product data: ${data["Products"]}, ID: ${data["id"]}");
+          _debounceCalculation(data);
+        },
+        decoration: InputDecoration(
+          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 0),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(6),
+            borderSide: BorderSide(color: Colors.grey[300]!),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(6),
+            borderSide: BorderSide(color: Colors.grey[300]!),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(6),
+            borderSide: BorderSide(
+              color: Theme.of(context).primaryColor,
+              width: 2,
+            ),
+          ),
+          filled: true,
+          fillColor: Colors.grey[50],
+        ),
+      ),
+    );
+  }
+
   void _submitData() {
     if (selectedBrand == null ||
-        selectedScrew == null ||
-        selectedThread == null) {
+        selectedColor == null ||
+        selectedThickness == null) {
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
@@ -584,16 +681,15 @@ class _ScrewState extends State<Screw> {
       );
       return;
     }
-
-    postScrewData().then((_) {
+    postPolycarbonateData().then((_) {
       setState(() {
         selectedBrand = null;
-        selectedScrew = null;
-        selectedThread = null;
-        brandList = [];
-        screwLengthList = [];
-        threadList = [];
-        _fetchBrand();
+        selectedColor = null;
+        selectedThickness = null;
+        brandsList = [];
+        colorsList = [];
+        thicknessList = [];
+        _fetchBrands();
       });
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -608,19 +704,19 @@ class _ScrewState extends State<Screw> {
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
           margin: EdgeInsets.all(16),
-          duration: Duration(seconds: 1),
+          duration: Duration(seconds: 2),
         ),
       );
     });
   }
 
   String _selectedItems() {
-    List<String> selectedData = [
+    List<String> values = [
       if (selectedBrand != null) "Brand: $selectedBrand",
-      if (selectedScrew != null) "Length of Screw: $selectedScrew",
-      if (selectedThread != null) "Thread: $selectedThread",
+      if (selectedColor != null) "Color: $selectedColor",
+      if (selectedThickness != null) "Thickness: $selectedThickness",
     ];
-    return selectedData.isEmpty ? "No Selection Yet" : selectedData.join(", ");
+    return values.isEmpty ? "No selection yet" : values.join(",  ");
   }
 
   Timer? _debounceTimer;
@@ -651,7 +747,7 @@ class _ScrewState extends State<Screw> {
 
   void _debounceCalculation(Map<String, dynamic> data) {
     _debounceTimer?.cancel();
-    _debounceTimer = Timer(Duration(milliseconds: 1500), () {
+    _debounceTimer = Timer(Duration(seconds: 1), () {
       _performCalculation(data);
     });
   }
@@ -676,6 +772,21 @@ class _ScrewState extends State<Screw> {
     debugPrint("Current UOM: $currentUom");
     debugPrint("Previous UOM: ${previousUomValues[productId]}");
 
+    double? profileValue;
+    String? profileText;
+    if (fieldControllers.containsKey(productId) &&
+        fieldControllers[productId]!.containsKey("Profile")) {
+      profileText = fieldControllers[productId]!["Profile"]!.text;
+      debugPrint("Profile from controller: $profileText");
+    }
+    if (profileText == null || profileText.isEmpty) {
+      profileText = data["Profile"]?.toString();
+      debugPrint("Profile from data: $profileText");
+    }
+    if (profileText != null && profileText.isNotEmpty) {
+      profileValue = double.tryParse(profileText);
+    }
+
     int nosValue = 0;
     String? nosText;
     if (fieldControllers.containsKey(productId) &&
@@ -691,16 +802,19 @@ class _ScrewState extends State<Screw> {
       nosValue = int.tryParse(nosText) ?? 1;
     }
 
+    debugPrint("Final Profile Value: $profileValue");
     debugPrint("Final Nos Value: $nosValue");
 
     final requestBody = {
       "id": int.tryParse(data["id"].toString()) ?? 0,
-      "category_id": 7,
+      "category_id": 19,
       "product": data["Products"]?.toString() ?? "",
       "height": null,
-      "previous_uom": null,
-      "current_uom": null,
-      "length": null,
+      "previous_uom": previousUomValues[productId] != null
+          ? int.tryParse(previousUomValues[productId]!)
+          : null,
+      "current_uom": currentUom != null ? int.tryParse(currentUom) : null,
+      "length": profileValue ?? 0,
       "nos": nosValue,
       "basic_rate": double.tryParse(data["Basic Rate"]?.toString() ?? "0") ?? 0,
     };
@@ -724,6 +838,13 @@ class _ScrewState extends State<Screw> {
             billamt = responseData["bill_total"] ?? 0;
             print("billamt updated to: $billamt");
             calculationResults[productId] = responseData;
+            if (responseData["Length"] != null) {
+              data["Profile"] = responseData["Length"].toString();
+              if (fieldControllers[productId]?["Profile"] != null) {
+                fieldControllers[productId]!["Profile"]!.text =
+                    responseData["Length"].toString();
+              }
+            }
             if (responseData["Nos"] != null) {
               String newNos = responseData["Nos"].toString().trim();
               String currentInput =
@@ -739,6 +860,13 @@ class _ScrewState extends State<Screw> {
                     "Nos NOT updated because user input = '$currentInput'");
               }
             }
+            if (responseData["sqmtr"] != null) {
+              data["SQMtr"] = responseData["sqmtr"].toString();
+              if (fieldControllers[productId]?["SQMtr"] != null) {
+                fieldControllers[productId]!["SQMtr"]!.text =
+                    responseData["sqmtr"].toString();
+              }
+            }
             if (responseData["Amount"] != null) {
               data["Amount"] = responseData["Amount"].toString();
               if (fieldControllers[productId]?["Amount"] != null) {
@@ -750,7 +878,7 @@ class _ScrewState extends State<Screw> {
           });
           debugPrint("=== CALCULATION SUCCESS ===");
           debugPrint(
-              "Updated data: Nos=${data["Nos"]}, Amount=${data["Amount"]}");
+              "Updated data: Length=${data["Profile"]}, Nos=${data["Nos"]}, SQMtr=${data["SQMtr"]}, Amount=${data["Amount"]}");
         } else {
           debugPrint("API returned error status: ${responseData["status"]}");
         }
@@ -802,8 +930,10 @@ class _ScrewState extends State<Screw> {
                 color: enabled ? Colors.deepPurple : Colors.grey,
               ),
               border: InputBorder.none,
-              contentPadding:
-                  EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              contentPadding: EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 12,
+              ),
             ),
           ),
           popupProps: PopupProps.menu(
@@ -828,21 +958,14 @@ class _ScrewState extends State<Screw> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          'Screw',
-          style: GoogleFonts.poppins(
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
-            color: Colors.black87,
-          ),
+        title: Subhead(
+          text: 'Polycarbonate',
+          weight: FontWeight.w500,
+          color: Colors.black,
         ),
         centerTitle: true,
         elevation: 0,
         backgroundColor: Colors.white,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.black87),
-          onPressed: () => Navigator.pop(context),
-        ),
       ),
       body: Container(
         decoration: BoxDecoration(
@@ -872,63 +995,60 @@ class _ScrewState extends State<Screw> {
                     ],
                   ),
                   child: Padding(
-                    padding: EdgeInsets.all(20),
+                    padding: EdgeInsets.all(16),
                     child: Form(
                       key: _formKey,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            "Add New Product",
-                            style: GoogleFonts.poppins(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.black87,
-                            ),
+                          Subhead(
+                            text: "Add New Product",
+                            weight: FontWeight.w600,
+                            color: Colors.black,
                           ),
-                          SizedBox(height: 24),
+                          SizedBox(height: 16),
                           _buildAnimatedDropdown(
-                            brandList,
+                            brandsList,
                             selectedBrand,
                             (value) {
                               setState(() {
                                 selectedBrand = value;
-                                selectedScrew = null;
-                                selectedThread = null;
-                                screwLengthList = [];
-                                threadList = [];
+                                selectedColor = null;
+                                selectedThickness = null;
+                                colorsList = [];
+                                thicknessList = [];
                               });
-                              _fetchScrew();
+                              _fetchColors();
                             },
                             label: "Brand",
                             icon: Icons.brightness_auto_outlined,
                           ),
                           _buildAnimatedDropdown(
-                            screwLengthList,
-                            selectedScrew,
+                            colorsList,
+                            selectedColor,
                             (value) {
                               setState(() {
-                                selectedScrew = value;
-                                selectedThread = null;
-                                threadList = [];
+                                selectedColor = value;
+                                selectedThickness = null;
+                                thicknessList = [];
                               });
-                              _fetchThreads();
+                              _fetchThickness();
                             },
-                            enabled: screwLengthList.isNotEmpty,
-                            label: "Length of Screw",
-                            icon: Icons.straighten_outlined,
+                            enabled: colorsList.isNotEmpty,
+                            label: "Color",
+                            icon: Icons.color_lens_outlined,
                           ),
                           _buildAnimatedDropdown(
-                            threadList,
-                            selectedThread,
+                            thicknessList,
+                            selectedThickness,
                             (value) {
                               setState(() {
-                                selectedThread = value;
+                                selectedThickness = value;
                               });
                             },
-                            enabled: threadList.isNotEmpty,
-                            label: "Type of Thread",
-                            icon: Icons.keyboard_command_key_outlined,
+                            enabled: thicknessList.isNotEmpty,
+                            label: "Thickness",
+                            icon: Icons.straighten_outlined,
                           ),
                           SizedBox(height: 16),
                           Container(
@@ -1003,6 +1123,7 @@ class _ScrewState extends State<Screw> {
                     ),
                   ),
                 ),
+                SizedBox(height: 24),
                 if (responseProducts.isNotEmpty) ...[
                   SizedBox(height: 24),
                   Container(

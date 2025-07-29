@@ -6,44 +6,47 @@ import 'package:dropdown_search/dropdown_search.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:gap/gap.dart';
-import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/io_client.dart';
 import 'package:zaron/view/universal_api/api&key.dart';
 import 'package:zaron/view/widgets/subhead.dart';
 
-import '../global_user/global_oredrID.dart';
-import '../global_user/global_user.dart';
+import '../../global_user/global_oredrID.dart';
+import '../../global_user/global_user.dart';
 
-class Purlin extends StatefulWidget {
-  const Purlin({super.key, required this.data});
+class ProfileRidgeAndArch extends StatefulWidget {
+  const ProfileRidgeAndArch({super.key, required this.data});
 
   final Map<String, dynamic> data;
 
   @override
-  State<Purlin> createState() => _PurlinState();
+  State<ProfileRidgeAndArch> createState() => _ProfileRidgeAndArchState();
 }
 
-class _PurlinState extends State<Purlin> {
+class _ProfileRidgeAndArchState extends State<ProfileRidgeAndArch> {
   Map<String, dynamic>? categoryMeta;
   int? billamt;
   int? orderIDD;
   String? orderNO;
   late TextEditingController editController;
-
-  String? selectProduct;
-  String? selectedBrand;
-  String? selectedSize;
+  String? selectedMaterial;
+  String? selectedBrands;
+  String? selectedColors;
   String? selectedThickness;
-  String? selectedMaterialType;
+  String? selectedCoatingMass;
   String? selectedProductBaseId;
-  String? selectedBaseProductName;
+  String? selectedBaseProductId;
 
-  List<String> productList = [];
-  List<String> brandsList = [];
-  List<String> sizeList = [];
-  List<String> thicknessList = [];
-  List<String> materialTypeList = [];
+  // String? selectedBrand;
+
+  List<String> materialList = [];
+  List<String> brandandList = [];
+  List<String> colorandList = [];
+  List<String> thickAndList = [];
+  List<String> coatingAndList = [];
+  List<dynamic> rawProfilearch = [];
+
+  // List<String> brandList = [];
   List<Map<String, dynamic>> submittedData = [];
 
   // Form key for validation
@@ -53,25 +56,32 @@ class _PurlinState extends State<Purlin> {
   void initState() {
     super.initState();
     editController = TextEditingController(text: widget.data["Base Product"]);
-    _fetchShapeProduct();
+    _fetchMaterial();
+    _fetchBrandData();
   }
 
   @override
   void dispose() {
+    _debounceTimer?.cancel();
     editController.dispose();
+    baseProductController.dispose();
+    baseProductFocusNode.dispose();
+    fieldControllers.forEach((_, controllers) {
+      controllers.forEach((_, controller) => controller.dispose());
+    });
     super.dispose();
   }
 
-  Future<void> _fetchShapeProduct() async {
+  Future<void> _fetchMaterial() async {
     setState(() {
-      productList = [];
-      selectProduct = null;
+      materialList = [];
+      selectedMaterial = null;
     });
 
     final client = IOClient(
       HttpClient()..badCertificateCallback = (_, __, ___) => true,
     );
-    final url = Uri.parse('$apiUrl/showlables/5');
+    final url = Uri.parse('$apiUrl/showlables/32');
 
     try {
       final response = await client.get(url);
@@ -79,8 +89,10 @@ class _PurlinState extends State<Purlin> {
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         final products = data["message"]["message"][1];
-        print("Shape of Product ${response.body}");
-        debugPrint(response.body);
+        debugPrint("PRoduct:::${products}");
+        debugPrint(response.body, wrapWidth: 1024);
+
+        rawProfilearch = products;
 
         if (products is List) {
           setState(() {
@@ -89,10 +101,9 @@ class _PurlinState extends State<Purlin> {
             if (categoryInfoList is List && categoryInfoList.isNotEmpty) {
               categoryMeta = Map<String, dynamic>.from(categoryInfoList[0]);
             }
-
-            productList = products
+            materialList = products
                 .whereType<Map>()
-                .map((e) => e["shape_of_product"]?.toString())
+                .map((e) => e["product_name"]?.toString())
                 .whereType<String>()
                 .toList();
           });
@@ -103,13 +114,47 @@ class _PurlinState extends State<Purlin> {
     }
   }
 
-  /// fetch Sizes Api's ///
-  Future<void> _fetchSizes() async {
-    if (selectProduct == null) return;
+  Future<void> _fetchBrandData() async {
+    setState(() {
+      brandandList = [];
+      selectedBrands;
+    });
+
+    final client = IOClient(
+      HttpClient()..badCertificateCallback = (_, __, ___) => true,
+    );
+    final url = Uri.parse('$apiUrl/showlables/32');
+
+    try {
+      final response = await client.get(url);
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final brandData = data["message"]["message"][2][1];
+        debugPrint(response.body);
+
+        if (brandData is List) {
+          setState(() {
+            brandandList = brandData
+                .whereType<Map>()
+                .map((e) => e["brand"]?.toString())
+                .whereType<String>()
+                .toList();
+          });
+        }
+      }
+    } catch (e) {
+      print("Exception fetching brands: $e");
+    }
+  }
+
+  /// fetch colors Api's //
+  Future<void> _fetchColorData() async {
+    if (selectedBrands == null) return;
 
     setState(() {
-      sizeList = [];
-      selectedSize = null;
+      colorandList = [];
+      selectedColors = null;
     });
 
     final client = IOClient(
@@ -122,95 +167,47 @@ class _PurlinState extends State<Purlin> {
         url,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-          "product_label": "size",
-          "product_filters": null,
-          "product_label_filters": null,
-          "product_category_id": null,
-          "base_product_filters": [selectProduct],
-          "base_label_filters": ["shape_of_product"],
-          "base_category_id": "5",
+          // "category_id": "3",
+          // "selectedlabel": "brand",
+          // "selectedvalue": selectedBrands,
+          // "label_name": "color",
+          "product_label": "color",
+          "product_filters": [selectedMaterial],
+          "product_label_filters": ["product_name"],
+          "product_category_id": 32,
+          "base_product_filters": [selectedBrands],
+          "base_label_filters": ["brand"],
+          "base_category_id": 3,
         }),
       );
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final sizes = data["message"]["message"][0];
-        print("Fetching colors for thick: $selectProduct");
+        final selectedThickness = data["message"]["message"][0];
+        print("Fetching colors for brand: $selectedThickness");
         print("API response: ${response.body}");
-        debugPrint(response.body);
 
-        if (sizes is List) {
+        if (selectedThickness is List) {
           setState(() {
-            sizeList = sizes
+            colorandList = selectedThickness
                 .whereType<Map>()
-                .map((e) => e["size"]?.toString())
+                .map((e) => e["color"]?.toString())
                 .whereType<String>()
                 .toList();
           });
         }
       }
     } catch (e) {
-      print("Exception fetching size: $e");
+      print("Exception fetching colors: $e");
     }
   }
 
-  /// fetch Material Type Api's ///
-  Future<void> _fetchMaterial() async {
-    if (selectProduct == null) return;
+  /// fetch Thickness Api's ///
+  Future<void> _fetchThicknessData() async {
+    if (selectedBrands == null) return;
 
     setState(() {
-      materialTypeList = [];
-      selectedMaterialType = null;
-    });
-
-    final client = IOClient(
-      HttpClient()..badCertificateCallback = (_, __, ___) => true,
-    );
-    final url = Uri.parse('$apiUrl/labelinputdata');
-
-    try {
-      final response = await client.post(
-        url,
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          "product_label": "material_type",
-          "product_filters": null,
-          "product_label_filters": null,
-          "product_category_id": null,
-          "base_product_filters": [selectProduct, selectedSize],
-          "base_label_filters": ["shape_of_product", "size"],
-          "base_category_id": "5",
-        }),
-      );
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        final materials = data["message"]["message"][0];
-        print("Fetching colors for brand: $selectedSize");
-        print("API response: ${response.body}");
-        debugPrint(response.body);
-
-        if (materials is List) {
-          setState(() {
-            materialTypeList = materials
-                .whereType<Map>()
-                .map((e) => e["material_type"]?.toString())
-                .whereType<String>()
-                .toList();
-          });
-        }
-      }
-    } catch (e) {
-      print("Exception fetching size: $e");
-    }
-  }
-
-  /// fetch thickness Api's //
-  Future<void> _fetchThickness() async {
-    if (selectProduct == null) return;
-
-    setState(() {
-      thicknessList = [];
+      thickAndList = [];
       selectedThickness = null;
     });
 
@@ -224,30 +221,29 @@ class _PurlinState extends State<Purlin> {
         url,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
+          // "category_id": "3",
+          // "selectedlabel": "color",
+          // "selectedvalue": selectedColors,
+          // "label_name": "thickness",
           "product_label": "thickness",
-          "product_filters": null,
-          "product_label_filters": null,
-          "product_category_id": null,
-          "base_product_filters": [
-            selectProduct,
-            selectedSize,
-            selectedMaterialType,
-          ],
-          "base_label_filters": ["shape_of_product", "size", "material_type"],
-          "base_category_id": "5",
+          "product_filters": [selectedMaterial],
+          "product_label_filters": ["product_name"],
+          "product_category_id": 32,
+          "base_product_filters": [selectedBrands, selectedColors],
+          "base_label_filters": ["brand", "color"],
+          "base_category_id": 3,
         }),
       );
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final thick = data["message"]["message"][0];
-        print("Fetching colors for thick: $selectedMaterialType");
+        final thickness = data["message"]["message"][0];
+        print("Fetching colors for brand: $selectedColors");
         print("API response: ${response.body}");
-        debugPrint(response.body);
 
-        if (thick is List) {
+        if (thickness is List) {
           setState(() {
-            thicknessList = thick
+            thickAndList = thickness
                 .whereType<Map>()
                 .map((e) => e["thickness"]?.toString())
                 .whereType<String>()
@@ -260,13 +256,16 @@ class _PurlinState extends State<Purlin> {
     }
   }
 
-  /// fetch Brand Api's ///
-  Future<void> _fetchBrand() async {
-    if (selectProduct == null) return;
+  /// fetch Thickness Api's ///
+  Future<void> _fetchCoatingMassData() async {
+    if (selectedBrands == null ||
+        selectedColors == null ||
+        selectedThickness == null ||
+        !mounted) return;
 
     setState(() {
-      brandsList = [];
-      selectedBrand = null;
+      coatingAndList = [];
+      selectedCoatingMass = null;
     });
 
     final client = IOClient(
@@ -279,94 +278,98 @@ class _PurlinState extends State<Purlin> {
         url,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-          "product_label": "brand",
-          "product_filters": null,
-          "product_label_filters": null,
-          "product_category_id": null,
+          "product_label": "coating_mass",
+          "product_filters": [selectedMaterial],
+          "product_label_filters": ["product_name"],
+          "product_category_id": 32,
           "base_product_filters": [
-            selectProduct,
-            selectedSize,
-            selectedMaterialType,
+            selectedColors,
+            selectedBrands,
             selectedThickness,
           ],
-          "base_label_filters": [
-            "shape_of_product",
-            "size",
-            "material_type",
-            "thickness",
-          ],
-          "base_category_id": "5",
+          "base_label_filters": ["brand", "color", "thickness"],
+          "base_category_id": 3,
         }),
       );
+
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         final message = data["message"]["message"];
-        print("Fetching brand: $selectedThickness");
+        print("Fetching coating mass for brand: $selectedBrands");
         print("API response: ${response.body}");
 
         if (message is List && message.isNotEmpty) {
-          // Extract brand names from the first list
-          final brandListRaw = message[0];
-          if (brandListRaw is List) {
+          final coating = message[0];
+          if (coating is List) {
             setState(() {
-              brandsList = brandListRaw
+              coatingAndList = coating
                   .whereType<Map>()
-                  .map((e) => e["brand"]?.toString())
+                  .map((e) => e["coating_mass"]?.toString())
                   .whereType<String>()
                   .toList();
             });
           }
 
-          // Extract id and base_product_id from the second list
+          // ✅ Extract both id and base_product_id
           final idData = message.length > 1 ? message[1] : null;
           if (idData is List && idData.isNotEmpty && idData.first is Map) {
             selectedProductBaseId = idData.first["id"]?.toString();
-            selectedBaseProductName =
-                idData.first["base_product_id"]?.toString(); // <-- New
-            print("Selected Base Product ID: $selectedProductBaseId");
-            print("Base Product Name: $selectedBaseProductName"); // <-- New
+            selectedBaseProductId =
+                idData.first["base_product_id"]?.toString(); // <-- NEW
+            print("Selected Product Base ID: $selectedProductBaseId");
+            print(
+              "Base Product ID (base_product_id): $selectedBaseProductId",
+            ); // <-- Optional
           }
+        } else {
+          debugPrint("Unexpected message format for coating mass data.");
         }
+      } else {
+        debugPrint("Failed to fetch coating mass data: ${response.statusCode}");
       }
     } catch (e) {
-      print("Exception fetching brand: $e");
+      print("Exception fetching coating mass: $e");
     }
   }
 
-  // 1. ADD THESE VARIABLES after your existing variables (around line 25)
-  Map<String, dynamic> apiResponseData = {};
-  Map<String, dynamic>? apiResponse;
-
   int? newOrderId = GlobalOrderSession().getNewOrderId();
-  // 2. MODIFY the postAllData() method - REPLACE the existing postAllData method with this:
+
+  ///post all Data
   Future<void> postAllData() async {
     HttpClient client = HttpClient();
     client.badCertificateCallback =
         ((X509Certificate cert, String host, int port) => true);
     IOClient ioClient = IOClient(client);
+
     // From saved categoryMeta
     final categoryId = categoryMeta?["category_id"];
     final categoryName = categoryMeta?["categories"];
     print("this os $categoryId");
     print("this os $categoryName");
 
+    // Find the matching item from rawAccessoriesData
+    final matchingAccessory = rawProfilearch.firstWhere(
+      (item) => item["product_name"] == selectedMaterial,
+      orElse: () => null,
+    );
+    // Extract values
+    final productID = matchingAccessory?["id"];
+    print("this os $productID");
     final headers = {"Content-Type": "application/json"};
     final data = {
       "customer_id": UserSession().userId,
-      "product_id": null,
-      "product_name": null,
-      "product_base_id": selectedProductBaseId,
-      "product_base_name": "$selectedBaseProductName",
+      "product_id": productID,
+      "product_name": selectedMaterial,
+      "product_base_id": null,
+      "product_base_name": "$selectedProductBaseId",
       "category_id": categoryId,
       "category_name": categoryName,
       "OrderID": newOrderId
     };
 
     print("This is a body data: $data");
-
     final url = "$apiUrl/addbag";
     final body = jsonEncode(data);
-
     try {
       final response = await ioClient.post(
         Uri.parse(url),
@@ -375,76 +378,43 @@ class _PurlinState extends State<Purlin> {
       );
 
       debugPrint("This is a response: ${response.body}");
+      final responseData = jsonDecode(response.body);
 
-      if (response.statusCode == 200) {
-        final responseData = jsonDecode(response.body);
+      setState(() {
+        final String orderID = responseData["order_id"]?.toString() ?? "";
+        orderIDD = int.tryParse(orderID);
+        orderNO = responseData["order_no"]?.toString() ?? "Unknown";
+        apiResponseData = responseData;
+        apiResponseData = responseData;
+        if (responseData["lebels"] != null &&
+            responseData["lebels"].isNotEmpty) {
+          // Append new products to the existing list
+          final newProducts = responseData["lebels"][0]["data"] ?? [];
+          responseProducts.addAll(newProducts);
 
-        setState(() {
-          final String orderID = responseData["order_id"]?.toString() ?? "";
-          orderIDD = int.tryParse(orderID);
-          orderNO = responseData["order_no"]?.toString() ?? "Unknown";
-          apiResponseData = responseData;
+          // Store UOM options for each product
 
-          // Handle label data safely
-          if (responseData["lebels"] != null &&
-              responseData["lebels"].isNotEmpty) {
-            List<dynamic> fullList = responseData["lebels"][0]["data"];
-            List<Map<String, dynamic>> newProducts = [];
-
-            for (var item in fullList) {
-              if (item is Map<String, dynamic>) {
-                Map<String, dynamic> product = Map<String, dynamic>.from(item);
-                String productId = product["id"].toString();
-
-                bool alreadyExists = responseProducts
-                    .any((existing) => existing["id"].toString() == productId);
-
-                if (!alreadyExists) {
-                  newProducts.add(product);
-                }
-
-                // UOM options
-                if (product["UOM"] != null &&
-                    product["UOM"]["options"] != null) {
-                  uomOptions[product["id"].toString()] =
-                      Map<String, String>.from(
-                    (product["UOM"]["options"] as Map).map(
-                      (key, value) =>
-                          MapEntry(key.toString(), value.toString()),
-                    ),
-                  );
-                }
-
-                debugPrint(
-                    "Product added: ${product["id"]} - ${product["Products"]}");
-              }
+          for (var product in responseProducts) {
+            if (product["UOM"] != null && product["UOM"]["options"] != null) {
+              uomOptions[product["id"].toString()] = Map<String, String>.from(
+                product["UOM"]["options"].map(
+                  (key, value) => MapEntry(key.toString(), value.toString()),
+                ),
+              );
             }
-
-            // ⛔ DO NOT ADD FULL LIST DIRECTLY HERE
-            // ✅ Only add unique new products
-            responseProducts.addAll(newProducts);
           }
-        });
-      } else {
-        print(
-            "API request failed with status ${response.statusCode}: ${response.body}");
-        Get.snackbar(
-          "Error",
-          "Failed to add product: Server error",
-          colorText: Colors.white,
-          backgroundColor: Colors.red,
-          snackPosition: SnackPosition.BOTTOM,
-        );
-      }
+        }
+      });
+      // if (selectedMaterial == null ||
+      //         selectedBrands == null ||
+      //         selectedColors == null ||
+      //         selectedThickness == null
+      //     // || selectedCoatingMass == null
+      //     ) {
+      //   return;
+      // }
     } catch (e) {
-      print("Exception posting data: $e");
-      Get.snackbar(
-        "Error",
-        "Error posting data: $e",
-        colorText: Colors.white,
-        backgroundColor: Colors.red,
-        snackPosition: SnackPosition.BOTTOM,
-      );
+      throw Exception("Error posting data: $e");
     }
   }
 
@@ -453,9 +423,79 @@ class _PurlinState extends State<Purlin> {
   bool isSearchingBaseProduct = false;
   String? selectedBaseProduct;
   FocusNode baseProductFocusNode = FocusNode();
-  // Map<String, dynamic>? apiResponseData;
-  List<dynamic> responseProducts = [];
-  Map<String, Map<String, String>> uomOptions = {};
+
+  void _submitData() {
+    if (selectedMaterial == null ||
+            selectedBrands == null ||
+            selectedColors == null ||
+            selectedThickness == null
+        // ||
+        // selectedCoatingMass == null
+        ) {
+      // Show elegant error message
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text('Incomplete Form'),
+          content: Text(
+            'Please fill all required fields to add a product.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text('OK'),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+    postAllData().then((_) {
+      setState(() {
+        submittedData.add({
+          "Product": "Profile and Arch",
+          "UOM": "Feet",
+          "Length": "0",
+          "Nos": "1",
+          "Basic Rate": "0",
+          "SQ": "0",
+          "Amount": "0",
+          "Base Product":
+              "$selectedMaterial, $selectedBrands,$selectedColors, $selectedThickness, $selectedCoatingMass",
+        });
+        selectedMaterial = null;
+        selectedBrands = null;
+        selectedColors = null;
+        selectedThickness = null;
+        selectedCoatingMass = null;
+        materialList = [];
+        brandandList = [];
+        colorandList = [];
+        thickAndList = [];
+        coatingAndList = [];
+        _fetchMaterial();
+        _fetchBrandData();
+      });
+
+      // Show success message with a more elegant snackBar
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              Icon(Icons.check_circle, color: Colors.white),
+              SizedBox(width: 12),
+              Text("Product added successfully"),
+            ],
+          ),
+          backgroundColor: Colors.green,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          margin: EdgeInsets.all(16),
+          duration: Duration(seconds: 2),
+        ),
+      );
+    });
+  }
 
   Widget _buildSubmittedDataList() {
     if (responseProducts.isEmpty) {
@@ -501,7 +541,7 @@ class _PurlinState extends State<Purlin> {
                         height: 40.h,
                         width: 210.w,
                         child: Text(
-                          "  ${index + 1}.  ${data["Products"]}" ?? "",
+                          "  ${index + 1}.  ${data["Products"] ?? ""}",
                           overflow: TextOverflow.ellipsis,
                           style: GoogleFonts.figtree(
                             fontSize: 18,
@@ -578,7 +618,6 @@ class _PurlinState extends State<Purlin> {
                 ],
               ),
               _buildProductDetailInRows(data),
-              Gap(5),
             ],
           ),
         );
@@ -586,13 +625,232 @@ class _PurlinState extends State<Purlin> {
     );
   }
 
-  // ADD this new method for the editable fields:
-  Widget _buildProductDetailInRows(Map<String, dynamic> data) {
+  Map<String, dynamic>? apiResponseData;
+  List<dynamic> responseProducts = [];
+  Map<String, Map<String, String>> uomOptions = {};
+
+  // Add this method to build the base product search field
+  Widget _buildBaseProductSearchField() {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Row(
+        Text(
+          "Base Product",
+          style: GoogleFonts.figtree(
+            fontSize: 16,
+            fontWeight: FontWeight.w500,
+            color: Colors.black87,
+          ),
+        ),
+        SizedBox(height: 8),
+        Container(
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.grey[300]!),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: TextField(
+            controller: baseProductController,
+            focusNode: baseProductFocusNode,
+            decoration: InputDecoration(
+              hintText: "Search base product...",
+              prefixIcon: Icon(Icons.search),
+              border: InputBorder.none,
+              contentPadding:
+                  EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              suffixIcon: isSearchingBaseProduct
+                  ? Padding(
+                      padding: EdgeInsets.all(12),
+                      child: SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                    )
+                  : null,
+            ),
+            onChanged: (value) {
+              searchBaseProducts(value);
+            },
+            onTap: () {
+              if (baseProductController.text.isNotEmpty) {
+                searchBaseProducts(baseProductController.text);
+              }
+            },
+          ),
+        ),
+        if (baseProductResults.isNotEmpty)
+          Container(
+            margin: EdgeInsets.only(top: 8),
+            padding: EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.grey[50],
+              border: Border.all(color: Colors.grey[300]!),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "Search Results:",
+                  style: GoogleFonts.figtree(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black87,
+                  ),
+                ),
+                SizedBox(height: 8),
+                ...baseProductResults.map((product) {
+                  return GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        selectedBaseProduct = product.toString();
+                        baseProductController.text = selectedBaseProduct!;
+                        baseProductResults = [];
+                      });
+                    },
+                    child: Container(
+                      width: double.infinity,
+                      padding:
+                          EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+                      margin: EdgeInsets.only(bottom: 6),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(color: Colors.grey[300]!),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.grey.withOpacity(0.1),
+                            spreadRadius: 1,
+                            blurRadius: 2,
+                            offset: Offset(0, 1),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(Icons.inventory_2, size: 16, color: Colors.blue),
+                          SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              product.toString(),
+                              style: GoogleFonts.figtree(
+                                fontSize: 14,
+                                color: Colors.black87,
+                                fontWeight: FontWeight.w400,
+                              ),
+                            ),
+                          ),
+                          Icon(
+                            Icons.arrow_forward_ios,
+                            size: 12,
+                            color: Colors.grey[400],
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ],
+            ),
+          ),
+        if (selectedBaseProduct != null)
+          Container(
+            margin: EdgeInsets.only(top: 8),
+            padding: EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.blue[50],
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.blue[200]!),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.check_circle, color: Colors.green, size: 20),
+                SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    "Selected: $selectedBaseProduct",
+                    style: GoogleFonts.figtree(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.black87,
+                    ),
+                  ),
+                ),
+                GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      selectedBaseProduct = null;
+                      baseProductController.clear();
+                      baseProductResults = [];
+                    });
+                  },
+                  child: Icon(Icons.close, color: Colors.grey[600], size: 20),
+                ),
+              ],
+            ),
+          ),
+      ],
+    );
+  }
+
+  // Add this method for searching base products
+  Future<void> searchBaseProducts(String query) async {
+    if (query.isEmpty) {
+      setState(() {
+        baseProductResults = [];
+      });
+      return;
+    }
+
+    setState(() {
+      isSearchingBaseProduct = true;
+    });
+
+    HttpClient client = HttpClient();
+    client.badCertificateCallback =
+        ((X509Certificate cert, String host, int port) => true);
+    IOClient ioClient = IOClient(client);
+
+    final headers = {"Content-Type": "application/json"};
+    final data = {"category_id": "32", "searchbase": query};
+
+    try {
+      final response = await ioClient.post(
+        Uri.parse("$apiUrl/api/baseproducts_search"),
+        headers: headers,
+        body: jsonEncode(data),
+      );
+
+      if (response.statusCode == 200) {
+        final responseData = jsonDecode(response.body);
+        final List<dynamic> results = responseData['base_products'] ?? [];
+
+        setState(() {
+          baseProductResults = results;
+          isSearchingBaseProduct = false;
+        });
+      } else {
+        setState(() {
+          baseProductResults = [];
+          isSearchingBaseProduct = false;
+        });
+      }
+    } catch (e) {
+      print("Error searching base products: $e");
+      setState(() {
+        baseProductResults = [];
+        isSearchingBaseProduct = false;
+      });
+    }
+  }
+
+  // New method that organizes fields in rows, two fields per row
+  Widget _buildProductDetailInRows(Map<String, dynamic> data) {
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: Column(
+        children: [
+          Row(
             children: [
               Expanded(
                 child: _buildDetailItem("UOM", _uomDropdownFromApi(data)),
@@ -600,8 +858,8 @@ class _PurlinState extends State<Purlin> {
               SizedBox(width: 10),
               Expanded(
                 child: _buildDetailItem(
-                  "Length",
-                  _editableTextField(data, "Profile"),
+                  "Crimp",
+                  _editableTextField(data, "height"),
                 ),
               ),
               SizedBox(width: 10),
@@ -610,11 +868,8 @@ class _PurlinState extends State<Purlin> {
               ),
             ],
           ),
-        ),
-        Gap(5),
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Row(
+          Gap(5),
+          Row(
             children: [
               Expanded(
                 child: _buildDetailItem(
@@ -625,8 +880,8 @@ class _PurlinState extends State<Purlin> {
               SizedBox(width: 10),
               Expanded(
                 child: _buildDetailItem(
-                  "Kg",
-                  _editableTextField(data, "kg"),
+                  "SQMtr",
+                  _editableTextField(data, "SQMtr"),
                 ),
               ),
               SizedBox(width: 10),
@@ -638,9 +893,14 @@ class _PurlinState extends State<Purlin> {
               ),
             ],
           ),
-        ),
-        Gap(5.h),
-      ],
+          Gap(5),
+          Row(
+            children: [
+              Expanded(child: _buildBaseProductSearchField()),
+            ],
+          ),
+        ],
+      ),
     );
   }
 
@@ -662,14 +922,13 @@ class _PurlinState extends State<Purlin> {
     );
   }
 
-  // 5. ADD this new method after _buildApiProductDetailInRows():
   Widget _editableTextField(Map<String, dynamic> data, String key) {
     final controller = _getController(data, key);
 
     return SizedBox(
       height: 38.h,
       child: TextField(
-        readOnly: (key == "Basic Rate" || key == "Amount" || key == "kg")
+        readOnly: (key == "Basic Rate" || key == "Amount" || key == "SQMtr")
             ? true
             : false,
         style: GoogleFonts.figtree(
@@ -694,10 +953,16 @@ class _PurlinState extends State<Purlin> {
           print("Controller text: ${controller.text}");
           print("Data after change: ${data[key]}");
 
+          // 🚫 DO NOT forcefully reset controller.text here!
+          // if (controller.text != val) {
+          //   controller.text = val;
+          // }
+
           if (key == "Length" ||
               key == "Nos" ||
               key == "Basic Rate" ||
-              key == "Profile") {
+              key == "Amount" ||
+              key == "height") {
             print("Triggering calculation for $key with value: $val");
             _debounceCalculation(data);
           }
@@ -729,44 +994,55 @@ class _PurlinState extends State<Purlin> {
     );
   }
 
-  // 6. ADD this new method after _apiEditableTextField():
   Widget _uomDropdownFromApi(Map<String, dynamic> data) {
     String productId = data["id"].toString();
-    Map<String, String>? options = uomOptions[productId];
 
-    if (options == null || options.isEmpty) {
+    // Extract UOM data from the response
+    Map<String, dynamic>? uomData;
+    if (data["UOM"] is Map) {
+      uomData = Map<String, dynamic>.from(data["UOM"]);
+    }
+
+    // If no UOM data, return text field
+    if (uomData == null || !uomData.containsKey('options')) {
       return _editableTextField(data, "UOM");
     }
 
-    String? currentValue;
-    if (data["UOM"] is Map) {
-      currentValue = data["UOM"]["value"]?.toString();
-    } else {
-      currentValue = data["UOM"]?.toString();
-    }
+    // Get the options map
+    Map<String, String> options =
+        Map<String, String>.from(uomData['options'] as Map);
+
+    // Get current value
+    String currentValue = uomData['value']?.toString() ?? options.keys.first;
 
     return SizedBox(
       height: 40.h,
       child: DropdownButtonFormField<String>(
         value: currentValue,
-        items: options.entries
-            .map(
-              (entry) => DropdownMenuItem(
-                value: entry.key,
-                child: Text(entry.value),
+        items: options.entries.map((entry) {
+          return DropdownMenuItem<String>(
+            value: entry.key,
+            child: Text(
+              entry.value,
+              style: GoogleFonts.figtree(
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
               ),
-            )
-            .toList(),
+            ),
+          );
+        }).toList(),
         onChanged: (val) {
-          setState(() {
-            data["UOM"] = {"value": val, "options": options};
-          });
-          print("UOM changed to: $val"); // Debug print
-          print(
-            "Product data: ${data["Products"]}, ID: ${data["id"]}",
-          ); // Debug print
-          // Trigger calculation with debounce
-          _debounceCalculation(data);
+          if (val != null) {
+            setState(() {
+              // Update the UOM data structure
+              data["UOM"] = {
+                "value": val,
+                "options": options,
+              };
+            });
+            print("UOM changed to: $val (${options[val]})");
+            _debounceCalculation(data);
+          }
         },
         decoration: InputDecoration(
           contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 0),
@@ -792,85 +1068,15 @@ class _PurlinState extends State<Purlin> {
     );
   }
 
-  // 7. MODIFY the _submitData() method - REPLACE the existing _submitData method with this:
-  void _submitData() {
-    if (selectedSize == null ||
-        selectedThickness == null ||
-        selectProduct == null ||
-        selectedMaterialType == null) {
-      showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: Text('Incomplete Form'),
-          content: Text(
-            'Please fill all required fields to add a product.',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text('OK'),
-            ),
-          ],
-        ),
-      );
-      return;
-    }
-
-    // Call postAllData and wait for completion
-    postAllData().then((_) {
-      setState(() {
-        selectProduct = null;
-        selectedSize = null;
-        selectedMaterialType = null;
-        selectedThickness = null;
-        selectedBrand = null;
-        productList = [];
-        sizeList = [];
-        materialTypeList = [];
-        thicknessList = [];
-        brandsList = [];
-        _fetchShapeProduct();
-      });
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Row(
-            children: [
-              Icon(Icons.check_circle, color: Colors.white),
-              SizedBox(width: 12),
-              Text("Product added successfully"),
-            ],
-          ),
-          backgroundColor: Colors.green,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
-          margin: EdgeInsets.all(16),
-          duration: Duration(seconds: 2),
-        ),
-      );
-    }).catchError((e) {
-      print("Error in submitData: $e");
-      Get.snackbar(
-        "Error",
-        "Failed to add product: $e",
-        colorText: Colors.white,
-        backgroundColor: Colors.red,
-        snackPosition: SnackPosition.BOTTOM,
-      );
-    });
-  }
-
   String _selectedItems() {
-    List<String> values = [
-      if (selectProduct != null) "Product: $selectProduct",
-      if (selectedSize != null) "Size: $selectedSize",
-      if (selectedMaterialType != null) "Material: $selectedMaterialType",
+    List<String> value = [
+      if (selectedMaterial != null) "Material Type: $selectedMaterial",
+      if (selectedBrands != null) "Brand: $selectedBrands",
+      if (selectedColors != null) "Color: $selectedColors",
       if (selectedThickness != null) "Thickness: $selectedThickness",
-      if (selectedBrand != null) "Brand: $selectedBrand",
+      if (selectedCoatingMass != null) "CostingMass: $selectedCoatingMass",
     ];
-    return values.isEmpty ? "No Selections yet" : values.join(", ");
+    return value.isEmpty ? "No selection yet" : value.join(",  ");
   }
 
   Timer? _debounceTimer;
@@ -981,21 +1187,40 @@ class _PurlinState extends State<Purlin> {
       nosValue = int.tryParse(nosText) ?? 1;
     }
 
+    // Get height (crimp) value from controller
+    String? heightValue;
+    if (fieldControllers.containsKey(productId) &&
+        fieldControllers[productId]!.containsKey("height")) {
+      heightValue = fieldControllers[productId]!["height"]!.text;
+      print("Height from controller: $heightValue");
+    }
+
+    if (heightValue == null || heightValue.isEmpty) {
+      heightValue = data["height"]?.toString();
+      print("Height from data: $heightValue");
+    }
+
     print("Final Profile Value: $profileValue");
     print("Final Nos Value: $nosValue");
+    print("Final Height Value: $heightValue");
 
     final requestBody = {
       "id": int.tryParse(data["id"].toString()) ?? 0,
-      "category_id": 5,
+      "category_id": 32,
       "product": data["Products"]?.toString() ?? "",
-      "height": null,
+      "height": heightValue,
       "previous_uom": previousUomValues[productId] != null
           ? int.tryParse(previousUomValues[productId]!)
           : null,
       "current_uom": currentUom != null ? int.tryParse(currentUom) : null,
-      "length": profileValue ?? 0,
+      "length": null,
       "nos": nosValue,
-      "basic_rate": double.tryParse(data["Basic Rate"]?.toString() ?? "0") ?? 0,
+      "basic_rate": double.tryParse(
+              fieldControllers[productId]?["Basic Rate"]?.text ??
+                  data["Basic Rate"]?.toString() ??
+                  "0") ??
+          0,
+      // double.tryParse(data["Basic Rate"]?.toString() ?? "0") ?? 0,
     };
 
     print("Request Body: ${jsonEncode(requestBody)}");
@@ -1015,8 +1240,20 @@ class _PurlinState extends State<Purlin> {
 
         if (responseData["status"] == "success") {
           setState(() {
+            billamt = responseData["bill_total"] ?? 0;
+            print("billamt updated to: $billamt");
             calculationResults[productId] = responseData;
 
+            // Update Basic Rate if provided in response
+            if (responseData["basic_rate"] != null) {
+              data["Basic Rate"] = responseData["basic_rate"].toString();
+              if (fieldControllers[productId]?["Basic Rate"] != null) {
+                fieldControllers[productId]!["Basic Rate"]!.text =
+                    responseData["basic_rate"].toString();
+              }
+            }
+
+            // Update Profile/Length
             if (responseData["Length"] != null) {
               data["Profile"] = responseData["Length"].toString();
               if (fieldControllers[productId]?["Profile"] != null) {
@@ -1024,20 +1261,7 @@ class _PurlinState extends State<Purlin> {
                     responseData["Length"].toString();
               }
             }
-
-            // if (responseData["kg"] != null) {
-            //   String kgValue = responseData["kg"].toString();
-            //   print("KG value: $kgValue");
-            //
-            //   // ✅ Store KG in your data map
-            //   data["KG"] = kgValue;
-            //
-            //   // ✅ If you have a KG field in UI, update it
-            //   if (fieldControllers[productId]?["KG"] != null) {
-            //     fieldControllers[productId]!["KG"]!.text = kgValue;
-            //   }
-            // }
-
+            // Update Nos
             if (responseData["Nos"] != null) {
               String newNos = responseData["Nos"].toString().trim();
               String currentInput =
@@ -1054,15 +1278,34 @@ class _PurlinState extends State<Purlin> {
               }
             }
 
-            if (responseData["kg"] != null) {
-              data["kg"] = responseData["kg"].toString();
-              if (fieldControllers[productId]?["kg"] != null) {
-                fieldControllers[productId]!["kg"]!.text =
-                    responseData["kg"].toString();
+            // Update Height/Crimp
+            if (responseData["crimp"] != null) {
+              String newCrimp = responseData["crimp"].toString();
+              String currentCrimp =
+                  fieldControllers[productId]!["height"]?.text.trim() ?? "";
+
+              if (currentCrimp.isEmpty || currentCrimp == "0") {
+                data["height"] = newCrimp;
+                if (fieldControllers[productId]?["height"] != null) {
+                  fieldControllers[productId]!["height"]!.text = newCrimp;
+                }
+                print("Height field updated to: $newCrimp");
+              } else {
+                print(
+                    "Height NOT updated because user input = '$currentCrimp'");
               }
             }
-            print("KG value updated: ${data["kg"]}");
 
+            // Update SQMtr
+            if (responseData["sqmtr"] != null) {
+              data["SQMtr"] = responseData["sqmtr"].toString();
+              if (fieldControllers[productId]?["SQMtr"] != null) {
+                fieldControllers[productId]!["SQMtr"]!.text =
+                    responseData["sqmtr"].toString();
+              }
+            }
+
+            // Update Amount
             if (responseData["Amount"] != null) {
               data["Amount"] = responseData["Amount"].toString();
               if (fieldControllers[productId]?["Amount"] != null) {
@@ -1076,7 +1319,7 @@ class _PurlinState extends State<Purlin> {
 
           print("=== CALCULATION SUCCESS ===");
           print(
-            "Updated data: Length=${data["Profile"]}, Nos=${data["Nos"]}, KGG=${data["kg"]}, Amount=${data["Amount"]}",
+            "Updated data: Length=${data["Profile"]}, Nos=${data["Nos"]}, Height=${data["height"]}, Amount=${data["Amount"]}",
           );
         } else {
           print("API returned error status: ${responseData["status"]}");
@@ -1159,7 +1402,7 @@ class _PurlinState extends State<Purlin> {
     return Scaffold(
       appBar: AppBar(
         title: Subhead(
-          text: 'Purlin',
+          text: ' Profile Ridge & Arch',
           weight: FontWeight.w500,
           color: Colors.black,
         ),
@@ -1195,7 +1438,8 @@ class _PurlinState extends State<Purlin> {
                     ],
                   ),
                   child: Padding(
-                    padding: EdgeInsets.all(16),
+                    padding:
+                        EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
                     child: Form(
                       key: _formKey,
                       child: Column(
@@ -1208,94 +1452,89 @@ class _PurlinState extends State<Purlin> {
                           ),
                           SizedBox(height: 16),
                           _buildAnimatedDropdown(
-                            productList,
-                            selectProduct,
+                            materialList,
+                            selectedMaterial,
                             (value) {
                               setState(() {
-                                selectProduct = value;
-                                // Clear dependent fields
-                                selectedSize = null;
-                                selectedMaterialType = null;
-                                selectedThickness = null;
-                                selectedBrand = null;
-                                sizeList = [];
-                                materialTypeList = [];
-                                thicknessList = [];
-                                brandsList = [];
+                                selectedMaterial = value;
                               });
-                              _fetchSizes();
+                              // _fetchProductName();
                             },
-                            label: "Shape of Product",
-                            icon: Icons.format_shapes_outlined,
-                          ),
-                          _buildAnimatedDropdown(
-                            sizeList,
-                            selectedSize,
-                            (value) {
-                              setState(() {
-                                selectedSize = value;
-                                // Clear dependent fields
-                                selectedMaterialType = null;
-                                selectedThickness = null;
-                                selectedBrand = null;
-                                materialTypeList = [];
-                                thicknessList = [];
-                                brandsList = [];
-                              });
-                              _fetchMaterial();
-                            },
-                            enabled: sizeList.isNotEmpty,
-                            label: "Size",
-                            icon: Icons.format_size_outlined,
-                          ),
-                          _buildAnimatedDropdown(
-                            materialTypeList,
-                            selectedMaterialType,
-                            (value) {
-                              setState(() {
-                                selectedMaterialType = value;
-                                // Clear dependent fields
-                                selectedThickness = null;
-                                selectedBrand = null;
-                                thicknessList = [];
-                                brandsList = [];
-                              });
-                              _fetchThickness();
-                            },
-                            enabled: materialTypeList.isNotEmpty,
+                            // enabled: productList.isNotEmpty,
                             label: "Material Type",
                             icon: Icons.difference_outlined,
                           ),
                           _buildAnimatedDropdown(
-                            thicknessList,
+                            brandandList,
+                            selectedBrands,
+                            (value) {
+                              setState(() {
+                                selectedBrands = value;
+
+                                ///clear fields
+                                selectedColors = null;
+                                selectedThickness = null;
+                                selectedCoatingMass = null;
+                                colorandList = [];
+                                thickAndList = [];
+                                coatingAndList = [];
+                              });
+                              _fetchColorData();
+                            },
+                            enabled: brandandList.isNotEmpty,
+                            label: "Brand",
+                            icon: Icons.brightness_auto_outlined,
+                          ),
+                          _buildAnimatedDropdown(
+                            colorandList,
+                            selectedColors,
+                            (value) {
+                              setState(() {
+                                selectedColors = value;
+
+                                ///clear fields
+                                selectedThickness = null;
+                                selectedCoatingMass = null;
+
+                                thickAndList = [];
+                                coatingAndList = [];
+                              });
+                              _fetchThicknessData();
+                            },
+                            enabled: colorandList.isNotEmpty,
+                            label: "Color",
+                            icon: Icons.color_lens_outlined,
+                          ),
+                          _buildAnimatedDropdown(
+                            thickAndList,
                             selectedThickness,
                             (value) {
                               setState(() {
                                 selectedThickness = value;
-                                // Clear dependent fields
-                                selectedBrand = null;
-                                brandsList = [];
+
+                                ///clear fields
+                                selectedCoatingMass = null;
+                                coatingAndList = [];
                               });
-                              _fetchBrand();
+                              _fetchCoatingMassData();
                             },
-                            enabled: thicknessList.isNotEmpty,
+                            enabled: thickAndList.isNotEmpty,
                             label: "Thickness",
                             icon: Icons.straighten_outlined,
                           ),
                           _buildAnimatedDropdown(
-                            brandsList,
-                            selectedBrand,
+                            coatingAndList,
+                            selectedCoatingMass,
                             (value) {
                               setState(() {
-                                selectedBrand = value;
+                                selectedCoatingMass = value;
                               });
-                              // _fetchColor();
                             },
-                            enabled: brandsList.isNotEmpty,
-                            label: "Brand",
-                            icon: Icons.brightness_auto_outlined,
+                            enabled: coatingAndList.isNotEmpty,
+                            label: "Coating Mass",
+                            icon: Icons.layers_outlined,
                           ),
-                          SizedBox(height: 16),
+                          SizedBox(height: 10),
                           Container(
                             padding: EdgeInsets.all(16),
                             decoration: BoxDecoration(

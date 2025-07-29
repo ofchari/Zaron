@@ -12,7 +12,7 @@ import 'package:zaron/view/universal_api/api&key.dart';
 import 'package:zaron/view/widgets/buttons.dart';
 import 'package:zaron/view/widgets/text.dart';
 
-import '../widgets/subhead.dart';
+import '../../../widgets/subhead.dart';
 
 class TotalEnquiryView extends StatefulWidget {
   const TotalEnquiryView({super.key, required this.id});

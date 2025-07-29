@@ -11,9 +11,9 @@ import 'package:http/io_client.dart';
 import 'package:zaron/view/universal_api/api&key.dart';
 import 'package:zaron/view/widgets/subhead.dart';
 
-import '../../widgets/text.dart';
-import '../global_user/global_oredrID.dart';
-import '../global_user/global_user.dart';
+import '../../../widgets/text.dart';
+import '../../global_user/global_oredrID.dart';
+import '../../global_user/global_user.dart';
 
 class IronSteel extends StatefulWidget {
   const IronSteel({super.key, required this.data});

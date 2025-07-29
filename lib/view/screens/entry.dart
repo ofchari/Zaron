@@ -60,29 +60,52 @@ class _EntryState extends State<Entry> {
                 height: height / 1.8.h,
                 width: width.w,
                 decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [Colors.orange, Colors.orange[50]!],
-                    ),
-                    borderRadius: BorderRadius.only(
-                        bottomRight: Radius.circular(60),
-                        bottomLeft: Radius.circular(60))),
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [Colors.orange, Colors.orange[50]!],
+                  ),
+                  borderRadius: BorderRadius.only(
+                    bottomRight: Radius.circular(60),
+                    bottomLeft: Radius.circular(60),
+                  ),
+                ),
               ),
             ],
           ),
-          Positioned(
-            bottom: 300.h,
-            right: 100.w,
-            child: Container(
-              height: height / 4.h,
-              width: width / 2.w,
-              decoration: BoxDecoration(
+          // Perfectly centered image using Center widget
+          Positioned.fill(
+            top: 220.h, // Adjust this to position within the orange container
+            bottom: 200.h, // Adjust this to leave space for button
+            child: Center(
+              child: Container(
+                height: height / 4.h,
+                width: width / 2.w,
+                decoration: BoxDecoration(
                   image: DecorationImage(
-                      image: AssetImage("assets/login.png"),
-                      fit: BoxFit.cover)),
+                    image: AssetImage("assets/login.png"),
+                    fit: BoxFit.cover,
+                  ),
+                ),
+              ),
             ),
           ),
+          // Alternative method - using specific positioning for exact center
+          // Positioned(
+          //   top: (height / 1.8.h - height / 4.h) / 2 + 80.h, // Center vertically in orange area
+          //   left: (width.w - width / 2.w) / 2, // Center horizontally
+          //   child: Container(
+          //     height: height / 4.h,
+          //     width: width / 2.w,
+          //     decoration: BoxDecoration(
+          //       image: DecorationImage(
+          //         image: AssetImage("assets/login.png"),
+          //         fit: BoxFit.cover,
+          //       ),
+          //     ),
+          //   ),
+          // ),
+          // Clean button design
           Positioned(
             bottom: 80,
             left: 0,
@@ -93,52 +116,44 @@ class _EntryState extends State<Entry> {
                   Get.off(Login());
                 },
                 child: AnimatedContainer(
-                  duration: Duration(milliseconds: 300),
-                  curve: Curves.easeInOut,
+                  duration: Duration(milliseconds: 200),
+                  curve: Curves.easeOut,
                   height: height / 16.h,
                   width: width / 1.25.w,
                   decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(30.r),
+                    borderRadius: BorderRadius.circular(32.r),
                     gradient: LinearGradient(
-                      colors: [Colors.orange.shade300, Colors.orange.shade100],
+                      colors: [
+                        Colors.orange.shade200,
+                        Colors.orange.shade500,
+                      ],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.deepPurple,
+                        color: Colors.black.withOpacity(0.4),
                         blurRadius: 5,
-                        offset: Offset(0, 0.5),
-                      ),
-                      BoxShadow(
-                        color: Colors.white.withOpacity(0.05),
-                        blurRadius: 20,
-                        offset: Offset(-5, -5),
+                        spreadRadius: 1,
+                        offset: Offset(0, 1.5),
                       ),
                     ],
                   ),
                   child: Center(
                     child: Text(
-                      "Get Started here ✈",
+                      "Get Started",
                       style: TextStyle(
                         color: Colors.white,
-                        fontWeight: FontWeight.bold,
+                        fontWeight: FontWeight.w600,
                         fontSize: 17.sp,
-                        letterSpacing: 1.2,
-                        shadows: [
-                          Shadow(
-                            color: Colors.black.withOpacity(0.3),
-                            offset: Offset(0, 1),
-                            blurRadius: 2,
-                          ),
-                        ],
+                        letterSpacing: 0.5,
                       ),
                     ),
                   ),
                 ),
               ),
             ),
-          ),
+          )
         ],
       ),
     );

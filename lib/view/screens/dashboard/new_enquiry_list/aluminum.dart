@@ -8,246 +8,265 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:gap/gap.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/io_client.dart';
-import 'package:zaron/view/widgets/subhead.dart';
+import 'package:zaron/view/screens/global_user/global_user.dart';
+import 'package:zaron/view/universal_api/api&key.dart';
 
-import '../../universal_api/api&key.dart';
-import '../global_user/global_oredrID.dart';
+import '../../../widgets/subhead.dart';
+import '../../global_user/global_oredrID.dart';
 
-class Polycarbonate extends StatefulWidget {
-  const Polycarbonate({super.key, required this.data});
+class Aluminum extends StatefulWidget {
+  const Aluminum({super.key, required this.data});
+
   final Map<String, dynamic> data;
 
   @override
-  State<Polycarbonate> createState() => _PolycarbonateState();
+  State<Aluminum> createState() => _AluminumState();
 }
 
-class _PolycarbonateState extends State<Polycarbonate> {
+class _AluminumState extends State<Aluminum> {
   Map<String, dynamic>? categoryMeta;
   int? billamt;
-  int? orderIDD;
   String? orderNO;
+  int? orderIDD;
   late TextEditingController editController;
 
   String? selectedBrand;
   String? selectedColor;
   String? selectedThickness;
+  String? selectedMaterialType;
   String? selectedProductBaseId;
   String? selectedBaseProductName;
 
   List<String> brandsList = [];
   List<String> colorsList = [];
   List<String> thicknessList = [];
+  List<String> materialTypeList = [];
   List<Map<String, dynamic>> submittedData = [];
-  bool isLoading = false;
+
+  List<Map<String, dynamic>> apiProductsList = [];
 
   final _formKey = GlobalKey<FormState>();
-
-  Map<String, dynamic>? apiResponseData;
-  List<dynamic> responseProducts = [];
-  Map<String, Map<String, String>> uomOptions = {};
 
   @override
   void initState() {
     super.initState();
-    editController = TextEditingController(
-      text: widget.data["Base Product"] ?? "",
-    );
-    _fetchBrands();
+    editController = TextEditingController(text: widget.data["Base Product"]);
+    print(UserSession().userId);
+    _fetchMaterialType();
   }
 
   @override
   void dispose() {
     editController.dispose();
-    baseProductController.dispose();
-    baseProductFocusNode.dispose();
-    // Dispose controllers in fieldControllers
-    fieldControllers.forEach((_, controllers) {
-      controllers.forEach((_, controller) => controller.dispose());
-    });
     super.dispose();
   }
 
-  Future<void> _fetchBrands() async {
-    if (!mounted) return;
-    setState(() => isLoading = true);
-    try {
-      final client = IOClient(
-        HttpClient()..badCertificateCallback = (_, __, ___) => true,
-      );
-      final response = await client.get(Uri.parse('$apiUrl/showlables/19'));
+  Future<void> _fetchMaterialType() async {
+    setState(() {
+      materialTypeList = [];
+      selectedMaterialType = null;
+    });
 
-      if (!mounted) return;
+    final client = IOClient(
+      HttpClient()..badCertificateCallback = (_, __, ___) => true,
+    );
+    final url = Uri.parse('$apiUrl/showlables/36');
+
+    try {
+      final response = await client.get(url);
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        debugPrint("Brands API Response: ${response.body}");
+        final materials = data["message"]["message"][1];
+        print(response.body);
 
-        final message = data["message"]["message"];
-        if (message is List && message.length >= 2) {
-          final brandsData = message[1];
-          if (brandsData is List) {
-            setState(() {
-              ///  Extract category info (message[0][0])
-              final categoryInfoList = data["message"]["message"][0];
-              if (categoryInfoList is List && categoryInfoList.isNotEmpty) {
-                categoryMeta = Map<String, dynamic>.from(categoryInfoList[0]);
-              }
-              brandsList = brandsData
-                  .whereType<Map>()
-                  .map((e) => e["type_of_panel"]?.toString() ?? "")
-                  .where((e) => e.isNotEmpty)
-                  .toList();
-            });
-          }
+        if (materials is List) {
+          setState(() {
+            ///  Extract category info (message[0][0])
+            final categoryInfoList = data["message"]["message"][0];
+            if (categoryInfoList is List && categoryInfoList.isNotEmpty) {
+              categoryMeta = Map<String, dynamic>.from(categoryInfoList[0]);
+            }
+            materialTypeList = materials
+                .whereType<Map>()
+                .map((e) => e["material_type"]?.toString())
+                .whereType<String>()
+                .toList();
+          });
         }
-      } else {
-        _showErrorSnackBar("Failed to load brands: ${response.statusCode}");
       }
     } catch (e) {
-      debugPrint("Brands Error: $e");
-      _showErrorSnackBar("Error loading brands");
-    } finally {
-      if (mounted) setState(() => isLoading = false);
-    }
-  }
-
-  Future<void> _fetchColors() async {
-    if (selectedBrand == null || !mounted) return;
-    setState(() => isLoading = true);
-    try {
-      final client = IOClient(
-        HttpClient()..badCertificateCallback = (_, __, ___) => true,
-      );
-      final response = await client.post(
-        Uri.parse('$apiUrl/labelinputdata'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          "product_label": "color",
-          "product_filters": null,
-          "product_label_filters": null,
-          "product_category_id": null,
-          "base_product_filters": [selectedBrand],
-          "base_label_filters": ["type_of_panel"],
-          "base_category_id": "19",
-        }),
-      );
-
-      if (!mounted) return;
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        final message = data["message"]["message"];
-        debugPrint("Colors API Response: ${response.body}");
-
-        if (message is List && message.length >= 2) {
-          final colorData = message[0];
-          if (colorData is List) {
-            setState(() {
-              colorsList = colorData
-                  .whereType<Map>()
-                  .map((e) => e["color"]?.toString() ?? "")
-                  .where((e) => e.isNotEmpty)
-                  .toList();
-            });
-          }
-        }
-      } else {
-        _showErrorSnackBar("Failed to load colors: ${response.statusCode}");
-      }
-    } catch (e) {
-      debugPrint("Colors Error: $e");
-      _showErrorSnackBar("Error loading colors");
-    } finally {
-      if (mounted) setState(() => isLoading = false);
+      print("Exception fetching brands: $e");
     }
   }
 
   Future<void> _fetchThickness() async {
-    if (selectedBrand == null || selectedColor == null || !mounted) return;
+    if (selectedMaterialType == null) return;
 
-    setState(() => isLoading = true);
+    setState(() {
+      thicknessList = [];
+      selectedThickness = null;
+    });
+
+    final client = IOClient(
+      HttpClient()..badCertificateCallback = (_, __, ___) => true,
+    );
+    final url = Uri.parse('$apiUrl/labelinputdata');
 
     try {
-      final client = IOClient(
-        HttpClient()..badCertificateCallback = (_, __, ___) => true,
-      );
       final response = await client.post(
-        Uri.parse('$apiUrl/labelinputdata'),
+        url,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           "product_label": "thickness",
           "product_filters": null,
           "product_label_filters": null,
           "product_category_id": null,
-          "base_product_filters": [selectedBrand, selectedColor],
-          "base_label_filters": ["type_of_panel", "color"],
-          "base_category_id": "19",
+          "base_product_filters": [selectedMaterialType],
+          "base_label_filters": ["material_type"],
+          "base_category_id": "36",
         }),
       );
 
-      if (!mounted) return;
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final thick = data["message"]["message"][0];
+        print("Fetching colors for thick: $selectedMaterialType");
+        print("API response: ${response.body}");
+
+        if (thick is List) {
+          setState(() {
+            thicknessList = thick
+                .whereType<Map>()
+                .map((e) => e["thickness"]?.toString())
+                .whereType<String>()
+                .toList();
+          });
+        }
+      }
+    } catch (e) {
+      print("Exception fetching thickness: $e");
+    }
+  }
+
+  Future<void> _fetchBrand() async {
+    if (selectedMaterialType == null) return;
+
+    setState(() {
+      brandsList = [];
+      selectedBrand = null;
+    });
+
+    final client = IOClient(
+      HttpClient()..badCertificateCallback = (_, __, ___) => true,
+    );
+    final url = Uri.parse('$apiUrl/labelinputdata');
+
+    try {
+      final response = await client.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          "product_label": "brand",
+          "product_filters": null,
+          "product_label_filters": null,
+          "product_category_id": null,
+          "base_product_filters": [selectedMaterialType, selectedThickness],
+          "base_label_filters": ["material_type", "thickness"],
+          "base_category_id": "36",
+        }),
+      );
 
       if (response.statusCode == 200) {
-        debugPrint("Thickness API Response: ${response.body}");
         final data = jsonDecode(response.body);
-        final message = data["message"]["message"];
+        final brand = data["message"]["message"][0];
+        print("Fetching colors for brand: $selectedThickness");
+        print("API response: ${response.body}");
 
-        if (message is List && message.length >= 2) {
-          final thicknessData = message[0];
-          final idData = message[1];
+        if (brand is List) {
+          setState(() {
+            brandsList = brand
+                .whereType<Map>()
+                .map((e) => e["brand"]?.toString())
+                .whereType<String>()
+                .toList();
+          });
+        }
+      }
+    } catch (e) {
+      print("Exception fetching brand: $e");
+    }
+  }
 
-          if (thicknessData is List) {
+  Future<void> _fetchColor() async {
+    if (selectedMaterialType == null) return;
+
+    setState(() {
+      colorsList = [];
+      selectedColor = null;
+    });
+
+    final client = IOClient(
+      HttpClient()..badCertificateCallback = (_, __, ___) => true,
+    );
+    final url = Uri.parse('$apiUrl/labelinputdata');
+
+    try {
+      final response = await client.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          "product_label": "color",
+          "product_filters": null,
+          "product_label_filters": null,
+          "product_category_id": null,
+          "base_product_filters": [
+            selectedMaterialType,
+            selectedThickness,
+            selectedBrand,
+          ],
+          "base_label_filters": ["material_type", "thickness", "brand"],
+          "base_category_id": "36",
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final colors = data["message"]["message"][0];
+        print("Fetching colors for brand: $selectedBrand");
+        print("API response: ${response.body}");
+
+        if (data["message"]["message"] is List) {
+          final List message = data["message"]["message"];
+
+          final colorData = message[0];
+          if (colorData is List) {
             setState(() {
-              thicknessList = thicknessData
+              colorsList = colorData
                   .whereType<Map>()
-                  .map((e) => e["thickness"]?.toString() ?? "")
-                  .where((e) => e.isNotEmpty)
+                  .map((e) => e["color"]?.toString())
+                  .whereType<String>()
                   .toList();
             });
           }
 
+          final idData = message.length > 1 ? message[1] : null;
           if (idData is List && idData.isNotEmpty && idData.first is Map) {
             selectedProductBaseId = idData.first["id"]?.toString();
             selectedBaseProductName =
                 idData.first["base_product_id"]?.toString();
-            debugPrint("Selected Base Product ID: $selectedProductBaseId");
-            debugPrint("Base Product Name: $selectedBaseProductName");
+            print("Selected Base Product ID: $selectedProductBaseId");
+            print("Base Product Name: $selectedBaseProductName");
           }
         }
-      } else {
-        _showErrorSnackBar("Failed to load thickness: ${response.statusCode}");
       }
     } catch (e) {
-      debugPrint("Thickness Error: $e");
-      _showErrorSnackBar("Error loading thickness");
-    } finally {
-      if (mounted) setState(() => isLoading = false);
+      print("Exception fetching color: $e");
     }
   }
 
-  void _showErrorSnackBar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            Icon(Icons.error_outline, color: Colors.white),
-            SizedBox(width: 12),
-            Expanded(child: Text(message)),
-          ],
-        ),
-        backgroundColor: Colors.red,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-        margin: EdgeInsets.all(16),
-        duration: Duration(seconds: 3),
-      ),
-    );
-  }
-
   int? newOrderId = GlobalOrderSession().getNewOrderId();
-
-  Future<void> postPolycarbonateData() async {
-    debugPrint("Posting polycarbonate data...");
+  Future<void> postAllData() async {
     HttpClient client = HttpClient();
     client.badCertificateCallback =
         ((X509Certificate cert, String host, int port) => true);
@@ -258,9 +277,10 @@ class _PolycarbonateState extends State<Polycarbonate> {
     final categoryName = categoryMeta?["categories"];
     print("this os $categoryId");
     print("this os $categoryName");
+
     final headers = {"Content-Type": "application/json"};
     final data = {
-      "customer_id": 377423,
+      "customer_id": UserSession().userId,
       "product_id": null,
       "product_name": null,
       "product_base_id": selectedProductBaseId,
@@ -270,7 +290,7 @@ class _PolycarbonateState extends State<Polycarbonate> {
       "OrderID": newOrderId
     };
 
-    debugPrint("Request Body: $data");
+    print("This is a body data: $data");
     final url = "$apiUrl/addbag";
     final body = jsonEncode(data);
     try {
@@ -280,26 +300,25 @@ class _PolycarbonateState extends State<Polycarbonate> {
         body: body,
       );
 
-      debugPrint("API Response Status: ${response.statusCode}");
-      debugPrint("API Response Body: ${response.body}");
-
-      if (selectedBrand == null ||
-          selectedColor == null ||
-          selectedThickness == null) {
-        _showErrorSnackBar("Please select all required fields");
-        return;
-      }
+      debugPrint("This is a response: ${response.body}");
 
       if (response.statusCode == 200) {
         final responseData = jsonDecode(response.body);
         setState(() {
-          final String orderID = responseData["order_id"]?.toString() ?? "";
-          orderIDD = int.tryParse(orderID);
-          orderNO = responseData["order_no"]?.toString() ?? "Unknown";
+          final responseData = jsonDecode(response.body);
+          final String orderID = responseData["order_id"].toString();
+          print("Order IDDDD: $orderID");
+          orderIDD = int.parse(orderID);
+          String orderNos = responseData["order_no"]?.toString() ?? "Unknown";
+          orderNO = orderNos.isEmpty ? "Unknown" : orderNos;
           apiResponseData = responseData;
 
-          if (responseData["lebels"] != null &&
-              responseData["lebels"].isNotEmpty) {
+          if (responseData['lebels'] != null &&
+              responseData['lebels'].isNotEmpty) {
+            apiProductsList = List<Map<String, dynamic>>.from(
+              responseData['lebels'][0]['data'],
+            );
+
             List<dynamic> fullList = responseData["lebels"][0]["data"];
             List<Map<String, dynamic>> newProducts = [];
 
@@ -313,40 +332,398 @@ class _PolycarbonateState extends State<Polycarbonate> {
 
                 if (!alreadyExists) {
                   newProducts.add(product);
-                  debugPrint(
-                      "Product added: ${product["id"]} - ${product["Products"]}");
-
-                  // Add UOM options if available
-                  if (product["UOM"] != null &&
-                      product["UOM"]["options"] != null) {
-                    uomOptions[product["id"].toString()] =
-                        Map<String, String>.from((product["UOM"]["options"]
-                                as Map)
-                            .map((key, value) =>
-                                MapEntry(key.toString(), value.toString())));
-                  }
                 }
+
+                if (product["UOM"] != null &&
+                    product["UOM"]["options"] != null) {
+                  uomOptions[product["id"].toString()] =
+                      Map<String, String>.from(
+                    (product["UOM"]["options"] as Map).map(
+                      (key, value) =>
+                          MapEntry(key.toString(), value.toString()),
+                    ),
+                  );
+                }
+
+                debugPrint(
+                    "Product added: ${product["id"]} - ${product["Products"]}");
               }
             }
 
-            // Add only non-duplicate products
+            // Only add non-duplicate products
             responseProducts.addAll(newProducts);
           }
         });
-      } else {
-        _showErrorSnackBar("Failed to add product: ${response.statusCode}");
+      }
+
+      if (selectedBrand == null ||
+          selectedColor == null ||
+          selectedThickness == null ||
+          selectedMaterialType == null) {
+        return;
       }
     } catch (e) {
-      debugPrint("Error posting data: $e");
-      _showErrorSnackBar("Failed to add product. Please try again.");
+      throw Exception("Error posting data: $e");
     }
   }
 
+  // Add these variables after line 25 (after the existing List declarations)
+  Map<String, dynamic>? apiResponseData;
+  List<dynamic> responseProducts = [];
+  Map<String, Map<String, String>> uomOptions = {};
+
+  Widget _buildProductDetailInRows(Map<String, dynamic> data) {
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Row(
+            children: [
+              Expanded(
+                child: _buildDetailItem("UOM", _uomDropdownFromApi(data)),
+              ),
+              Gap(10),
+              Expanded(
+                  child: _buildDetailItem(
+                      "Billing Option", _buildApiBillingDropdown(data))),
+              Gap(10),
+              Expanded(
+                child: _buildDetailItem(
+                  "Length",
+                  _editableTextField(data, "Length"),
+                ),
+              ),
+            ],
+          ),
+        ),
+        Gap(5),
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Row(
+            children: [
+              Expanded(
+                child: _buildDetailItem(
+                    "Crimp", _editableTextField(data, "Crimp")),
+              ),
+              Gap(10),
+              Expanded(
+                child: _buildDetailItem("Nos", _editableTextField(data, "Nos")),
+              ),
+              Gap(10),
+              Expanded(
+                child: _buildDetailItem(
+                  "Basic Rate",
+                  _editableTextField(data, "Basic Rate"),
+                ),
+              ),
+            ],
+          ),
+        ),
+        Gap(5.h),
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Row(
+            children: [
+              Gap(10),
+              Expanded(
+                child: _buildDetailItem(
+                  "SQMtr",
+                  _editableTextField(data, "SQMtr"),
+                ),
+              ),
+              SizedBox(width: 10),
+              Expanded(
+                child: _buildDetailItem(
+                  "Amount",
+                  _editableTextField(data, "Amount"),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDetailItem(String label, Widget field) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            fontWeight: FontWeight.w500,
+            color: Colors.grey[700],
+            fontSize: 15,
+          ),
+        ),
+        SizedBox(height: 6),
+        field,
+      ],
+    );
+  }
+
+  Widget _editableTextField(Map<String, dynamic> data, String key) {
+    final controller = _getController(data, key);
+
+    return SizedBox(
+      height: 38.h,
+      child: TextField(
+        readOnly: (key == "Basic Rate" || key == "Amount" || key == "SQMtr")
+            ? true
+            : false,
+        style: GoogleFonts.figtree(
+          fontWeight: FontWeight.w500,
+          color: Colors.black,
+          fontSize: 15.sp,
+        ),
+        controller: controller,
+        keyboardType: (key == "Length" ||
+                key == "Nos" ||
+                key == "Basic Rate" ||
+                key == "Amount" ||
+                key == "SQMtr")
+            ? TextInputType.numberWithOptions(decimal: true)
+            : TextInputType.numberWithOptions(decimal: true),
+        onChanged: (val) {
+          setState(() {
+            data[key] = val;
+          });
+
+          print("Field $key changed to: $val");
+          print("Controller text: ${controller.text}");
+          print("Data after change: ${data[key]}");
+
+          // 🚫 DO NOT forcefully reset controller.text here!
+          // if (controller.text != val) {
+          //   controller.text = val;
+          // }
+
+          if (key == "Length" ||
+              key == "Nos" ||
+              key == "Basic Rate" ||
+              key == "Crimp") {
+            print("Triggering calculation for $key with value: $val");
+            _debounceCalculation(data);
+          }
+        },
+        decoration: InputDecoration(
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 12,
+            vertical: 0,
+          ),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(6),
+            borderSide: BorderSide(color: Colors.grey[300]!),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(6),
+            borderSide: BorderSide(color: Colors.grey[300]!),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(6),
+            borderSide: BorderSide(
+              color: Theme.of(context).primaryColor,
+              width: 2,
+            ),
+          ),
+          filled: true,
+          fillColor: Colors.grey[50],
+        ),
+      ),
+    );
+  }
+
+  Widget _uomDropdownFromApi(Map<String, dynamic> data) {
+    // Extract UOM data from the product data
+    Map<String, dynamic>? uomData = data['UOM'];
+    String? currentValue = uomData?['value']?.toString();
+    Map<String, dynamic>? options =
+        uomData?['options'] as Map<String, dynamic>?;
+
+    if (options == null || options.isEmpty) {
+      return _editableTextField(data, "UOM");
+    }
+
+    return SizedBox(
+      height: 38.h,
+      child: DropdownButtonFormField<String>(
+        value: currentValue,
+        items: options.entries
+            .map(
+              (entry) => DropdownMenuItem(
+                value: entry.key,
+                child: Text(
+                  entry.value.toString(),
+                  style: GoogleFonts.figtree(
+                    fontSize: 14.sp,
+                    color: Colors.black,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+            )
+            .toList(),
+        onChanged: (val) {
+          setState(() {
+            if (data['UOM'] is! Map) {
+              data['UOM'] = {};
+            }
+            data['UOM']['value'] = val;
+            data['UOM']['options'] = options;
+          });
+          print("UOM changed to: $val");
+          _debounceCalculation(data);
+        },
+        decoration: InputDecoration(
+          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 0),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(6),
+            borderSide: BorderSide(color: Colors.grey[300]!),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(6),
+            borderSide: BorderSide(color: Colors.grey[300]!),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(6),
+            borderSide: BorderSide(
+              color: Theme.of(context).primaryColor,
+              width: 2,
+            ),
+          ),
+          filled: true,
+          fillColor: Colors.grey[50],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildApiBillingDropdown(Map<String, dynamic> data) {
+    Map<String, dynamic> billingData = data['Billing Option'] ?? {};
+    String currentValue = billingData['value']?.toString() ?? "";
+    Map<String, dynamic> options = billingData['options'] ?? {};
+
+    return Container(
+      height: 40,
+      child: DropdownButtonFormField<String>(
+        isExpanded: true,
+        value: currentValue.isNotEmpty ? currentValue : null,
+        items: options.entries.map((entry) {
+          return DropdownMenuItem<String>(
+            value: entry.key.toString(),
+            child: Text(
+              entry.value.toString(),
+              style: GoogleFonts.figtree(
+                fontSize: 15,
+                color: Colors.black,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          );
+        }).toList(),
+        onChanged: (val) {
+          setState(() {
+            if (data['Billing Option'] is! Map) {
+              data['Billing Option'] = {};
+            }
+            data['Billing Option']['value'] = val;
+            data['Billing Option']['options'] = options;
+          });
+          // Trigger calculation when billing option changes
+          _debounceCalculation(data);
+        },
+        decoration: InputDecoration(
+          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(6),
+            borderSide: BorderSide(color: Colors.grey[300]!),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(6),
+            borderSide: BorderSide(color: Colors.grey[300]!),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(6),
+            borderSide: BorderSide(color: Colors.deepPurple[400]!, width: 2),
+          ),
+          filled: true,
+          fillColor: Colors.white,
+        ),
+      ),
+    );
+  }
+
+  /// Base View Products data //
   TextEditingController baseProductController = TextEditingController();
   List<dynamic> baseProductResults = [];
   bool isSearchingBaseProduct = false;
   String? selectedBaseProduct;
   FocusNode baseProductFocusNode = FocusNode();
+
+  void _submitData() {
+    if (selectedBrand == null ||
+        selectedColor == null ||
+        selectedThickness == null ||
+        selectedMaterialType == null) {
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text('Incomplete Form'),
+          content: Text(
+            'Please fill all required fields to add a product.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text('OK'),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+    postAllData().then((_) {
+      setState(() {
+        selectedMaterialType = null;
+        selectedThickness = null;
+        selectedBrand = null;
+        selectedColor = null;
+        materialTypeList = [];
+        thicknessList = [];
+        brandsList = [];
+        colorsList = [];
+        _fetchMaterialType();
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              Icon(Icons.check_circle, color: Colors.white),
+              SizedBox(width: 12),
+              Text("Product added successfully"),
+            ],
+          ),
+          backgroundColor: Colors.green,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          margin: EdgeInsets.all(16),
+          duration: Duration(seconds: 2),
+        ),
+      );
+    });
+  }
+
+  String _selectedItems() {
+    List<String> value = [
+      if (selectedMaterialType != null) "Material: $selectedMaterialType",
+      if (selectedThickness != null) "Thickness: $selectedThickness",
+      if (selectedBrand != null) "Brand: $selectedBrand",
+      if (selectedColor != null) "Color: $selectedColor",
+    ];
+    return value.isEmpty ? "No selections yet" : value.join(",  ");
+  }
 
   Widget _buildSubmittedDataList() {
     if (responseProducts.isEmpty) {
@@ -366,11 +743,12 @@ class _PolycarbonateState extends State<Polycarbonate> {
       );
     }
 
+    ///old column
+
     return Column(
       children: responseProducts.asMap().entries.map((entry) {
         int index = entry.key;
         Map<String, dynamic> data = Map<String, dynamic>.from(entry.value);
-        debugPrint("Rendering product: $data");
         return Card(
           margin: EdgeInsets.symmetric(vertical: 10),
           elevation: 2,
@@ -392,7 +770,7 @@ class _PolycarbonateState extends State<Polycarbonate> {
                         height: 40.h,
                         width: 210.w,
                         child: Text(
-                          "  ${index + 1}.  ${data["Products"] ?? "Unknown Product"}",
+                          "  ${index + 1}.  ${data["Products"]}" ?? "",
                           overflow: TextOverflow.ellipsis,
                           style: GoogleFonts.figtree(
                             fontSize: 18,
@@ -404,13 +782,16 @@ class _PolycarbonateState extends State<Polycarbonate> {
                     ),
                   ),
                   Container(
-                    padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.blue[50],
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(
-                      "ID: ${data['id'] ?? 'N/A'}",
+                      "ID: ${data['id']}",
                       style: TextStyle(
                         fontSize: 12,
                         color: Colors.blue[700],
@@ -444,8 +825,6 @@ class _PolycarbonateState extends State<Polycarbonate> {
                                     onPressed: () {
                                       setState(() {
                                         responseProducts.removeAt(index);
-                                        fieldControllers
-                                            .remove(data["id"]?.toString());
                                       });
                                       Navigator.pop(context);
                                     },
@@ -468,7 +847,6 @@ class _PolycarbonateState extends State<Polycarbonate> {
                 ],
               ),
               _buildProductDetailInRows(data),
-              Gap(5),
             ],
           ),
         );
@@ -476,275 +854,47 @@ class _PolycarbonateState extends State<Polycarbonate> {
     );
   }
 
-  Widget _buildProductDetailInRows(Map<String, dynamic> data) {
-    debugPrint("Product details: $data");
-    return Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Row(
-            children: [
-              Expanded(
-                child: _buildDetailItem("UOM", _uomDropdownFromApi(data)),
-              ),
-              SizedBox(width: 10),
-              Expanded(
-                child: _buildDetailItem(
-                    "Length", _editableTextField(data, "Profile")),
-              ),
-              SizedBox(width: 10),
-              Expanded(
-                child: _buildDetailItem("Nos", _editableTextField(data, "Nos")),
-              ),
-            ],
-          ),
-        ),
-        Gap(5),
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Row(
-            children: [
-              Expanded(
-                child: _buildDetailItem(
-                    "Basic Rate", _editableTextField(data, "Basic Rate")),
-              ),
-              SizedBox(width: 10),
-              Expanded(
-                child: _buildDetailItem(
-                    "SQMtr", _editableTextField(data, "SQMtr")),
-              ),
-              SizedBox(width: 10),
-              Expanded(
-                child: _buildDetailItem(
-                    "Amount", _editableTextField(data, "Amount")),
-              ),
-            ],
-          ),
-        ),
-        Gap(5.h),
-      ],
-    );
-  }
-
-  Widget _buildDetailItem(String label, Widget field) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: TextStyle(
-            fontWeight: FontWeight.w500,
-            color: Colors.grey[700],
-            fontSize: 15,
-          ),
-        ),
-        SizedBox(height: 6),
-        field,
-      ],
-    );
-  }
-
-  Widget _editableTextField(Map<String, dynamic> data, String key) {
-    final controller = _getController(data, key);
-
-    return SizedBox(
-      height: 38.h,
-      child: TextField(
-        readOnly: (key == "Basic Rate" || key == "Amount" || key == "SQMtr"),
-        style: GoogleFonts.figtree(
-          fontWeight: FontWeight.w500,
-          color: Colors.black,
-          fontSize: 15.sp,
-        ),
-        controller: controller,
-        keyboardType: (key == "Length" ||
-                key == "Nos" ||
-                key == "Basic Rate" ||
-                key == "Amount" ||
-                key == "SQMtr")
-            ? TextInputType.numberWithOptions(decimal: true)
-            : TextInputType.numberWithOptions(decimal: true),
-        onChanged: (val) {
-          setState(() {
-            data[key] = val;
-          });
-          debugPrint("Field $key changed to: $val");
-          debugPrint("Controller text: ${controller.text}");
-          debugPrint("Data after change: ${data[key]}");
-
-          if (key == "Length" ||
-              key == "Nos" ||
-              key == "Basic Rate" ||
-              key == "Profile") {
-            debugPrint("Triggering calculation for $key with value: $val");
-            _debounceCalculation(data);
-          }
-        },
-        decoration: InputDecoration(
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(6),
-            borderSide: BorderSide(color: Colors.grey[300]!),
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(6),
-            borderSide: BorderSide(color: Colors.grey[300]!),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(6),
-            borderSide: BorderSide(
-              color: Theme.of(context).primaryColor,
-              width: 2,
-            ),
-          ),
-          filled: true,
-          fillColor: Colors.grey[50],
-        ),
-      ),
-    );
-  }
-
-  Widget _uomDropdownFromApi(Map<String, dynamic> data) {
-    String productId = data["id"].toString();
-    Map<String, String>? options = uomOptions[productId];
-
-    if (options == null || options.isEmpty) {
-      return _editableTextField(data, "UOM");
-    }
-
-    String? currentValue;
-    if (data["UOM"] is Map) {
-      currentValue = data["UOM"]["value"]?.toString();
-    } else {
-      currentValue = data["UOM"]?.toString();
-    }
-
-    return SizedBox(
-      height: 40.h,
-      child: DropdownButtonFormField<String>(
-        value: currentValue,
-        items: options.entries
-            .map((entry) => DropdownMenuItem(
-                  value: entry.key,
-                  child: Text(entry.value),
-                ))
-            .toList(),
-        onChanged: (val) {
-          setState(() {
-            data["UOM"] = {"value": val, "options": options};
-          });
-          debugPrint("UOM changed to: $val");
-          debugPrint("Product data: ${data["Products"]}, ID: ${data["id"]}");
-          _debounceCalculation(data);
-        },
-        decoration: InputDecoration(
-          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 0),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(6),
-            borderSide: BorderSide(color: Colors.grey[300]!),
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(6),
-            borderSide: BorderSide(color: Colors.grey[300]!),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(6),
-            borderSide: BorderSide(
-              color: Theme.of(context).primaryColor,
-              width: 2,
-            ),
-          ),
-          filled: true,
-          fillColor: Colors.grey[50],
-        ),
-      ),
-    );
-  }
-
-  void _submitData() {
-    if (selectedBrand == null ||
-        selectedColor == null ||
-        selectedThickness == null) {
-      showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: Text('Incomplete Form'),
-          content: Text('Please fill all required fields to add a product.'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text('OK'),
-            ),
-          ],
-        ),
-      );
-      return;
-    }
-    postPolycarbonateData().then((_) {
-      setState(() {
-        selectedBrand = null;
-        selectedColor = null;
-        selectedThickness = null;
-        brandsList = [];
-        colorsList = [];
-        thicknessList = [];
-        _fetchBrands();
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Row(
-            children: [
-              Icon(Icons.check_circle, color: Colors.white),
-              SizedBox(width: 12),
-              Text("Product added successfully"),
-            ],
-          ),
-          backgroundColor: Colors.green,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-          margin: EdgeInsets.all(16),
-          duration: Duration(seconds: 2),
-        ),
-      );
-    });
-  }
-
-  String _selectedItems() {
-    List<String> values = [
-      if (selectedBrand != null) "Brand: $selectedBrand",
-      if (selectedColor != null) "Color: $selectedColor",
-      if (selectedThickness != null) "Thickness: $selectedThickness",
-    ];
-    return values.isEmpty ? "No selection yet" : values.join(",  ");
-  }
-
   Timer? _debounceTimer;
   Map<String, dynamic> calculationResults = {};
-  Map<String, String?> previousUomValues = {};
-  Map<String, Map<String, TextEditingController>> fieldControllers = {};
+  Map<String, String?> previousUomValues = {}; // Track previous UOM values
+  Map<String, Map<String, TextEditingController>> fieldControllers =
+      {}; // Store controllers
 
+  // Method to get or create controller for each field
   TextEditingController _getController(Map<String, dynamic> data, String key) {
     String productId = data["id"].toString();
+
+    // Initialize controllers map for this product ID
     fieldControllers.putIfAbsent(productId, () => {});
+
+    // If controller for this key doesn't exist, create it
     if (!fieldControllers[productId]!.containsKey(key)) {
       String initialValue = (data[key] != null && data[key].toString() != "0")
           ? data[key].toString()
-          : "";
-      fieldControllers[productId]![key] =
-          TextEditingController(text: initialValue);
-      debugPrint("Created controller for [$key] with value: '$initialValue'");
+          : ""; // Avoid initializing with "0"
+
+      fieldControllers[productId]![key] = TextEditingController(
+        text: initialValue,
+      );
+
+      print("Created controller for [$key] with value: '$initialValue'");
     } else {
+      // Existing controller: check if it needs sync from data
       final controller = fieldControllers[productId]![key]!;
+
       final dataValue = data[key]?.toString() ?? "";
+
+      // If the controller is empty but data has a value, sync it
       if (controller.text.isEmpty && dataValue.isNotEmpty && dataValue != "0") {
         controller.text = dataValue;
-        debugPrint("Synced controller for [$key] to: '$dataValue'");
+        print("Synced controller for [$key] to: '$dataValue'");
       }
     }
+
     return fieldControllers[productId]![key]!;
   }
 
+  // Add this method for debounced calculation
   void _debounceCalculation(Map<String, dynamic> data) {
     _debounceTimer?.cancel();
     _debounceTimer = Timer(Duration(seconds: 1), () {
@@ -753,8 +903,8 @@ class _PolycarbonateState extends State<Polycarbonate> {
   }
 
   Future<void> _performCalculation(Map<String, dynamic> data) async {
-    debugPrint("=== STARTING CALCULATION API ===");
-    debugPrint("Data received: $data");
+    print("=== STARTING CALCULATION API ===");
+    print("Data received: $data");
 
     final client = IOClient(
       HttpClient()..badCertificateCallback = (_, __, ___) => true,
@@ -762,6 +912,8 @@ class _PolycarbonateState extends State<Polycarbonate> {
     final url = Uri.parse('$apiUrl/calculation');
 
     String productId = data["id"].toString();
+
+    // Get current UOM value
     String? currentUom;
     if (data["UOM"] is Map) {
       currentUom = data["UOM"]["value"]?.toString();
@@ -769,47 +921,71 @@ class _PolycarbonateState extends State<Polycarbonate> {
       currentUom = data["UOM"]?.toString();
     }
 
-    debugPrint("Current UOM: $currentUom");
-    debugPrint("Previous UOM: ${previousUomValues[productId]}");
+    print("Current UOM: $currentUom");
+    print("Previous UOM: ${previousUomValues[productId]}");
 
+    // Get Profile value from controller
     double? profileValue;
     String? profileText;
+
     if (fieldControllers.containsKey(productId) &&
-        fieldControllers[productId]!.containsKey("Profile")) {
-      profileText = fieldControllers[productId]!["Profile"]!.text;
-      debugPrint("Profile from controller: $profileText");
-    }
-    if (profileText == null || profileText.isEmpty) {
-      profileText = data["Profile"]?.toString();
-      debugPrint("Profile from data: $profileText");
-    }
-    if (profileText != null && profileText.isNotEmpty) {
-      profileValue = double.tryParse(profileText);
+        fieldControllers[productId]!.containsKey("Length")) {
+      profileText = data["Length"]?.toString(); // First check the latest data
+      if (profileText == null || profileText.isEmpty) {
+        profileText = fieldControllers[productId]!["Length"]!
+            .text; // Then check controller
+      }
+      print("Length/Profile from data/controller: $profileText");
     }
 
+    if (profileText != null && profileText.isNotEmpty) {
+      profileValue = double.tryParse(profileText);
+      print("Parsed profile value: $profileValue");
+    }
+
+    // Get Nos value from controller
     int nosValue = 0;
     String? nosText;
+
     if (fieldControllers.containsKey(productId) &&
         fieldControllers[productId]!.containsKey("Nos")) {
       nosText = fieldControllers[productId]!["Nos"]!.text;
-      debugPrint("Nos from controller: $nosText");
+      print("Nos from controller: $nosText");
     }
+
     if (nosText == null || nosText.isEmpty) {
       nosText = data["Nos"]?.toString();
-      debugPrint("Nos from data: $nosText");
+      print("Nos from data: $nosText");
     }
+
     if (nosText != null && nosText.isNotEmpty) {
       nosValue = int.tryParse(nosText) ?? 1;
     }
 
-    debugPrint("Final Profile Value: $profileValue");
-    debugPrint("Final Nos Value: $nosValue");
+    // Get Crimp value
+    double? crimpValue;
+    String? crimpText = data["Crimp"]?.toString();
+
+    if (crimpText == null || crimpText.isEmpty || crimpText == "0") {
+      if (fieldControllers.containsKey(productId) &&
+          fieldControllers[productId]!.containsKey("Crimp")) {
+        crimpText = fieldControllers[productId]!["Crimp"]!.text.trim();
+      }
+    }
+
+    if (crimpText != null && crimpText.isNotEmpty) {
+      crimpValue = double.tryParse(crimpText);
+      print("Using crimp value: $crimpValue from text: $crimpText");
+    }
+
+    print("Final Profile Value: $profileValue");
+    print("Final Nos Value: $nosValue");
 
     final requestBody = {
       "id": int.tryParse(data["id"].toString()) ?? 0,
-      "category_id": 19,
+      "category_id": 36,
       "product": data["Products"]?.toString() ?? "",
-      "height": null,
+      "height": crimpValue != null ? crimpValue.toInt() : 0,
       "previous_uom": previousUomValues[productId] != null
           ? int.tryParse(previousUomValues[productId]!)
           : null,
@@ -817,9 +993,12 @@ class _PolycarbonateState extends State<Polycarbonate> {
       "length": profileValue ?? 0,
       "nos": nosValue,
       "basic_rate": double.tryParse(data["Basic Rate"]?.toString() ?? "0") ?? 0,
+      "billing_option": data["Billing Option"] is Map
+          ? int.tryParse(data["Billing Option"]["value"]?.toString() ?? "2")
+          : null,
     };
 
-    debugPrint("Request Body: ${jsonEncode(requestBody)}");
+    print("Request Body: ${jsonEncode(requestBody)}");
 
     try {
       final response = await client.post(
@@ -828,38 +1007,65 @@ class _PolycarbonateState extends State<Polycarbonate> {
         body: jsonEncode(requestBody),
       );
 
-      debugPrint("Response Status: ${response.statusCode}");
-      debugPrint("Response Body: ${response.body}");
+      print("Response Status: ${response.statusCode}");
+      print("Response Body: ${response.body}");
 
       if (response.statusCode == 200) {
         final responseData = jsonDecode(response.body);
+
         if (responseData["status"] == "success") {
           setState(() {
             billamt = responseData["bill_total"] ?? 0;
             print("billamt updated to: $billamt");
             calculationResults[productId] = responseData;
-            if (responseData["Length"] != null) {
-              data["Profile"] = responseData["Length"].toString();
-              if (fieldControllers[productId]?["Profile"] != null) {
-                fieldControllers[productId]!["Profile"]!.text =
-                    responseData["Length"].toString();
+
+            // Update Profile/Length
+            if (responseData["profile"] != null) {
+              String newProfile = responseData["profile"].toString();
+              // Only update if calculation returned different value
+              if (data["Length"]?.toString() != newProfile) {
+                data["Length"] = newProfile;
+                if (fieldControllers[productId]?["Length"] != null) {
+                  fieldControllers[productId]!["Length"]!.text = newProfile;
+                }
+                print("Length/Profile updated to: $newProfile");
               }
             }
+
+            // Update Nos
             if (responseData["Nos"] != null) {
               String newNos = responseData["Nos"].toString().trim();
               String currentInput =
                   fieldControllers[productId]!["Nos"]!.text.trim();
+
               if (currentInput.isEmpty || currentInput == "0") {
                 data["Nos"] = newNos;
                 if (fieldControllers[productId]?["Nos"] != null) {
                   fieldControllers[productId]!["Nos"]!.text = newNos;
                 }
-                debugPrint("Nos field updated to: $newNos");
+                print("Nos field updated to: $newNos");
               } else {
-                debugPrint(
-                    "Nos NOT updated because user input = '$currentInput'");
+                print("Nos NOT updated because user input = '$currentInput'");
               }
             }
+
+            // Update Crimp
+            if (responseData["crimp"] != null) {
+              String newCrimp = responseData["crimp"].toString();
+              if (newCrimp != "0" && newCrimp != "0.0") {
+                data["Crimp"] = newCrimp;
+                if (fieldControllers[productId]?["Crimp"] != null) {
+                  String currentCrimp =
+                      fieldControllers[productId]!["Crimp"]!.text.trim();
+                  if (currentCrimp.isEmpty || currentCrimp == "0") {
+                    fieldControllers[productId]!["Crimp"]!.text = newCrimp;
+                    print("Crimp field updated to: $newCrimp");
+                  }
+                }
+              }
+            }
+
+            // Update SQMtr
             if (responseData["sqmtr"] != null) {
               data["SQMtr"] = responseData["sqmtr"].toString();
               if (fieldControllers[productId]?["SQMtr"] != null) {
@@ -867,6 +1073,8 @@ class _PolycarbonateState extends State<Polycarbonate> {
                     responseData["sqmtr"].toString();
               }
             }
+
+            // Update Amount
             if (responseData["Amount"] != null) {
               data["Amount"] = responseData["Amount"].toString();
               if (fieldControllers[productId]?["Amount"] != null) {
@@ -876,17 +1084,19 @@ class _PolycarbonateState extends State<Polycarbonate> {
             }
             previousUomValues[productId] = currentUom;
           });
-          debugPrint("=== CALCULATION SUCCESS ===");
-          debugPrint(
-              "Updated data: Length=${data["Profile"]}, Nos=${data["Nos"]}, SQMtr=${data["SQMtr"]}, Amount=${data["Amount"]}");
+
+          print("=== CALCULATION SUCCESS ===");
+          print(
+            "Updated data: Length=${data["Profile"]}, Nos=${data["Nos"]}, Height=${data["Crimp"]}, Amount=${data["Amount"]}",
+          );
         } else {
-          debugPrint("API returned error status: ${responseData["status"]}");
+          print("API returned error status: ${responseData["status"]}");
         }
       } else {
-        debugPrint("HTTP Error: ${response.statusCode}");
+        print("HTTP Error: ${response.statusCode}");
       }
     } catch (e) {
-      debugPrint("Calculation API Error: $e");
+      print("Calculation API Error: $e");
     }
   }
 
@@ -958,14 +1168,21 @@ class _PolycarbonateState extends State<Polycarbonate> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Subhead(
-          text: 'Polycarbonate',
-          weight: FontWeight.w500,
-          color: Colors.black,
+        title: Text(
+          'Aluminum',
+          style: GoogleFonts.poppins(
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
+            color: Colors.black87,
+          ),
         ),
         centerTitle: true,
         elevation: 0,
         backgroundColor: Colors.white,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: Colors.black87),
+          onPressed: () => Navigator.pop(context),
+        ),
       ),
       body: Container(
         decoration: BoxDecoration(
@@ -995,18 +1212,57 @@ class _PolycarbonateState extends State<Polycarbonate> {
                     ],
                   ),
                   child: Padding(
-                    padding: EdgeInsets.all(16),
+                    padding: EdgeInsets.all(20),
                     child: Form(
                       key: _formKey,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Subhead(
-                            text: "Add New Product",
-                            weight: FontWeight.w600,
-                            color: Colors.black,
+                          SizedBox(width: 10),
+                          Text(
+                            "Add New Product",
+                            style: GoogleFonts.poppins(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.black87,
+                            ),
                           ),
-                          SizedBox(height: 16),
+                          SizedBox(height: 24),
+                          _buildAnimatedDropdown(
+                            materialTypeList,
+                            selectedMaterialType,
+                            (value) {
+                              setState(() {
+                                selectedMaterialType = value;
+                                selectedThickness = null;
+                                selectedBrand = null;
+                                selectedColor = null;
+                                thicknessList = [];
+                                brandsList = [];
+                                colorsList = [];
+                              });
+                              _fetchThickness();
+                            },
+                            label: "Material Type",
+                            icon: Icons.category_outlined,
+                          ),
+                          _buildAnimatedDropdown(
+                            thicknessList,
+                            selectedThickness,
+                            (value) {
+                              setState(() {
+                                selectedThickness = value;
+                                selectedBrand = null;
+                                selectedColor = null;
+                                brandsList = [];
+                                colorsList = [];
+                              });
+                              _fetchBrand();
+                            },
+                            enabled: thicknessList.isNotEmpty,
+                            label: "Thickness",
+                            icon: Icons.straighten_outlined,
+                          ),
                           _buildAnimatedDropdown(
                             brandsList,
                             selectedBrand,
@@ -1014,12 +1270,11 @@ class _PolycarbonateState extends State<Polycarbonate> {
                               setState(() {
                                 selectedBrand = value;
                                 selectedColor = null;
-                                selectedThickness = null;
                                 colorsList = [];
-                                thicknessList = [];
                               });
-                              _fetchColors();
+                              _fetchColor();
                             },
+                            enabled: brandsList.isNotEmpty,
                             label: "Brand",
                             icon: Icons.brightness_auto_outlined,
                           ),
@@ -1029,28 +1284,13 @@ class _PolycarbonateState extends State<Polycarbonate> {
                             (value) {
                               setState(() {
                                 selectedColor = value;
-                                selectedThickness = null;
-                                thicknessList = [];
                               });
-                              _fetchThickness();
                             },
                             enabled: colorsList.isNotEmpty,
                             label: "Color",
                             icon: Icons.color_lens_outlined,
                           ),
-                          _buildAnimatedDropdown(
-                            thicknessList,
-                            selectedThickness,
-                            (value) {
-                              setState(() {
-                                selectedThickness = value;
-                              });
-                            },
-                            enabled: thicknessList.isNotEmpty,
-                            label: "Thickness",
-                            icon: Icons.straighten_outlined,
-                          ),
-                          SizedBox(height: 16),
+                          SizedBox(height: 24),
                           Container(
                             padding: EdgeInsets.all(16),
                             decoration: BoxDecoration(
@@ -1123,7 +1363,6 @@ class _PolycarbonateState extends State<Polycarbonate> {
                     ),
                   ),
                 ),
-                SizedBox(height: 24),
                 if (responseProducts.isNotEmpty) ...[
                   SizedBox(height: 24),
                   Container(
@@ -1189,7 +1428,7 @@ class _PolycarbonateState extends State<Polycarbonate> {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text(
-                                "Decking Sheets",
+                                "Aluminum",
                                 style: GoogleFonts.poppins(
                                   fontWeight: FontWeight.w600,
                                   color: Colors.grey.shade700,
@@ -1214,7 +1453,7 @@ class _PolycarbonateState extends State<Polycarbonate> {
                                     ),
                                     SizedBox(width: 4),
                                     Text(
-                                      "ID: ${orderNO ?? 'N/A'}",
+                                      "ID: ${orderNO ?? orderIDD}",
                                       style: GoogleFonts.figtree(
                                         fontSize: 13,
                                         fontWeight: FontWeight.w600,

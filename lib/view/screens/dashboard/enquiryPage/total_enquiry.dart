@@ -5,8 +5,8 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
+import 'package:zaron/view/screens/dashboard/enquiryPage/total_enquiry_view.dart';
 import 'package:zaron/view/screens/global_user/global_user.dart';
-import 'package:zaron/view/screens/total_enquiry_view.dart';
 import 'package:zaron/view/universal_api/api&key.dart';
 import 'package:zaron/view/widgets/subhead.dart';
 

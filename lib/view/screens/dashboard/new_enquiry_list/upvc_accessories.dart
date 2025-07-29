@@ -10,9 +10,9 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:http/io_client.dart';
 import 'package:zaron/view/universal_api/api&key.dart';
 
-import '../../widgets/text.dart';
-import '../global_user/global_oredrID.dart';
-import '../global_user/global_user.dart';
+import '../../../widgets/text.dart';
+import '../../global_user/global_oredrID.dart';
+import '../../global_user/global_user.dart';
 
 class UpvcAccessories extends StatefulWidget {
   const UpvcAccessories({super.key, required this.data});
@@ -400,7 +400,7 @@ class _UpvcAccessoriesState extends State<UpvcAccessories> {
   //
   //   try {
   //     final response = await ioClient.post(
-  //       Uri.parse("https://demo.zaron.in:8181/ci4/api/baseproducts_search"),
+  //       Uri.parse("$apiUrl/api/baseproducts_search"),
   //       headers: headers,
   //       body: jsonEncode(data),
   //     );

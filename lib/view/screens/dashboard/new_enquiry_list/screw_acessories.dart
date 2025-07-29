@@ -8,7 +8,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:http/io_client.dart';
 import 'package:zaron/view/widgets/subhead.dart';
 
-import '../../universal_api/api&key.dart';
+import '../../../universal_api/api&key.dart';
 
 class ScrewAccessories extends StatefulWidget {
   const ScrewAccessories({super.key, required this.data});
@@ -308,7 +308,7 @@ class _ScrewAccessoriesState extends State<ScrewAccessories> {
   //
   //   try {
   //     final response = await ioClient.post(
-  //       Uri.parse("https://demo.zaron.in:8181/ci4/api/baseproducts_search"),
+  //       Uri.parse("$apiUrl/api/baseproducts_search"),
   //       headers: headers,
   //       body: jsonEncode(data),
   //     );

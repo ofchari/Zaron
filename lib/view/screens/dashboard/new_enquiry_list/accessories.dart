@@ -11,10 +11,10 @@ import 'package:http/io_client.dart';
 import 'package:zaron/view/universal_api/api&key.dart';
 import 'package:zaron/view/widgets/subhead.dart';
 
-import '../../widgets/text.dart';
-import '../camera_upload/acessories_uploads/accessories_attahment.dart';
-import '../global_user/global_oredrID.dart';
-import '../global_user/global_user.dart';
+import '../../../widgets/text.dart';
+import '../../camera_upload/acessories_uploads/accessories_attahment.dart';
+import '../../global_user/global_oredrID.dart';
+import '../../global_user/global_user.dart';
 
 class Accessories extends StatefulWidget {
   const Accessories({super.key, required this.data});
@@ -738,7 +738,7 @@ class _AccessoriesState extends State<Accessories> {
 
     try {
       final response = await ioClient.post(
-        Uri.parse("https://demo.zaron.in:8181/ci4/api/baseproduct_update"),
+        Uri.parse("$apiUrl/api/baseproduct_update"),
         headers: headers,
         body: jsonEncode(data),
       );

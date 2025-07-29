@@ -10,8 +10,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:http/io_client.dart';
 import 'package:zaron/view/universal_api/api&key.dart';
 
-import '../global_user/global_oredrID.dart';
-import '../global_user/global_user.dart';
+import '../../global_user/global_oredrID.dart';
+import '../../global_user/global_user.dart';
 
 class UpvcTiles extends StatefulWidget {
   const UpvcTiles({super.key, required this.data});

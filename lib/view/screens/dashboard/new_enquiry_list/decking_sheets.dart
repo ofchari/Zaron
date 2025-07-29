@@ -8,198 +8,124 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:gap/gap.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/io_client.dart';
+import 'package:zaron/view/screens/global_user/global_user.dart';
 import 'package:zaron/view/universal_api/api&key.dart';
 import 'package:zaron/view/widgets/subhead.dart';
 
-import '../../widgets/text.dart';
-import '../global_user/global_oredrID.dart';
-import '../global_user/global_user.dart';
-
-class LinerSheetPage extends StatefulWidget {
-  const LinerSheetPage({super.key, required this.data});
+class DeckingSheets extends StatefulWidget {
+  const DeckingSheets({super.key, required this.data});
 
   final Map<String, dynamic> data;
 
   @override
-  State<LinerSheetPage> createState() => _LinerSheetPageState();
+  State<DeckingSheets> createState() => _DeckingSheetsState();
 }
 
-class _LinerSheetPageState extends State<LinerSheetPage> {
+class _DeckingSheetsState extends State<DeckingSheets> {
   Map<String, dynamic>? categoryMeta;
   int? billamt;
-  String? orderNo;
   int? orderIDD;
+  String? orderNO;
   late TextEditingController editController;
-  String? selectedProduct;
-  String? selectedBrands;
-  String? selectedColors;
+  String? selectedMaterialType;
   String? selectedThickness;
-  String? selectedCoatingMass;
+  String? selectCoatingMass;
+  String? selectedYieldStrength;
+  String? selectedBrand;
   String? selectedProductBaseId;
-  String? selectedBaseProductId;
 
-  List<String> productList = [];
-  List<String> brandandList = [];
-  List<String> colorandList = [];
-  List<String> thickAndList = [];
-  List<String> coatingAndList = [];
-  List<dynamic> rawliner = [];
-
-  // List<String> brandList = [];
-  List<Map<String, dynamic>> submittedData = [];
+  List<String> materialTypeList = [];
+  List<String> thicknessList = [];
+  List<String> coatingMassList = [];
+  List<String> yieldStrengthList = [];
+  List<String> brandList = [];
+  Map<String, dynamic>? apiResponseData;
+  List<dynamic> responseProducts = [];
+  Map<String, Map<String, String>> uomOptions = {};
 
   // Form key for validation
   final _formKey = GlobalKey<FormState>();
+
+  Timer? _debounceTimer;
+  Map<String, dynamic> calculationResults = {};
+  Map<String, String?> previousUomValues = {};
+  Map<String, Map<String, TextEditingController>> fieldControllers = {};
+
+  // Base Product Search
+  TextEditingController baseProductController = TextEditingController();
+  List<dynamic> baseProductResults = [];
+  bool isSearchingBaseProduct = false;
+  String? selectedBaseProduct;
+  FocusNode baseProductFocusNode = FocusNode();
 
   @override
   void initState() {
     super.initState();
     editController = TextEditingController(text: widget.data["Base Product"]);
-    _fetchProductName();
-    _fetchBrandData();
+    _fetchMaterialType();
   }
 
   @override
   void dispose() {
     editController.dispose();
+    baseProductController.dispose();
+    baseProductFocusNode.dispose();
+    fieldControllers.forEach((_, controllers) {
+      controllers.forEach((_, controller) => controller.dispose());
+    });
+    _debounceTimer?.cancel();
     super.dispose();
   }
 
-  Future<void> _fetchProductName() async {
+  Future<void> _fetchMaterialType() async {
     setState(() {
-      productList = [];
-      selectedProduct = null;
+      materialTypeList = [];
+      selectedMaterialType = null;
     });
 
     final client = IOClient(
       HttpClient()..badCertificateCallback = (_, __, ___) => true,
     );
-    final url = Uri.parse('$apiUrl/showlables/590');
+    final url = Uri.parse('$apiUrl/showlables/34');
 
     try {
       final response = await client.get(url);
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final products = data["message"]["message"][1];
-        debugPrint("PRoduct:::${products}");
-        debugPrint(response.body, wrapWidth: 1024);
-        rawliner = products;
+        final meterialType = data["message"]["message"][1];
+        print("Material Type Response: ${response.body}");
 
-        if (products is List) {
+        if (meterialType is List) {
           setState(() {
             ///  Extract category info (message[0][0])
             final categoryInfoList = data["message"]["message"][0];
             if (categoryInfoList is List && categoryInfoList.isNotEmpty) {
               categoryMeta = Map<String, dynamic>.from(categoryInfoList[0]);
             }
-            productList = products
+
+            materialTypeList = meterialType
                 .whereType<Map>()
-                .map((e) => e["product_name"]?.toString())
+                .map((e) => e["material_type"]?.toString())
                 .whereType<String>()
                 .toList();
           });
         }
+      } else {
+        print("Failed to fetch material types: ${response.statusCode}");
       }
     } catch (e) {
-      print("Exception fetching brands: $e");
+      print("Exception fetching material types: $e");
+    } finally {
+      client.close();
     }
   }
 
-  Future<void> _fetchBrandData() async {
-    setState(() {
-      brandandList = [];
-      selectedBrands;
-    });
-
-    final client = IOClient(
-      HttpClient()..badCertificateCallback = (_, __, ___) => true,
-    );
-    final url = Uri.parse('$apiUrl/showlables/590');
-
-    try {
-      final response = await client.get(url);
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        final brandData = data["message"]["message"][2][1];
-        debugPrint(response.body);
-
-        if (brandData is List) {
-          setState(() {
-            brandandList = brandData
-                .whereType<Map>()
-                .map((e) => e["brand"]?.toString())
-                .whereType<String>()
-                .toList();
-          });
-        }
-      }
-    } catch (e) {
-      print("Exception fetching brands: $e");
-    }
-  }
-
-  /// fetch colors Api's //
-  Future<void> _fetchColorData() async {
-    if (selectedBrands == null) return;
+  Future<void> _fetchThick() async {
+    if (selectedMaterialType == null) return;
 
     setState(() {
-      colorandList = [];
-      selectedColors = null;
-    });
-
-    final client = IOClient(
-      HttpClient()..badCertificateCallback = (_, __, ___) => true,
-    );
-    final url = Uri.parse('$apiUrl/labelinputdata');
-
-    try {
-      final response = await client.post(
-        url,
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          // "category_id": "3",
-          // "selectedlabel": "brand",
-          // "selectedvalue": selectedBrands,
-          // "label_name": "color",
-          "product_label": "color",
-          "product_filters": [selectedProduct],
-          "product_label_filters": ["product_name"],
-          "product_category_id": 590,
-          "base_product_filters": [selectedBrands],
-          "base_label_filters": ["brand"],
-          "base_category_id": 3,
-        }),
-      );
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        final selectedThickness = data["message"]["message"][0];
-        print("Fetching colors for brand: $selectedThickness");
-        print("API response: ${response.body}");
-
-        if (selectedThickness is List) {
-          setState(() {
-            colorandList = selectedThickness
-                .whereType<Map>()
-                .map((e) => e["color"]?.toString())
-                .whereType<String>()
-                .toList();
-          });
-        }
-      }
-    } catch (e) {
-      print("Exception fetching colors: $e");
-    }
-  }
-
-  /// fetch Thickness Api's ///
-  Future<void> _fetchThicknessData() async {
-    if (selectedBrands == null) return;
-
-    setState(() {
-      thickAndList = [];
+      thicknessList = [];
       selectedThickness = null;
     });
 
@@ -213,48 +139,46 @@ class _LinerSheetPageState extends State<LinerSheetPage> {
         url,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-          // "category_id": "3",
-          // "selectedlabel": "color",
-          // "selectedvalue": selectedColors,
-          // "label_name": "thickness",
           "product_label": "thickness",
-          "product_filters": [selectedProduct],
-          "product_label_filters": ["product_name"],
-          "product_category_id": 590,
-          "base_product_filters": [selectedBrands, selectedColors],
-          "base_label_filters": ["brand", "color"],
-          "base_category_id": 3,
+          "product_filters": null,
+          "product_label_filters": null,
+          "product_category_id": null,
+          "base_product_filters": ["$selectedMaterialType"],
+          "base_label_filters": ["material_type"],
+          "base_category_id": "34",
         }),
       );
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final thickness = data["message"]["message"][0];
-        print("Fetching colors for brand: $selectedColors");
-        print("API response: ${response.body}");
+        final selectedThickness = data["message"]["message"][0];
+        print("Thickness Response: ${response.body}");
 
-        if (thickness is List) {
+        if (selectedThickness is List) {
           setState(() {
-            thickAndList = thickness
+            thicknessList = selectedThickness
                 .whereType<Map>()
                 .map((e) => e["thickness"]?.toString())
                 .whereType<String>()
                 .toList();
           });
         }
+      } else {
+        print("Failed to fetch thickness: ${response.statusCode}");
       }
     } catch (e) {
       print("Exception fetching thickness: $e");
+    } finally {
+      client.close();
     }
   }
 
-  /// fetch Thickness Api's ///
-  Future<void> _fetchCoatingMassData() async {
-    if (selectedBrands == null) return;
+  Future<void> _fetchCoat() async {
+    if (selectedThickness == null) return;
 
     setState(() {
-      coatingAndList = [];
-      selectedCoatingMass = null;
+      coatingMassList = [];
+      selectCoatingMass = null;
     });
 
     final client = IOClient(
@@ -268,62 +192,169 @@ class _LinerSheetPageState extends State<LinerSheetPage> {
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           "product_label": "coating_mass",
-          "product_filters": [selectedProduct],
-          "product_label_filters": ["product_name"],
-          "product_category_id": 590,
+          "product_filters": null,
+          "product_label_filters": null,
+          "product_category_id": null,
+          "base_product_filters": [selectedMaterialType, selectedThickness],
+          "base_label_filters": ["material_type", "thickness"],
+          "base_category_id": "34",
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final thickness = data["message"]["message"][0];
+        print("Coating Mass Response: ${response.body}");
+
+        if (thickness is List) {
+          setState(() {
+            coatingMassList = thickness
+                .whereType<Map>()
+                .map((e) => e["coating_mass"]?.toString())
+                .whereType<String>()
+                .toList();
+          });
+        }
+      } else {
+        print("Failed to fetch coating mass: ${response.statusCode}");
+      }
+    } catch (e) {
+      print("Exception fetching coating mass: $e");
+    } finally {
+      client.close();
+    }
+  }
+
+  Future<void> _yieldStrength() async {
+    if (selectCoatingMass == null) return;
+
+    setState(() {
+      yieldStrengthList = [];
+      selectedYieldStrength = null;
+    });
+
+    final client = IOClient(
+      HttpClient()..badCertificateCallback = (_, __, ___) => true,
+    );
+    final url = Uri.parse('$apiUrl/labelinputdata');
+
+    try {
+      final response = await client.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          "product_label": "yield_strength",
+          "product_filters": null,
+          "product_label_filters": null,
+          "product_category_id": null,
           "base_product_filters": [
-            selectedBrands,
-            selectedColors,
+            selectedMaterialType,
             selectedThickness,
+            selectCoatingMass,
           ],
-          "base_label_filters": ["brand", "color", "thickness"],
-          "base_category_id": 3,
+          "base_label_filters": ["material_type", "thickness", "coating_mass"],
+          "base_category_id": "34",
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final coating = data["message"]["message"][0];
+        print("Yield Strength Response: ${response.body}");
+
+        if (coating is List) {
+          setState(() {
+            yieldStrengthList = coating
+                .whereType<Map>()
+                .map((e) => e["yield_strength"]?.toString())
+                .whereType<String>()
+                .toList();
+          });
+        }
+      } else {
+        print("Failed to fetch yield strength: ${response.statusCode}");
+      }
+    } catch (e) {
+      print("Exception fetching yield strength: $e");
+    } finally {
+      client.close();
+    }
+  }
+
+  Future<void> _fetchBrand() async {
+    if (selectedYieldStrength == null) return;
+
+    setState(() {
+      brandList = [];
+      selectedBrand = null;
+    });
+
+    final client = IOClient(
+      HttpClient()..badCertificateCallback = (_, __, ___) => true,
+    );
+    final url = Uri.parse('$apiUrl/labelinputdata');
+
+    try {
+      final response = await client.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          "product_label": "brand",
+          "product_filters": null,
+          "product_label_filters": null,
+          "product_category_id": null,
+          "base_product_filters": [
+            selectedMaterialType,
+            selectedThickness,
+            selectCoatingMass,
+            selectedYieldStrength,
+          ],
+          "base_label_filters": [
+            "material_type",
+            "thickness",
+            "coating_mass",
+            "yield_strength",
+          ],
+          "base_category_id": "34",
         }),
       );
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         final message = data["message"]["message"];
-        print("Fetching coating mass for brand: $selectedBrands");
-        print("API response: ${response.body}");
 
-        if (message is List && message.isNotEmpty) {
-          final coating = message[0];
-          if (coating is List) {
-            setState(() {
-              coatingAndList = coating
-                  .whereType<Map>()
-                  .map((e) => e["coating_mass"]?.toString())
-                  .whereType<String>()
-                  .toList();
-            });
-          }
-
-          // Extract product_base_id and base_product_id from message[1]
-          final idData = message.length > 1 ? message[1] : null;
-          if (idData is List && idData.isNotEmpty && idData.first is Map) {
-            selectedProductBaseId = idData.first["id"]?.toString();
-            selectedBaseProductId =
-                idData.first["base_product_id"]?.toString(); // <-- Added line
-            print("Selected Product Base ID: $selectedProductBaseId");
-            print(
-              "Selected Base Product ID: $selectedBaseProductId",
-            ); // <-- Optional
-          }
+        // Extract brand names
+        final brands = message[0];
+        if (brands is List) {
+          setState(() {
+            brandList = brands
+                .whereType<Map>()
+                .map((e) => e["brand"]?.toString())
+                .whereType<String>()
+                .toList();
+          });
         }
+
+        // Extract product_base_id
+        final idData = message.length > 1 ? message[1] : null;
+        if (idData is List && idData.isNotEmpty && idData.first is Map) {
+          setState(() {
+            selectedProductBaseId = idData.first["id"]?.toString();
+            print("Selected Base Product ID: $selectedProductBaseId");
+          });
+        }
+
+        print("Brand Response: ${response.body}");
+      } else {
+        print("Failed to fetch brands: ${response.statusCode}");
       }
     } catch (e) {
-      print("Exception fetching coating mass: $e");
+      print("Exception fetching brands: $e");
+    } finally {
+      client.close();
     }
   }
 
-  // Add these variables after line 25 (after the existing List declarations)
-  Map<String, dynamic>? apiResponseData;
-  List<dynamic> responseProducts = [];
-  Map<String, Map<String, String>> uomOptions = {};
-
-  ///post All Data
-  int? newOrderId = GlobalOrderSession().getNewOrderId();
   Future<void> postAllData() async {
     HttpClient client = HttpClient();
     client.badCertificateCallback =
@@ -336,103 +367,83 @@ class _LinerSheetPageState extends State<LinerSheetPage> {
     print("this os $categoryId");
     print("this os $categoryName");
 
-    // Find the matching item from rawAccessoriesData
-    final matchingAccessory = rawliner.firstWhere(
-      (item) => item["product_name"] == selectedProduct,
-      orElse: () => null,
-    );
-    // Extract values
-    final linerproID = matchingAccessory?["id"];
-    print("this os $linerproID");
-
     final headers = {"Content-Type": "application/json"};
     final data = {
       "customer_id": UserSession().userId,
-      "product_id": linerproID,
-      "product_name": selectedProduct,
+      "product_id": null,
+      "product_name": null,
       "product_base_id": selectedProductBaseId,
-      "product_base_name": "$selectedBaseProductId",
+      "product_base_name":
+          "$selectedMaterialType,$selectedThickness,$selectCoatingMass,$selectedYieldStrength,$selectedBrand",
       "category_id": categoryId,
       "category_name": categoryName,
-      "OrderID": newOrderId
+      "OrderID": (orderIDD != null) ? orderIDD : null,
     };
 
-    print("This is a body data: $data");
+    print("Request Body: $data");
+
     final url = "$apiUrl/addbag";
-    final body = jsonEncode(data);
+
     try {
       final response = await ioClient.post(
         Uri.parse(url),
         headers: headers,
-        body: body,
+        body: jsonEncode(data),
       );
 
-      debugPrint("This is a response: ${response.body}");
-      if (selectedProduct == null ||
-          selectedBrands == null ||
-          selectedColors == null ||
-          selectedThickness == null ||
-          selectedCoatingMass == null) return;
+      print("Response Status: ${response.statusCode}");
+      print("Response Body: ${response.body}");
 
       if (response.statusCode == 200) {
-        // Parse and store the API response
-        print(response.statusCode);
         final responseData = jsonDecode(response.body);
+        print("Parsed Response Data: $responseData");
 
         setState(() {
           apiResponseData = responseData;
+          final String orderID = responseData["order_id"].toString();
+          print("Order IDDDD: $orderID");
+          orderIDD = int.parse(orderID);
 
-          if (responseData["lebels"] != null &&
-              responseData["lebels"].isNotEmpty) {
-            final newProducts = responseData["lebels"][0]["data"] ?? [];
+          String orderNos = responseData["order_no"]?.toString() ?? "Unknown";
+          orderNO = orderNos.isEmpty ? "Unknown" : orderNos;
 
-            // ✅ Filter duplicates
-            final uniqueNewProducts = newProducts.where((newItem) {
-              final newId = newItem["id"].toString();
-              return !responseProducts
-                  .any((existing) => existing["id"].toString() == newId);
-            }).toList();
-
-            responseProducts.addAll(uniqueNewProducts);
-
-            final String orderID = responseData["order_id"].toString();
-            print("Order IDDDD: $orderID");
-            orderIDD = int.parse(orderID);
-
-            String orderNos = responseData["order_no"]?.toString() ?? "Unknown";
-            orderNo = orderNos.isEmpty ? "Unknown" : orderNos;
-
-            for (var product in responseProducts) {
-              if (product["UOM"] != null && product["UOM"]["options"] != null) {
-                uomOptions[product["id"].toString()] = Map<String, String>.from(
-                  product["UOM"]["options"].map(
-                    (key, value) => MapEntry(key.toString(), value.toString()),
-                  ),
-                );
-              }
-            }
+          if (responseData['lebels'] != null &&
+              responseData['lebels'].isNotEmpty) {
+            responseProducts = responseData['lebels'][0]['data'] ?? [];
+            print("Updated responseProducts: $responseProducts");
+          } else {
+            print("No 'lebels' data found in response");
+            responseProducts = [];
           }
         });
+      } else {
+        print("API Error: Status ${response.statusCode}");
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Failed to add product: Server error")),
+        );
       }
     } catch (e) {
-      throw Exception("Error posting data: $e");
+      print("Error posting data: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error adding product: $e")),
+      );
+    } finally {
+      ioClient.close();
     }
   }
 
   void _submitData() {
-    if (selectedProduct == null ||
-        selectedBrands == null ||
-        selectedColors == null ||
+    if (!_formKey.currentState!.validate() ||
+        selectedMaterialType == null ||
         selectedThickness == null ||
-        selectedCoatingMass == null) {
-      // Show elegant error message
+        selectCoatingMass == null ||
+        selectedYieldStrength == null ||
+        selectedBrand == null) {
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
           title: Text('Incomplete Form'),
-          content: Text(
-            'Please fill all required fields to add a product.',
-          ),
+          content: Text('Please fill all required fields to add a product.'),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
@@ -443,34 +454,8 @@ class _LinerSheetPageState extends State<LinerSheetPage> {
       );
       return;
     }
-    postAllData().then((_) {
-      setState(() {
-        submittedData.add({
-          "Product": "Linear Sheets",
-          "UOM": "Feet",
-          "Length": "0",
-          "Nos": "1",
-          "Basic Rate": "0",
-          "SQ": "0",
-          "Amount": "0",
-          "Base Product":
-              "$selectedProduct, $selectedBrands, $selectedColors, $selectedThickness, $selectedCoatingMass,",
-        });
-        selectedProduct = null;
-        selectedBrands = null;
-        selectedColors = null;
-        selectedThickness = null;
-        selectedCoatingMass = null;
-        productList = [];
-        brandandList = [];
-        colorandList = [];
-        thickAndList = [];
-        coatingAndList = [];
-        _fetchProductName();
-        _fetchBrandData();
-      });
 
-      // Show success message with a more elegant snackBar
+    postAllData().then((_) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Row(
@@ -487,21 +472,357 @@ class _LinerSheetPageState extends State<LinerSheetPage> {
           duration: Duration(seconds: 2),
         ),
       );
+
+      setState(() {
+        selectedMaterialType = null;
+        selectedThickness = null;
+        selectCoatingMass = null;
+        selectedYieldStrength = null;
+        selectedBrand = null;
+        materialTypeList = [];
+        thicknessList = [];
+        coatingMassList = [];
+        yieldStrengthList = [];
+        brandList = [];
+        _fetchMaterialType();
+      });
+    }).catchError((e) {
+      print("Error in submitData: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Failed to add product: $e"),
+          backgroundColor: Colors.red,
+        ),
+      );
     });
   }
 
+  Widget _buildProductDetailInRows(Map<String, dynamic> data) {
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: _buildDetailItem("UOM", _uomDropdownFromApi(data)),
+              ),
+              Gap(10),
+              Expanded(
+                child: _buildDetailItem(
+                    "Billing Option", _buildApiBillingDropdown(data)),
+              ),
+              Gap(10),
+              Expanded(
+                child: _buildDetailItem(
+                    "Length", _editableTextField(data, "Length")),
+              ),
+            ],
+          ),
+          Gap(5),
+          Row(
+            children: [
+              Expanded(
+                child: _buildDetailItem("Nos", _editableTextField(data, "Nos")),
+              ),
+              Gap(10),
+              Expanded(
+                child: _buildDetailItem(
+                    "Basic Rate", _editableTextField(data, "Basic Rate")),
+              ),
+              Gap(10),
+              Expanded(
+                child: _buildDetailItem("Qty", _editableTextField(data, "qty")),
+              ),
+            ],
+          ),
+          Gap(5.h),
+          Row(
+            children: [
+              Expanded(
+                child: _buildDetailItem(
+                    "Amount", _editableTextField(data, "Amount")),
+              ),
+            ],
+          ),
+          Gap(5.h),
+          // _buildBaseProductSearchField(),
+        ],
+      ),
+    );
+  }
+
+  Widget _uomDropdownFromApi(Map<String, dynamic> data) {
+    Map<String, dynamic>? uomData = data['UOM'];
+    String? currentValue = uomData?['value']?.toString();
+    Map<String, dynamic>? options =
+        uomData?['options'] as Map<String, dynamic>?;
+
+    if (options == null || options.isEmpty) {
+      return _editableTextField(data, "UOM");
+    }
+
+    return SizedBox(
+      height: 38.h,
+      child: DropdownButtonFormField<String>(
+        value: currentValue,
+        items: options.entries
+            .map(
+              (entry) => DropdownMenuItem(
+                value: entry.key,
+                child: Text(
+                  entry.value.toString(),
+                  style: GoogleFonts.figtree(
+                    fontSize: 14.sp,
+                    color: Colors.black,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+            )
+            .toList(),
+        onChanged: (val) {
+          setState(() {
+            if (data['UOM'] is! Map) {
+              data['UOM'] = {};
+            }
+            data['UOM']['value'] = val;
+            data['UOM']['options'] = options;
+          });
+          print("UOM changed to: $val");
+          _debounceCalculation(data);
+        },
+        decoration: InputDecoration(
+          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 0),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(6),
+            borderSide: BorderSide(color: Colors.grey[300]!),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(6),
+            borderSide: BorderSide(color: Colors.grey[300]!),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(6),
+            borderSide: BorderSide(
+              color: Theme.of(context).primaryColor,
+              width: 2,
+            ),
+          ),
+          filled: true,
+          fillColor: Colors.grey[50],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildApiBillingDropdown(Map<String, dynamic> data) {
+    Map<String, dynamic> billingData = data['Billing Option'] ?? {};
+    String currentValue = billingData['value']?.toString() ?? "";
+    Map<String, dynamic> options = billingData['options'] ?? {};
+    return Container(
+      height: 40,
+      child: DropdownButtonFormField<String>(
+        isExpanded: true,
+        value: currentValue.isNotEmpty ? currentValue : null,
+        items: options.entries.map((entry) {
+          return DropdownMenuItem<String>(
+            value: entry.key.toString(),
+            child: Text(
+              entry.value.toString(),
+              style: GoogleFonts.figtree(
+                fontSize: 15,
+                color: Colors.black,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          );
+        }).toList(),
+        onChanged: (val) {
+          setState(() {
+            if (data['Billing Option'] is! Map) {
+              data['Billing Option'] = {};
+            }
+            data['Billing Option']['value'] = val;
+            data['Billing Option']['options'] = options;
+          });
+          _debounceCalculation(data);
+        },
+        decoration: InputDecoration(
+          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(6),
+            borderSide: BorderSide(color: Colors.grey[300]!),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(6),
+            borderSide: BorderSide(color: Colors.grey[300]!),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(6),
+            borderSide: BorderSide(color: Colors.deepPurple[400]!, width: 2),
+          ),
+          filled: true,
+          fillColor: Colors.white,
+        ),
+      ),
+    );
+  }
+
+  Widget _editableTextField(Map<String, dynamic> data, String key) {
+    final controller = _getController(data, key);
+
+    return SizedBox(
+      height: 38.h,
+      child: TextField(
+        readOnly: (key == "Basic Rate" || key == "Amount" || key == "qty")
+            ? true
+            : false,
+        style: GoogleFonts.figtree(
+          fontWeight: FontWeight.w500,
+          color: Colors.black,
+          fontSize: 15.sp,
+        ),
+        controller: controller,
+        keyboardType: (key == "Length" ||
+                key == "Nos" ||
+                key == "Basic Rate" ||
+                key == "Amount" ||
+                key == "SQMtr")
+            ? TextInputType.numberWithOptions(decimal: true)
+            : TextInputType.numberWithOptions(decimal: true),
+        onChanged: (val) {
+          setState(() {
+            data[key] = val;
+          });
+
+          print("Field $key changed to: $val");
+          print("Controller text: ${controller.text}");
+          print("Data after change: ${data[key]}");
+
+          if (key == "Length" ||
+              key == "Nos" ||
+              key == "Basic Rate" ||
+              key == "Crimp" ||
+              key == "qty") {
+            print("Triggering calculation for $key with value: $val");
+            _debounceCalculation(data);
+          }
+        },
+        decoration: InputDecoration(
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 12,
+            vertical: 0,
+          ),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(6),
+            borderSide: BorderSide(color: Colors.grey[300]!),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(6),
+            borderSide: BorderSide(color: Colors.grey[300]!),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(6),
+            borderSide: BorderSide(
+              color: Theme.of(context).primaryColor,
+              width: 2,
+            ),
+          ),
+          filled: true,
+          fillColor: Colors.grey[50],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDetailItem(String label, Widget field) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            fontWeight: FontWeight.w500,
+            color: Colors.grey[700],
+            fontSize: 15,
+          ),
+        ),
+        SizedBox(height: 6),
+        field,
+      ],
+    );
+  }
+
+  Future<void> searchBaseProducts(String query) async {
+    if (query.isEmpty) {
+      setState(() {
+        baseProductResults = [];
+      });
+      return;
+    }
+
+    setState(() {
+      isSearchingBaseProduct = true;
+    });
+
+    HttpClient client = HttpClient();
+    client.badCertificateCallback =
+        ((X509Certificate cert, String host, int port) => true);
+    IOClient ioClient = IOClient(client);
+    final headers = {"Content-Type": "application/json"};
+    final data = {"category_id": "34", "searchbase": query};
+
+    try {
+      final response = await ioClient.post(
+        Uri.parse("$apiUrl/api/baseproducts_search"),
+        headers: headers,
+        body: jsonEncode(data),
+      );
+
+      if (response.statusCode == 200) {
+        final responseData = jsonDecode(response.body);
+        print("Base product response: $responseData");
+        setState(() {
+          baseProductResults = responseData['base_products'] ?? [];
+          isSearchingBaseProduct = false;
+        });
+      } else {
+        print("Failed to search base products: ${response.statusCode}");
+        setState(() {
+          baseProductResults = [];
+          isSearchingBaseProduct = false;
+        });
+      }
+    } catch (e) {
+      print("Error searching base products: $e");
+      setState(() {
+        baseProductResults = [];
+        isSearchingBaseProduct = false;
+      });
+    } finally {
+      ioClient.close();
+    }
+  }
+
   String _selectedItems() {
-    List<String> value = [
-      if (selectedProduct != null) "Product: $selectedProduct",
-      if (selectedBrands != null) "Brand: $selectedBrands",
-      if (selectedColors != null) "Color: $selectedColors",
+    List<String> selectedValues = [
+      if (selectedMaterialType != null) "Material: $selectedMaterialType",
       if (selectedThickness != null) "Thickness: $selectedThickness",
-      if (selectedCoatingMass != null) "CoatingMass: $selectedCoatingMass",
+      if (selectCoatingMass != null) "Coating Mass: $selectCoatingMass",
+      if (selectedYieldStrength != null)
+        "Yield Strength: $selectedYieldStrength",
+      if (selectedBrand != null) "Brand: $selectedBrand",
     ];
-    return value.isEmpty ? "No selection yet" : value.join(",  ");
+    return selectedValues.isEmpty
+        ? "No selections yet"
+        : selectedValues.join(",  ");
   }
 
   Widget _buildSubmittedDataList() {
+    print(
+        "Rendering submitted data list with responseProducts: $responseProducts");
+
     if (responseProducts.isEmpty) {
       return Container(
         padding: EdgeInsets.symmetric(vertical: 40),
@@ -523,6 +844,7 @@ class _LinerSheetPageState extends State<LinerSheetPage> {
       children: responseProducts.asMap().entries.map((entry) {
         int index = entry.key;
         Map<String, dynamic> data = Map<String, dynamic>.from(entry.value);
+        print("Rendering product $index: $data");
 
         return Card(
           margin: EdgeInsets.symmetric(vertical: 10),
@@ -545,7 +867,7 @@ class _LinerSheetPageState extends State<LinerSheetPage> {
                         height: 40.h,
                         width: 210.w,
                         child: Text(
-                          "  ${index + 1}.  ${data["Products"]}" ?? "",
+                          "  ${index + 1}.  ${data["Products"] ?? "Unknown Product"}",
                           overflow: TextOverflow.ellipsis,
                           style: GoogleFonts.figtree(
                             fontSize: 18,
@@ -557,16 +879,13 @@ class _LinerSheetPageState extends State<LinerSheetPage> {
                     ),
                   ),
                   Container(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
-                    ),
+                    padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
                       color: Colors.blue[50],
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(
-                      "ID: ${data['id']}",
+                      "ID: ${data['id'] ?? "N/A"}",
                       style: TextStyle(
                         fontSize: 12,
                         color: Colors.blue[700],
@@ -622,113 +941,6 @@ class _LinerSheetPageState extends State<LinerSheetPage> {
                 ],
               ),
               _buildProductDetailInRows(data),
-              // Padding(
-              //   padding: const EdgeInsets.only(top: 8.0, left: 8),
-              //   child: Container(
-              //     height: 40.h,
-              //     width: double.infinity.w,
-              //     decoration: BoxDecoration(
-              //       borderRadius: BorderRadius.circular(10),
-              //     ),
-              //     child: Row(
-              //       crossAxisAlignment: CrossAxisAlignment.center,
-              //       children: [
-              //         Container(
-              //           height: 40.h,
-              //           width: 280.w,
-              //           child: TextField(
-              //             style: TextStyle(
-              //               fontSize: 13.sp,
-              //               color: Colors.black87,
-              //               fontWeight: FontWeight.w500,
-              //             ),
-              //             decoration: InputDecoration(
-              //               enabledBorder: InputBorder.none,
-              //               focusedBorder: InputBorder.none,
-              //             ),
-              //             controller: TextEditingController(
-              //               text: " ${data["Material Specification"]}",
-              //             ),
-              //             readOnly: true,
-              //           ),
-              //         ),
-              //         Gap(5),
-              //         Container(
-              //           height: 30.h,
-              //           width: 30.w,
-              //           decoration: BoxDecoration(
-              //             color: Colors.grey[200],
-              //             borderRadius: BorderRadius.circular(10),
-              //           ),
-              //           child: IconButton(
-              //             onPressed: () {
-              //               editController.text =
-              //                   data["Material Specification"].toString();
-              //               showDialog(
-              //                 context: context,
-              //                 builder: (context) {
-              //                   return AlertDialog(
-              //                     title: Text("Edit Your Liner Sheet"),
-              //                     content: Column(
-              //                       mainAxisSize: MainAxisSize.min,
-              //                       children: [
-              //                         Container(
-              //                           height: 40.h,
-              //                           width: double.infinity.w,
-              //                           decoration: BoxDecoration(
-              //                             borderRadius:
-              //                                 BorderRadius.circular(10),
-              //                             color: Colors.white,
-              //                           ),
-              //                           child: Padding(
-              //                             padding: const EdgeInsets.only(
-              //                               left: 7.0,
-              //                             ),
-              //                             child: TextField(
-              //                               decoration: InputDecoration(
-              //                                 enabledBorder: InputBorder.none,
-              //                                 focusedBorder: InputBorder.none,
-              //                               ),
-              //                               controller: editController,
-              //                               onSubmitted: (value) {
-              //                                 setState(() {
-              //                                   data["Material Specification"] =
-              //                                       value;
-              //                                 });
-              //                                 Navigator.pop(context);
-              //                               },
-              //                             ),
-              //                           ),
-              //                         ),
-              //                       ],
-              //                     ),
-              //                     actions: [
-              //                       ElevatedButton(
-              //                         onPressed: () {
-              //                           setState(() {
-              //                             data["Material Specification"] =
-              //                                 editController.text;
-              //                           });
-              //                           Navigator.pop(context);
-              //                         },
-              //                         child: MyText(
-              //                           text: "Save",
-              //                           weight: FontWeight.w500,
-              //                           color: Colors.black,
-              //                         ),
-              //                       ),
-              //                     ],
-              //                   );
-              //                 },
-              //               );
-              //             },
-              //             icon: Icon(Icons.edit, size: 15),
-              //           ),
-              //         ),
-              //       ],
-              //     ),
-              //   ),
-              // ),
             ],
           ),
         );
@@ -736,250 +948,21 @@ class _LinerSheetPageState extends State<LinerSheetPage> {
     );
   }
 
-  TextEditingController baseProductController = TextEditingController();
-  List<dynamic> baseProductResults = [];
-  bool isSearchingBaseProduct = false;
-  String? selectedBaseProduct;
-  FocusNode baseProductFocusNode = FocusNode();
-
-  // Replace the existing _buildProductDetailInRows() method with this:
-  Widget _buildProductDetailInRows(Map<String, dynamic> data) {
-    return Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Row(
-            children: [
-              Expanded(
-                child: _buildDetailItem("UOM", _uomDropdownFromApi(data)),
-              ),
-              SizedBox(width: 10),
-              Expanded(
-                child: _buildDetailItem(
-                  "Profile",
-                  _editableTextField(data, "Length"),
-                ),
-              ),
-              SizedBox(width: 10),
-              Expanded(
-                child: _buildDetailItem("Nos", _editableTextField(data, "Nos")),
-              ),
-            ],
-          ),
-        ),
-        Gap(5),
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Row(
-            children: [
-              Expanded(
-                child: _buildDetailItem(
-                  "Basic Rate",
-                  _editableTextField(data, "Basic Rate"),
-                ),
-              ),
-              SizedBox(width: 10),
-              Expanded(
-                child: _buildDetailItem(
-                  "SQMtr",
-                  _editableTextField(data, "SQMtr"),
-                ),
-              ),
-              SizedBox(width: 10),
-              Expanded(
-                child: _buildDetailItem(
-                  "Amount",
-                  _editableTextField(data, "Amount"),
-                ),
-              ),
-            ],
-          ),
-        ),
-        Gap(5.h),
-      ],
-    );
-  }
-
-  Widget _buildDetailItem(String label, Widget field) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: TextStyle(
-            fontWeight: FontWeight.w500,
-            color: Colors.grey[700],
-            fontSize: 15,
-          ),
-        ),
-        SizedBox(height: 6),
-        field,
-      ],
-    );
-  }
-
-  Widget _editableTextField(Map<String, dynamic> data, String key) {
-    final controller = _getController(data, key);
-
-    return SizedBox(
-      height: 38.h,
-      child: TextField(
-        readOnly: (key == "Basic Rate" || key == "Amount" || key == "SQMtr")
-            ? true
-            : false,
-        style: GoogleFonts.figtree(
-          fontWeight: FontWeight.w500,
-          color: Colors.black,
-          fontSize: 15.sp,
-        ),
-        controller: controller,
-        keyboardType: (key == "Length" ||
-                key == "Nos" ||
-                key == "Basic Rate" ||
-                key == "Amount" ||
-                key == "SQMtr")
-            ? TextInputType.numberWithOptions(decimal: true)
-            : TextInputType.numberWithOptions(decimal: true),
-        onChanged: (val) {
-          setState(() {
-            data[key] = val;
-          });
-
-          print("Field $key changed to: $val");
-          print("Controller text: ${controller.text}");
-          print("Data after change: ${data[key]}");
-
-          // 🚫 DO NOT forcefully reset controller.text here!
-          // if (controller.text != val) {
-          //   controller.text = val;
-          // }
-
-          if (key == "Length" || key == "Nos" || key == "Basic Rate") {
-            print("Triggering calculation for $key with value: $val");
-            _debounceCalculation(data);
-          }
-        },
-        decoration: InputDecoration(
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 12,
-            vertical: 0,
-          ),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(6),
-            borderSide: BorderSide(color: Colors.grey[300]!),
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(6),
-            borderSide: BorderSide(color: Colors.grey[300]!),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(6),
-            borderSide: BorderSide(
-              color: Theme.of(context).primaryColor,
-              width: 2,
-            ),
-          ),
-          filled: true,
-          fillColor: Colors.grey[50],
-        ),
-      ),
-    );
-  }
-
-  // Add this new method after the existing _uomDropdown method:
-  Widget _uomDropdownFromApi(Map<String, dynamic> data) {
-    String productId = data["id"].toString();
-    Map<String, String>? options = uomOptions[productId];
-
-    if (options == null || options.isEmpty) {
-      return _editableTextField(data, "UOM");
-    }
-
-    String? currentValue;
-    if (data["UOM"] is Map) {
-      currentValue = data["UOM"]["value"]?.toString();
-    } else {
-      currentValue = data["UOM"]?.toString();
-    }
-
-    return SizedBox(
-      height: 40.h,
-      child: DropdownButtonFormField<String>(
-        value: currentValue,
-        items: options.entries
-            .map(
-              (entry) => DropdownMenuItem(
-                value: entry.key,
-                child: Text(entry.value),
-              ),
-            )
-            .toList(),
-        onChanged: (val) {
-          setState(() {
-            data["UOM"] = {"value": val, "options": options};
-          });
-          print("UOM changed to: $val"); // Debug print
-          print(
-            "Product data: ${data["Products"]}, ID: ${data["id"]}",
-          ); // Debug print
-          // Trigger calculation with debounce
-          _debounceCalculation(data);
-        },
-        decoration: InputDecoration(
-          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 0),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(6),
-            borderSide: BorderSide(color: Colors.grey[300]!),
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(6),
-            borderSide: BorderSide(color: Colors.grey[300]!),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(6),
-            borderSide: BorderSide(
-              color: Theme.of(context).primaryColor,
-              width: 2,
-            ),
-          ),
-          filled: true,
-          fillColor: Colors.grey[50],
-        ),
-      ),
-    );
-  }
-
-  Timer? _debounceTimer;
-  Map<String, dynamic> calculationResults = {};
-  Map<String, String?> previousUomValues = {}; // Track previous UOM values
-  Map<String, Map<String, TextEditingController>> fieldControllers =
-      {}; // Store controllers
-
-  // Method to get or create controller for each field
   TextEditingController _getController(Map<String, dynamic> data, String key) {
     String productId = data["id"].toString();
 
-    // Initialize controllers map for this product ID
     fieldControllers.putIfAbsent(productId, () => {});
 
-    // If controller for this key doesn't exist, create it
     if (!fieldControllers[productId]!.containsKey(key)) {
       String initialValue = (data[key] != null && data[key].toString() != "0")
           ? data[key].toString()
-          : ""; // Avoid initializing with "0"
-
-      fieldControllers[productId]![key] = TextEditingController(
-        text: initialValue,
-      );
-
+          : "";
+      fieldControllers[productId]![key] =
+          TextEditingController(text: initialValue);
       print("Created controller for [$key] with value: '$initialValue'");
     } else {
-      // Existing controller: check if it needs sync from data
       final controller = fieldControllers[productId]![key]!;
-
       final dataValue = data[key]?.toString() ?? "";
-
-      // If the controller is empty but data has a value, sync it
       if (controller.text.isEmpty && dataValue.isNotEmpty && dataValue != "0") {
         controller.text = dataValue;
         print("Synced controller for [$key] to: '$dataValue'");
@@ -989,7 +972,6 @@ class _LinerSheetPageState extends State<LinerSheetPage> {
     return fieldControllers[productId]![key]!;
   }
 
-  // Add this method for debounced calculation
   void _debounceCalculation(Map<String, dynamic> data) {
     _debounceTimer?.cancel();
     _debounceTimer = Timer(Duration(seconds: 1), () {
@@ -1008,7 +990,6 @@ class _LinerSheetPageState extends State<LinerSheetPage> {
 
     String productId = data["id"].toString();
 
-    // Get current UOM value
     String? currentUom;
     if (data["UOM"] is Map) {
       currentUom = data["UOM"]["value"]?.toString();
@@ -1019,26 +1000,23 @@ class _LinerSheetPageState extends State<LinerSheetPage> {
     print("Current UOM: $currentUom");
     print("Previous UOM: ${previousUomValues[productId]}");
 
-    // Get Profile value from controller
     double? profileValue;
     String? profileText;
 
     if (fieldControllers.containsKey(productId) &&
         fieldControllers[productId]!.containsKey("Length")) {
-      profileText = fieldControllers[productId]!["Length"]!.text;
-      print("Profile from controller: $profileText");
-    }
-
-    if (profileText == null || profileText.isEmpty) {
-      profileText = data["Profile"]?.toString();
-      print("Profile from data: $profileText");
+      profileText = data["Length"]?.toString();
+      if (profileText == null || profileText.isEmpty) {
+        profileText = fieldControllers[productId]!["Length"]!.text;
+      }
+      print("Length/Profile from data/controller: $profileText");
     }
 
     if (profileText != null && profileText.isNotEmpty) {
       profileValue = double.tryParse(profileText);
+      print("Parsed profile value: $profileValue");
     }
 
-    // Get Nos value from controller
     int nosValue = 0;
     String? nosText;
 
@@ -1057,12 +1035,27 @@ class _LinerSheetPageState extends State<LinerSheetPage> {
       nosValue = int.tryParse(nosText) ?? 1;
     }
 
+    double? crimpValue;
+    String? crimpText = data["Crimp"]?.toString();
+
+    if (crimpText == null || crimpText.isEmpty || crimpText == "0") {
+      if (fieldControllers.containsKey(productId) &&
+          fieldControllers[productId]!.containsKey("Crimp")) {
+        crimpText = fieldControllers[productId]!["Crimp"]!.text.trim();
+      }
+    }
+
+    if (crimpText != null && crimpText.isNotEmpty) {
+      crimpValue = double.tryParse(crimpText);
+      print("Using crimp value: $crimpValue from text: $crimpText");
+    }
+
     print("Final Profile Value: $profileValue");
     print("Final Nos Value: $nosValue");
 
     final requestBody = {
       "id": int.tryParse(data["id"].toString()) ?? 0,
-      "category_id": 590,
+      "category_id": 34,
       "product": data["Products"]?.toString() ?? "",
       "height": null,
       "previous_uom": previousUomValues[productId] != null
@@ -1072,8 +1065,13 @@ class _LinerSheetPageState extends State<LinerSheetPage> {
       "length": profileValue ?? 0,
       "nos": nosValue,
       "basic_rate": double.tryParse(data["Basic Rate"]?.toString() ?? "0") ?? 0,
+      "billing_option": data["Billing Option"] is Map
+          ? int.tryParse(data["Billing Option"]["value"]?.toString() ?? "2")
+          : null,
     };
-    print("Request Body: ${jsonEncode(requestBody)}");
+
+    print("Calculation Request Body: ${jsonEncode(requestBody)}");
+
     try {
       final response = await client.post(
         url,
@@ -1081,8 +1079,8 @@ class _LinerSheetPageState extends State<LinerSheetPage> {
         body: jsonEncode(requestBody),
       );
 
-      print("Response Status: ${response.statusCode}");
-      print("Response Body: ${response.body}");
+      print("Calculation Response Status: ${response.statusCode}");
+      print("Calculation Response Body: ${response.body}");
 
       if (response.statusCode == 200) {
         final responseData = jsonDecode(response.body);
@@ -1091,14 +1089,16 @@ class _LinerSheetPageState extends State<LinerSheetPage> {
           setState(() {
             billamt = responseData["bill_total"] ?? 0;
             print("billamt updated to: $billamt");
-
             calculationResults[productId] = responseData;
 
-            if (responseData["Length"] != null) {
-              data["Profile"] = responseData["Length"].toString();
-              if (fieldControllers[productId]?["Profile"] != null) {
-                fieldControllers[productId]!["Profile"]!.text =
-                    responseData["Length"].toString();
+            if (responseData["profile"] != null) {
+              String newProfile = responseData["profile"].toString();
+              if (data["Length"]?.toString() != newProfile) {
+                data["Length"] = newProfile;
+                if (fieldControllers[productId]?["Length"] != null) {
+                  fieldControllers[productId]!["Length"]!.text = newProfile;
+                }
+                print("Length/Profile updated to: $newProfile");
               }
             }
 
@@ -1118,18 +1118,26 @@ class _LinerSheetPageState extends State<LinerSheetPage> {
               }
             }
 
-            // if (responseData["R.Ft"] != null) {
-            //   data["R.Ft"] = responseData["R.Ft"].toString();
-            //   if (fieldControllers[productId]?["R.Ft"] != null) {
-            //     fieldControllers[productId]!["R.Ft"]!.text =
-            //         responseData["R.Ft"].toString();
-            //   }
-            // }
-            if (responseData["sqmtr"] != null) {
-              data["SQMtr"] = responseData["sqmtr"].toString();
-              if (fieldControllers[productId]?["SQMtr"] != null) {
-                fieldControllers[productId]!["SQMtr"]!.text =
-                    responseData["sqmtr"].toString();
+            if (responseData["crimp"] != null) {
+              String newCrimp = responseData["crimp"].toString();
+              if (newCrimp != "0" && newCrimp != "0.0") {
+                data["Crimp"] = newCrimp;
+                if (fieldControllers[productId]?["Crimp"] != null) {
+                  String currentCrimp =
+                      fieldControllers[productId]!["Crimp"]!.text.trim();
+                  if (currentCrimp.isEmpty || currentCrimp == "0") {
+                    fieldControllers[productId]!["Crimp"]!.text = newCrimp;
+                    print("Crimp field updated to: $newCrimp");
+                  }
+                }
+              }
+            }
+
+            if (responseData["qty"] != null) {
+              data["qty"] = responseData["qty"].toString();
+              if (fieldControllers[productId]?["qty"] != null) {
+                fieldControllers[productId]!["qty"]!.text =
+                    responseData["qty"].toString();
               }
             }
 
@@ -1140,22 +1148,23 @@ class _LinerSheetPageState extends State<LinerSheetPage> {
                     responseData["Amount"].toString();
               }
             }
-
             previousUomValues[productId] = currentUom;
           });
 
           print("=== CALCULATION SUCCESS ===");
           print(
-            "Updated data: Length=${data["Profile"]}, Nos=${data["Nos"]}, R.Ft=${data["R.Ft"]}, Amount=${data["Amount"]}",
+            "Updated data: Length=${data["Length"]}, Nos=${data["Nos"]}, Crimp=${data["Crimp"]}, Amount=${data["Amount"]}",
           );
         } else {
           print("API returned error status: ${responseData["status"]}");
         }
       } else {
-        print("HTTP Error: ${response.statusCode}");
+        print("Calculation HTTP Error: ${response.statusCode}");
       }
     } catch (e) {
       print("Calculation API Error: $e");
+    } finally {
+      client.close();
     }
   }
 
@@ -1217,7 +1226,6 @@ class _LinerSheetPageState extends State<LinerSheetPage> {
               ),
             ),
             constraints: BoxConstraints(maxHeight: 300),
-            // borderRadius: BorderRadius.circular(12),
           ),
         ),
       ),
@@ -1229,7 +1237,7 @@ class _LinerSheetPageState extends State<LinerSheetPage> {
     return Scaffold(
       appBar: AppBar(
         title: Subhead(
-          text: 'Liner Sheet',
+          text: 'Decking Sheets',
           weight: FontWeight.w500,
           color: Colors.black,
         ),
@@ -1265,93 +1273,100 @@ class _LinerSheetPageState extends State<LinerSheetPage> {
                     ],
                   ),
                   child: Padding(
-                    padding: EdgeInsets.all(20),
+                    padding: EdgeInsets.all(16),
                     child: Form(
                       key: _formKey,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            "Add New Product",
-                            style: GoogleFonts.poppins(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.black87,
-                            ),
+                          Subhead(
+                            text: "Add New Product",
+                            weight: FontWeight.w600,
+                            color: Colors.black,
                           ),
-                          SizedBox(height: 24),
+                          SizedBox(height: 16),
                           _buildAnimatedDropdown(
-                            productList,
-                            selectedProduct,
+                            materialTypeList,
+                            selectedMaterialType,
                             (value) {
                               setState(() {
-                                selectedProduct = value;
-                              });
-                            },
-                            label: "Product Name",
-                            icon: Icons.category_outlined,
-                          ),
-                          _buildAnimatedDropdown(
-                            brandandList,
-                            selectedBrands,
-                            (value) {
-                              setState(() {
-                                selectedBrands = value;
-                                selectedColors = null;
+                                selectedMaterialType = value;
                                 selectedThickness = null;
-                                selectedCoatingMass = null;
-                                colorandList = [];
-                                thickAndList = [];
-                                coatingAndList = [];
+                                selectCoatingMass = null;
+                                selectedYieldStrength = null;
+                                selectedBrand = null;
+                                thicknessList = [];
+                                coatingMassList = [];
+                                yieldStrengthList = [];
+                                brandList = [];
                               });
-                              _fetchColorData();
+                              _fetchThick();
                             },
-                            label: "Brand",
-                            icon: Icons.brightness_auto_outlined,
+                            label: "Material Type",
+                            icon: Icons.difference_outlined,
                           ),
                           _buildAnimatedDropdown(
-                            colorandList,
-                            selectedColors,
-                            (value) {
-                              setState(() {
-                                selectedColors = value;
-                                selectedThickness = null;
-                                selectedCoatingMass = null;
-                                thickAndList = [];
-                                coatingAndList = [];
-                              });
-                              _fetchThicknessData();
-                            },
-                            enabled: colorandList.isNotEmpty,
-                            label: "Color",
-                            icon: Icons.color_lens_outlined,
-                          ),
-                          _buildAnimatedDropdown(
-                            thickAndList,
+                            thicknessList,
                             selectedThickness,
                             (value) {
                               setState(() {
                                 selectedThickness = value;
-                                selectedCoatingMass = null;
-                                coatingAndList = [];
+                                selectCoatingMass = null;
+                                selectedYieldStrength = null;
+                                selectedBrand = null;
+                                coatingMassList = [];
+                                yieldStrengthList = [];
+                                brandList = [];
                               });
-                              _fetchCoatingMassData();
+                              _fetchCoat();
                             },
-                            enabled: thickAndList.isNotEmpty,
+                            enabled: thicknessList.isNotEmpty,
                             label: "Thickness",
                             icon: Icons.straighten_outlined,
                           ),
                           _buildAnimatedDropdown(
-                            coatingAndList,
-                            selectedCoatingMass,
+                            coatingMassList,
+                            selectCoatingMass,
                             (value) {
                               setState(() {
-                                selectedCoatingMass = value;
+                                selectCoatingMass = value;
+                                selectedYieldStrength = null;
+                                selectedBrand = null;
+                                yieldStrengthList = [];
+                                brandList = [];
                               });
+                              _yieldStrength();
                             },
-                            enabled: coatingAndList.isNotEmpty,
+                            enabled: coatingMassList.isNotEmpty,
                             label: "Coating Mass",
                             icon: Icons.layers_outlined,
+                          ),
+                          _buildAnimatedDropdown(
+                            yieldStrengthList,
+                            selectedYieldStrength,
+                            (value) {
+                              setState(() {
+                                selectedYieldStrength = value;
+                                selectedBrand = null;
+                                brandList = [];
+                              });
+                              _fetchBrand();
+                            },
+                            enabled: yieldStrengthList.isNotEmpty,
+                            label: "Yield Strength",
+                            icon: Icons.radio_button_checked,
+                          ),
+                          _buildAnimatedDropdown(
+                            brandList,
+                            selectedBrand,
+                            (value) {
+                              setState(() {
+                                selectedBrand = value;
+                              });
+                            },
+                            enabled: brandList.isNotEmpty,
+                            label: "Brand",
+                            icon: Icons.brightness_auto_outlined,
                           ),
                           SizedBox(height: 16),
                           Container(
@@ -1490,15 +1505,12 @@ class _LinerSheetPageState extends State<LinerSheetPage> {
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              // MyText(
-                              //   text: categoryyName ?? "Accessories",
-                              //   weight: FontWeight.w600,
-                              //   color: Colors.grey.shade700,
-                              // ),
-                              MyText(
-                                text: "LinerSheet",
-                                weight: FontWeight.w600,
-                                color: Colors.grey.shade700,
+                              Text(
+                                "Decking Sheets",
+                                style: GoogleFonts.poppins(
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.grey.shade700,
+                                ),
                               ),
                               Container(
                                 padding: EdgeInsets.symmetric(
@@ -1519,7 +1531,7 @@ class _LinerSheetPageState extends State<LinerSheetPage> {
                                     ),
                                     SizedBox(width: 4),
                                     Text(
-                                      "ID: $orderNo",
+                                      "ID: $orderNO",
                                       style: GoogleFonts.figtree(
                                         fontSize: 13,
                                         fontWeight: FontWeight.w600,
