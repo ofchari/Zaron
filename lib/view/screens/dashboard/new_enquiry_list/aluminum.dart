@@ -11,7 +11,8 @@ import 'package:http/io_client.dart';
 import 'package:zaron/view/screens/global_user/global_user.dart';
 import 'package:zaron/view/universal_api/api&key.dart';
 
-import '../../widgets/subhead.dart';
+import '../../../widgets/subhead.dart';
+import '../../global_user/global_oredrID.dart';
 
 class Aluminum extends StatefulWidget {
   const Aluminum({super.key, required this.data});
@@ -23,6 +24,10 @@ class Aluminum extends StatefulWidget {
 }
 
 class _AluminumState extends State<Aluminum> {
+  Map<String, dynamic>? categoryMeta;
+  int? billamt;
+  String? orderNO;
+  int? orderIDD;
   late TextEditingController editController;
 
   String? selectedBrand;
@@ -77,6 +82,11 @@ class _AluminumState extends State<Aluminum> {
 
         if (materials is List) {
           setState(() {
+            ///  Extract category info (message[0][0])
+            final categoryInfoList = data["message"]["message"][0];
+            if (categoryInfoList is List && categoryInfoList.isNotEmpty) {
+              categoryMeta = Map<String, dynamic>.from(categoryInfoList[0]);
+            }
             materialTypeList = materials
                 .whereType<Map>()
                 .map((e) => e["material_type"]?.toString())
@@ -255,11 +265,19 @@ class _AluminumState extends State<Aluminum> {
     }
   }
 
+  int? newOrderId = GlobalOrderSession().getNewOrderId();
   Future<void> postAllData() async {
     HttpClient client = HttpClient();
     client.badCertificateCallback =
         ((X509Certificate cert, String host, int port) => true);
     IOClient ioClient = IOClient(client);
+
+    // From saved categoryMeta
+    final categoryId = categoryMeta?["category_id"];
+    final categoryName = categoryMeta?["categories"];
+    print("this os $categoryId");
+    print("this os $categoryName");
+
     final headers = {"Content-Type": "application/json"};
     final data = {
       "customer_id": UserSession().userId,
@@ -267,8 +285,9 @@ class _AluminumState extends State<Aluminum> {
       "product_name": null,
       "product_base_id": selectedProductBaseId,
       "product_base_name": "$selectedBaseProductName",
-      "category_id": 36,
-      "category_name": "Aluminum",
+      "category_id": categoryId,
+      "category_name": categoryName,
+      "OrderID": newOrderId
     };
 
     print("This is a body data: $data");
@@ -286,14 +305,53 @@ class _AluminumState extends State<Aluminum> {
       if (response.statusCode == 200) {
         final responseData = jsonDecode(response.body);
         setState(() {
+          final responseData = jsonDecode(response.body);
+          final String orderID = responseData["order_id"].toString();
+          print("Order IDDDD: $orderID");
+          orderIDD = int.parse(orderID);
+          String orderNos = responseData["order_no"]?.toString() ?? "Unknown";
+          orderNO = orderNos.isEmpty ? "Unknown" : orderNos;
           apiResponseData = responseData;
+
           if (responseData['lebels'] != null &&
               responseData['lebels'].isNotEmpty) {
             apiProductsList = List<Map<String, dynamic>>.from(
               responseData['lebels'][0]['data'],
             );
-            // Update responseProducts with the new data
-            responseProducts.addAll(List<dynamic>.from(apiProductsList));
+
+            List<dynamic> fullList = responseData["lebels"][0]["data"];
+            List<Map<String, dynamic>> newProducts = [];
+
+            for (var item in fullList) {
+              if (item is Map<String, dynamic>) {
+                Map<String, dynamic> product = Map<String, dynamic>.from(item);
+                String productId = product["id"].toString();
+
+                bool alreadyExists = responseProducts
+                    .any((existing) => existing["id"].toString() == productId);
+
+                if (!alreadyExists) {
+                  newProducts.add(product);
+                }
+
+                if (product["UOM"] != null &&
+                    product["UOM"]["options"] != null) {
+                  uomOptions[product["id"].toString()] =
+                      Map<String, String>.from(
+                    (product["UOM"]["options"] as Map).map(
+                      (key, value) =>
+                          MapEntry(key.toString(), value.toString()),
+                    ),
+                  );
+                }
+
+                debugPrint(
+                    "Product added: ${product["id"]} - ${product["Products"]}");
+              }
+            }
+
+            // Only add non-duplicate products
+            responseProducts.addAll(newProducts);
           }
         });
       }
@@ -685,11 +743,12 @@ class _AluminumState extends State<Aluminum> {
       );
     }
 
+    ///old column
+
     return Column(
       children: responseProducts.asMap().entries.map((entry) {
         int index = entry.key;
         Map<String, dynamic> data = Map<String, dynamic>.from(entry.value);
-
         return Card(
           margin: EdgeInsets.symmetric(vertical: 10),
           elevation: 2,
@@ -788,113 +847,6 @@ class _AluminumState extends State<Aluminum> {
                 ],
               ),
               _buildProductDetailInRows(data),
-              // Padding(
-              //   padding: const EdgeInsets.only(top: 8.0, left: 8),
-              //   child: Container(
-              //     height: 40.h,
-              //     width: double.infinity.w,
-              //     decoration: BoxDecoration(
-              //       borderRadius: BorderRadius.circular(10),
-              //     ),
-              //     child: Row(
-              //       crossAxisAlignment: CrossAxisAlignment.center,
-              //       children: [
-              //         Container(
-              //           height: 40.h,
-              //           width: 280.w,
-              //           child: TextField(
-              //             style: TextStyle(
-              //               fontSize: 13.sp,
-              //               color: Colors.black87,
-              //               fontWeight: FontWeight.w500,
-              //             ),
-              //             decoration: InputDecoration(
-              //               enabledBorder: InputBorder.none,
-              //               focusedBorder: InputBorder.none,
-              //             ),
-              //             controller: TextEditingController(
-              //               text: " ${data["Material Specification"]}",
-              //             ),
-              //             readOnly: true,
-              //           ),
-              //         ),
-              //         Gap(5),
-              //         Container(
-              //           height: 30.h,
-              //           width: 30.w,
-              //           decoration: BoxDecoration(
-              //             color: Colors.grey[200],
-              //             borderRadius: BorderRadius.circular(10),
-              //           ),
-              //           child: IconButton(
-              //             onPressed: () {
-              //               editController.text =
-              //                   data["Material Specification"].toString();
-              //               showDialog(
-              //                 context: context,
-              //                 builder: (context) {
-              //                   return AlertDialog(
-              //                     title: Text("Edit Your Liner Sheet"),
-              //                     content: Column(
-              //                       mainAxisSize: MainAxisSize.min,
-              //                       children: [
-              //                         Container(
-              //                           height: 40.h,
-              //                           width: double.infinity.w,
-              //                           decoration: BoxDecoration(
-              //                             borderRadius:
-              //                                 BorderRadius.circular(10),
-              //                             color: Colors.white,
-              //                           ),
-              //                           child: Padding(
-              //                             padding: const EdgeInsets.only(
-              //                               left: 7.0,
-              //                             ),
-              //                             child: TextField(
-              //                               decoration: InputDecoration(
-              //                                 enabledBorder: InputBorder.none,
-              //                                 focusedBorder: InputBorder.none,
-              //                               ),
-              //                               controller: editController,
-              //                               onSubmitted: (value) {
-              //                                 setState(() {
-              //                                   data["Material Specification"] =
-              //                                       value;
-              //                                 });
-              //                                 Navigator.pop(context);
-              //                               },
-              //                             ),
-              //                           ),
-              //                         ),
-              //                       ],
-              //                     ),
-              //                     actions: [
-              //                       ElevatedButton(
-              //                         onPressed: () {
-              //                           setState(() {
-              //                             data["Material Specification"] =
-              //                                 editController.text;
-              //                           });
-              //                           Navigator.pop(context);
-              //                         },
-              //                         child: MyText(
-              //                           text: "Save",
-              //                           weight: FontWeight.w500,
-              //                           color: Colors.black,
-              //                         ),
-              //                       ),
-              //                     ],
-              //                   );
-              //                 },
-              //               );
-              //             },
-              //             icon: Icon(Icons.edit, size: 15),
-              //           ),
-              //         ),
-              //       ],
-              //     ),
-              //   ),
-              // ),
             ],
           ),
         );
@@ -1043,7 +995,7 @@ class _AluminumState extends State<Aluminum> {
       "basic_rate": double.tryParse(data["Basic Rate"]?.toString() ?? "0") ?? 0,
       "billing_option": data["Billing Option"] is Map
           ? int.tryParse(data["Billing Option"]["value"]?.toString() ?? "2")
-          : null
+          : null,
     };
 
     print("Request Body: ${jsonEncode(requestBody)}");
@@ -1063,6 +1015,8 @@ class _AluminumState extends State<Aluminum> {
 
         if (responseData["status"] == "success") {
           setState(() {
+            billamt = responseData["bill_total"] ?? 0;
+            print("billamt updated to: $billamt");
             calculationResults[productId] = responseData;
 
             // Update Profile/Length
@@ -1264,6 +1218,7 @@ class _AluminumState extends State<Aluminum> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                          SizedBox(width: 10),
                           Text(
                             "Add New Product",
                             style: GoogleFonts.poppins(
@@ -1289,7 +1244,7 @@ class _AluminumState extends State<Aluminum> {
                               _fetchThickness();
                             },
                             label: "Material Type",
-                            icon: Icons.difference_outlined,
+                            icon: Icons.category_outlined,
                           ),
                           _buildAnimatedDropdown(
                             thicknessList,
@@ -1408,30 +1363,170 @@ class _AluminumState extends State<Aluminum> {
                     ),
                   ),
                 ),
-                if (apiProductsList.isNotEmpty) ...[
+                if (responseProducts.isNotEmpty) ...[
                   SizedBox(height: 24),
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 4),
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.shopping_bag_outlined,
-                          color: Colors.grey.shade700,
-                        ),
-                        SizedBox(width: 8),
-                        Text(
-                          "API Response Data",
-                          style: GoogleFonts.poppins(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.grey.shade800,
-                          ),
+                  Container(
+                    padding: EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          Colors.deepPurple.shade100,
+                          Colors.blue.shade50
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: Colors.deepPurple.shade100),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 10,
+                          offset: Offset(0, 4),
                         ),
                       ],
                     ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Container(
+                              padding: EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color:
+                                    Colors.deepPurple.shade100.withOpacity(0.5),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Icon(
+                                Icons.shopping_bag_outlined,
+                                color: Colors.deepPurple.shade700,
+                                size: 20,
+                              ),
+                            ),
+                            SizedBox(width: 12),
+                            Text(
+                              "Added Products",
+                              style: GoogleFonts.poppins(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.deepPurple,
+                              ),
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: 16),
+                        Container(
+                          padding:
+                              EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: Colors.white60,
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(color: Colors.grey.shade200),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                "Aluminum",
+                                style: GoogleFonts.poppins(
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.grey.shade700,
+                                ),
+                              ),
+                              Container(
+                                padding: EdgeInsets.symmetric(
+                                    horizontal: 10, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: Colors.blue.shade50,
+                                  borderRadius: BorderRadius.circular(20),
+                                  border:
+                                      Border.all(color: Colors.blue.shade200),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      Icons.receipt_outlined,
+                                      size: 14,
+                                      color: Colors.blue.shade700,
+                                    ),
+                                    SizedBox(width: 4),
+                                    Text(
+                                      "ID: ${orderNO ?? orderIDD}",
+                                      style: GoogleFonts.figtree(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.blue.shade700,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        SizedBox(height: 16),
+                        Container(
+                          margin: EdgeInsets.symmetric(vertical: 4),
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                Colors.deepPurple.shade500,
+                                Colors.deepPurple.shade200
+                              ],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.blue.withOpacity(0.3),
+                                blurRadius: 8,
+                                offset: Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: Padding(
+                            padding: EdgeInsets.all(10),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  flex: 3,
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        "TOTAL AMOUNT",
+                                        style: TextStyle(
+                                          color: Colors.white70,
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w500,
+                                          letterSpacing: 0.5,
+                                        ),
+                                      ),
+                                      SizedBox(height: 4),
+                                      Text(
+                                        "₹${billamt ?? 0}",
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 20,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        _buildSubmittedDataList(),
+                      ],
+                    ),
                   ),
-                  SizedBox(height: 12),
-                  _buildSubmittedDataList(),
                 ],
               ],
             ),

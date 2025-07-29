@@ -2,6 +2,7 @@ C/C++ Structured Log\
 Z
 XC:\Users\Hp\Zaron\android\app\.cxx\Debug\37c2i64f\arm64-v8a\additional_project_files.txtC
 A
+<<<<<<< HEAD
 ?com.android.build.gradle.internal.cxx.io.EncodedFileFingerPrint	Ò½¶õþ2 ž½¶õþ2Y
 W
 UC:\Users\Hp\Zaron\android\app\.cxx\Debug\37c2i64f\arm64-v8a\android_gradle_build.json	Ò½¶õþ2… §½¶õþ2^
@@ -26,3 +27,29 @@ U
 SC:\Users\Hp\Zaron\android\app\.cxx\Debug\37c2i64f\arm64-v8a\symbol_folder_index.txt	Ó½¶õþ2J É½¶õþ2O
 M
 KC:\src\flutter\packages\flutter_tools\gradle\src\main\groovy\CMakeLists.txt	Ó½¶õþ2§ ——·Õ2
+=======
+?com.android.build.gradle.internal.cxx.io.EncodedFileFingerPrint	ø«Ýå‚3 Å—‡ã‚3Y
+W
+UC:\Users\Hp\Zaron\android\app\.cxx\Debug\37c2i64f\arm64-v8a\android_gradle_build.json	ø«Ýå‚3… Ö—‡ã‚3^
+\
+ZC:\Users\Hp\Zaron\android\app\.cxx\Debug\37c2i64f\arm64-v8a\android_gradle_build_mini.json	ø«Ýå‚3æ ú—‡ã‚3K
+I
+GC:\Users\Hp\Zaron\android\app\.cxx\Debug\37c2i64f\arm64-v8a\build.ninja	ø«Ýå‚3çÎ ƒ•‡ã‚3O
+M
+KC:\Users\Hp\Zaron\android\app\.cxx\Debug\37c2i64f\arm64-v8a\build.ninja.txt	ø«Ýå‚3T
+R
+PC:\Users\Hp\Zaron\android\app\.cxx\Debug\37c2i64f\arm64-v8a\build_file_index.txt	ø«Ýå‚3K ˆ˜‡ã‚3U
+S
+QC:\Users\Hp\Zaron\android\app\.cxx\Debug\37c2i64f\arm64-v8a\compile_commands.json	ø«Ýå‚3Y
+W
+UC:\Users\Hp\Zaron\android\app\.cxx\Debug\37c2i64f\arm64-v8a\compile_commands.json.bin	ø«Ýå‚3	_
+]
+[C:\Users\Hp\Zaron\android\app\.cxx\Debug\37c2i64f\arm64-v8a\metadata_generation_command.txt	ø«Ýå‚3
+Š þ—‡ã‚3R
+P
+NC:\Users\Hp\Zaron\android\app\.cxx\Debug\37c2i64f\arm64-v8a\prefab_config.json	ø«Ýå‚3( ƒ˜‡ã‚3W
+U
+SC:\Users\Hp\Zaron\android\app\.cxx\Debug\37c2i64f\arm64-v8a\symbol_folder_index.txt	ø«Ýå‚3J …˜‡ã‚3O
+M
+KC:\src\flutter\packages\flutter_tools\gradle\src\main\groovy\CMakeLists.txt	ø«Ýå‚3§ ——·Õ2
+>>>>>>> 1820fbdd61db6b0791efba93655668f9ec18d62f

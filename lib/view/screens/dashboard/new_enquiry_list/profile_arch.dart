@@ -11,7 +11,8 @@ import 'package:http/io_client.dart';
 import 'package:zaron/view/universal_api/api&key.dart';
 import 'package:zaron/view/widgets/subhead.dart';
 
-import '../global_user/global_user.dart';
+import '../../global_user/global_oredrID.dart';
+import '../../global_user/global_user.dart';
 
 class ProfileRidgeAndArch extends StatefulWidget {
   const ProfileRidgeAndArch({super.key, required this.data});
@@ -23,6 +24,10 @@ class ProfileRidgeAndArch extends StatefulWidget {
 }
 
 class _ProfileRidgeAndArchState extends State<ProfileRidgeAndArch> {
+  Map<String, dynamic>? categoryMeta;
+  int? billamt;
+  int? orderIDD;
+  String? orderNO;
   late TextEditingController editController;
   String? selectedMaterial;
   String? selectedBrands;
@@ -39,6 +44,7 @@ class _ProfileRidgeAndArchState extends State<ProfileRidgeAndArch> {
   List<String> colorandList = [];
   List<String> thickAndList = [];
   List<String> coatingAndList = [];
+  List<dynamic> rawProfilearch = [];
 
   // List<String> brandList = [];
   List<Map<String, dynamic>> submittedData = [];
@@ -56,7 +62,13 @@ class _ProfileRidgeAndArchState extends State<ProfileRidgeAndArch> {
 
   @override
   void dispose() {
+    _debounceTimer?.cancel();
     editController.dispose();
+    baseProductController.dispose();
+    baseProductFocusNode.dispose();
+    fieldControllers.forEach((_, controllers) {
+      controllers.forEach((_, controller) => controller.dispose());
+    });
     super.dispose();
   }
 
@@ -80,8 +92,15 @@ class _ProfileRidgeAndArchState extends State<ProfileRidgeAndArch> {
         debugPrint("PRoduct:::${products}");
         debugPrint(response.body, wrapWidth: 1024);
 
+        rawProfilearch = products;
+
         if (products is List) {
           setState(() {
+            ///  Extract category info (message[0][0])
+            final categoryInfoList = data["message"]["message"][0];
+            if (categoryInfoList is List && categoryInfoList.isNotEmpty) {
+              categoryMeta = Map<String, dynamic>.from(categoryInfoList[0]);
+            }
             materialList = products
                 .whereType<Map>()
                 .map((e) => e["product_name"]?.toString())
@@ -313,21 +332,39 @@ class _ProfileRidgeAndArchState extends State<ProfileRidgeAndArch> {
     }
   }
 
+  int? newOrderId = GlobalOrderSession().getNewOrderId();
+
   ///post all Data
   Future<void> postAllData() async {
     HttpClient client = HttpClient();
     client.badCertificateCallback =
         ((X509Certificate cert, String host, int port) => true);
     IOClient ioClient = IOClient(client);
+
+    // From saved categoryMeta
+    final categoryId = categoryMeta?["category_id"];
+    final categoryName = categoryMeta?["categories"];
+    print("this os $categoryId");
+    print("this os $categoryName");
+
+    // Find the matching item from rawAccessoriesData
+    final matchingAccessory = rawProfilearch.firstWhere(
+      (item) => item["product_name"] == selectedMaterial,
+      orElse: () => null,
+    );
+    // Extract values
+    final productID = matchingAccessory?["id"];
+    print("this os $productID");
     final headers = {"Content-Type": "application/json"};
     final data = {
       "customer_id": UserSession().userId,
-      "product_id": 798,
+      "product_id": productID,
       "product_name": selectedMaterial,
       "product_base_id": null,
       "product_base_name": "$selectedProductBaseId",
-      "category_id": 32,
-      "category_name": "Profile ridge & Arch",
+      "category_id": categoryId,
+      "category_name": categoryName,
+      "OrderID": newOrderId
     };
 
     print("This is a body data: $data");
@@ -344,6 +381,10 @@ class _ProfileRidgeAndArchState extends State<ProfileRidgeAndArch> {
       final responseData = jsonDecode(response.body);
 
       setState(() {
+        final String orderID = responseData["order_id"]?.toString() ?? "";
+        orderIDD = int.tryParse(orderID);
+        orderNO = responseData["order_no"]?.toString() ?? "Unknown";
+        apiResponseData = responseData;
         apiResponseData = responseData;
         if (responseData["lebels"] != null &&
             responseData["lebels"].isNotEmpty) {
@@ -577,113 +618,6 @@ class _ProfileRidgeAndArchState extends State<ProfileRidgeAndArch> {
                 ],
               ),
               _buildProductDetailInRows(data),
-              // Padding(
-              //   padding: const EdgeInsets.only(top: 8.0, left: 8),
-              //   child: Container(
-              //     height: 40.h,
-              //     width: double.infinity.w,
-              //     decoration: BoxDecoration(
-              //       borderRadius: BorderRadius.circular(10),
-              //     ),
-              //     child: Row(
-              //       crossAxisAlignment: CrossAxisAlignment.center,
-              //       children: [
-              //         Container(
-              //           height: 40.h,
-              //           width: 280.w,
-              //           child: TextField(
-              //             style: TextStyle(
-              //               fontSize: 13.sp,
-              //               color: Colors.black87,
-              //               fontWeight: FontWeight.w500,
-              //             ),
-              //             decoration: InputDecoration(
-              //               enabledBorder: InputBorder.none,
-              //               focusedBorder: InputBorder.none,
-              //             ),
-              //             controller: TextEditingController(
-              //               text: " ${data["Material Specification"]}",
-              //             ),
-              //             readOnly: true,
-              //           ),
-              //         ),
-              //         Gap(5),
-              //         Container(
-              //           height: 30.h,
-              //           width: 30.w,
-              //           decoration: BoxDecoration(
-              //             color: Colors.grey[200],
-              //             borderRadius: BorderRadius.circular(10),
-              //           ),
-              //           child: IconButton(
-              //             onPressed: () {
-              //               editController.text =
-              //                   data["Material Specification"].toString();
-              //               showDialog(
-              //                 context: context,
-              //                 builder: (context) {
-              //                   return AlertDialog(
-              //                     title: Text("Edit Your Liner Sheet"),
-              //                     content: Column(
-              //                       mainAxisSize: MainAxisSize.min,
-              //                       children: [
-              //                         Container(
-              //                           height: 40.h,
-              //                           width: double.infinity.w,
-              //                           decoration: BoxDecoration(
-              //                             borderRadius:
-              //                                 BorderRadius.circular(10),
-              //                             color: Colors.white,
-              //                           ),
-              //                           child: Padding(
-              //                             padding: const EdgeInsets.only(
-              //                               left: 7.0,
-              //                             ),
-              //                             child: TextField(
-              //                               decoration: InputDecoration(
-              //                                 enabledBorder: InputBorder.none,
-              //                                 focusedBorder: InputBorder.none,
-              //                               ),
-              //                               controller: editController,
-              //                               onSubmitted: (value) {
-              //                                 setState(() {
-              //                                   data["Material Specification"] =
-              //                                       value;
-              //                                 });
-              //                                 Navigator.pop(context);
-              //                               },
-              //                             ),
-              //                           ),
-              //                         ),
-              //                       ],
-              //                     ),
-              //                     actions: [
-              //                       ElevatedButton(
-              //                         onPressed: () {
-              //                           setState(() {
-              //                             data["Material Specification"] =
-              //                                 editController.text;
-              //                           });
-              //                           Navigator.pop(context);
-              //                         },
-              //                         child: MyText(
-              //                           text: "Save",
-              //                           weight: FontWeight.w500,
-              //                           color: Colors.black,
-              //                         ),
-              //                       ),
-              //                     ],
-              //                   );
-              //                 },
-              //               );
-              //             },
-              //             icon: Icon(Icons.edit, size: 15),
-              //           ),
-              //         ),
-              //       ],
-              //     ),
-              //   ),
-              // ),
             ],
           ),
         );
@@ -721,10 +655,8 @@ class _ProfileRidgeAndArchState extends State<ProfileRidgeAndArch> {
               hintText: "Search base product...",
               prefixIcon: Icon(Icons.search),
               border: InputBorder.none,
-              contentPadding: EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 12,
-              ),
+              contentPadding:
+                  EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               suffixIcon: isSearchingBaseProduct
                   ? Padding(
                       padding: EdgeInsets.all(12),
@@ -746,8 +678,6 @@ class _ProfileRidgeAndArchState extends State<ProfileRidgeAndArch> {
             },
           ),
         ),
-
-        // Search Results Display (line by line, not dropdown)
         if (baseProductResults.isNotEmpty)
           Container(
             margin: EdgeInsets.only(top: 8),
@@ -780,10 +710,8 @@ class _ProfileRidgeAndArchState extends State<ProfileRidgeAndArch> {
                     },
                     child: Container(
                       width: double.infinity,
-                      padding: EdgeInsets.symmetric(
-                        vertical: 12,
-                        horizontal: 12,
-                      ),
+                      padding:
+                          EdgeInsets.symmetric(vertical: 12, horizontal: 12),
                       margin: EdgeInsets.only(bottom: 6),
                       decoration: BoxDecoration(
                         color: Colors.white,
@@ -825,8 +753,6 @@ class _ProfileRidgeAndArchState extends State<ProfileRidgeAndArch> {
               ],
             ),
           ),
-
-        // Selected Base Product Display
         if (selectedBaseProduct != null)
           Container(
             margin: EdgeInsets.only(top: 8),
@@ -884,21 +810,23 @@ class _ProfileRidgeAndArchState extends State<ProfileRidgeAndArch> {
     client.badCertificateCallback =
         ((X509Certificate cert, String host, int port) => true);
     IOClient ioClient = IOClient(client);
+
     final headers = {"Content-Type": "application/json"};
     final data = {"category_id": "32", "searchbase": query};
 
     try {
       final response = await ioClient.post(
-        Uri.parse("https://demo.zaron.in:8181/ci4/api/baseproducts_search"),
+        Uri.parse("$apiUrl/api/baseproducts_search"),
         headers: headers,
         body: jsonEncode(data),
       );
 
       if (response.statusCode == 200) {
         final responseData = jsonDecode(response.body);
-        print("Base product response: $responseData"); // Debug print
+        final List<dynamic> results = responseData['base_products'] ?? [];
+
         setState(() {
-          baseProductResults = responseData['base_products'] ?? [];
+          baseProductResults = results;
           isSearchingBaseProduct = false;
         });
       } else {
@@ -918,11 +846,11 @@ class _ProfileRidgeAndArchState extends State<ProfileRidgeAndArch> {
 
   // New method that organizes fields in rows, two fields per row
   Widget _buildProductDetailInRows(Map<String, dynamic> data) {
-    return Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Row(
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: Column(
+        children: [
+          Row(
             children: [
               Expanded(
                 child: _buildDetailItem("UOM", _uomDropdownFromApi(data)),
@@ -940,11 +868,8 @@ class _ProfileRidgeAndArchState extends State<ProfileRidgeAndArch> {
               ),
             ],
           ),
-        ),
-        Gap(5),
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Row(
+          Gap(5),
+          Row(
             children: [
               Expanded(
                 child: _buildDetailItem(
@@ -968,8 +893,14 @@ class _ProfileRidgeAndArchState extends State<ProfileRidgeAndArch> {
               ),
             ],
           ),
-        ),
-      ],
+          Gap(5),
+          Row(
+            children: [
+              Expanded(child: _buildBaseProductSearchField()),
+            ],
+          ),
+        ],
+      ),
     );
   }
 
@@ -1309,6 +1240,8 @@ class _ProfileRidgeAndArchState extends State<ProfileRidgeAndArch> {
 
         if (responseData["status"] == "success") {
           setState(() {
+            billamt = responseData["bill_total"] ?? 0;
+            print("billamt updated to: $billamt");
             calculationResults[productId] = responseData;
 
             // Update Basic Rate if provided in response
@@ -1478,22 +1411,35 @@ class _ProfileRidgeAndArchState extends State<ProfileRidgeAndArch> {
         backgroundColor: Colors.white,
       ),
       body: Container(
-        color: Colors.grey[50],
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Colors.white, Colors.grey.shade50],
+          ),
+        ),
         child: Padding(
-          padding: EdgeInsets.all(16),
+          padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
           child: SingleChildScrollView(
             physics: BouncingScrollPhysics(),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Card(
-                  elevation: 2,
-                  color: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 10,
+                        offset: Offset(0, 5),
+                      ),
+                    ],
                   ),
                   child: Padding(
-                    padding: EdgeInsets.all(16),
+                    padding:
+                        EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
                     child: Form(
                       key: _formKey,
                       child: Column(
@@ -1547,7 +1493,6 @@ class _ProfileRidgeAndArchState extends State<ProfileRidgeAndArch> {
                                 selectedColors = value;
 
                                 ///clear fields
-
                                 selectedThickness = null;
                                 selectedCoatingMass = null;
 
@@ -1589,9 +1534,7 @@ class _ProfileRidgeAndArchState extends State<ProfileRidgeAndArch> {
                             label: "Coating Mass",
                             icon: Icons.layers_outlined,
                           ),
-                          SizedBox(height: 24),
-                          _buildBaseProductSearchField(),
-                          SizedBox(height: 16),
+                          SizedBox(height: 10),
                           Container(
                             padding: EdgeInsets.all(16),
                             decoration: BoxDecoration(
@@ -1665,14 +1608,171 @@ class _ProfileRidgeAndArchState extends State<ProfileRidgeAndArch> {
                   ),
                 ),
                 SizedBox(height: 24),
-                if (submittedData.isNotEmpty)
-                  Subhead(
-                    text: "   Added Product",
-                    weight: FontWeight.w600,
-                    color: Colors.black,
+                if (submittedData.isNotEmpty) ...[
+                  SizedBox(height: 24),
+                  Container(
+                    padding: EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          Colors.deepPurple.shade100,
+                          Colors.blue.shade50
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: Colors.deepPurple.shade100),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 10,
+                          offset: Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Container(
+                              padding: EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color:
+                                    Colors.deepPurple.shade100.withOpacity(0.5),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Icon(
+                                Icons.shopping_bag_outlined,
+                                color: Colors.deepPurple.shade700,
+                                size: 20,
+                              ),
+                            ),
+                            SizedBox(width: 12),
+                            Text(
+                              "Added Products",
+                              style: GoogleFonts.poppins(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.deepPurple,
+                              ),
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: 16),
+                        Container(
+                          padding:
+                              EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: Colors.white60,
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(color: Colors.grey.shade200),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                "Decking Sheets",
+                                style: GoogleFonts.poppins(
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.grey.shade700,
+                                ),
+                              ),
+                              Container(
+                                padding: EdgeInsets.symmetric(
+                                    horizontal: 10, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: Colors.blue.shade50,
+                                  borderRadius: BorderRadius.circular(20),
+                                  border:
+                                      Border.all(color: Colors.blue.shade200),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      Icons.receipt_outlined,
+                                      size: 14,
+                                      color: Colors.blue.shade700,
+                                    ),
+                                    SizedBox(width: 4),
+                                    Text(
+                                      "ID: ${orderNO ?? 'N/A'}",
+                                      style: GoogleFonts.figtree(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.blue.shade700,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        SizedBox(height: 16),
+                        Container(
+                          margin: EdgeInsets.symmetric(vertical: 4),
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                Colors.deepPurple.shade500,
+                                Colors.deepPurple.shade200
+                              ],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.blue.withOpacity(0.3),
+                                blurRadius: 8,
+                                offset: Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: Padding(
+                            padding: EdgeInsets.all(10),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  flex: 3,
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        "TOTAL AMOUNT",
+                                        style: TextStyle(
+                                          color: Colors.white70,
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w500,
+                                          letterSpacing: 0.5,
+                                        ),
+                                      ),
+                                      SizedBox(height: 4),
+                                      Text(
+                                        "₹${billamt ?? 0}",
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 20,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        _buildSubmittedDataList(),
+                      ],
+                    ),
                   ),
-                SizedBox(height: 8),
-                _buildSubmittedDataList(),
+                ],
               ],
             ),
           ),

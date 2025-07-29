@@ -4,18 +4,17 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:gap/gap.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:zaron/view/screens/cancel_quotation.dart';
+import 'package:zaron/view/screens/dashboard/enquiryPage/all_enquiry.dart';
+import 'package:zaron/view/screens/dashboard/new_enquiry_list/new_enquiry.dart';
+import 'package:zaron/view/screens/dashboard/orders/pending.dart';
+import 'package:zaron/view/screens/dashboard/quotationPage/all_quotation.dart';
 import 'package:zaron/view/screens/login.dart';
-import 'package:zaron/view/screens/new_enquirys/new_enquiry.dart';
-import 'package:zaron/view/screens/quotation.dart';
-import 'package:zaron/view/screens/total_enquiry.dart';
 import 'package:zaron/view/widgets/subhead.dart';
 import 'package:zaron/view/widgets/text.dart';
 
-import 'cancel_enquiry.dart';
-
 class Dashboard extends StatefulWidget {
   const Dashboard({super.key, required this.userid});
+
   final String userid;
 
   @override
@@ -71,34 +70,22 @@ class _DashboardState extends State<Dashboard> {
         "route": NewEnquiry()
       },
       {
-        "title": "Total Enquiry",
+        "title": "Enquiries",
         "icon": FontAwesomeIcons.list,
         "color": const Color(0xFF2196F3),
-        "route": TotalEnquiryPage()
+        "route": AllEnquiry()
       },
       {
-        "title": "Total Quotations",
+        "title": "Quotations",
         "icon": FontAwesomeIcons.fileInvoiceDollar,
         "color": const Color(0xFF9C27B0),
-        "route": QuotationPage()
+        "route": AllQuotation()
       },
       {
-        "title": "Cancelled Enquiry",
-        "icon": FontAwesomeIcons.cancel,
-        "color": Colors.redAccent.shade400,
-        "route": CancelEnquiry()
-      },
-      {
-        "title": "Cancelled Quotation",
-        "icon": FontAwesomeIcons.times,
+        "title": "Orders",
+        "icon": FontAwesomeIcons.receipt,
         "color": Colors.redAccent.shade700,
-        "route": CancelQuotation()
-      },
-      {
-        "title": "Missed Enquiry",
-        "icon": FontAwesomeIcons.exclamationTriangle,
-        "color": const Color(0xFF212121),
-        "route": null
+        "route": AllOrders()
       },
     ];
 
@@ -107,9 +94,26 @@ class _DashboardState extends State<Dashboard> {
       appBar: AppBar(
         leading: IconButton(
             onPressed: () {
-              Get.offAll(Login());
+              showDialog(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                        title: Text("Logout"),
+                        content: Text("Are you sure you want to logout?"),
+                        actions: [
+                          ElevatedButton(
+                              onPressed: () {
+                                Navigator.pop(context);
+                              },
+                              child: Text("Cancel")),
+                          ElevatedButton(
+                              onPressed: () {
+                                Get.offAll(Login());
+                              },
+                              child: Text("Yes"))
+                        ],
+                      ));
             },
-            icon: const Icon(Icons.logout, color: Colors.black)),
+            icon: Icon(Icons.logout)),
         title: Subhead(
             text: "Dashboard", weight: FontWeight.w600, color: Colors.black),
         centerTitle: true,

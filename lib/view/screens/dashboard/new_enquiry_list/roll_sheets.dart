@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -9,37 +10,40 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:http/io_client.dart';
 import 'package:zaron/view/universal_api/api&key.dart';
 import 'package:zaron/view/widgets/subhead.dart';
-import 'package:zaron/view/widgets/text.dart';
 
-import '../global_user/global_user.dart';
+import '../../global_user/global_oredrID.dart';
+import '../../global_user/global_user.dart';
 
-class GIStiffner extends StatefulWidget {
-  const GIStiffner({super.key, required this.data});
+class RollSheet extends StatefulWidget {
+  const RollSheet({super.key, required this.data});
 
   final Map<String, dynamic> data;
 
   @override
-  State<GIStiffner> createState() => _GIStiffnerState();
+  State<RollSheet> createState() => _RollSheetState();
 }
 
-class _GIStiffnerState extends State<GIStiffner> {
+class _RollSheetState extends State<RollSheet> {
+  Map<String, dynamic>? categoryMeta;
+  int? billamt;
+  int? orderIDD;
+  String? orderNO;
   late TextEditingController editController;
   String? selectedProduct;
-  String? selectedMeterial;
-  String? selectedThichness;
-  String? selsectedCoat;
-  String? selectedyie;
   String? selectedBrand;
+  String? selectedColor;
+  String? selectedThickness;
+  String? selectedCoatingMass;
+  String? selectedBaseProductID;
   String? selectedProductBaseId;
-  String? selectedBaseProductId;
 
   List<String> productList = [];
-  List<String> meterialList = [];
-  List<String> thichnessLists = [];
-  List<String> coatMassList = [];
-  List<String> yieldsListt = [];
-  List<String> brandList = [];
+  List<String> brandsList = [];
+  List<String> colorsList = [];
+  List<String> thicknessList = [];
+  List<String> coatingMassList = [];
   List<Map<String, dynamic>> submittedData = [];
+  List<dynamic> rawRollsheet = [];
 
   // Form key for validation
   final _formKey = GlobalKey<FormState>();
@@ -48,8 +52,8 @@ class _GIStiffnerState extends State<GIStiffner> {
   void initState() {
     super.initState();
     editController = TextEditingController(text: widget.data["Base Product"]);
+    _fetchBrands();
     _fetchProductName();
-    _fetchMeterialType();
   }
 
   @override
@@ -67,7 +71,7 @@ class _GIStiffnerState extends State<GIStiffner> {
     final client = IOClient(
       HttpClient()..badCertificateCallback = (_, __, ___) => true,
     );
-    final url = Uri.parse('$apiUrl/showlables/627');
+    final url = Uri.parse('$apiUrl/showlables/591');
 
     try {
       final response = await client.get(url);
@@ -77,9 +81,15 @@ class _GIStiffnerState extends State<GIStiffner> {
         final products = data["message"]["message"][1];
         debugPrint("PRoduct:::${products}");
         debugPrint(response.body, wrapWidth: 1024);
+        rawRollsheet = products;
 
         if (products is List) {
           setState(() {
+            ///  Extract category info (message[0][0])
+            final categoryInfoList = data["message"]["message"][0];
+            if (categoryInfoList is List && categoryInfoList.isNotEmpty) {
+              categoryMeta = Map<String, dynamic>.from(categoryInfoList[0]);
+            }
             productList = products
                 .whereType<Map>()
                 .map((e) => e["product_name"]?.toString())
@@ -89,34 +99,34 @@ class _GIStiffnerState extends State<GIStiffner> {
         }
       }
     } catch (e) {
-      print("Exception fetching brands: $e");
+      print("Exception fetching products: $e");
     }
   }
 
-  Future<void> _fetchMeterialType() async {
+  Future<void> _fetchBrands() async {
     setState(() {
-      meterialList = [];
-      selectedMeterial;
+      brandsList = [];
+      selectedBrand = null;
     });
 
     final client = IOClient(
       HttpClient()..badCertificateCallback = (_, __, ___) => true,
     );
-    final url = Uri.parse('$apiUrl/showlables/627');
+    final url = Uri.parse('$apiUrl/showlables/591');
 
     try {
       final response = await client.get(url);
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final meterialData = data["message"]["message"][2][1];
-        debugPrint(response.body);
+        final brands = data["message"]["message"][2][1];
+        print(response.body);
 
-        if (meterialData is List) {
+        if (brands is List) {
           setState(() {
-            meterialList = meterialData
+            brandsList = brands
                 .whereType<Map>()
-                .map((e) => e["material_type"]?.toString())
+                .map((e) => e["brand"]?.toString())
                 .whereType<String>()
                 .toList();
           });
@@ -127,13 +137,61 @@ class _GIStiffnerState extends State<GIStiffner> {
     }
   }
 
-  /// fetch colors Api's //
-  Future<void> _fetchThickness() async {
-    if (selectedMeterial == null) return;
+  Future<void> _fetchColors() async {
+    if (selectedBrand == null) return;
 
     setState(() {
-      thichnessLists = [];
-      selectedThichness = null;
+      colorsList = [];
+      selectedColor = null;
+    });
+
+    final client = IOClient(
+      HttpClient()..badCertificateCallback = (_, __, ___) => true,
+    );
+    final url = Uri.parse('$apiUrl/labelinputdata');
+
+    try {
+      final response = await client.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          "product_label": "color",
+          "product_filters": [selectedProduct],
+          "product_label_filters": ["product_name"],
+          "product_category_id": 591,
+          "base_product_filters": [selectedBrand],
+          "base_label_filters": ["brand"],
+          "base_category_id": 3,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final colors = data["message"]["message"][0];
+        print("Fetching colors for brand: $selectedBrand");
+        print("API response: ${response.body}");
+
+        if (colors is List) {
+          setState(() {
+            colorsList = colors
+                .whereType<Map>()
+                .map((e) => e["color"]?.toString())
+                .whereType<String>()
+                .toList();
+          });
+        }
+      }
+    } catch (e) {
+      print("Exception fetching colors: $e");
+    }
+  }
+
+  Future<void> _fetchThickness() async {
+    if (selectedBrand == null) return;
+
+    setState(() {
+      thicknessList = [];
+      selectedThickness = null;
     });
 
     final client = IOClient(
@@ -149,22 +207,22 @@ class _GIStiffnerState extends State<GIStiffner> {
           "product_label": "thickness",
           "product_filters": [selectedProduct],
           "product_label_filters": ["product_name"],
-          "product_category_id": 627,
-          "base_product_filters": [selectedMeterial],
-          "base_label_filters": ["material_type"],
-          "base_category_id": "34",
+          "product_category_id": 591,
+          "base_product_filters": [selectedBrand, selectedColor],
+          "base_label_filters": ["brand", "color"],
+          "base_category_id": 3,
         }),
       );
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final selectedThickness = data["message"]["message"][0];
-        print("Fetching colors for brand: $selectedThickness");
+        final thickness = data["message"]["message"][0];
+        print("Fetching thickness for brand: $selectedBrand");
         print("API response: ${response.body}");
 
-        if (selectedThickness is List) {
+        if (thickness is List) {
           setState(() {
-            thichnessLists = selectedThickness
+            thicknessList = thickness
                 .whereType<Map>()
                 .map((e) => e["thickness"]?.toString())
                 .whereType<String>()
@@ -173,17 +231,19 @@ class _GIStiffnerState extends State<GIStiffner> {
         }
       }
     } catch (e) {
-      print("Exception fetching colors: $e");
+      print("Exception fetching thickness: $e");
     }
   }
 
-  /// fetch Thickness Api's ///
-  Future<void> _fetchCoat() async {
-    if (selectedMeterial == null) return;
+  Future<void> _fetchCoatingMass() async {
+    if (selectedBrand == null ||
+        selectedColor == null ||
+        selectedThickness == null ||
+        !mounted) return;
 
     setState(() {
-      coatMassList = [];
-      selsectedCoat = null;
+      coatingMassList = [];
+      selectedCoatingMass = null;
     });
 
     final client = IOClient(
@@ -199,180 +259,90 @@ class _GIStiffnerState extends State<GIStiffner> {
           "product_label": "coating_mass",
           "product_filters": [selectedProduct],
           "product_label_filters": ["product_name"],
-          "product_category_id": 627,
-          "base_product_filters": [selectedMeterial, selectedThichness],
-          "base_label_filters": ["material_type", "thickness"],
-          "base_category_id": "34",
-        }),
-      );
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        final coat = data["message"]["message"][0];
-        print("Fetching colors for brand: $selectedThichness");
-        print("API response: ${response.body}");
-
-        if (coat is List) {
-          setState(() {
-            coatMassList = coat
-                .whereType<Map>()
-                .map((e) => e["coating_mass"]?.toString())
-                .whereType<String>()
-                .toList();
-          });
-        }
-      }
-    } catch (e) {
-      print("Exception fetching thickness: $e");
-    }
-  }
-
-  /// fetch Thickness Api's ///
-  Future<void> _fetchYie() async {
-    if (selectedMeterial == null) return;
-
-    setState(() {
-      yieldsListt = [];
-      selectedyie = null;
-    });
-
-    final client = IOClient(
-      HttpClient()..badCertificateCallback = (_, __, ___) => true,
-    );
-    final url = Uri.parse('$apiUrl/labelinputdata');
-
-    try {
-      final response = await client.post(
-        url,
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          "product_label": "yield_strength",
-          "product_filters": [selectedProduct],
-          "product_label_filters": ["product_name"],
-          "product_category_id": 627,
+          "product_category_id": 591,
           "base_product_filters": [
-            selectedMeterial,
-            selectedThichness,
-            selsectedCoat,
+            selectedBrand,
+            selectedColor,
+            selectedThickness,
           ],
-          "base_label_filters": ["material_type", "thickness", "coating_mass"],
-          "base_category_id": "34",
-        }),
-      );
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        final yieldsStrength = data["message"]["message"][0];
-        print("Fetching colors for brand: $selectedThichness");
-        print("API response: ${response.body}");
-
-        if (yieldsStrength is List) {
-          setState(() {
-            yieldsListt = yieldsStrength
-                .whereType<Map>()
-                .map((e) => e["yield_strength"]?.toString())
-                .whereType<String>()
-                .toList();
-          });
-        }
-      }
-    } catch (e) {
-      print("Exception fetching coating mass: $e");
-    }
-  }
-
-  Future<void> _fetchBrandss() async {
-    if (selectedMeterial == null) return;
-
-    setState(() {
-      brandList = [];
-      selectedBrand = null;
-    });
-
-    final client = IOClient(
-      HttpClient()..badCertificateCallback = (_, __, ___) => true,
-    );
-    final url = Uri.parse('$apiUrl/labelinputdata');
-
-    try {
-      final response = await client.post(
-        url,
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          "product_label": "brand",
-          "product_filters": [selectedProduct],
-          "product_label_filters": ["product_name"],
-          "product_category_id": 627,
-          "base_product_filters": [
-            selectedMeterial,
-            selectedThichness,
-            selsectedCoat,
-            selectedyie,
-          ],
-          "base_label_filters": [
-            "material_type",
-            "thickness",
-            "coating_mass",
-            "yield_strength",
-          ],
-          "base_category_id": "34",
+          "base_label_filters": ["brand", "color", "thickness"],
+          "base_category_id": "3",
         }),
       );
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         final message = data["message"]["message"];
-        print("API response: ${response.body}");
 
-        if (message is List && message.isNotEmpty) {
-          final brands = message[0];
-          if (brands is List) {
+        print("Full API Response: $message");
+
+        if (message is List && message.length >= 2) {
+          final coatingData = message[0];
+          final idData = message[1];
+
+          if (coatingData is List) {
             setState(() {
-              brandList = brands
+              coatingMassList = coatingData
                   .whereType<Map>()
-                  .map((e) => e["brand"]?.toString())
+                  .map((e) => e["coating_mass"]?.toString())
                   .whereType<String>()
                   .toList();
             });
           }
 
-          // Extract product_base_id and base_product_id if present in message[1]
-          final idData = message.length > 1 ? message[1] : null;
           if (idData is List && idData.isNotEmpty && idData.first is Map) {
-            selectedProductBaseId = idData.first["id"]?.toString();
-            selectedBaseProductId =
-                idData.first["base_product_id"]?.toString(); // <-- Added line
-            print("Selected Product Base ID: $selectedProductBaseId");
-            print(
-              "Selected Base Product ID: $selectedBaseProductId",
-            ); // <-- Optional
+            selectedBaseProductID = idData.first["id"]?.toString();
+            selectedProductBaseId = idData.first["base_product_id"]?.toString();
+            debugPrint("Selected Base Product ID: $selectedBaseProductID");
+            debugPrint(
+              "Base Product ID (base_product_id): $selectedProductBaseId",
+            );
           }
+        } else {
+          debugPrint("Unexpected message format for coating mass.");
         }
+      } else {
+        debugPrint("Failed to fetch coating mass: ${response.statusCode}");
       }
     } catch (e) {
-      print("Exception fetching brand: $e");
+      print("Exception fetching coating mass: $e");
     }
   }
 
-  // 1. ADD THESE NEW VARIABLES at the top of your _GIStiffnerState class (around line 25)
   Map<String, dynamic>? apiResponseData;
   List<dynamic> responseProducts = [];
-
-  // 2. MODIFY the postAllData() method - REPLACE the existing method with this:
+  Map<String, Map<String, String>> uomOptions = {};
+  int? newOrderId = GlobalOrderSession().getNewOrderId();
   Future<void> postAllData() async {
     HttpClient client = HttpClient();
     client.badCertificateCallback =
         ((X509Certificate cert, String host, int port) => true);
     IOClient ioClient = IOClient(client);
+
+    // From saved categoryMeta
+    final categoryId = categoryMeta?["category_id"];
+    final categoryName = categoryMeta?["categories"];
+    print("this os $categoryId");
+    print("this os $categoryName");
+
+    // Find the matching item from rawAccessoriesData
+    final matchingAccessory = rawRollsheet.firstWhere(
+      (item) => item["product_name"] == selectedProduct,
+      orElse: () => null,
+    );
+    // Extract values
+    final rollsheetProID = matchingAccessory?["id"];
+    print("this os $rollsheetProID");
     final headers = {"Content-Type": "application/json"};
     final data = {
       "customer_id": UserSession().userId,
-      "product_id": 1330,
+      "product_id": rollsheetProID,
       "product_name": selectedProduct,
-      "product_base_id": selectedProductBaseId,
-      "product_base_name": "$selectedBaseProductId",
-      "category_id": 627,
-      "category_name": "GI Stiffner",
+      "product_base_id": selectedBaseProductID,
+      "product_base_name": "$selectedProductBaseId",
+      "category_id": categoryId,
+      "category_name": categoryName,
+      "OrderID": newOrderId
     };
 
     print("This is a body data: $data");
@@ -386,16 +356,58 @@ class _GIStiffnerState extends State<GIStiffner> {
       );
 
       debugPrint("This is a response: ${response.body}");
+      if (selectedProduct == null ||
+          selectedBrand == null ||
+          selectedColor == null ||
+          selectedThickness == null ||
+          selectedCoatingMass == null) return;
 
       if (response.statusCode == 200) {
-        // PARSE THE API RESPONSE
         final responseData = jsonDecode(response.body);
         setState(() {
+          final String orderID = responseData["order_id"]?.toString() ?? "";
+          orderIDD = int.tryParse(orderID);
+          orderNO = responseData["order_no"]?.toString() ?? "Unknown";
           apiResponseData = responseData;
-          // Extract the products from the response
+
           if (responseData['lebels'] != null &&
               responseData['lebels'].isNotEmpty) {
-            responseProducts = responseData['lebels'][0]['data'] ?? [];
+            List<dynamic> fullList = responseData["lebels"][0]["data"];
+            List<Map<String, dynamic>> newProducts = [];
+
+            for (var item in fullList) {
+              if (item is Map<String, dynamic>) {
+                Map<String, dynamic> product = Map<String, dynamic>.from(item);
+
+                // Check for duplicate product ID
+                String productId = product["id"].toString();
+                bool alreadyExists = responseProducts
+                    .any((existing) => existing["id"].toString() == productId);
+
+                if (!alreadyExists) {
+                  newProducts.add(product);
+                }
+
+                // Save UOM if present
+                if (product["UOM"] != null &&
+                    product["UOM"]["options"] != null) {
+                  uomOptions[product["id"].toString()] =
+                      Map<String, String>.from(
+                          (product["UOM"]["options"] as Map).map(
+                    (key, value) => MapEntry(key.toString(), value.toString()),
+                  ));
+                }
+
+                debugPrint(
+                    "Product added: ${product["id"]} - ${product["Products"]}");
+              }
+            }
+
+            // Add only unique new products
+            responseProducts.addAll(newProducts);
+
+            // Update submittedData to reflect responseProducts
+            submittedData = List<Map<String, dynamic>>.from(responseProducts);
           }
         });
       }
@@ -404,76 +416,12 @@ class _GIStiffnerState extends State<GIStiffner> {
     }
   }
 
-  // 3. MODIFY the _submitData() method - REPLACE the existing method with this:
-  void _submitData() {
-    if (selectedMeterial == null ||
-        selectedThichness == null ||
-        selsectedCoat == null ||
-        selectedyie == null ||
-        selectedBrand == null ||
-        selectedProduct == null) {
-      showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: Text('Incomplete Form'),
-          content: Text(
-            'Please fill all required fields to add a product.',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text('OK'),
-            ),
-          ],
-        ),
-      );
-      return;
-    }
-
-    postAllData().then((_) {
-      // Reset form fields
-      setState(() {
-        selectedMeterial = null;
-        selectedThichness = null;
-        selsectedCoat = null;
-        selectedyie = null;
-        selectedBrand = null;
-        selectedProduct = null;
-        meterialList = [];
-        thichnessLists = [];
-        coatMassList = [];
-        yieldsListt = [];
-        brandList = [];
-        _fetchMeterialType();
-      });
-
-      // Show success message
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Row(
-            children: [
-              Icon(Icons.check_circle, color: Colors.white),
-              SizedBox(width: 12),
-              Text("Product added successfully"),
-            ],
-          ),
-          backgroundColor: Colors.green,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-          margin: EdgeInsets.all(16),
-          duration: Duration(seconds: 2),
-        ),
-      );
-    });
-  }
-
   TextEditingController baseProductController = TextEditingController();
   List<dynamic> baseProductResults = [];
   bool isSearchingBaseProduct = false;
   String? selectedBaseProduct;
   FocusNode baseProductFocusNode = FocusNode();
 
-  // Add this method for searching base products
   Future<void> searchBaseProducts(String query) async {
     if (query.isEmpty) {
       setState(() {
@@ -491,18 +439,18 @@ class _GIStiffnerState extends State<GIStiffner> {
         ((X509Certificate cert, String host, int port) => true);
     IOClient ioClient = IOClient(client);
     final headers = {"Content-Type": "application/json"};
-    final data = {"category_id": "627", "searchbase": query};
+    final data = {"category_id": "591", "searchbase": query};
 
     try {
       final response = await ioClient.post(
-        Uri.parse("https://demo.zaron.in:8181/ci4/api/baseproducts_search"),
+        Uri.parse("$apiUrl/api/baseproducts_search"),
         headers: headers,
         body: jsonEncode(data),
       );
 
       if (response.statusCode == 200) {
         final responseData = jsonDecode(response.body);
-        print("Base product response: $responseData"); // Debug print
+        print("Base product response: $responseData");
         setState(() {
           baseProductResults = responseData['base_products'] ?? [];
           isSearchingBaseProduct = false;
@@ -522,7 +470,6 @@ class _GIStiffnerState extends State<GIStiffner> {
     }
   }
 
-  // Add this method to build the base product search field
   Widget _buildBaseProductSearchField() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -573,8 +520,6 @@ class _GIStiffnerState extends State<GIStiffner> {
             },
           ),
         ),
-
-        // Search Results Display (line by line, not dropdown)
         if (baseProductResults.isNotEmpty)
           Container(
             margin: EdgeInsets.only(top: 8),
@@ -652,8 +597,6 @@ class _GIStiffnerState extends State<GIStiffner> {
               ],
             ),
           ),
-
-        // Selected Base Product Display
         if (selectedBaseProduct != null)
           Container(
             margin: EdgeInsets.only(top: 8),
@@ -694,9 +637,67 @@ class _GIStiffnerState extends State<GIStiffner> {
     );
   }
 
-  // 4. REPLACE the _buildSubmittedDataList() method with this:
+  void _submitData() {
+    if (selectedProduct == null ||
+        selectedBrand == null ||
+        selectedColor == null ||
+        selectedThickness == null ||
+        selectedCoatingMass == null) {
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text('Incomplete Form'),
+          content: Text(
+            'Please fill all required fields to add a product.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text('OK'),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+
+    postAllData().then((_) {
+      setState(() {
+        selectedProduct = null;
+        selectedBrand = null;
+        selectedColor = null;
+        selectedThickness = null;
+        selectedCoatingMass = null;
+        productList = [];
+        brandsList = [];
+        colorsList = [];
+        thicknessList = [];
+        coatingMassList = [];
+        _fetchProductName();
+        _fetchBrands();
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              Icon(Icons.check_circle, color: Colors.white),
+              SizedBox(width: 12),
+              Text("Product added successfully"),
+            ],
+          ),
+          backgroundColor: Colors.green,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          margin: EdgeInsets.all(16),
+          duration: Duration(seconds: 2),
+        ),
+      );
+    });
+  }
+
   Widget _buildSubmittedDataList() {
-    if (responseProducts.isEmpty) {
+    if (submittedData.isEmpty) {
       return Container(
         padding: EdgeInsets.symmetric(vertical: 40),
         alignment: Alignment.center,
@@ -714,9 +715,9 @@ class _GIStiffnerState extends State<GIStiffner> {
     }
 
     return Column(
-      children: responseProducts.asMap().entries.map((entry) {
+      children: submittedData.asMap().entries.map((entry) {
         int index = entry.key;
-        Map<String, dynamic> data = entry.value;
+        Map<String, dynamic> data = Map<String, dynamic>.from(entry.value);
 
         return Card(
           margin: EdgeInsets.symmetric(vertical: 10),
@@ -739,7 +740,7 @@ class _GIStiffnerState extends State<GIStiffner> {
                         height: 40.h,
                         width: 210.w,
                         child: Text(
-                          "  ${data["S.No"]}.  ${data["Products"]}" ?? "",
+                          "  ${index + 1}.  ${data["Products"] ?? ""}",
                           overflow: TextOverflow.ellipsis,
                           style: GoogleFonts.figtree(
                             fontSize: 18,
@@ -793,6 +794,7 @@ class _GIStiffnerState extends State<GIStiffner> {
                                   ElevatedButton(
                                     onPressed: () {
                                       setState(() {
+                                        submittedData.removeAt(index);
                                         responseProducts.removeAt(index);
                                       });
                                       Navigator.pop(context);
@@ -816,111 +818,6 @@ class _GIStiffnerState extends State<GIStiffner> {
                 ],
               ),
               _buildProductDetailInRows(data),
-              Padding(
-                padding: const EdgeInsets.only(top: 8.0, left: 8),
-                child: Container(
-                  height: 40.h,
-                  width: double.infinity.w,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Container(
-                        height: 40.h,
-                        width: 280.w,
-                        child: TextField(
-                          style: TextStyle(
-                            fontSize: 13.sp,
-                            color: Colors.black87,
-                            fontWeight: FontWeight.w500,
-                          ),
-                          decoration: InputDecoration(
-                            enabledBorder: InputBorder.none,
-                            focusedBorder: InputBorder.none,
-                          ),
-                          controller: TextEditingController(
-                            text: " ${data["Base Product"]}",
-                          ),
-                          readOnly: true,
-                        ),
-                      ),
-                      Gap(5),
-                      Container(
-                        height: 30.h,
-                        width: 30.w,
-                        decoration: BoxDecoration(
-                          color: Colors.grey[200],
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: IconButton(
-                          onPressed: () {
-                            editController.text = data["Base Product"];
-                            showDialog(
-                              context: context,
-                              builder: (context) {
-                                return AlertDialog(
-                                  title: Text("Edit Your GI Stiffner"),
-                                  content: Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Container(
-                                        height: 40.h,
-                                        width: double.infinity.w,
-                                        decoration: BoxDecoration(
-                                          borderRadius:
-                                              BorderRadius.circular(10),
-                                          color: Colors.white,
-                                        ),
-                                        child: Padding(
-                                          padding: const EdgeInsets.only(
-                                            left: 7.0,
-                                          ),
-                                          child: TextField(
-                                            decoration: InputDecoration(
-                                              enabledBorder: InputBorder.none,
-                                              focusedBorder: InputBorder.none,
-                                            ),
-                                            controller: editController,
-                                            onSubmitted: (value) {
-                                              setState(() {
-                                                data["Base Product"] = value;
-                                              });
-                                              Navigator.pop(context);
-                                            },
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  actions: [
-                                    ElevatedButton(
-                                      onPressed: () {
-                                        setState(() {
-                                          data["Base Product"] =
-                                              editController.text;
-                                        });
-                                        Navigator.pop(context);
-                                      },
-                                      child: MyText(
-                                        text: "Save",
-                                        weight: FontWeight.w500,
-                                        color: Colors.black,
-                                      ),
-                                    ),
-                                  ],
-                                );
-                              },
-                            );
-                          },
-                          icon: Icon(Icons.edit, size: 15),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
               Gap(5),
             ],
           ),
@@ -929,25 +826,21 @@ class _GIStiffnerState extends State<GIStiffner> {
     );
   }
 
-  // 5. REPLACE the _buildProductDetailInRows method with this:
   Widget _buildProductDetailInRows(Map<String, dynamic> data) {
-    return Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Row(
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: Column(
+        children: [
+          Row(
             children: [
               Expanded(
-                child: _buildDetailItem(
-                  "Billing Option",
-                  _billingOptionDropdown(data),
-                ),
+                child: _buildDetailItem("UOM", _uomDropdownFromApi(data)),
               ),
               SizedBox(width: 10),
               Expanded(
                 child: _buildDetailItem(
                   "Length",
-                  _editableTextField(data, "Length"),
+                  _editableTextField(data, "Profile"),
                 ),
               ),
               SizedBox(width: 10),
@@ -956,11 +849,8 @@ class _GIStiffnerState extends State<GIStiffner> {
               ),
             ],
           ),
-        ),
-        Gap(5),
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Row(
+          Gap(5),
+          Row(
             children: [
               Expanded(
                 child: _buildDetailItem(
@@ -970,7 +860,10 @@ class _GIStiffnerState extends State<GIStiffner> {
               ),
               SizedBox(width: 10),
               Expanded(
-                child: _buildDetailItem("Qty", _editableTextField(data, "Qty")),
+                child: _buildDetailItem(
+                  "SQMtr",
+                  _editableTextField(data, "SQMtr"),
+                ),
               ),
               SizedBox(width: 10),
               Expanded(
@@ -981,33 +874,33 @@ class _GIStiffnerState extends State<GIStiffner> {
               ),
             ],
           ),
-        ),
-        Gap(5.h),
-      ],
+          Gap(5.h),
+          _buildBaseProductSearchField(),
+        ],
+      ),
     );
   }
 
-  // 6. ADD this new method for the billing option dropdown:
-  Widget _billingOptionDropdown(Map<String, dynamic> data) {
-    Map<String, String> billingOptions = {};
-    String? currentValue;
+  Widget _uomDropdownFromApi(Map<String, dynamic> data) {
+    String productId = data["id"].toString();
+    Map<String, String>? options = uomOptions[productId];
 
-    if (data["Billing Option"] is Map) {
-      Map billingData = data["Billing Option"];
-      currentValue = billingData["value"]?.toString();
-      if (billingData["options"] is Map) {
-        Map options = billingData["options"];
-        billingOptions = options.map(
-          (key, value) => MapEntry(key.toString(), value.toString()),
-        );
-      }
+    if (options == null || options.isEmpty) {
+      return _editableTextField(data, "UOM");
+    }
+
+    String? currentValue;
+    if (data["UOM"] is Map) {
+      currentValue = data["UOM"]["value"]?.toString();
+    } else {
+      currentValue = data["UOM"]?.toString();
     }
 
     return SizedBox(
       height: 40.h,
       child: DropdownButtonFormField<String>(
-        value: currentValue?.isEmpty == true ? null : currentValue,
-        items: billingOptions.entries
+        value: currentValue,
+        items: options.entries
             .map(
               (entry) => DropdownMenuItem(
                 value: entry.key,
@@ -1017,10 +910,13 @@ class _GIStiffnerState extends State<GIStiffner> {
             .toList(),
         onChanged: (val) {
           setState(() {
-            if (data["Billing Option"] is Map) {
-              data["Billing Option"]["value"] = val;
-            }
+            data["UOM"] = {"value": val, "options": options};
           });
+          print("UOM changed to: $val");
+          print(
+            "Product data: ${data["Products"]}, ID: ${data["id"]}",
+          );
+          _debounceCalculation(data);
         },
         decoration: InputDecoration(
           contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 0),
@@ -1065,18 +961,46 @@ class _GIStiffnerState extends State<GIStiffner> {
   }
 
   Widget _editableTextField(Map<String, dynamic> data, String key) {
+    final controller = _getController(data, key);
+
     return SizedBox(
       height: 38.h,
       child: TextField(
+        readOnly: (key == "Basic Rate" || key == "Amount" || key == "SQMtr")
+            ? true
+            : false,
         style: GoogleFonts.figtree(
           fontWeight: FontWeight.w500,
           color: Colors.black,
           fontSize: 15.sp,
         ),
-        controller: TextEditingController(text: data[key]),
-        onChanged: (val) => data[key] = val,
+        controller: controller,
+        keyboardType: (key == "Length" ||
+                key == "Nos" ||
+                key == "Basic Rate" ||
+                key == "Amount" ||
+                key == "SQMtr")
+            ? TextInputType.numberWithOptions(decimal: false)
+            : TextInputType.numberWithOptions(decimal: false),
+        onChanged: (val) {
+          setState(() {
+            data[key] = val;
+          });
+
+          print("Field $key changed to: $val");
+          print("Controller text: ${controller.text}");
+          print("Data after change: ${data[key]}");
+
+          if (key == "Profile" || key == "Nos" || key == "Basic Rate") {
+            print("Triggering calculation for $key with value: $val");
+            _debounceCalculation(data);
+          }
+        },
         decoration: InputDecoration(
-          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 0),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 12,
+            vertical: 0,
+          ),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(6),
             borderSide: BorderSide(color: Colors.grey[300]!),
@@ -1100,14 +1024,207 @@ class _GIStiffnerState extends State<GIStiffner> {
   }
 
   String _selectedItems() {
-    List<String> values = [
-      if (selectedMeterial != null) "Material: $selectedMeterial",
-      if (selectedThichness != null) "Thickness: $selectedThichness",
-      if (selsectedCoat != null) "CoatingMass: $selsectedCoat",
-      if (selectedyie != null) "yieldStrength: $selectedyie",
+    List<String> value = [
+      if (selectedProduct != null) "Product: $selectedProduct",
       if (selectedBrand != null) "Brand: $selectedBrand",
+      if (selectedColor != null) "Color: $selectedColor",
+      if (selectedThickness != null) "Thickness: $selectedThickness",
+      if (selectedCoatingMass != null) "CoatingMass: $selectedCoatingMass",
     ];
-    return values.isEmpty ? "No Selections yet" : values.join(", ");
+    return value.isEmpty ? "No selection yet" : value.join(",  ");
+  }
+
+  Timer? _debounceTimer;
+  Map<String, dynamic> calculationResults = {};
+  Map<String, String?> previousUomValues = {};
+  Map<String, Map<String, TextEditingController>> fieldControllers = {};
+
+  TextEditingController _getController(Map<String, dynamic> data, String key) {
+    String productId = data["id"].toString();
+
+    fieldControllers.putIfAbsent(productId, () => {});
+
+    if (!fieldControllers[productId]!.containsKey(key)) {
+      String initialValue = (data[key] != null && data[key].toString() != "0")
+          ? data[key].toString()
+          : "";
+
+      fieldControllers[productId]![key] = TextEditingController(
+        text: initialValue,
+      );
+
+      print("Created controller for [$key] with value: '$initialValue'");
+    } else {
+      final controller = fieldControllers[productId]![key]!;
+      final dataValue = data[key]?.toString() ?? "";
+
+      if (controller.text.isEmpty && dataValue.isNotEmpty && dataValue != "0") {
+        controller.text = dataValue;
+        print("Synced controller for [$key] to: '$dataValue'");
+      }
+    }
+
+    return fieldControllers[productId]![key]!;
+  }
+
+  void _debounceCalculation(Map<String, dynamic> data) {
+    _debounceTimer?.cancel();
+    _debounceTimer = Timer(Duration(seconds: 1), () {
+      _performCalculation(data);
+    });
+  }
+
+  Future<void> _performCalculation(Map<String, dynamic> data) async {
+    print("=== STARTING CALCULATION API ===");
+    print("Data received: $data");
+
+    final client = IOClient(
+      HttpClient()..badCertificateCallback = (_, __, ___) => true,
+    );
+    final url = Uri.parse('$apiUrl/calculation');
+
+    String productId = data["id"].toString();
+
+    String? currentUom;
+    if (data["UOM"] is Map) {
+      currentUom = data["UOM"]["value"]?.toString();
+    } else {
+      currentUom = data["UOM"]?.toString();
+    }
+
+    print("Current UOM: $currentUom");
+    print("Previous UOM: ${previousUomValues[productId]}");
+
+    double? profileValue;
+    String? profileText;
+
+    if (fieldControllers.containsKey(productId) &&
+        fieldControllers[productId]!.containsKey("Profile")) {
+      profileText = fieldControllers[productId]!["Profile"]!.text;
+      print("Profile from controller: $profileText");
+    }
+
+    if (profileText == null || profileText.isEmpty) {
+      profileText = data["Profile"]?.toString();
+      print("Profile from data: $profileText");
+    }
+
+    if (profileText != null && profileText.isNotEmpty) {
+      profileValue = double.tryParse(profileText);
+    }
+
+    int nosValue = 0;
+    String? nosText;
+
+    if (fieldControllers.containsKey(productId) &&
+        fieldControllers[productId]!.containsKey("Nos")) {
+      nosText = fieldControllers[productId]!["Nos"]!.text;
+      print("Nos from controller: $nosText");
+    }
+
+    if (nosText == null || nosText.isEmpty) {
+      nosText = data["Nos"]?.toString();
+      print("Nos from data: $nosText");
+    }
+
+    if (nosText != null && nosText.isNotEmpty) {
+      nosValue = int.tryParse(nosText) ?? 1;
+    }
+
+    print("Final Profile Value: $profileValue");
+    print("Final Nos Value: $nosValue");
+
+    final requestBody = {
+      "id": int.tryParse(data["id"].toString()) ?? 0,
+      "category_id": 26,
+      "product": data["Products"]?.toString() ?? "",
+      "height": null,
+      "previous_uom": previousUomValues[productId] != null
+          ? int.tryParse(previousUomValues[productId]!)
+          : null,
+      "current_uom": currentUom != null ? int.tryParse(currentUom) : null,
+      "length": profileValue ?? 0,
+      "nos": nosValue,
+      "basic_rate": double.tryParse(data["Basic Rate"]?.toString() ?? "0") ?? 0,
+    };
+
+    print("Request Body: ${jsonEncode(requestBody)}");
+
+    try {
+      final response = await client.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(requestBody),
+      );
+
+      print("Response Status: ${response.statusCode}");
+      print("Response Body: ${response.body}");
+
+      if (response.statusCode == 200) {
+        final responseData = jsonDecode(response.body);
+
+        if (responseData["status"] == "success") {
+          setState(() {
+            billamt = responseData["bill_total"] ?? 0;
+            print("billamt updated to: $billamt");
+            calculationResults[productId] = responseData;
+
+            if (responseData["Length"] != null) {
+              data["Profile"] = responseData["Length"].toString();
+              if (fieldControllers[productId]?["Profile"] != null) {
+                fieldControllers[productId]!["Profile"]!.text =
+                    responseData["Length"].toString();
+              }
+            }
+
+            if (responseData["Nos"] != null) {
+              String newNos = responseData["Nos"].toString().trim();
+              String currentInput =
+                  fieldControllers[productId]!["Nos"]!.text.trim();
+
+              if (currentInput.isEmpty || currentInput == "0") {
+                data["Nos"] = newNos;
+                if (fieldControllers[productId]?["Nos"] != null) {
+                  fieldControllers[productId]!["Nos"]!.text = newNos;
+                }
+                print("Nos field updated to: $newNos");
+              } else {
+                print("Nos NOT updated because user input = '$currentInput'");
+              }
+            }
+
+            if (responseData["sqmtr"] != null) {
+              data["SQMtr"] = responseData["sqmtr"].toString();
+              if (fieldControllers[productId]?["SQMtr"] != null) {
+                fieldControllers[productId]!["SQMtr"]!.text =
+                    responseData["sqmtr"].toString();
+              }
+            }
+
+            if (responseData["Amount"] != null) {
+              data["Amount"] = responseData["Amount"].toString();
+              if (fieldControllers[productId]?["Amount"] != null) {
+                fieldControllers[productId]!["Amount"]!.text =
+                    responseData["Amount"].toString();
+              }
+            }
+
+            previousUomValues[productId] = currentUom;
+          });
+
+          print("=== CALCULATION SUCCESS ===");
+          print(
+            "Updated data: Length=${data["Profile"]}, Nos=${data["Nos"]}, SQMtr=${data["SQMtr"]}, Amount=${data["Amount"]}",
+          );
+        } else {
+          print("API returned error status: ${responseData["status"]}");
+        }
+      } else {
+        print("HTTP Error: ${response.statusCode}");
+      }
+    } catch (e) {
+      print("Calculation API Error: $e");
+    }
   }
 
   Widget _buildAnimatedDropdown(
@@ -1168,7 +1285,6 @@ class _GIStiffnerState extends State<GIStiffner> {
               ),
             ),
             constraints: BoxConstraints(maxHeight: 300),
-            // borderRadius: BorderRadius.circular(12),
           ),
         ),
       ),
@@ -1180,7 +1296,7 @@ class _GIStiffnerState extends State<GIStiffner> {
     return Scaffold(
       appBar: AppBar(
         title: Subhead(
-          text: 'GI Stiffner',
+          text: 'Roll Sheet',
           weight: FontWeight.w500,
           color: Colors.black,
         ),
@@ -1189,19 +1305,31 @@ class _GIStiffnerState extends State<GIStiffner> {
         backgroundColor: Colors.white,
       ),
       body: Container(
-        color: Colors.grey[50],
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Colors.white, Colors.grey.shade50],
+          ),
+        ),
         child: Padding(
-          padding: EdgeInsets.all(16),
+          padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
           child: SingleChildScrollView(
             physics: BouncingScrollPhysics(),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Card(
-                  elevation: 2,
-                  color: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 10,
+                        offset: Offset(0, 5),
+                      ),
+                    ],
                   ),
                   child: Padding(
                     padding: EdgeInsets.all(16),
@@ -1223,108 +1351,73 @@ class _GIStiffnerState extends State<GIStiffner> {
                               setState(() {
                                 selectedProduct = value;
                               });
-                              // _fetchProductName();
                             },
-                            // enabled: productList.isNotEmpty,
                             label: "Product Name",
                             icon: Icons.category_outlined,
                           ),
                           _buildAnimatedDropdown(
-                            meterialList,
-                            selectedMeterial,
-                            (value) {
-                              setState(() {
-                                selectedMeterial = value;
-
-                                ///clear fields
-                                selectedThichness = null;
-                                selsectedCoat = null;
-                                selectedyie = null;
-                                selectedBrand = null;
-                                thichnessLists = [];
-                                coatMassList = [];
-                                yieldsListt = [];
-                                brandList = [];
-                              });
-                              _fetchThickness();
-                            },
-                            label: "Meterial Type",
-                            icon: Icons.difference_outlined,
-                          ),
-                          _buildAnimatedDropdown(
-                            thichnessLists,
-                            selectedThichness,
-                            (value) {
-                              setState(() {
-                                selectedThichness = value;
-
-                                ///clear fields
-
-                                selsectedCoat = null;
-                                selectedyie = null;
-                                selectedBrand = null;
-
-                                coatMassList = [];
-                                yieldsListt = [];
-                                brandList = [];
-                              });
-                              _fetchCoat();
-                            },
-                            enabled: thichnessLists.isNotEmpty,
-                            label: "Thickness",
-                            icon: Icons.straighten_outlined,
-                          ),
-                          _buildAnimatedDropdown(
-                            coatMassList,
-                            selsectedCoat,
-                            (value) {
-                              setState(() {
-                                selsectedCoat = value;
-
-                                ///clear fields
-                                selectedyie = null;
-                                selectedBrand = null;
-                                yieldsListt = [];
-                                brandList = [];
-                              });
-                              _fetchYie();
-                            },
-                            enabled: coatMassList.isNotEmpty,
-                            label: "Coating Mass",
-                            icon: Icons.layers_outlined,
-                          ),
-                          _buildAnimatedDropdown(
-                            yieldsListt,
-                            selectedyie,
-                            (value) {
-                              setState(() {
-                                selectedyie = value;
-
-                                ///clear fields
-                                selectedBrand = null;
-                                brandList = [];
-                              });
-                              _fetchBrandss();
-                            },
-                            enabled: yieldsListt.isNotEmpty,
-                            label: "Yield Strength",
-                            icon: Icons.radio_button_checked,
-                          ),
-                          _buildAnimatedDropdown(
-                            brandList,
+                            brandsList,
                             selectedBrand,
                             (value) {
                               setState(() {
                                 selectedBrand = value;
+                                selectedColor = null;
+                                selectedThickness = null;
+                                selectedCoatingMass = null;
+                                colorsList = [];
+                                thicknessList = [];
+                                coatingMassList = [];
                               });
+                              _fetchColors();
                             },
-                            enabled: brandList.isNotEmpty,
                             label: "Brand",
                             icon: Icons.brightness_auto_outlined,
                           ),
-                          SizedBox(height: 24),
-                          _buildBaseProductSearchField(),
-                          SizedBox(height: 16),
+                          _buildAnimatedDropdown(
+                            colorsList,
+                            selectedColor,
+                            (value) {
+                              setState(() {
+                                selectedColor = value;
+                                selectedThickness = null;
+                                selectedCoatingMass = null;
+                                thicknessList = [];
+                                coatingMassList = [];
+                              });
+                              _fetchThickness();
+                            },
+                            enabled: colorsList.isNotEmpty,
+                            label: "Color",
+                            icon: Icons.color_lens_outlined,
+                          ),
+                          _buildAnimatedDropdown(
+                            thicknessList,
+                            selectedThickness,
+                            (value) {
+                              setState(() {
+                                selectedThickness = value;
+                                selectedCoatingMass = null;
+                                coatingMassList = [];
+                              });
+                              _fetchCoatingMass();
+                            },
+                            enabled: thicknessList.isNotEmpty,
+                            label: "Thickness",
+                            icon: Icons.straighten_outlined,
+                          ),
+                          _buildAnimatedDropdown(
+                            coatingMassList,
+                            selectedCoatingMass,
+                            (value) {
+                              setState(() {
+                                selectedCoatingMass = value;
+                              });
+                            },
+                            enabled: coatingMassList.isNotEmpty,
+                            label: "Coating Mass",
+                            icon: Icons.layers_outlined,
+                          ),
+                          SizedBox(height: 10),
                           Container(
                             padding: EdgeInsets.all(16),
                             decoration: BoxDecoration(
@@ -1398,14 +1491,171 @@ class _GIStiffnerState extends State<GIStiffner> {
                   ),
                 ),
                 SizedBox(height: 24),
-                if (responseProducts.isNotEmpty)
-                  Subhead(
-                    text: "   Added Products",
-                    weight: FontWeight.w600,
-                    color: Colors.black,
+                if (submittedData.isNotEmpty) ...[
+                  SizedBox(height: 24),
+                  Container(
+                    padding: EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          Colors.deepPurple.shade100,
+                          Colors.blue.shade50
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: Colors.deepPurple.shade100),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 10,
+                          offset: Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Container(
+                              padding: EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color:
+                                    Colors.deepPurple.shade100.withOpacity(0.5),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Icon(
+                                Icons.shopping_bag_outlined,
+                                color: Colors.deepPurple.shade700,
+                                size: 20,
+                              ),
+                            ),
+                            SizedBox(width: 12),
+                            Text(
+                              "Added Products",
+                              style: GoogleFonts.poppins(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.deepPurple,
+                              ),
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: 16),
+                        Container(
+                          padding:
+                              EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: Colors.white60,
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(color: Colors.grey.shade200),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                "Decking Sheets",
+                                style: GoogleFonts.poppins(
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.grey.shade700,
+                                ),
+                              ),
+                              Container(
+                                padding: EdgeInsets.symmetric(
+                                    horizontal: 10, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: Colors.blue.shade50,
+                                  borderRadius: BorderRadius.circular(20),
+                                  border:
+                                      Border.all(color: Colors.blue.shade200),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      Icons.receipt_outlined,
+                                      size: 14,
+                                      color: Colors.blue.shade700,
+                                    ),
+                                    SizedBox(width: 4),
+                                    Text(
+                                      "ID: ${orderNO ?? 'N/A'}",
+                                      style: GoogleFonts.figtree(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.blue.shade700,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        SizedBox(height: 16),
+                        Container(
+                          margin: EdgeInsets.symmetric(vertical: 4),
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                Colors.deepPurple.shade500,
+                                Colors.deepPurple.shade200
+                              ],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.blue.withOpacity(0.3),
+                                blurRadius: 8,
+                                offset: Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: Padding(
+                            padding: EdgeInsets.all(10),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  flex: 3,
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        "TOTAL AMOUNT",
+                                        style: TextStyle(
+                                          color: Colors.white70,
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w500,
+                                          letterSpacing: 0.5,
+                                        ),
+                                      ),
+                                      SizedBox(height: 4),
+                                      Text(
+                                        "₹${billamt ?? 0}",
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 20,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        _buildSubmittedDataList(),
+                      ],
+                    ),
                   ),
-                SizedBox(height: 8),
-                _buildSubmittedDataList(),
+                ],
               ],
             ),
           ),

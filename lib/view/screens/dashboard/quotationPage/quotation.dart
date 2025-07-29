@@ -5,11 +5,11 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
+import 'package:zaron/view/screens/dashboard/quotationPage/total_quoation_view.dart';
 import 'package:zaron/view/screens/global_user/global_user.dart';
-import 'package:zaron/view/screens/total_quoation_view.dart';
 import 'package:zaron/view/universal_api/api&key.dart';
 
-import '../widgets/subhead.dart';
+import '../../../widgets/subhead.dart';
 
 class QuotationPage extends StatefulWidget {
   const QuotationPage({super.key});
@@ -67,10 +67,10 @@ class _QuotationPageState extends State<QuotationPage> {
   Future<void> fetchEnquiryData() async {
     setState(() => isLoading = true);
 
-    final String Url = '$apiUrl/totalquotation/${UserSession().userId}';
+    final String url = '$apiUrl/totalquotation/${UserSession().userId}';
 
     try {
-      final response = await http.get(Uri.parse(Url));
+      final response = await http.get(Uri.parse(url));
 
       if (response.statusCode == 200) {
         final jsonData = jsonDecode(response.body);

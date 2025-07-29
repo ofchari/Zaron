@@ -12,6 +12,8 @@ import 'package:zaron/view/screens/global_user/global_user.dart';
 import 'package:zaron/view/universal_api/api&key.dart';
 import 'package:zaron/view/widgets/subhead.dart';
 
+import '../../global_user/global_oredrID.dart';
+
 class TileSheetPage extends StatefulWidget {
   const TileSheetPage({super.key, required this.data});
 
@@ -22,7 +24,11 @@ class TileSheetPage extends StatefulWidget {
 }
 
 class _TileSheetPageState extends State<TileSheetPage> {
+  Map<String, dynamic>? categoryMeta;
+  int? billamt;
   late TextEditingController editController;
+  int? orderIDD;
+  String? orderNO;
   String? selectedMaterial;
   String? selectedBrands;
   String? selectedColors;
@@ -37,6 +43,7 @@ class _TileSheetPageState extends State<TileSheetPage> {
   List<String> colorandList = [];
   List<String> thickAndList = [];
   List<String> coatingAndList = [];
+  List<dynamic> rawTilesheet = [];
 
   // List<String> brandList = [];
   List<Map<String, dynamic>> submittedData = [];
@@ -77,9 +84,16 @@ class _TileSheetPageState extends State<TileSheetPage> {
         final materials = data["message"]["message"][1];
         debugPrint("PRoduct:::${materials}");
         debugPrint(response.body, wrapWidth: 1024);
+        rawTilesheet = materials;
 
         if (materials is List) {
           setState(() {
+            ///  Extract category info (message[0][0])
+            final categoryInfoList = data["message"]["message"][0];
+            if (categoryInfoList is List && categoryInfoList.isNotEmpty) {
+              categoryMeta = Map<String, dynamic>.from(categoryInfoList[0]);
+            }
+
             materialList = materials
                 .whereType<Map>()
                 .map((e) => e["material_type"]?.toString())
@@ -301,26 +315,45 @@ class _TileSheetPageState extends State<TileSheetPage> {
     }
   }
 
+  int? newOrderId = GlobalOrderSession().getNewOrderId();
+
   ///post All Data
   Future<void> postAllData() async {
     HttpClient client = HttpClient();
     client.badCertificateCallback =
         ((X509Certificate cert, String host, int port) => true);
     IOClient ioClient = IOClient(client);
+
+    // From saved categoryMeta
+    final categoryId = categoryMeta?["category_id"];
+    final categoryName = categoryMeta?["categories"];
+    print("this os $categoryId");
+    print("this os $categoryName");
+
+    // Find the matching item from rawAccessoriesData
+    final matchingAccessory = rawTilesheet.firstWhere(
+      (item) => item["material_type"] == selectedMaterial,
+      orElse: () => null,
+    );
+    // Extract values
+    final tileSheetProID = matchingAccessory?["id"];
+    print("this os $tileSheetProID");
     final headers = {"Content-Type": "application/json"};
     final data = {
       "customer_id": UserSession().userId,
-      "product_id": 1114,
+      "product_id": tileSheetProID,
       "product_name": selectedMaterial,
       "product_base_id": selectedProductBaseId,
       "product_base_name": "$selectedBrands,$selectedColors,$selectedThickness",
-      "category_id": 26,
-      "category_name": "Tile sheet",
+      "category_id": categoryId,
+      "category_name": categoryName,
+      "OrderID": newOrderId
     };
 
     print("This is a body data: $data");
     final url = "$apiUrl/addbag";
     final body = jsonEncode(data);
+
     try {
       final response = await ioClient.post(
         Uri.parse(url),
@@ -329,6 +362,7 @@ class _TileSheetPageState extends State<TileSheetPage> {
       );
 
       debugPrint("This is a response: ${response.body}");
+
       if (selectedMaterial == null ||
           selectedBrands == null ||
           selectedColors == null ||
@@ -336,24 +370,51 @@ class _TileSheetPageState extends State<TileSheetPage> {
           selectedCoatingMass == null) return;
 
       if (response.statusCode == 200) {
-        // Parse and store the API response
         final responseData = jsonDecode(response.body);
         setState(() {
+          final String orderID = responseData["order_id"]?.toString() ?? "";
+          orderIDD = int.tryParse(orderID);
+          orderNO = responseData["order_no"]?.toString() ?? "Unknown";
           apiResponseData = responseData;
+
           if (responseData["lebels"] != null &&
               responseData["lebels"].isNotEmpty) {
-            responseProducts.addAll(responseData["lebels"][0]["data"] ?? []);
+            // Safely handle the response data
+            List<dynamic> fullList = responseData["lebels"][0]["data"];
+            List<Map<String, dynamic>> newProducts = [];
 
-            // Store UOM options for each product
-            for (var product in responseProducts) {
-              if (product["UOM"] != null && product["UOM"]["options"] != null) {
-                uomOptions[product["id"].toString()] = Map<String, String>.from(
-                  product["UOM"]["options"].map(
-                    (key, value) => MapEntry(key.toString(), value.toString()),
-                  ),
-                );
+            for (var item in fullList) {
+              if (item is Map<String, dynamic>) {
+                Map<String, dynamic> product = Map<String, dynamic>.from(item);
+
+                // Prevent duplicates
+                String productId = product["id"].toString();
+                bool alreadyExists = responseProducts
+                    .any((existing) => existing["id"].toString() == productId);
+
+                if (!alreadyExists) {
+                  newProducts.add(product);
+                }
+
+                // Save UOM options if present
+                if (product["UOM"] != null &&
+                    product["UOM"]["options"] != null) {
+                  uomOptions[product["id"].toString()] =
+                      Map<String, String>.from(
+                    (product["UOM"]["options"] as Map).map(
+                      (key, value) =>
+                          MapEntry(key.toString(), value.toString()),
+                    ),
+                  );
+                }
+
+                debugPrint(
+                    "Product added: ${product["id"]} - ${product["Products"]}");
               }
             }
+
+            // Add only new (non-duplicate) products
+            responseProducts.addAll(newProducts);
           }
         });
       }
@@ -367,227 +428,6 @@ class _TileSheetPageState extends State<TileSheetPage> {
   bool isSearchingBaseProduct = false;
   String? selectedBaseProduct;
   FocusNode baseProductFocusNode = FocusNode();
-
-  // // Add this method for searching base products
-  // Future<void> searchBaseProducts(String query) async {
-  //   if (query.isEmpty) {
-  //     setState(() {
-  //       baseProductResults = [];
-  //     });
-  //     return;
-  //   }
-  //
-  //   setState(() {
-  //     isSearchingBaseProduct = true;
-  //   });
-  //
-  //   HttpClient client = HttpClient();
-  //   client.badCertificateCallback =
-  //       ((X509Certificate cert, String host, int port) => true);
-  //   IOClient ioClient = IOClient(client);
-  //   final headers = {"Content-Type": "application/json"};
-  //   final data = {"category_id": "26", "searchbase": query};
-  //
-  //   try {
-  //     final response = await ioClient.post(
-  //       Uri.parse("https://demo.zaron.in:8181/ci4/api/baseproducts_search"),
-  //       headers: headers,
-  //       body: jsonEncode(data),
-  //     );
-  //
-  //     if (response.statusCode == 200) {
-  //       final responseData = jsonDecode(response.body);
-  //       print("Base product response: $responseData"); // Debug print
-  //       setState(() {
-  //         baseProductResults = responseData['base_products'] ?? [];
-  //         isSearchingBaseProduct = false;
-  //       });
-  //     } else {
-  //       setState(() {
-  //         baseProductResults = [];
-  //         isSearchingBaseProduct = false;
-  //       });
-  //     }
-  //   } catch (e) {
-  //     print("Error searching base products: $e");
-  //     setState(() {
-  //       baseProductResults = [];
-  //       isSearchingBaseProduct = false;
-  //     });
-  //   }
-  // }
-  //
-  // // Add this method to build the base product search field
-  // Widget _buildBaseProductSearchField() {
-  //   return Column(
-  //     crossAxisAlignment: CrossAxisAlignment.start,
-  //     children: [
-  //       Text(
-  //         "Base Product",
-  //         style: GoogleFonts.figtree(
-  //           fontSize: 16,
-  //           fontWeight: FontWeight.w500,
-  //           color: Colors.black87,
-  //         ),
-  //       ),
-  //       SizedBox(height: 8),
-  //       Container(
-  //         decoration: BoxDecoration(
-  //           border: Border.all(color: Colors.grey[300]!),
-  //           borderRadius: BorderRadius.circular(8),
-  //         ),
-  //         child: TextField(
-  //           controller: baseProductController,
-  //           focusNode: baseProductFocusNode,
-  //           decoration: InputDecoration(
-  //             hintText: "Search base product...",
-  //             prefixIcon: Icon(Icons.search),
-  //             border: InputBorder.none,
-  //             contentPadding: EdgeInsets.symmetric(
-  //               horizontal: 16,
-  //               vertical: 12,
-  //             ),
-  //             suffixIcon: isSearchingBaseProduct
-  //                 ? Padding(
-  //                     padding: EdgeInsets.all(12),
-  //                     child: SizedBox(
-  //                       width: 20,
-  //                       height: 20,
-  //                       child: CircularProgressIndicator(strokeWidth: 2),
-  //                     ),
-  //                   )
-  //                 : null,
-  //           ),
-  //           onChanged: (value) {
-  //             searchBaseProducts(value);
-  //           },
-  //           onTap: () {
-  //             if (baseProductController.text.isNotEmpty) {
-  //               searchBaseProducts(baseProductController.text);
-  //             }
-  //           },
-  //         ),
-  //       ),
-  //
-  //       // Search Results Display (line by line, not dropdown)
-  //       if (baseProductResults.isNotEmpty)
-  //         Container(
-  //           margin: EdgeInsets.only(top: 8),
-  //           padding: EdgeInsets.all(12),
-  //           decoration: BoxDecoration(
-  //             color: Colors.grey[50],
-  //             border: Border.all(color: Colors.grey[300]!),
-  //             borderRadius: BorderRadius.circular(8),
-  //           ),
-  //           child: Column(
-  //             crossAxisAlignment: CrossAxisAlignment.start,
-  //             children: [
-  //               Text(
-  //                 "Search Results:",
-  //                 style: GoogleFonts.figtree(
-  //                   fontSize: 14,
-  //                   fontWeight: FontWeight.w600,
-  //                   color: Colors.black87,
-  //                 ),
-  //               ),
-  //               SizedBox(height: 8),
-  //               ...baseProductResults.map((product) {
-  //                 return GestureDetector(
-  //                   onTap: () {
-  //                     setState(() {
-  //                       selectedBaseProduct = product.toString();
-  //                       baseProductController.text = selectedBaseProduct!;
-  //                       baseProductResults = [];
-  //                     });
-  //                   },
-  //                   child: Container(
-  //                     width: double.infinity,
-  //                     padding: EdgeInsets.symmetric(
-  //                       vertical: 12,
-  //                       horizontal: 12,
-  //                     ),
-  //                     margin: EdgeInsets.only(bottom: 6),
-  //                     decoration: BoxDecoration(
-  //                       color: Colors.white,
-  //                       borderRadius: BorderRadius.circular(6),
-  //                       border: Border.all(color: Colors.grey[300]!),
-  //                       boxShadow: [
-  //                         BoxShadow(
-  //                           color: Colors.grey.withOpacity(0.1),
-  //                           spreadRadius: 1,
-  //                           blurRadius: 2,
-  //                           offset: Offset(0, 1),
-  //                         ),
-  //                       ],
-  //                     ),
-  //                     child: Row(
-  //                       children: [
-  //                         Icon(Icons.inventory_2, size: 16, color: Colors.blue),
-  //                         SizedBox(width: 10),
-  //                         Expanded(
-  //                           child: Text(
-  //                             product.toString(),
-  //                             style: GoogleFonts.figtree(
-  //                               fontSize: 14,
-  //                               color: Colors.black87,
-  //                               fontWeight: FontWeight.w400,
-  //                             ),
-  //                           ),
-  //                         ),
-  //                         Icon(
-  //                           Icons.arrow_forward_ios,
-  //                           size: 12,
-  //                           color: Colors.grey[400],
-  //                         ),
-  //                       ],
-  //                     ),
-  //                   ),
-  //                 );
-  //               }).toList(),
-  //             ],
-  //           ),
-  //         ),
-  //
-  //       // Selected Base Product Display
-  //       if (selectedBaseProduct != null)
-  //         Container(
-  //           margin: EdgeInsets.only(top: 8),
-  //           padding: EdgeInsets.all(12),
-  //           decoration: BoxDecoration(
-  //             color: Colors.blue[50],
-  //             borderRadius: BorderRadius.circular(8),
-  //             border: Border.all(color: Colors.blue[200]!),
-  //           ),
-  //           child: Row(
-  //             children: [
-  //               Icon(Icons.check_circle, color: Colors.green, size: 20),
-  //               SizedBox(width: 8),
-  //               Expanded(
-  //                 child: Text(
-  //                   "Selected: $selectedBaseProduct",
-  //                   style: GoogleFonts.figtree(
-  //                     fontSize: 14,
-  //                     fontWeight: FontWeight.w500,
-  //                     color: Colors.black87,
-  //                   ),
-  //                 ),
-  //               ),
-  //               GestureDetector(
-  //                 onTap: () {
-  //                   setState(() {
-  //                     selectedBaseProduct = null;
-  //                     baseProductController.clear();
-  //                     baseProductResults = [];
-  //                   });
-  //                 },
-  //                 child: Icon(Icons.close, color: Colors.grey[600], size: 20),
-  //               ),
-  //             ],
-  //           ),
-  //         ),
-  //     ],
-  //   );
-  // }
 
   void _submitData() {
     if (selectedMaterial == null ||
@@ -1208,6 +1048,8 @@ class _TileSheetPageState extends State<TileSheetPage> {
 
         if (responseData["status"] == "success") {
           setState(() {
+            billamt = responseData["bill_total"] ?? 0;
+            print("billamt updated to: $billamt");
             calculationResults[productId] = responseData;
 
             // Handle Length update
@@ -1291,22 +1133,34 @@ class _TileSheetPageState extends State<TileSheetPage> {
         backgroundColor: Colors.white,
       ),
       body: Container(
-        color: Colors.grey[50],
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Colors.white, Colors.grey.shade50],
+          ),
+        ),
         child: Padding(
-          padding: EdgeInsets.all(16),
+          padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
           child: SingleChildScrollView(
             physics: BouncingScrollPhysics(),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Card(
-                  color: Colors.white,
-                  elevation: 2,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 10,
+                        offset: Offset(0, 5),
+                      ),
+                    ],
                   ),
                   child: Padding(
-                    padding: EdgeInsets.all(16),
+                    padding: EdgeInsets.all(20),
                     child: Form(
                       key: _formKey,
                       child: Column(
@@ -1476,14 +1330,171 @@ class _TileSheetPageState extends State<TileSheetPage> {
                   ),
                 ),
                 SizedBox(height: 24),
-                if (submittedData.isNotEmpty)
-                  Subhead(
-                    text: "   Added Products",
-                    weight: FontWeight.w600,
-                    color: Colors.black,
+                if (submittedData.isNotEmpty) ...[
+                  SizedBox(height: 24),
+                  Container(
+                    padding: EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          Colors.deepPurple.shade100,
+                          Colors.blue.shade50
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: Colors.deepPurple.shade100),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 10,
+                          offset: Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Container(
+                              padding: EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color:
+                                    Colors.deepPurple.shade100.withOpacity(0.5),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Icon(
+                                Icons.shopping_bag_outlined,
+                                color: Colors.deepPurple.shade700,
+                                size: 20,
+                              ),
+                            ),
+                            SizedBox(width: 12),
+                            Text(
+                              "Added Products",
+                              style: GoogleFonts.poppins(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.deepPurple,
+                              ),
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: 16),
+                        Container(
+                          padding:
+                              EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: Colors.white60,
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(color: Colors.grey.shade200),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                "Decking Sheets",
+                                style: GoogleFonts.poppins(
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.grey.shade700,
+                                ),
+                              ),
+                              Container(
+                                padding: EdgeInsets.symmetric(
+                                    horizontal: 10, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: Colors.blue.shade50,
+                                  borderRadius: BorderRadius.circular(20),
+                                  border:
+                                      Border.all(color: Colors.blue.shade200),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      Icons.receipt_outlined,
+                                      size: 14,
+                                      color: Colors.blue.shade700,
+                                    ),
+                                    SizedBox(width: 4),
+                                    Text(
+                                      "ID: ${orderNO ?? 0.0}",
+                                      style: GoogleFonts.figtree(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.blue.shade700,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        SizedBox(height: 16),
+                        Container(
+                          margin: EdgeInsets.symmetric(vertical: 4),
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                Colors.deepPurple.shade500,
+                                Colors.deepPurple.shade200
+                              ],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.blue.withOpacity(0.3),
+                                blurRadius: 8,
+                                offset: Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: Padding(
+                            padding: EdgeInsets.all(10),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  flex: 3,
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        "TOTAL AMOUNT",
+                                        style: TextStyle(
+                                          color: Colors.white70,
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w500,
+                                          letterSpacing: 0.5,
+                                        ),
+                                      ),
+                                      SizedBox(height: 4),
+                                      Text(
+                                        "₹${billamt ?? 0}",
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 20,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        _buildSubmittedDataList(),
+                      ],
+                    ),
                   ),
-                SizedBox(height: 8),
-                _buildSubmittedDataList(),
+                ],
               ],
             ),
           ),

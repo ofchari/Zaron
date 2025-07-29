@@ -5,25 +5,26 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
-import 'package:zaron/view/screens/new_enquirys/CutToLengthSheet.dart';
-import 'package:zaron/view/screens/new_enquirys/accessories.dart';
-import 'package:zaron/view/screens/new_enquirys/aluminum.dart';
-import 'package:zaron/view/screens/new_enquirys/decking_sheets.dart';
-import 'package:zaron/view/screens/new_enquirys/gl_gutter.dart';
-import 'package:zaron/view/screens/new_enquirys/gl_stiffner.dart';
-import 'package:zaron/view/screens/new_enquirys/iron_steels.dart';
-import 'package:zaron/view/screens/new_enquirys/polycarbonate.dart';
-import 'package:zaron/view/screens/new_enquirys/profile_arch.dart';
-import 'package:zaron/view/screens/new_enquirys/purlin.dart';
-import 'package:zaron/view/screens/new_enquirys/roll_sheets.dart';
-import 'package:zaron/view/screens/new_enquirys/screw.dart';
-import 'package:zaron/view/screens/new_enquirys/screw_acessories.dart';
-import 'package:zaron/view/screens/new_enquirys/tile_sheets.dart';
-import 'package:zaron/view/screens/new_enquirys/upvc_accessories.dart';
-import 'package:zaron/view/screens/new_enquirys/upvc_tiles.dart';
+import 'package:zaron/view/screens/dashboard/new_enquiry_list/CutToLengthSheet.dart';
+import 'package:zaron/view/screens/dashboard/new_enquiry_list/accessories.dart';
+import 'package:zaron/view/screens/dashboard/new_enquiry_list/aluminum.dart';
+import 'package:zaron/view/screens/dashboard/new_enquiry_list/decking_sheets.dart';
+import 'package:zaron/view/screens/dashboard/new_enquiry_list/gl_gutter.dart';
+import 'package:zaron/view/screens/dashboard/new_enquiry_list/gl_stiffner.dart';
+import 'package:zaron/view/screens/dashboard/new_enquiry_list/iron_steels.dart';
+import 'package:zaron/view/screens/dashboard/new_enquiry_list/polycarbonate.dart';
+import 'package:zaron/view/screens/dashboard/new_enquiry_list/profile_arch.dart';
+import 'package:zaron/view/screens/dashboard/new_enquiry_list/purlin.dart';
+import 'package:zaron/view/screens/dashboard/new_enquiry_list/roll_sheets.dart';
+import 'package:zaron/view/screens/dashboard/new_enquiry_list/screw.dart';
+import 'package:zaron/view/screens/dashboard/new_enquiry_list/screw_acessories.dart';
+import 'package:zaron/view/screens/dashboard/new_enquiry_list/tile_sheets.dart';
+import 'package:zaron/view/screens/dashboard/new_enquiry_list/upvc_accessories.dart';
+import 'package:zaron/view/screens/dashboard/new_enquiry_list/upvc_tiles.dart';
 import 'package:zaron/view/widgets/buttons.dart';
 
-import '../../universal_api/api&key.dart';
+import '../../../universal_api/api&key.dart';
+import '../../global_user/global_oredrID.dart';
 import 'linear_sheets.dart';
 
 class NewEnquiry extends StatefulWidget {
@@ -49,30 +50,44 @@ class _NewEnquiryState extends State<NewEnquiry> {
       final response = await http.get(url);
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        print(response.body);
+        debugPrint(response.body);
         print(response.statusCode);
+
         if (data['message']['success']) {
+          // ✅ Extract and store new_order_id from the parent "message" object
+          final message = data['message'];
+          if (message["new_order_id"] != null) {
+            int? parsed = int.tryParse(message["new_order_id"].toString());
+            if (parsed != null) {
+              GlobalOrderSession().setNewOrderId(parsed);
+              print("✅ Stored new_order_id globally: $parsed");
+            }
+          }
+
+          // 🧩 Now process the categories list
+          final List filtered = (message['message'] as List)
+              .where((item) =>
+                  item["id"] != null &&
+                  item["categories"] != null &&
+                  item["cate_image"] != null)
+              .toList();
+
           setState(() {
             categories = List<Map<String, dynamic>>.from(
-              (data['message']['message'] as List)
-                  .where((item) =>
-                      item["id"] != null &&
-                      item["categories"] != null &&
-                      item["cate_image"] != null)
-                  .map(
-                    (item) => {
-                      "id": item["id"].toString(),
-                      "name": item["categories"],
-                      "imagePath":
-                          "https://demo.zaron.in:8181/${item["cate_image"]}",
-                    },
-                  ),
+              filtered.map(
+                (item) => {
+                  "id": item["id"].toString(),
+                  "name": item["categories"],
+                  "imagePath":
+                      "https://demo.zaron.in:8181/${item["cate_image"]}",
+                },
+              ),
             );
           });
         }
       }
     } catch (e) {
-      print('Error fetching categories: $e');
+      print('❌ Error fetching categories: $e');
     }
   }
 
@@ -83,17 +98,17 @@ class _NewEnquiryState extends State<NewEnquiry> {
       final response = await http.get(url);
       if (response.statusCode == 200) {
         final responseData = jsonDecode(response.body);
-        print("✅ [SUCCESS] Response Data: $responseData");
+        print("[SUCCESS] Response Data: $responseData");
 
         // Route to the correct page based on category name
         Widget nextPage = getCategoryPage(categoryName, responseData);
         Get.to(() => nextPage);
       } else {
-        print("❌ [ERROR] Status Code: ${response.statusCode}");
+        print(" [ERROR] Status Code: ${response.statusCode}");
         _showErrorDialog(context, 'Failed to load labels.');
       }
     } catch (e) {
-      print("❌ [ERROR] Exception: $e");
+      print(" [ERROR] Exception: $e");
       _showErrorDialog(context, 'An error occurred: $e');
     }
   }

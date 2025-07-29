@@ -6,12 +6,13 @@ import 'package:dropdown_search/dropdown_search.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:gap/gap.dart';
-import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/io_client.dart';
 import 'package:zaron/view/universal_api/api&key.dart';
 
-import '../global_user/global_user.dart';
+import '../../../widgets/text.dart';
+import '../../global_user/global_oredrID.dart';
+import '../../global_user/global_user.dart';
 
 class UpvcAccessories extends StatefulWidget {
   const UpvcAccessories({super.key, required this.data});
@@ -24,8 +25,11 @@ class UpvcAccessories extends StatefulWidget {
 
 class _UpvcAccessoriesState extends State<UpvcAccessories> {
   late TextEditingController editController;
+  Map<String, dynamic>? categoryMeta;
+  int? billamt;
   String? selectedProductBaseId;
-
+  int? orderIDD;
+  String? orderNO;
   String? selectedBrand;
   String? selectedColor;
   String? selectProductNameBase;
@@ -75,6 +79,11 @@ class _UpvcAccessoriesState extends State<UpvcAccessories> {
 
         if (product is List) {
           setState(() {
+            ///  Extract category info (message[0][0])
+            final categoryInfoList = data["message"]["message"][0];
+            if (categoryInfoList is List && categoryInfoList.isNotEmpty) {
+              categoryMeta = Map<String, dynamic>.from(categoryInfoList[0]);
+            }
             productList = product
                 .whereType<Map>()
                 .map((e) => e["product_name_base"]?.toString())
@@ -280,12 +289,19 @@ class _UpvcAccessoriesState extends State<UpvcAccessories> {
   Map<String, dynamic>? apiResponseData;
   List<dynamic> responseProducts = [];
 
+  int? newOrderId = GlobalOrderSession().getNewOrderId();
   // 2. MODIFY the postAllData() method - REPLACE the existing method with this:
   Future<void> postAllData() async {
     HttpClient client = HttpClient();
     client.badCertificateCallback =
         ((X509Certificate cert, String host, int port) => true);
     IOClient ioClient = IOClient(client);
+
+    // From saved categoryMeta
+    final categoryId = categoryMeta?["category_id"];
+    final categoryName = categoryMeta?["categories"];
+    print("this os $categoryId");
+    print("this os $categoryName");
     final headers = {"Content-Type": "application/json"};
     final data = {
       "customer_id": UserSession().userId,
@@ -293,8 +309,9 @@ class _UpvcAccessoriesState extends State<UpvcAccessories> {
       "product_name": null,
       "product_base_id": selectedProductBaseId,
       "product_base_name": "$selectedBaseProductName",
-      "category_id": 15,
-      "category_name": "UPVC Accessories",
+      "category_id": categoryId,
+      "category_name": categoryName,
+      "OrderID": newOrderId
     };
 
     print("This is a body data: $data");
@@ -314,23 +331,40 @@ class _UpvcAccessoriesState extends State<UpvcAccessories> {
           selectedSize == null) return;
 
       if (response.statusCode == 200) {
-        // NEW CODE: Parse and store the API response
         final responseData = jsonDecode(response.body);
         setState(() {
+          final String orderID = responseData["order_id"]?.toString() ?? "";
+          orderIDD = int.tryParse(orderID);
+          orderNO = responseData["order_no"]?.toString() ?? "Unknown";
           apiResponseData = responseData;
+
+          // Safely handle the response data
           if (responseData['lebels'] != null &&
               responseData['lebels'].isNotEmpty) {
-            responseProducts = responseData['lebels'][0]['data'] ?? [];
+            List<dynamic> fullList = responseData["lebels"][0]["data"];
+            List<Map<String, dynamic>> newProducts = [];
+
+            for (var item in fullList) {
+              if (item is Map<String, dynamic>) {
+                Map<String, dynamic> product = Map<String, dynamic>.from(item);
+
+                // Prevent duplicates using product["id"]
+                String productId = product["id"].toString();
+                bool alreadyExists = responseProducts
+                    .any((existing) => existing["id"].toString() == productId);
+
+                if (!alreadyExists) {
+                  newProducts.add(product);
+                  debugPrint(
+                      "Product added: ${product["id"]} - ${product["Products"]}");
+                }
+              }
+            }
+
+            // Append only non-duplicate products
+            responseProducts.addAll(newProducts);
           }
         });
-
-        Get.snackbar(
-          "Data Added",
-          "Successfully",
-          colorText: Colors.white,
-          backgroundColor: Colors.green,
-          snackPosition: SnackPosition.BOTTOM,
-        );
       }
     } catch (e) {
       throw Exception("Error posting data: $e");
@@ -366,7 +400,7 @@ class _UpvcAccessoriesState extends State<UpvcAccessories> {
   //
   //   try {
   //     final response = await ioClient.post(
-  //       Uri.parse("https://demo.zaron.in:8181/ci4/api/baseproducts_search"),
+  //       Uri.parse("$apiUrl/api/baseproducts_search"),
   //       headers: headers,
   //       body: jsonEncode(data),
   //     );
@@ -932,6 +966,8 @@ class _UpvcAccessoriesState extends State<UpvcAccessories> {
 
         if (responseData["status"] == "success") {
           setState(() {
+            billamt = responseData["bill_total"] ?? 0;
+            print("billamt updated to: $billamt");
             // Update fields based on API response
             // if (responseData["Length"] != null) {
             //   data["Length"] = responseData["Length"].toString();
@@ -1007,6 +1043,7 @@ class _UpvcAccessoriesState extends State<UpvcAccessories> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                          SizedBox(width: 10),
                           Text(
                             "Add New Product",
                             style: GoogleFonts.poppins(
@@ -1078,9 +1115,7 @@ class _UpvcAccessoriesState extends State<UpvcAccessories> {
                             label: "Size",
                             icon: Icons.format_size_sharp,
                           ),
-                          // SizedBox(height: 24),
-                          // _buildBaseProductSearchField(),
-                          SizedBox(height: 16),
+                          SizedBox(height: 24),
                           Container(
                             padding: EdgeInsets.all(16),
                             decoration: BoxDecoration(
@@ -1155,28 +1190,172 @@ class _UpvcAccessoriesState extends State<UpvcAccessories> {
                 ),
                 if (responseProducts.isNotEmpty) ...[
                   SizedBox(height: 24),
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 4),
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.shopping_bag_outlined,
-                          color: Colors.grey.shade700,
-                        ),
-                        SizedBox(width: 8),
-                        Text(
-                          "Added Products",
-                          style: GoogleFonts.poppins(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.grey.shade800,
-                          ),
+                  Container(
+                    padding: EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          Colors.deepPurple.shade100,
+                          Colors.blue.shade50
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: Colors.deepPurple.shade100),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 10,
+                          offset: Offset(0, 4),
                         ),
                       ],
                     ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Container(
+                              padding: EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color:
+                                    Colors.deepPurple.shade100.withOpacity(0.5),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Icon(
+                                Icons.shopping_bag_outlined,
+                                color: Colors.deepPurple.shade700,
+                                size: 20,
+                              ),
+                            ),
+                            SizedBox(width: 12),
+                            Text(
+                              "Added Products",
+                              style: GoogleFonts.poppins(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.deepPurple,
+                              ),
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: 16),
+                        Container(
+                          padding:
+                              EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: Colors.white60,
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(color: Colors.grey.shade200),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  MyText(
+                                    text: "UPVC Accessories",
+                                    weight: FontWeight.w600,
+                                    color: Colors.grey.shade700,
+                                  ),
+                                  Container(
+                                    padding: EdgeInsets.symmetric(
+                                        horizontal: 10, vertical: 4),
+                                    decoration: BoxDecoration(
+                                      color: Colors.blue.shade50,
+                                      borderRadius: BorderRadius.circular(20),
+                                      border: Border.all(
+                                          color: Colors.blue.shade200),
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(
+                                          Icons.receipt_outlined,
+                                          size: 14,
+                                          color: Colors.blue.shade700,
+                                        ),
+                                        SizedBox(width: 4),
+                                        Text(
+                                          "ID: $orderNO",
+                                          style: GoogleFonts.figtree(
+                                            fontSize: 13,
+                                            fontWeight: FontWeight.w600,
+                                            color: Colors.blue.shade700,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                        SizedBox(height: 16),
+                        Container(
+                          margin: EdgeInsets.symmetric(vertical: 4),
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                Colors.deepPurple.shade500,
+                                Colors.deepPurple.shade200
+                              ],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.blue.withOpacity(0.3),
+                                blurRadius: 8,
+                                offset: Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: Padding(
+                            padding: EdgeInsets.all(10),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  flex: 3,
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        "TOTAL AMOUNT",
+                                        style: TextStyle(
+                                          color: Colors.white70,
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w500,
+                                          letterSpacing: 0.5,
+                                        ),
+                                      ),
+                                      SizedBox(height: 4),
+                                      Text(
+                                        "₹${billamt ?? 0}",
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 20,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        _buildSubmittedDataList(),
+                      ],
+                    ),
                   ),
-                  SizedBox(height: 12),
-                  _buildSubmittedDataList(),
                 ],
               ],
             ),

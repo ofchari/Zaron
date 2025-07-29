@@ -11,9 +11,10 @@ import 'package:http/io_client.dart';
 import 'package:zaron/view/universal_api/api&key.dart';
 import 'package:zaron/view/widgets/subhead.dart';
 
-import '../../widgets/text.dart';
-import '../camera_upload/acessories_uploads/accessories_attahment.dart';
-import '../global_user/global_user.dart';
+import '../../../widgets/text.dart';
+import '../../camera_upload/acessories_uploads/accessories_attahment.dart';
+import '../../global_user/global_oredrID.dart';
+import '../../global_user/global_user.dart';
 
 class Accessories extends StatefulWidget {
   const Accessories({super.key, required this.data});
@@ -25,6 +26,7 @@ class Accessories extends StatefulWidget {
 }
 
 class _AccessoriesState extends State<Accessories> {
+  int? billamt;
   late TextEditingController editController;
   int? orderIDD;
   String? selectedAccessories;
@@ -38,6 +40,8 @@ class _AccessoriesState extends State<Accessories> {
   List<String> colorandList = [];
   List<String> thickAndList = [];
   List<String> coatingAndList = [];
+  Map<String, dynamic>? categoryMeta;
+  List<dynamic> rawAccessoriesData = []; // Add this line at class level
   List<Map<String, dynamic>> submittedData = [];
   Map<String, dynamic>? apiResponseData;
   List<dynamic> responseProducts = [];
@@ -102,9 +106,16 @@ class _AccessoriesState extends State<Accessories> {
         final accessories = data["message"]["message"][1];
         debugPrint("Accessories:::$accessories");
         debugPrint(response.body, wrapWidth: 1024);
+        rawAccessoriesData = accessories;
 
         if (accessories is List) {
           setState(() {
+            ///  Extract category info (message[0][0])
+            final categoryInfoList = data["message"]["message"][0];
+            if (categoryInfoList is List && categoryInfoList.isNotEmpty) {
+              categoryMeta = Map<String, dynamic>.from(categoryInfoList[0]);
+            }
+
             accessoriesList = accessories
                 .whereType<Map>()
                 .map((e) => e["accessories_name"]?.toString())
@@ -114,7 +125,7 @@ class _AccessoriesState extends State<Accessories> {
         }
       }
     } catch (e) {
-      print("Exception fetching accessories: $e");
+      print("Exception fetching accessories:$e");
     }
   }
 
@@ -320,100 +331,7 @@ class _AccessoriesState extends State<Accessories> {
     }
   }
 
-  // Future<void> postAllData() async {
-  //   if (selectedAccessories == null ||
-  //       selectedBrands == null ||
-  //       selectedColors == null ||
-  //       selectedThickness == null ||
-  //       selectedCoatingMass == null) {
-  //     return;
-  //   }
-  //
-  //   final client = IOClient(
-  //     HttpClient()..badCertificateCallback = (_, __, ___) => true,
-  //   );
-  //   final url = Uri.parse('$apiUrl/addbag');
-  //   final headers = {'Content-Type': 'application/json'};
-  //   final data = {
-  //     "customer_id": UserSession().userId,
-  //     "product_id": 1,
-  //     "product_name": selectedAccessories,
-  //     "product_base_id": null,
-  //     "product_base_name":
-  //         "$selectedBrands,$selectedColors,$selectedThickness,$selectedCoatingMass,",
-  //     "category_id": 1,
-  //     "category_name": "accessories_name",
-  //     "OrderID": (orderIDD != null) ? orderIDD : null
-  //   };
-  //
-  //   try {
-  //     final response = await client.post(
-  //       url,
-  //       headers: headers,
-  //       body: jsonEncode(data),
-  //     );
-  //
-  //     debugPrint("This is a response: ${response.body}");
-  //
-  //     if (response.statusCode == 200) {
-  //       final responseData = jsonDecode(response.body);
-  //
-  //       setState(() {
-  //         final String orderID = responseData["order_id"].toString();
-  //         print("Order IDDDD: $orderID");
-  //         orderIDD = int.parse(orderID);
-  //         apiResponseData = responseData;
-  //         currentMainProductId = responseData["product_id"]?.toString();
-  //         debugPrint("Stored main product_id: $currentMainProductId");
-  //
-  //         if (responseData["lebels"] != null &&
-  //             responseData["lebels"].isNotEmpty) {
-  //           String categoryName = responseData["category_name"] ?? "";
-  //           categoryyName = categoryName.isEmpty ? "Accessories" : categoryName;
-  //           String orderNos = responseData["order_no"]?.toString() ?? "Unknown";
-  //           orderNoo = orderNos.isEmpty ? "Unknown" : orderNos;
-  //           debugPrint("Order No xxxxxx : $orderNos");
-  //           debugPrint("Category: $categoryName");
-  //           // Safely handle the response data
-  //           List<dynamic> newProducts = [];
-  //           if (responseData["lebels"][0]["data"] is List) {
-  //             newProducts = List<Map<String, dynamic>>.from(
-  //                 responseData["lebels"][0]["data"].map((item) =>
-  //                     item is Map ? Map<String, dynamic>.from(item) : {}));
-  //           }
-  //           responseProducts.addAll(newProducts);
-  //
-  //           // Save each new product to Hive
-  //           for (var product in newProducts) {
-  //             if (product is Map<String, dynamic>) {
-  //               if (product["UOM"] != null &&
-  //                   product["UOM"]["options"] != null) {
-  //                 uomOptions[product["id"].toString()] =
-  //                     Map<String, String>.from(
-  //                   (product["UOM"]["options"] as Map).map(
-  //                     (key, value) =>
-  //                         MapEntry(key.toString(), value.toString()),
-  //                   ),
-  //                 );
-  //               }
-  //               debugPrint(
-  //                   "Product added: ${product["id"]} - ${product["Products"]}");
-  //             }
-  //           }
-  //         }
-  //       });
-  //     } else {
-  //       debugPrint("Error response: ${response.statusCode} - ${response.body}");
-  //       throw Exception("Server returned ${response.statusCode}");
-  //     }
-  //   } catch (e) {
-  //     debugPrint("Exception in postAllData: $e");
-  //     ScaffoldMessenger.of(context).showSnackBar(
-  //       SnackBar(content: Text("Error adding product: $e")),
-  //     );
-  //     throw Exception("Error posting data: $e");
-  //   }
-  // }
+  int? newOrderId = GlobalOrderSession().getNewOrderId();
 
   Future<void> postAllData() async {
     if (selectedAccessories == null ||
@@ -428,20 +346,39 @@ class _AccessoriesState extends State<Accessories> {
       HttpClient()..badCertificateCallback = (_, __, ___) => true,
     );
 
+    // Find the matching item from rawAccessoriesData
+    final matchingAccessory = rawAccessoriesData.firstWhere(
+      (item) => item["accessories_name"] == selectedAccessories,
+      orElse: () => null,
+    );
+
+    // Extract values
+    final accessoryID = matchingAccessory?["id"];
+    final accessoryName = matchingAccessory?["accessories_name"];
+    print("this os $accessoryID");
+    print("this os $accessoryName");
+
+    // From saved categoryMeta
+    final categoryId = categoryMeta?["category_id"];
+    final categoryName = categoryMeta?["categories"];
+    print("this os $categoryId");
+    print("this os $categoryName");
+
     final url = Uri.parse('$apiUrl/addbag');
     final headers = {'Content-Type': 'application/json'};
 
     final data = {
       "customer_id": UserSession().userId,
-      "product_id": 1,
+      "product_id": accessoryID,
       "product_name": selectedAccessories,
       "product_base_id": null,
       "product_base_name":
           "$selectedBrands,$selectedColors,$selectedThickness,$selectedCoatingMass,",
-      "category_id": 1,
-      "category_name": "accessories_name",
-      "OrderID": (orderIDD != null) ? orderIDD : null
+      "category_id": categoryId,
+      "category_name": categoryName,
+      "OrderID": newOrderId
     };
+    print("this is a body feed data$data");
 
     try {
       final response = await client.post(
@@ -449,12 +386,10 @@ class _AccessoriesState extends State<Accessories> {
         headers: headers,
         body: jsonEncode(data),
       );
-
       debugPrint("This is a response: ${response.body}");
-
       if (response.statusCode == 200) {
+        print("this is a body feeded data$data");
         final responseData = jsonDecode(response.body);
-
         setState(() {
           final String orderID = responseData["order_id"].toString();
           print("Order IDDDD: $orderID");
@@ -468,11 +403,9 @@ class _AccessoriesState extends State<Accessories> {
               responseData["lebels"].isNotEmpty) {
             String categoryName = responseData["category_name"] ?? "";
             categoryyName = categoryName.isEmpty ? "Accessories" : categoryName;
-
             String orderNos = responseData["order_no"]?.toString() ?? "Unknown";
             orderNoo = orderNos.isEmpty ? "Unknown" : orderNos;
-
-            debugPrint("Order No xxxxxx : $orderNos");
+            debugPrint("Order No : $orderNos");
             debugPrint("Category: $categoryName");
 
             // Safely handle the response data
@@ -483,7 +416,7 @@ class _AccessoriesState extends State<Accessories> {
               if (item is Map<String, dynamic>) {
                 Map<String, dynamic> product = Map<String, dynamic>.from(item);
 
-                // ✅ Prevent duplicates
+                // Prevent duplicates
                 String productId = product["id"].toString();
                 bool alreadyExists = responseProducts
                     .any((existing) => existing["id"].toString() == productId);
@@ -509,7 +442,7 @@ class _AccessoriesState extends State<Accessories> {
               }
             }
 
-            // ✅ Add only new (non-duplicate) products
+            //Add only new (non-duplicate) products
             responseProducts.addAll(newProducts);
           }
         });
@@ -579,7 +512,7 @@ class _AccessoriesState extends State<Accessories> {
   Widget _buildBaseProductSearchField(Map<String, dynamic> data) {
     String productId = data["id"].toString();
 
-    // Create a unique controller for this product if it doesn't exist
+// Create a unique controller for this product if it doesn't exist
     if (!baseProductControllers.containsKey(productId)) {
       baseProductControllers[productId] = TextEditingController();
       baseProductFocusNodes[productId] = FocusNode();
@@ -805,7 +738,7 @@ class _AccessoriesState extends State<Accessories> {
 
     try {
       final response = await ioClient.post(
-        Uri.parse("https://demo.zaron.in:8181/ci4/api/baseproduct_update"),
+        Uri.parse("$apiUrl/api/baseproduct_update"),
         headers: headers,
         body: jsonEncode(data),
       );
@@ -852,12 +785,13 @@ class _AccessoriesState extends State<Accessories> {
 
 // Method to call when user wants to update the selected base product
   void updateSelectedBaseProduct(String productId) {
-    if (selectedBaseProduct != null && selectedBaseProduct!.isNotEmpty) {
+    if (selectedBaseProducts[productId] != null &&
+        selectedBaseProducts[productId]!.isNotEmpty) {
       setState(() {
         isBaseProductUpdated = true;
-        baseProductController.clear();
+// baseProductController.clear();
       });
-      updateBaseProduct(productId, selectedBaseProduct!);
+      updateBaseProduct(productId, selectedBaseProducts[productId]!);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -957,69 +891,158 @@ class _AccessoriesState extends State<Accessories> {
 
     return Column(
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            Container(
-              decoration: BoxDecoration(
-                color: Colors.grey[100],
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        isGridView = true;
-                      });
-                    },
-                    child: Container(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 8,
-                      ),
-                      decoration: BoxDecoration(
-                        color: isGridView ? Colors.blue : Colors.transparent,
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Icon(
-                        Icons.grid_view,
-                        color: isGridView ? Colors.white : Colors.grey[600],
-                        size: 20,
-                      ),
-                    ),
-                  ),
-                  SizedBox(width: 4),
-                  GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        isGridView = false;
-                      });
-                    },
-                    child: Container(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 8,
-                      ),
-                      decoration: BoxDecoration(
-                        color: !isGridView ? Colors.blue : Colors.transparent,
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Icon(
-                        Icons.list,
-                        color: !isGridView ? Colors.white : Colors.grey[600],
-                        size: 20,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+        Container(
+          margin: EdgeInsets.symmetric(vertical: 4),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Colors.deepPurple.shade500, Colors.deepPurple.shade200],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
             ),
-          ],
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.blue.withOpacity(0.3),
+                blurRadius: 8,
+                offset: Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Padding(
+            padding: EdgeInsets.all(10),
+            child: Row(
+              children: [
+                // Total Amount Section - Fixed width to prevent overflow
+                Expanded(
+                  flex: 3,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "TOTAL AMOUNT",
+                        style: TextStyle(
+                          color: Colors.white70,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                      SizedBox(height: 4),
+                      Text(
+                        "₹${billamt ?? 0}",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+
+                SizedBox(width: 12),
+
+// View Toggle Section - Fixed width
+                Expanded(
+                  flex: 2,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: Colors.white.withOpacity(0.2),
+                        width: 1,
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                isGridView = true;
+                              });
+                            },
+                            child: AnimatedContainer(
+                              duration: Duration(milliseconds: 200),
+                              padding: EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 10,
+                              ),
+                              decoration: BoxDecoration(
+                                color: isGridView
+                                    ? Colors.white.withOpacity(0.25)
+                                    : Colors.transparent,
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Icon(
+                                Icons.grid_view_rounded,
+                                color:
+                                    isGridView ? Colors.white : Colors.white70,
+                                size: 18,
+                              ),
+                            ),
+                          ),
+                        ),
+                        SizedBox(width: 2),
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                isGridView = false;
+                              });
+                            },
+                            child: AnimatedContainer(
+                              duration: Duration(milliseconds: 500),
+                              padding: EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 10,
+                              ),
+                              decoration: BoxDecoration(
+                                color: !isGridView
+                                    ? Colors.white.withOpacity(0.25)
+                                    : Colors.transparent,
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Icon(
+                                Icons.view_list_rounded,
+                                color:
+                                    !isGridView ? Colors.white : Colors.white70,
+                                size: 18,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
+
         SizedBox(height: 16),
-        isGridView ? _buildGridView() : _buildListView(),
+
+// Content with smooth transition
+        AnimatedSwitcher(
+          duration: Duration(milliseconds: 300),
+          transitionBuilder: (Widget child, Animation<double> animation) {
+            return FadeTransition(
+              opacity: animation,
+              child: SlideTransition(
+                position: Tween<Offset>(
+                  begin: Offset(0.0, 0.1),
+                  end: Offset.zero,
+                ).animate(animation),
+                child: child,
+              ),
+            );
+          },
+          child: isGridView ? _buildGridView() : _buildListView(),
+        ),
       ],
     );
   }
@@ -1048,7 +1071,7 @@ class _AccessoriesState extends State<Accessories> {
                   children: [
                     Expanded(
                       child: Container(
-                        // color: Colors.red,
+// color: Colors.red,
                         height: 65.h,
                         width: 200.w,
                         child: Column(
@@ -1056,7 +1079,7 @@ class _AccessoriesState extends State<Accessories> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              "${index + 1}.  ${data["Products"]}" ?? "",
+                              "${index + 1}.  ${data["Products"] ?? ""}",
                               overflow: TextOverflow.ellipsis,
                               style: GoogleFonts.figtree(
                                 fontSize: 18,
@@ -1076,7 +1099,7 @@ class _AccessoriesState extends State<Accessories> {
                           vertical: 14,
                         ),
                         decoration: BoxDecoration(
-                          // color: Colors.deepPurple[50],
+// color: Colors.deepPurple[50],
                           color: Colors.blue[50],
                           borderRadius: BorderRadius.circular(10),
                         ),
@@ -1205,7 +1228,7 @@ class _AccessoriesState extends State<Accessories> {
                     Expanded(
                       flex: 3,
                       child: Text(
-                        "${index + 1}. ${data["Products"]}" ?? "",
+                        "${index + 1}. ${data["Products"] ?? ""}",
                         style: GoogleFonts.figtree(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
@@ -1505,7 +1528,10 @@ class _AccessoriesState extends State<Accessories> {
     return SizedBox(
       height: 38.h,
       child: TextField(
-        readOnly: (key == "Basic Rate" || key == "Amount" || key == "R.Ft")
+        readOnly: (key == "Basic Rate" ||
+                key == "Amount" ||
+                key == "R.Ft" ||
+                key == "bill_total")
             ? true
             : false,
         style: GoogleFonts.figtree(
@@ -1523,9 +1549,9 @@ class _AccessoriesState extends State<Accessories> {
             : TextInputType.numberWithOptions(decimal: true),
         onChanged: (val) {
           setState(() {
-            // Only update the data if the value is not empty
+// Only update the data if the value is not empty
             if (val.trim().isNotEmpty) {
-              // Convert to double and check if it's not zero
+// Convert to double and check if it's not zero
               final numVal = double.tryParse(val);
               if (numVal != null && numVal != 0) {
                 data[key] = val;
@@ -1533,13 +1559,16 @@ class _AccessoriesState extends State<Accessories> {
                 print("Controller text: ${controller.text}");
                 print("Data after change: ${data[key]}");
 
-                if (key == "Profile" || key == "Nos" || key == "Basic Rate") {
+                if (key == "Profile" ||
+                    key == "Nos" ||
+                    key == "Basic Rate" ||
+                    key == "bill_total") {
                   print("Triggering calculation for $key with value: $val");
                   _debounceCalculation(data);
                 }
               }
             } else {
-              // Remove the key from data if value is empty
+// Remove the key from data if value is empty
               data.remove(key);
               print("Removed empty field $key from data");
             }
@@ -1618,7 +1647,7 @@ class _AccessoriesState extends State<Accessories> {
             ),
           ],
         ),
-        Gap(5.h),
+        Gap(5),
       ],
     );
   }
@@ -1740,12 +1769,14 @@ class _AccessoriesState extends State<Accessories> {
       );
 
       print("Response Status: ${response.statusCode}");
-      print("Response Body: ${response.body}");
+      print("Response Bodyyyy: ${response.body}");
 
       if (response.statusCode == 200) {
         final responseData = jsonDecode(response.body);
         if (responseData["status"] == "success") {
           setState(() {
+            billamt = responseData["bill_total"] ?? 0;
+            print("billamt updated to: $billamt");
             calculationResults[productId] = responseData;
             if (responseData["Length"] != null) {
               data["Profile"] = responseData["Length"].toString();
@@ -1773,6 +1804,13 @@ class _AccessoriesState extends State<Accessories> {
               if (fieldControllers[productId]?["R.Ft"] != null) {
                 fieldControllers[productId]!["R.Ft"]!.text =
                     responseData["R.Ft"].toString();
+              }
+            }
+            if (responseData["bill_total"] != null) {
+              data["bill_total"] = responseData["bill_total"].toString();
+              if (fieldControllers[productId]?["bill_total"] != null) {
+                fieldControllers[productId]!["bill_total"]!.text =
+                    responseData["bill_total"].toString();
               }
             }
             if (responseData["Amount"] != null) {
@@ -2181,7 +2219,7 @@ class _AccessoriesState extends State<Accessories> {
                             ],
                           ),
                         ),
-                        SizedBox(height: 16),
+                        SizedBox(height: 15),
                         _buildSubmittedDataList(),
                       ],
                     ),

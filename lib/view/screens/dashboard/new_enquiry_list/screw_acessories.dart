@@ -8,7 +8,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:http/io_client.dart';
 import 'package:zaron/view/widgets/subhead.dart';
 
-import '../../universal_api/api&key.dart';
+import '../../../universal_api/api&key.dart';
 
 class ScrewAccessories extends StatefulWidget {
   const ScrewAccessories({super.key, required this.data});
@@ -21,7 +21,8 @@ class ScrewAccessories extends StatefulWidget {
 
 class _ScrewAccessoriesState extends State<ScrewAccessories> {
   late TextEditingController editController;
-
+  int? orderIDD;
+  String? orderNO;
   String? selectedProduct;
   String? selectedColor;
   String? selsectedBrand;
@@ -220,6 +221,7 @@ class _ScrewAccessoriesState extends State<ScrewAccessories> {
       "product_base_name": "$selectedBaseProductName",
       "category_id": 9,
       "category_name": "Screw accessories",
+      "OrderID": (orderIDD != null) ? orderIDD : null
     };
 
     print("User input Data $data");
@@ -238,6 +240,9 @@ class _ScrewAccessoriesState extends State<ScrewAccessories> {
       if (response.statusCode == 200) {
         final jsonResponse = jsonDecode(response.body);
         setState(() {
+          final String orderID = jsonResponse["order_id"]?.toString() ?? "";
+          orderIDD = int.tryParse(orderID);
+          orderNO = jsonResponse["order_no"]?.toString() ?? "Unknown";
           apiResponse = jsonResponse;
           // Extract the data from first category
           if (jsonResponse['lebels'] != null &&
@@ -303,7 +308,7 @@ class _ScrewAccessoriesState extends State<ScrewAccessories> {
   //
   //   try {
   //     final response = await ioClient.post(
-  //       Uri.parse("https://demo.zaron.in:8181/ci4/api/baseproducts_search"),
+  //       Uri.parse("$apiUrl/api/baseproducts_search"),
   //       headers: headers,
   //       body: jsonEncode(data),
   //     );

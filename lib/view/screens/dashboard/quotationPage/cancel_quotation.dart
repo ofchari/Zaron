@@ -7,16 +7,16 @@ import 'package:http/http.dart' as http;
 import 'package:zaron/view/screens/global_user/global_user.dart';
 import 'package:zaron/view/widgets/subhead.dart';
 
-import '../universal_api/api&key.dart';
+import '../../../universal_api/api&key.dart';
 
-class CancelEnquiry extends StatefulWidget {
-  const CancelEnquiry({super.key});
+class CancelQuotation extends StatefulWidget {
+  const CancelQuotation({super.key});
 
   @override
-  State<CancelEnquiry> createState() => _CancelEnquiryPageState();
+  State<CancelQuotation> createState() => _CancelQuotationPageState();
 }
 
-class _CancelEnquiryPageState extends State<CancelEnquiry> {
+class _CancelQuotationPageState extends State<CancelQuotation> {
   List<Map<String, dynamic>> tableData = [];
   List<Map<String, dynamic>> filteredData = [];
   bool isLoading = true;
@@ -45,7 +45,7 @@ class _CancelEnquiryPageState extends State<CancelEnquiry> {
   Future<void> fetchEnquiryData() async {
     setState(() => isLoading = true);
 
-    final String url = '$apiUrl/cancelledenquiry/${UserSession().userId}';
+    final String url = '$apiUrl/cancelledquotation/${UserSession().userId}';
 
     try {
       final response = await http.get(Uri.parse(url));
@@ -54,21 +54,19 @@ class _CancelEnquiryPageState extends State<CancelEnquiry> {
         final jsonData = jsonDecode(response.body);
 
         if (jsonData is Map<String, dynamic> &&
-            jsonData.containsKey("cancelled_enquiry")) {
-          final List<dynamic> enquiryList = jsonData["cancelled_enquiry"];
+            jsonData.containsKey("cancelled_quotation")) {
+          final List<dynamic> enquiryList = jsonData["cancelled_quotation"];
 
           final List<Map<String, dynamic>> processedData = enquiryList
               .whereType<Map<String, dynamic>>()
-              .map(
-                (item) => {
-                  // 'no': (enquiryList.indexOf(item) + 1).toString(),
-                  'id': item['id'] ?? '',
-                  'order_no': item['order_no'] ?? '',
-                  'bill_total': item['bill_total'] ?? '',
-                  'create_date': item['create_date'] ?? '',
-                  'create_time': item['create_time'] ?? '',
-                },
-              )
+              .map((item) => {
+                    // 'no': (enquiryList.indexOf(item) + 1).toString(),
+                    'id': item['id'] ?? '',
+                    'order_no': item['order_no'] ?? '',
+                    'bill_total': item['bill_total'] ?? '',
+                    'create_date': item['create_date'] ?? '',
+                    'create_time': item['create_time'] ?? '',
+                  })
               .toList();
 
           setState(() {
@@ -83,8 +81,7 @@ class _CancelEnquiryPageState extends State<CancelEnquiry> {
         throw Exception("Invalid API response format");
       } else {
         throw Exception(
-          'API Error: ${response.statusCode} - ${response.reasonPhrase}',
-        );
+            'API Error: ${response.statusCode} - ${response.reasonPhrase}');
       }
     } catch (e) {
       print('❌ Error fetching enquiry data: $e');
@@ -101,11 +98,8 @@ class _CancelEnquiryPageState extends State<CancelEnquiry> {
     } else {
       setState(() {
         filteredData = tableData
-            .where(
-              (row) => (row['order_no'] ?? '').toLowerCase().contains(
-                    searchQuery,
-                  ),
-            )
+            .where((row) =>
+                (row['order_no'] ?? '').toLowerCase().contains(searchQuery))
             .toList();
       });
     }
@@ -119,10 +113,9 @@ class _CancelEnquiryPageState extends State<CancelEnquiry> {
         centerTitle: true,
         backgroundColor: Colors.white,
         title: Subhead(
-          text: "Cancelled Enquiry",
-          weight: FontWeight.w500,
-          color: Colors.black,
-        ),
+            text: "Cancelled Quotation",
+            weight: FontWeight.w500,
+            color: Colors.black),
       ),
       body: Column(
         children: [
@@ -132,10 +125,8 @@ class _CancelEnquiryPageState extends State<CancelEnquiry> {
             child: TextField(
               controller: enquiryNoController,
               decoration: InputDecoration(
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 16,
-                ),
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
                 labelText: 'Search..',
                 labelStyle: GoogleFonts.outfit(
                   textStyle: TextStyle(
@@ -165,7 +156,6 @@ class _CancelEnquiryPageState extends State<CancelEnquiry> {
               ),
             ),
           ),
-
           // Table
           isLoading
               ? Expanded(child: Center(child: CircularProgressIndicator()))
@@ -180,9 +170,7 @@ class _CancelEnquiryPageState extends State<CancelEnquiry> {
                           padding: const EdgeInsets.all(8.0),
                           child: DataTable(
                             border: TableBorder.all(
-                              color: Colors.purple,
-                              width: 0.5,
-                            ),
+                                color: Colors.purple, width: 0.5),
                             dataRowHeight: 60,
                             columnSpacing: 40,
                             headingRowHeight: 56,
@@ -262,13 +250,13 @@ class _CancelEnquiryPageState extends State<CancelEnquiry> {
                             ],
                             rows: filteredData.asMap().entries.map((entry) {
                               return DataRow(
-                                color: WidgetStateProperty.resolveWith<Color?>((
-                                  Set<WidgetState> states,
-                                ) {
-                                  return entry.key % 2 == 0
-                                      ? Colors.white
-                                      : Colors.grey.shade200;
-                                }),
+                                color: WidgetStateProperty.resolveWith<Color?>(
+                                  (Set<WidgetState> states) {
+                                    return entry.key % 2 == 0
+                                        ? Colors.white
+                                        : Colors.grey.shade200;
+                                  },
+                                ),
                                 cells: [
                                   DataCell(
                                     Text(

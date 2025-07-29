@@ -10,7 +10,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:http/io_client.dart';
 import 'package:zaron/view/widgets/subhead.dart';
 
-import '../../universal_api/api&key.dart';
+import '../../../universal_api/api&key.dart';
+import '../../global_user/global_oredrID.dart';
 
 class Polycarbonate extends StatefulWidget {
   const Polycarbonate({super.key, required this.data});
@@ -21,6 +22,10 @@ class Polycarbonate extends StatefulWidget {
 }
 
 class _PolycarbonateState extends State<Polycarbonate> {
+  Map<String, dynamic>? categoryMeta;
+  int? billamt;
+  int? orderIDD;
+  String? orderNO;
   late TextEditingController editController;
 
   String? selectedBrand;
@@ -37,6 +42,10 @@ class _PolycarbonateState extends State<Polycarbonate> {
 
   final _formKey = GlobalKey<FormState>();
 
+  Map<String, dynamic>? apiResponseData;
+  List<dynamic> responseProducts = [];
+  Map<String, Map<String, String>> uomOptions = {};
+
   @override
   void initState() {
     super.initState();
@@ -49,6 +58,12 @@ class _PolycarbonateState extends State<Polycarbonate> {
   @override
   void dispose() {
     editController.dispose();
+    baseProductController.dispose();
+    baseProductFocusNode.dispose();
+    // Dispose controllers in fieldControllers
+    fieldControllers.forEach((_, controllers) {
+      controllers.forEach((_, controller) => controller.dispose());
+    });
     super.dispose();
   }
 
@@ -72,6 +87,11 @@ class _PolycarbonateState extends State<Polycarbonate> {
           final brandsData = message[1];
           if (brandsData is List) {
             setState(() {
+              ///  Extract category info (message[0][0])
+              final categoryInfoList = data["message"]["message"][0];
+              if (categoryInfoList is List && categoryInfoList.isNotEmpty) {
+                categoryMeta = Map<String, dynamic>.from(categoryInfoList[0]);
+              }
               brandsList = brandsData
                   .whereType<Map>()
                   .map((e) => e["type_of_panel"]?.toString() ?? "")
@@ -117,8 +137,7 @@ class _PolycarbonateState extends State<Polycarbonate> {
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         final message = data["message"]["message"];
-        print(response.body);
-        print(response.statusCode);
+        debugPrint("Colors API Response: ${response.body}");
 
         if (message is List && message.length >= 2) {
           final colorData = message[0];
@@ -169,8 +188,7 @@ class _PolycarbonateState extends State<Polycarbonate> {
       if (!mounted) return;
 
       if (response.statusCode == 200) {
-        print(response.body);
-        print(response.statusCode);
+        debugPrint("Thickness API Response: ${response.body}");
         final data = jsonDecode(response.body);
         final message = data["message"]["message"];
 
@@ -193,9 +211,7 @@ class _PolycarbonateState extends State<Polycarbonate> {
             selectedBaseProductName =
                 idData.first["base_product_id"]?.toString();
             debugPrint("Selected Base Product ID: $selectedProductBaseId");
-            debugPrint(
-              "Base Product Name: $selectedBaseProductName",
-            ); // <-- Optional print
+            debugPrint("Base Product Name: $selectedBaseProductName");
           }
         }
       } else {
@@ -228,14 +244,20 @@ class _PolycarbonateState extends State<Polycarbonate> {
     );
   }
 
-  // Add these variables after your existing variables
-  Map<String, dynamic>? apiResponse;
+  int? newOrderId = GlobalOrderSession().getNewOrderId();
 
   Future<void> postPolycarbonateData() async {
+    debugPrint("Posting polycarbonate data...");
     HttpClient client = HttpClient();
     client.badCertificateCallback =
         ((X509Certificate cert, String host, int port) => true);
     IOClient ioClient = IOClient(client);
+
+    // From saved categoryMeta
+    final categoryId = categoryMeta?["category_id"];
+    final categoryName = categoryMeta?["categories"];
+    print("this os $categoryId");
+    print("this os $categoryName");
     final headers = {"Content-Type": "application/json"};
     final data = {
       "customer_id": 377423,
@@ -243,11 +265,12 @@ class _PolycarbonateState extends State<Polycarbonate> {
       "product_name": null,
       "product_base_id": selectedProductBaseId,
       "product_base_name": "$selectedBaseProductName",
-      "category_id": 19,
-      "category_name": "Polycarbonate",
+      "category_id": categoryId,
+      "category_name": categoryName,
+      "OrderID": newOrderId
     };
 
-    print("This is a body data: $data");
+    debugPrint("Request Body: $data");
     final url = "$apiUrl/addbag";
     final body = jsonEncode(data);
     try {
@@ -257,35 +280,65 @@ class _PolycarbonateState extends State<Polycarbonate> {
         body: body,
       );
 
-      debugPrint("This is a response: ${response.body}");
+      debugPrint("API Response Status: ${response.statusCode}");
+      debugPrint("API Response Body: ${response.body}");
+
       if (selectedBrand == null ||
           selectedColor == null ||
-          selectedThickness == null) return;
+          selectedThickness == null) {
+        _showErrorSnackBar("Please select all required fields");
+        return;
+      }
 
       if (response.statusCode == 200) {
-        // Parse and store the API response
         final responseData = jsonDecode(response.body);
         setState(() {
+          final String orderID = responseData["order_id"]?.toString() ?? "";
+          orderIDD = int.tryParse(orderID);
+          orderNO = responseData["order_no"]?.toString() ?? "Unknown";
           apiResponseData = responseData;
+
           if (responseData["lebels"] != null &&
               responseData["lebels"].isNotEmpty) {
-            responseProducts.addAll(responseData["lebels"][0]["data"] ?? []);
+            List<dynamic> fullList = responseData["lebels"][0]["data"];
+            List<Map<String, dynamic>> newProducts = [];
 
-            // Store UOM options for each product
-            for (var product in responseProducts) {
-              if (product["UOM"] != null && product["UOM"]["options"] != null) {
-                uomOptions[product["id"].toString()] = Map<String, String>.from(
-                  product["UOM"]["options"].map(
-                    (key, value) => MapEntry(key.toString(), value.toString()),
-                  ),
-                );
+            for (var item in fullList) {
+              if (item is Map<String, dynamic>) {
+                Map<String, dynamic> product = Map<String, dynamic>.from(item);
+                String productId = product["id"].toString();
+
+                bool alreadyExists = responseProducts
+                    .any((existing) => existing["id"].toString() == productId);
+
+                if (!alreadyExists) {
+                  newProducts.add(product);
+                  debugPrint(
+                      "Product added: ${product["id"]} - ${product["Products"]}");
+
+                  // Add UOM options if available
+                  if (product["UOM"] != null &&
+                      product["UOM"]["options"] != null) {
+                    uomOptions[product["id"].toString()] =
+                        Map<String, String>.from((product["UOM"]["options"]
+                                as Map)
+                            .map((key, value) =>
+                                MapEntry(key.toString(), value.toString())));
+                  }
+                }
               }
             }
+
+            // Add only non-duplicate products
+            responseProducts.addAll(newProducts);
           }
         });
+      } else {
+        _showErrorSnackBar("Failed to add product: ${response.statusCode}");
       }
     } catch (e) {
-      throw Exception("Error posting data: $e");
+      debugPrint("Error posting data: $e");
+      _showErrorSnackBar("Failed to add product. Please try again.");
     }
   }
 
@@ -294,11 +347,6 @@ class _PolycarbonateState extends State<Polycarbonate> {
   bool isSearchingBaseProduct = false;
   String? selectedBaseProduct;
   FocusNode baseProductFocusNode = FocusNode();
-
-  // Add these variables after line 25 (after the existing List declarations)
-  Map<String, dynamic>? apiResponseData;
-  List<dynamic> responseProducts = [];
-  Map<String, Map<String, String>> uomOptions = {};
 
   Widget _buildSubmittedDataList() {
     if (responseProducts.isEmpty) {
@@ -322,7 +370,7 @@ class _PolycarbonateState extends State<Polycarbonate> {
       children: responseProducts.asMap().entries.map((entry) {
         int index = entry.key;
         Map<String, dynamic> data = Map<String, dynamic>.from(entry.value);
-
+        debugPrint("Rendering product: $data");
         return Card(
           margin: EdgeInsets.symmetric(vertical: 10),
           elevation: 2,
@@ -344,7 +392,7 @@ class _PolycarbonateState extends State<Polycarbonate> {
                         height: 40.h,
                         width: 210.w,
                         child: Text(
-                          "  ${index + 1}.  ${data["Products"]}" ?? "",
+                          "  ${index + 1}.  ${data["Products"] ?? "Unknown Product"}",
                           overflow: TextOverflow.ellipsis,
                           style: GoogleFonts.figtree(
                             fontSize: 18,
@@ -356,16 +404,13 @@ class _PolycarbonateState extends State<Polycarbonate> {
                     ),
                   ),
                   Container(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
-                    ),
+                    padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
                       color: Colors.blue[50],
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(
-                      "ID: ${data['id']}",
+                      "ID: ${data['id'] ?? 'N/A'}",
                       style: TextStyle(
                         fontSize: 12,
                         color: Colors.blue[700],
@@ -399,6 +444,8 @@ class _PolycarbonateState extends State<Polycarbonate> {
                                     onPressed: () {
                                       setState(() {
                                         responseProducts.removeAt(index);
+                                        fieldControllers
+                                            .remove(data["id"]?.toString());
                                       });
                                       Navigator.pop(context);
                                     },
@@ -430,6 +477,7 @@ class _PolycarbonateState extends State<Polycarbonate> {
   }
 
   Widget _buildProductDetailInRows(Map<String, dynamic> data) {
+    debugPrint("Product details: $data");
     return Column(
       children: [
         Padding(
@@ -442,9 +490,7 @@ class _PolycarbonateState extends State<Polycarbonate> {
               SizedBox(width: 10),
               Expanded(
                 child: _buildDetailItem(
-                  "Length",
-                  _editableTextField(data, "Profile"),
-                ),
+                    "Length", _editableTextField(data, "Profile")),
               ),
               SizedBox(width: 10),
               Expanded(
@@ -460,23 +506,17 @@ class _PolycarbonateState extends State<Polycarbonate> {
             children: [
               Expanded(
                 child: _buildDetailItem(
-                  "Basic Rate",
-                  _editableTextField(data, "Basic Rate"),
-                ),
+                    "Basic Rate", _editableTextField(data, "Basic Rate")),
               ),
               SizedBox(width: 10),
               Expanded(
                 child: _buildDetailItem(
-                  "SQMtr",
-                  _editableTextField(data, "SQMtr"),
-                ),
+                    "SQMtr", _editableTextField(data, "SQMtr")),
               ),
               SizedBox(width: 10),
               Expanded(
                 child: _buildDetailItem(
-                  "Amount",
-                  _editableTextField(data, "Amount"),
-                ),
+                    "Amount", _editableTextField(data, "Amount")),
               ),
             ],
           ),
@@ -510,9 +550,7 @@ class _PolycarbonateState extends State<Polycarbonate> {
     return SizedBox(
       height: 38.h,
       child: TextField(
-        readOnly: (key == "Basic Rate" || key == "Amount" || key == "SQMtr")
-            ? true
-            : false,
+        readOnly: (key == "Basic Rate" || key == "Amount" || key == "SQMtr"),
         style: GoogleFonts.figtree(
           fontWeight: FontWeight.w500,
           color: Colors.black,
@@ -530,24 +568,21 @@ class _PolycarbonateState extends State<Polycarbonate> {
           setState(() {
             data[key] = val;
           });
-
-          print("Field $key changed to: $val");
-          print("Controller text: ${controller.text}");
-          print("Data after change: ${data[key]}");
+          debugPrint("Field $key changed to: $val");
+          debugPrint("Controller text: ${controller.text}");
+          debugPrint("Data after change: ${data[key]}");
 
           if (key == "Length" ||
               key == "Nos" ||
               key == "Basic Rate" ||
               key == "Profile") {
-            print("Triggering calculation for $key with value: $val");
+            debugPrint("Triggering calculation for $key with value: $val");
             _debounceCalculation(data);
           }
         },
         decoration: InputDecoration(
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 12,
-            vertical: 0,
-          ),
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(6),
             borderSide: BorderSide(color: Colors.grey[300]!),
@@ -590,22 +625,17 @@ class _PolycarbonateState extends State<Polycarbonate> {
       child: DropdownButtonFormField<String>(
         value: currentValue,
         items: options.entries
-            .map(
-              (entry) => DropdownMenuItem(
-                value: entry.key,
-                child: Text(entry.value),
-              ),
-            )
+            .map((entry) => DropdownMenuItem(
+                  value: entry.key,
+                  child: Text(entry.value),
+                ))
             .toList(),
         onChanged: (val) {
           setState(() {
             data["UOM"] = {"value": val, "options": options};
           });
-          print("UOM changed to: $val"); // Debug print
-          print(
-            "Product data: ${data["Products"]}, ID: ${data["id"]}",
-          ); // Debug print
-          // Trigger calculation with debounce
+          debugPrint("UOM changed to: $val");
+          debugPrint("Product data: ${data["Products"]}, ID: ${data["id"]}");
           _debounceCalculation(data);
         },
         decoration: InputDecoration(
@@ -636,14 +666,11 @@ class _PolycarbonateState extends State<Polycarbonate> {
     if (selectedBrand == null ||
         selectedColor == null ||
         selectedThickness == null) {
-      // Show elegant error message
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
           title: Text('Incomplete Form'),
-          content: Text(
-            'Please fill all required fields to add a product.',
-          ),
+          content: Text('Please fill all required fields to add a product.'),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
@@ -694,45 +721,30 @@ class _PolycarbonateState extends State<Polycarbonate> {
 
   Timer? _debounceTimer;
   Map<String, dynamic> calculationResults = {};
-  Map<String, String?> previousUomValues = {}; // Track previous UOM values
-  Map<String, Map<String, TextEditingController>> fieldControllers =
-      {}; // Store controllers
+  Map<String, String?> previousUomValues = {};
+  Map<String, Map<String, TextEditingController>> fieldControllers = {};
 
-  // Method to get or create controller for each field
   TextEditingController _getController(Map<String, dynamic> data, String key) {
     String productId = data["id"].toString();
-
-    // Initialize controllers map for this product ID
     fieldControllers.putIfAbsent(productId, () => {});
-
-    // If controller for this key doesn't exist, create it
     if (!fieldControllers[productId]!.containsKey(key)) {
       String initialValue = (data[key] != null && data[key].toString() != "0")
           ? data[key].toString()
-          : ""; // Avoid initializing with "0"
-
-      fieldControllers[productId]![key] = TextEditingController(
-        text: initialValue,
-      );
-
-      print("Created controller for [$key] with value: '$initialValue'");
+          : "";
+      fieldControllers[productId]![key] =
+          TextEditingController(text: initialValue);
+      debugPrint("Created controller for [$key] with value: '$initialValue'");
     } else {
-      // Existing controller: check if it needs sync from data
       final controller = fieldControllers[productId]![key]!;
-
       final dataValue = data[key]?.toString() ?? "";
-
-      // If the controller is empty but data has a value, sync it
       if (controller.text.isEmpty && dataValue.isNotEmpty && dataValue != "0") {
         controller.text = dataValue;
-        print("Synced controller for [$key] to: '$dataValue'");
+        debugPrint("Synced controller for [$key] to: '$dataValue'");
       }
     }
-
     return fieldControllers[productId]![key]!;
   }
 
-  // Add this method for debounced calculation
   void _debounceCalculation(Map<String, dynamic> data) {
     _debounceTimer?.cancel();
     _debounceTimer = Timer(Duration(seconds: 1), () {
@@ -741,8 +753,8 @@ class _PolycarbonateState extends State<Polycarbonate> {
   }
 
   Future<void> _performCalculation(Map<String, dynamic> data) async {
-    print("=== STARTING CALCULATION API ===");
-    print("Data received: $data");
+    debugPrint("=== STARTING CALCULATION API ===");
+    debugPrint("Data received: $data");
 
     final client = IOClient(
       HttpClient()..badCertificateCallback = (_, __, ___) => true,
@@ -750,8 +762,6 @@ class _PolycarbonateState extends State<Polycarbonate> {
     final url = Uri.parse('$apiUrl/calculation');
 
     String productId = data["id"].toString();
-
-    // Get current UOM value
     String? currentUom;
     if (data["UOM"] is Map) {
       currentUom = data["UOM"]["value"]?.toString();
@@ -759,49 +769,41 @@ class _PolycarbonateState extends State<Polycarbonate> {
       currentUom = data["UOM"]?.toString();
     }
 
-    print("Current UOM: $currentUom");
-    print("Previous UOM: ${previousUomValues[productId]}");
+    debugPrint("Current UOM: $currentUom");
+    debugPrint("Previous UOM: ${previousUomValues[productId]}");
 
-    // Get Profile value from controller
     double? profileValue;
     String? profileText;
-
     if (fieldControllers.containsKey(productId) &&
         fieldControllers[productId]!.containsKey("Profile")) {
       profileText = fieldControllers[productId]!["Profile"]!.text;
-      print("Profile from controller: $profileText");
+      debugPrint("Profile from controller: $profileText");
     }
-
     if (profileText == null || profileText.isEmpty) {
       profileText = data["Profile"]?.toString();
-      print("Profile from data: $profileText");
+      debugPrint("Profile from data: $profileText");
     }
-
     if (profileText != null && profileText.isNotEmpty) {
       profileValue = double.tryParse(profileText);
     }
 
-    // Get Nos value from controller
     int nosValue = 0;
     String? nosText;
-
     if (fieldControllers.containsKey(productId) &&
         fieldControllers[productId]!.containsKey("Nos")) {
       nosText = fieldControllers[productId]!["Nos"]!.text;
-      print("Nos from controller: $nosText");
+      debugPrint("Nos from controller: $nosText");
     }
-
     if (nosText == null || nosText.isEmpty) {
       nosText = data["Nos"]?.toString();
-      print("Nos from data: $nosText");
+      debugPrint("Nos from data: $nosText");
     }
-
     if (nosText != null && nosText.isNotEmpty) {
       nosValue = int.tryParse(nosText) ?? 1;
     }
 
-    print("Final Profile Value: $profileValue");
-    print("Final Nos Value: $nosValue");
+    debugPrint("Final Profile Value: $profileValue");
+    debugPrint("Final Nos Value: $nosValue");
 
     final requestBody = {
       "id": int.tryParse(data["id"].toString()) ?? 0,
@@ -817,7 +819,7 @@ class _PolycarbonateState extends State<Polycarbonate> {
       "basic_rate": double.tryParse(data["Basic Rate"]?.toString() ?? "0") ?? 0,
     };
 
-    print("Request Body: ${jsonEncode(requestBody)}");
+    debugPrint("Request Body: ${jsonEncode(requestBody)}");
 
     try {
       final response = await client.post(
@@ -826,16 +828,16 @@ class _PolycarbonateState extends State<Polycarbonate> {
         body: jsonEncode(requestBody),
       );
 
-      print("Response Status: ${response.statusCode}");
-      print("Response Body: ${response.body}");
+      debugPrint("Response Status: ${response.statusCode}");
+      debugPrint("Response Body: ${response.body}");
 
       if (response.statusCode == 200) {
         final responseData = jsonDecode(response.body);
-
         if (responseData["status"] == "success") {
           setState(() {
+            billamt = responseData["bill_total"] ?? 0;
+            print("billamt updated to: $billamt");
             calculationResults[productId] = responseData;
-
             if (responseData["Length"] != null) {
               data["Profile"] = responseData["Length"].toString();
               if (fieldControllers[productId]?["Profile"] != null) {
@@ -843,30 +845,21 @@ class _PolycarbonateState extends State<Polycarbonate> {
                     responseData["Length"].toString();
               }
             }
-
             if (responseData["Nos"] != null) {
               String newNos = responseData["Nos"].toString().trim();
               String currentInput =
                   fieldControllers[productId]!["Nos"]!.text.trim();
-
               if (currentInput.isEmpty || currentInput == "0") {
                 data["Nos"] = newNos;
                 if (fieldControllers[productId]?["Nos"] != null) {
                   fieldControllers[productId]!["Nos"]!.text = newNos;
                 }
-                print("Nos field updated to: $newNos");
+                debugPrint("Nos field updated to: $newNos");
               } else {
-                print("Nos NOT updated because user input = '$currentInput'");
+                debugPrint(
+                    "Nos NOT updated because user input = '$currentInput'");
               }
             }
-
-            // if (responseData["R.Ft"] != null) {
-            //   data["R.Ft"] = responseData["R.Ft"].toString();
-            //   if (fieldControllers[productId]?["R.Ft"] != null) {
-            //     fieldControllers[productId]!["R.Ft"]!.text =
-            //         responseData["R.Ft"].toString();
-            //   }
-            // }
             if (responseData["sqmtr"] != null) {
               data["SQMtr"] = responseData["sqmtr"].toString();
               if (fieldControllers[productId]?["SQMtr"] != null) {
@@ -874,7 +867,6 @@ class _PolycarbonateState extends State<Polycarbonate> {
                     responseData["sqmtr"].toString();
               }
             }
-
             if (responseData["Amount"] != null) {
               data["Amount"] = responseData["Amount"].toString();
               if (fieldControllers[productId]?["Amount"] != null) {
@@ -882,22 +874,19 @@ class _PolycarbonateState extends State<Polycarbonate> {
                     responseData["Amount"].toString();
               }
             }
-
             previousUomValues[productId] = currentUom;
           });
-
-          print("=== CALCULATION SUCCESS ===");
-          print(
-            "Updated data: Length=${data["Profile"]}, Nos=${data["Nos"]}, R.Ft=${data["R.Ft"]}, Amount=${data["Amount"]}",
-          );
+          debugPrint("=== CALCULATION SUCCESS ===");
+          debugPrint(
+              "Updated data: Length=${data["Profile"]}, Nos=${data["Nos"]}, SQMtr=${data["SQMtr"]}, Amount=${data["Amount"]}");
         } else {
-          print("API returned error status: ${responseData["status"]}");
+          debugPrint("API returned error status: ${responseData["status"]}");
         }
       } else {
-        print("HTTP Error: ${response.statusCode}");
+        debugPrint("HTTP Error: ${response.statusCode}");
       }
     } catch (e) {
-      print("Calculation API Error: $e");
+      debugPrint("Calculation API Error: $e");
     }
   }
 
@@ -959,7 +948,6 @@ class _PolycarbonateState extends State<Polycarbonate> {
               ),
             ),
             constraints: BoxConstraints(maxHeight: 300),
-            // borderRadius: BorderRadius.circular(12),
           ),
         ),
       ),
@@ -980,19 +968,31 @@ class _PolycarbonateState extends State<Polycarbonate> {
         backgroundColor: Colors.white,
       ),
       body: Container(
-        color: Colors.grey[50],
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Colors.white, Colors.grey.shade50],
+          ),
+        ),
         child: Padding(
-          padding: EdgeInsets.all(16),
+          padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
           child: SingleChildScrollView(
             physics: BouncingScrollPhysics(),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Card(
-                  elevation: 2,
-                  color: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 10,
+                        offset: Offset(0, 5),
+                      ),
+                    ],
                   ),
                   child: Padding(
                     padding: EdgeInsets.all(16),
@@ -1013,7 +1013,6 @@ class _PolycarbonateState extends State<Polycarbonate> {
                             (value) {
                               setState(() {
                                 selectedBrand = value;
-                                // Clear dependent fields
                                 selectedColor = null;
                                 selectedThickness = null;
                                 colorsList = [];
@@ -1030,7 +1029,6 @@ class _PolycarbonateState extends State<Polycarbonate> {
                             (value) {
                               setState(() {
                                 selectedColor = value;
-                                // Clear dependent fields
                                 selectedThickness = null;
                                 thicknessList = [];
                               });
@@ -1126,14 +1124,171 @@ class _PolycarbonateState extends State<Polycarbonate> {
                   ),
                 ),
                 SizedBox(height: 24),
-                if (submittedData.isNotEmpty)
-                  Subhead(
-                    text: "   Added Products",
-                    weight: FontWeight.w600,
-                    color: Colors.black,
+                if (responseProducts.isNotEmpty) ...[
+                  SizedBox(height: 24),
+                  Container(
+                    padding: EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          Colors.deepPurple.shade100,
+                          Colors.blue.shade50
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: Colors.deepPurple.shade100),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 10,
+                          offset: Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Container(
+                              padding: EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color:
+                                    Colors.deepPurple.shade100.withOpacity(0.5),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Icon(
+                                Icons.shopping_bag_outlined,
+                                color: Colors.deepPurple.shade700,
+                                size: 20,
+                              ),
+                            ),
+                            SizedBox(width: 12),
+                            Text(
+                              "Added Products",
+                              style: GoogleFonts.poppins(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.deepPurple,
+                              ),
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: 16),
+                        Container(
+                          padding:
+                              EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: Colors.white60,
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(color: Colors.grey.shade200),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                "Decking Sheets",
+                                style: GoogleFonts.poppins(
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.grey.shade700,
+                                ),
+                              ),
+                              Container(
+                                padding: EdgeInsets.symmetric(
+                                    horizontal: 10, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: Colors.blue.shade50,
+                                  borderRadius: BorderRadius.circular(20),
+                                  border:
+                                      Border.all(color: Colors.blue.shade200),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      Icons.receipt_outlined,
+                                      size: 14,
+                                      color: Colors.blue.shade700,
+                                    ),
+                                    SizedBox(width: 4),
+                                    Text(
+                                      "ID: ${orderNO ?? 'N/A'}",
+                                      style: GoogleFonts.figtree(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.blue.shade700,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        SizedBox(height: 16),
+                        Container(
+                          margin: EdgeInsets.symmetric(vertical: 4),
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                Colors.deepPurple.shade500,
+                                Colors.deepPurple.shade200
+                              ],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.blue.withOpacity(0.3),
+                                blurRadius: 8,
+                                offset: Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: Padding(
+                            padding: EdgeInsets.all(10),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  flex: 3,
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        "TOTAL AMOUNT",
+                                        style: TextStyle(
+                                          color: Colors.white70,
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w500,
+                                          letterSpacing: 0.5,
+                                        ),
+                                      ),
+                                      SizedBox(height: 4),
+                                      Text(
+                                        "₹${billamt ?? 0}",
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 20,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        _buildSubmittedDataList(),
+                      ],
+                    ),
                   ),
-                SizedBox(height: 8),
-                _buildSubmittedDataList(),
+                ],
               ],
             ),
           ),

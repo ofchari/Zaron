@@ -8,11 +8,12 @@ import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/io_client.dart';
+import 'package:zaron/view/screens/global_user/global_user.dart';
 
-import '../universal_api/api&key.dart';
-import '../widgets/buttons.dart';
-import '../widgets/subhead.dart';
-import '../widgets/text.dart';
+import '../../../universal_api/api&key.dart';
+import '../../../widgets/buttons.dart';
+import '../../../widgets/subhead.dart';
+import '../../../widgets/text.dart';
 
 class TotalQuoationView extends StatefulWidget {
   const TotalQuoationView({super.key, required this.id});
@@ -62,7 +63,7 @@ class _TotalQuoationViewState extends State<TotalQuoationView> {
           if (categoriesData.isNotEmpty) {
             setState(() {
               categories = categoriesData;
-              // Store labels and data for each category
+// Store labels and data for each category
               for (var category in categories) {
                 final categoryId = category['category_id'].toString();
                 categoryLabels[categoryId] =
@@ -70,7 +71,7 @@ class _TotalQuoationViewState extends State<TotalQuoationView> {
                 categoryData[categoryId] =
                     List<Map<String, dynamic>>.from(category['data'] ?? []);
 
-                // Initialize UOM options from all categories
+// Initialize UOM options from all categories
                 for (var item in category['data'] ?? []) {
                   if (item['UOM'] is Map && item['UOM']['options'] is Map) {
                     uomOptions.addAll(
@@ -330,6 +331,40 @@ class _TotalQuoationViewState extends State<TotalQuoationView> {
     }
   }
 
+  Future<void> postCreateQuotation() async {
+    HttpClient client = HttpClient();
+    client.badCertificateCallback =
+        ((X509Certificate cert, String host, int port) => true);
+    IOClient ioClient = IOClient(client);
+
+    final headers = {"Content-Type": "application/json"};
+    final payload = {
+      "customer_id": UserSession().userId,
+      "order_id": widget.id,
+    };
+    print("User Input Data Fields${payload}");
+
+    final url = "https://demo.zaron.in:8181/ci3app/api/createquotation";
+    final body = json.encode(payload);
+
+    try {
+      final response =
+          await http.post(Uri.parse(url), headers: headers, body: body);
+      print("This is the status code${response.statusCode}");
+      if (response.statusCode == 200) {
+        print("this is a post Data response : ${response.body}");
+        Get.snackbar(
+          "Success Create Quotation",
+          "Data Added Successfully",
+          colorText: Colors.white,
+          backgroundColor: Colors.green,
+        );
+      }
+    } catch (e) {
+      throw Exception("Error posting data: $e");
+    }
+  }
+
   @override
   void dispose() {
     remarkController.dispose();
@@ -536,6 +571,19 @@ class _TotalQuoationViewState extends State<TotalQuoationView> {
               text: "Total Quotation View",
               weight: FontWeight.w500,
               color: Colors.black),
+          actions: [
+            GestureDetector(
+                onTap: () {
+                  postCreateQuotation();
+                },
+                child: Buttons(
+                    text: "Create Quotation",
+                    weight: FontWeight.w500,
+                    color: Colors.blue,
+                    height: height / 18.h,
+                    width: width / 2.8,
+                    radius: BorderRadius.circular(10)))
+          ],
         ),
         body: isLoading
             ? const Center(child: CircularProgressIndicator())
@@ -632,12 +680,12 @@ class _TotalQuoationViewState extends State<TotalQuoationView> {
                                                     selectedIndices[
                                                             categoryId] ==
                                                         rowIndex) {
-                                                  // Deselect if the same row is tapped
+// Deselect if the same row is tapped
                                                   selectedCategoryId = null;
                                                   selectedIndices[categoryId] =
                                                       null;
                                                 } else {
-                                                  // Select the new row
+// Select the new row
                                                   selectedCategoryId =
                                                       int.parse(categoryId);
                                                   selectedIndices[categoryId] =
@@ -771,8 +819,8 @@ class _TotalQuoationViewState extends State<TotalQuoationView> {
                                     ),
                                   ),
                                 ),
-                                // Gap(10),
-                                // Divider(height: 30, thickness: 1),
+// Gap(10),
+// Divider(height: 30, thickness: 1),
                               ],
                             );
                           }).toList(),
