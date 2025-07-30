@@ -43,6 +43,14 @@ class _NewEnquiryState extends State<NewEnquiry> {
   void initState() {
     super.initState();
     fetchCategories();
+    // Clear global order ID when dashboard is initialized
+    GlobalOrderManager().clearGlobalOrderId();
+  }
+
+  // Call this method when user goes back to dashboard
+  void onBackToDashboard() {
+    GlobalOrderManager().clearGlobalOrderId();
+    print("User returned to dashboard - Global Order ID cleared");
   }
 
   Future<void> fetchCategories() async {
