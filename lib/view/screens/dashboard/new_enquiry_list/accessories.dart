@@ -332,6 +332,7 @@ class _AccessoriesState extends State<Accessories> {
   }
 
   int? newOrderId = GlobalOrderSession().getNewOrderId();
+  bool isFirstPost = true;
 
   Future<void> postAllData() async {
     if (selectedAccessories == null ||
@@ -346,26 +347,20 @@ class _AccessoriesState extends State<Accessories> {
       HttpClient()..badCertificateCallback = (_, __, ___) => true,
     );
 
-    // Find the matching item from rawAccessoriesData
     final matchingAccessory = rawAccessoriesData.firstWhere(
       (item) => item["accessories_name"] == selectedAccessories,
       orElse: () => null,
     );
 
-    // Extract values
     final accessoryID = matchingAccessory?["id"];
-    final accessoryName = matchingAccessory?["accessories_name"];
-    print("this os $accessoryID");
-    print("this os $accessoryName");
-
-    // From saved categoryMeta
     final categoryId = categoryMeta?["category_id"];
     final categoryName = categoryMeta?["categories"];
-    print("this os $categoryId");
-    print("this os $categoryName");
 
     final url = Uri.parse('$apiUrl/addbag');
     final headers = {'Content-Type': 'application/json'};
+
+    // Use global order ID if available, otherwise null for first time
+    final globalOrderManager = GlobalOrderManager();
 
     final data = {
       "customer_id": UserSession().userId,
@@ -376,9 +371,10 @@ class _AccessoriesState extends State<Accessories> {
           "$selectedBrands,$selectedColors,$selectedThickness,$selectedCoatingMass,",
       "category_id": categoryId,
       "category_name": categoryName,
-      "OrderID": newOrderId
+      "OrderID": globalOrderManager.globalOrderId // Use global order ID
     };
-    print("this is a body feed data$data");
+
+    print("Posting data: $data");
 
     try {
       final response = await client.post(
@@ -386,38 +382,40 @@ class _AccessoriesState extends State<Accessories> {
         headers: headers,
         body: jsonEncode(data),
       );
-      debugPrint("This is a response: ${response.body}");
+
       if (response.statusCode == 200) {
-        print("this is a body feeded data$data");
         final responseData = jsonDecode(response.body);
+
         setState(() {
           final String orderID = responseData["order_id"].toString();
-          print("Order IDDDD: $orderID");
-          orderIDD = int.parse(orderID); // save for next posts
+          final String orderNo =
+              responseData["order_no"]?.toString() ?? "Unknown";
+
+          // Set global order ID if this is the first time
+          if (!globalOrderManager.hasGlobalOrderId()) {
+            globalOrderManager.setGlobalOrderId(int.parse(orderID), orderNo);
+          }
+
+          // Update local variables
+          orderIDD = globalOrderManager.globalOrderId;
+          orderNoo = globalOrderManager.globalOrderNo;
           apiResponseData = responseData;
           currentMainProductId = responseData["product_id"]?.toString();
-          debugPrint("Stored main product_id: $currentMainProductId");
 
-          // Optional: set order number and category name
+          // Rest of your existing logic for processing response...
           if (responseData["lebels"] != null &&
               responseData["lebels"].isNotEmpty) {
             String categoryName = responseData["category_name"] ?? "";
             categoryyName = categoryName.isEmpty ? "Accessories" : categoryName;
-            String orderNos = responseData["order_no"]?.toString() ?? "Unknown";
-            orderNoo = orderNos.isEmpty ? "Unknown" : orderNos;
-            debugPrint("Order No : $orderNos");
-            debugPrint("Category: $categoryName");
 
-            // Safely handle the response data
             List<dynamic> fullList = responseData["lebels"][0]["data"];
             List<Map<String, dynamic>> newProducts = [];
 
             for (var item in fullList) {
               if (item is Map<String, dynamic>) {
                 Map<String, dynamic> product = Map<String, dynamic>.from(item);
-
-                // Prevent duplicates
                 String productId = product["id"].toString();
+
                 bool alreadyExists = responseProducts
                     .any((existing) => existing["id"].toString() == productId);
 
@@ -425,7 +423,6 @@ class _AccessoriesState extends State<Accessories> {
                   newProducts.add(product);
                 }
 
-                // Save UOM options if present
                 if (product["UOM"] != null &&
                     product["UOM"]["options"] != null) {
                   uomOptions[product["id"].toString()] =
@@ -436,22 +433,15 @@ class _AccessoriesState extends State<Accessories> {
                     ),
                   );
                 }
-
-                debugPrint(
-                    "Product added: ${product["id"]} - ${product["Products"]}");
               }
             }
-
-            //Add only new (non-duplicate) products
             responseProducts.addAll(newProducts);
           }
         });
       } else {
-        debugPrint("Error response: ${response.statusCode} - ${response.body}");
         throw Exception("Server returned ${response.statusCode}");
       }
     } catch (e) {
-      debugPrint("Exception in postAllData: $e");
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Error adding product: $e")),
       );

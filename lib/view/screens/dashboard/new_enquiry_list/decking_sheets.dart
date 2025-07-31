@@ -12,6 +12,8 @@ import 'package:zaron/view/screens/global_user/global_user.dart';
 import 'package:zaron/view/universal_api/api&key.dart';
 import 'package:zaron/view/widgets/subhead.dart';
 
+import '../../global_user/global_oredrID.dart';
+
 class DeckingSheets extends StatefulWidget {
   const DeckingSheets({super.key, required this.data});
 
@@ -367,6 +369,9 @@ class _DeckingSheetsState extends State<DeckingSheets> {
     print("this os $categoryId");
     print("this os $categoryName");
 
+    // Use global order ID if available, otherwise null for first time
+    final globalOrderManager = GlobalOrderManager();
+
     final headers = {"Content-Type": "application/json"};
     final data = {
       "customer_id": UserSession().userId,
@@ -377,11 +382,10 @@ class _DeckingSheetsState extends State<DeckingSheets> {
           "$selectedMaterialType,$selectedThickness,$selectCoatingMass,$selectedYieldStrength,$selectedBrand",
       "category_id": categoryId,
       "category_name": categoryName,
-      "OrderID": (orderIDD != null) ? orderIDD : null,
+      "OrderID": globalOrderManager.globalOrderId,
     };
 
     print("Request Body: $data");
-
     final url = "$apiUrl/addbag";
 
     try {
@@ -403,6 +407,15 @@ class _DeckingSheetsState extends State<DeckingSheets> {
           final String orderID = responseData["order_id"].toString();
           print("Order IDDDD: $orderID");
           orderIDD = int.parse(orderID);
+
+          // Set global order ID if this is the first time
+          if (!globalOrderManager.hasGlobalOrderId()) {
+            globalOrderManager.setGlobalOrderId(int.parse(orderID), orderNO!);
+          }
+
+          // Update local variables
+          orderIDD = globalOrderManager.globalOrderId;
+          orderNO = globalOrderManager.globalOrderNo;
 
           String orderNos = responseData["order_no"]?.toString() ?? "Unknown";
           orderNO = orderNos.isEmpty ? "Unknown" : orderNos;

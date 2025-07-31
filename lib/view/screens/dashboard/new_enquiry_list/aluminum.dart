@@ -266,17 +266,19 @@ class _AluminumState extends State<Aluminum> {
   }
 
   int? newOrderId = GlobalOrderSession().getNewOrderId();
+  bool isFirstPost = true;
+
   Future<void> postAllData() async {
     HttpClient client = HttpClient();
     client.badCertificateCallback =
         ((X509Certificate cert, String host, int port) => true);
     IOClient ioClient = IOClient(client);
 
-    // From saved categoryMeta
     final categoryId = categoryMeta?["category_id"];
     final categoryName = categoryMeta?["categories"];
-    print("this os $categoryId");
-    print("this os $categoryName");
+
+    // Use global order ID if available, otherwise null for first time
+    final globalOrderManager = GlobalOrderManager();
 
     final headers = {"Content-Type": "application/json"};
     final data = {
@@ -287,12 +289,14 @@ class _AluminumState extends State<Aluminum> {
       "product_base_name": "$selectedBaseProductName",
       "category_id": categoryId,
       "category_name": categoryName,
-      "OrderID": newOrderId
+      "OrderID": globalOrderManager.globalOrderId // Use global order ID
     };
 
     print("This is a body data: $data");
+
     final url = "$apiUrl/addbag";
     final body = jsonEncode(data);
+
     try {
       final response = await ioClient.post(
         Uri.parse(url),
@@ -300,19 +304,25 @@ class _AluminumState extends State<Aluminum> {
         body: body,
       );
 
-      debugPrint("This is a response: ${response.body}");
-
       if (response.statusCode == 200) {
         final responseData = jsonDecode(response.body);
+
         setState(() {
-          final responseData = jsonDecode(response.body);
           final String orderID = responseData["order_id"].toString();
-          print("Order IDDDD: $orderID");
-          orderIDD = int.parse(orderID);
-          String orderNos = responseData["order_no"]?.toString() ?? "Unknown";
-          orderNO = orderNos.isEmpty ? "Unknown" : orderNos;
+          final String orderNo =
+              responseData["order_no"]?.toString() ?? "Unknown";
+
+          // Set global order ID if this is the first time
+          if (!globalOrderManager.hasGlobalOrderId()) {
+            globalOrderManager.setGlobalOrderId(int.parse(orderID), orderNo);
+          }
+
+          // Update local variables
+          orderIDD = globalOrderManager.globalOrderId;
+          orderNO = globalOrderManager.globalOrderNo;
           apiResponseData = responseData;
 
+          // Rest of your existing logic...
           if (responseData['lebels'] != null &&
               responseData['lebels'].isNotEmpty) {
             apiProductsList = List<Map<String, dynamic>>.from(
@@ -344,23 +354,11 @@ class _AluminumState extends State<Aluminum> {
                     ),
                   );
                 }
-
-                debugPrint(
-                    "Product added: ${product["id"]} - ${product["Products"]}");
               }
             }
-
-            // Only add non-duplicate products
             responseProducts.addAll(newProducts);
           }
         });
-      }
-
-      if (selectedBrand == null ||
-          selectedColor == null ||
-          selectedThickness == null ||
-          selectedMaterialType == null) {
-        return;
       }
     } catch (e) {
       throw Exception("Error posting data: $e");
