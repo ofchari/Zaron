@@ -323,7 +323,7 @@ class _LinerSheetPageState extends State<LinerSheetPage> {
   Map<String, Map<String, String>> uomOptions = {};
 
   ///post All Data
-  int? newOrderId = GlobalOrderSession().getNewOrderId();
+
   Future<void> postAllData() async {
     HttpClient client = HttpClient();
     client.badCertificateCallback =
@@ -335,6 +335,9 @@ class _LinerSheetPageState extends State<LinerSheetPage> {
     final categoryName = categoryMeta?["categories"];
     print("this os $categoryId");
     print("this os $categoryName");
+
+    // Use global order ID if available, otherwise null for first time
+    final globalOrderManager = GlobalOrderManager();
 
     // Find the matching item from rawAccessoriesData
     final matchingAccessory = rawliner.firstWhere(
@@ -354,7 +357,7 @@ class _LinerSheetPageState extends State<LinerSheetPage> {
       "product_base_name": "$selectedBaseProductId",
       "category_id": categoryId,
       "category_name": categoryName,
-      "OrderID": newOrderId
+      "OrderID": globalOrderManager.globalOrderId
     };
 
     print("This is a body data: $data");
@@ -401,6 +404,15 @@ class _LinerSheetPageState extends State<LinerSheetPage> {
 
             String orderNos = responseData["order_no"]?.toString() ?? "Unknown";
             orderNo = orderNos.isEmpty ? "Unknown" : orderNos;
+
+            // Set global order ID if this is the first time
+            if (!globalOrderManager.hasGlobalOrderId()) {
+              globalOrderManager.setGlobalOrderId(int.parse(orderID), orderNo!);
+            }
+
+            // Update local variables
+            orderIDD = globalOrderManager.globalOrderId;
+            orderNo = globalOrderManager.globalOrderNo;
 
             for (var product in responseProducts) {
               if (product["UOM"] != null && product["UOM"]["options"] != null) {

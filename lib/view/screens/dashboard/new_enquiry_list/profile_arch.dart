@@ -332,8 +332,6 @@ class _ProfileRidgeAndArchState extends State<ProfileRidgeAndArch> {
     }
   }
 
-  int? newOrderId = GlobalOrderSession().getNewOrderId();
-
   ///post all Data
   Future<void> postAllData() async {
     HttpClient client = HttpClient();
@@ -346,6 +344,9 @@ class _ProfileRidgeAndArchState extends State<ProfileRidgeAndArch> {
     final categoryName = categoryMeta?["categories"];
     print("this os $categoryId");
     print("this os $categoryName");
+
+    // Use global order ID if available, otherwise null for first time
+    final globalOrderManager = GlobalOrderManager();
 
     // Find the matching item from rawAccessoriesData
     final matchingAccessory = rawProfilearch.firstWhere(
@@ -364,7 +365,7 @@ class _ProfileRidgeAndArchState extends State<ProfileRidgeAndArch> {
       "product_base_name": "$selectedProductBaseId",
       "category_id": categoryId,
       "category_name": categoryName,
-      "OrderID": newOrderId
+      "OrderID": globalOrderManager.globalOrderId
     };
 
     print("This is a body data: $data");
@@ -384,7 +385,16 @@ class _ProfileRidgeAndArchState extends State<ProfileRidgeAndArch> {
         final String orderID = responseData["order_id"]?.toString() ?? "";
         orderIDD = int.tryParse(orderID);
         orderNO = responseData["order_no"]?.toString() ?? "Unknown";
-        apiResponseData = responseData;
+
+        // Set global order ID if this is the first time
+        if (!globalOrderManager.hasGlobalOrderId()) {
+          globalOrderManager.setGlobalOrderId(int.parse(orderID), orderNO!);
+        }
+
+        // Update local variables
+        orderIDD = globalOrderManager.globalOrderId;
+        orderNO = globalOrderManager.globalOrderNo;
+
         apiResponseData = responseData;
         if (responseData["lebels"] != null &&
             responseData["lebels"].isNotEmpty) {

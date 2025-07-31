@@ -372,8 +372,6 @@ class _GIStiffnerState extends State<GIStiffner> {
   List<dynamic> responseProducts = [];
   Map<String, Map<String, String>> uomOptions = {};
 
-  int? newOrderId = GlobalOrderSession().getNewOrderId();
-
   // 2. MODIFY the postAllData() method - REPLACE the existing method with this:
   Future<void> postAllData() async {
     HttpClient client = HttpClient();

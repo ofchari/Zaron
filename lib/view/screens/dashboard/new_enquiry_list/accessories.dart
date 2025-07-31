@@ -331,8 +331,6 @@ class _AccessoriesState extends State<Accessories> {
     }
   }
 
-  int? newOrderId = GlobalOrderSession().getNewOrderId();
-
   Future<void> postAllData() async {
     if (selectedAccessories == null ||
         selectedBrands == null ||

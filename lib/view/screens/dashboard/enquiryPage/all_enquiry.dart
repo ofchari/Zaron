@@ -4,7 +4,6 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
 
 import '../../../widgets/text.dart';
-import 'cancel_enquiry.dart';
 import 'total_enquiry.dart';
 
 class AllEnquiry extends StatefulWidget {
@@ -37,7 +36,8 @@ class _AllEnquiryState extends State<AllEnquiry> with TickerProviderStateMixin {
       "title": "Cancelled Enquiry",
       "icon": FontAwesomeIcons.ban,
       "color": const Color(0xFFD32F2F),
-      "route": CancelEnquiry(),
+      "route": null,
+      // "route": CancelEnquiry(),
       "gradient": [Color(0xFFD32F2F), Color(0xFFEF5350)],
     },
   ];

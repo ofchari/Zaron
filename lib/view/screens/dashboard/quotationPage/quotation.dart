@@ -370,13 +370,6 @@ class _QuotationPageState extends State<QuotationPage> {
                               width: 1,
                               borderRadius: BorderRadius.circular(12),
                             ),
-                            // child: Padding(
-                            //   padding: const EdgeInsets.all(8.0),
-                            //   child: DataTable(
-                            //     showCheckboxColumn: false,
-                            //     border: TableBorder.all(
-                            //         color: Colors.purple, width: 0.5),
-                            //     dataRowHeight: 60,
                             columnSpacing: 40,
                             headingRowHeight: 70,
                             columns: [

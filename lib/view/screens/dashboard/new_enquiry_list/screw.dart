@@ -248,8 +248,6 @@ class _ScrewState extends State<Screw> {
     );
   }
 
-  int? newOrderId = GlobalOrderSession().getNewOrderId();
-
   Future<void> postScrewData() async {
     debugPrint("Posting screw data...");
     HttpClient client = HttpClient();
@@ -262,6 +260,9 @@ class _ScrewState extends State<Screw> {
     final categoryName = categoryMeta?["categories"];
     print("this os $categoryId");
     print("this os $categoryName");
+
+    // Use global order ID if available, otherwise null for first time
+    final globalOrderManager = GlobalOrderManager();
     final headers = {"Content-Type": "application/json"};
     final data = {
       "customer_id": UserSession().userId,
@@ -271,7 +272,7 @@ class _ScrewState extends State<Screw> {
       "product_base_name": selectedBaseProductName,
       "category_id": categoryId,
       "category_name": categoryName,
-      "OrderID": newOrderId,
+      "OrderID": globalOrderManager.globalOrderId,
     };
 
     debugPrint("Request Body: $data");
@@ -300,6 +301,14 @@ class _ScrewState extends State<Screw> {
           final String orderID = decodedResponse["order_id"]?.toString() ?? "";
           orderIDD = int.tryParse(orderID);
           orderNO = decodedResponse["order_no"]?.toString() ?? "Unknown";
+          // Set global order ID if this is the first time
+          if (!globalOrderManager.hasGlobalOrderId()) {
+            globalOrderManager.setGlobalOrderId(int.parse(orderID), orderNO!);
+          }
+
+          // Update local variables
+          orderIDD = globalOrderManager.globalOrderId;
+          orderNO = globalOrderManager.globalOrderNo;
           apiResponse = decodedResponse;
 
           if (decodedResponse["lebels"] != null &&

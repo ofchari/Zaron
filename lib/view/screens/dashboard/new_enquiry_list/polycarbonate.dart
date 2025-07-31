@@ -244,8 +244,6 @@ class _PolycarbonateState extends State<Polycarbonate> {
     );
   }
 
-  int? newOrderId = GlobalOrderSession().getNewOrderId();
-
   Future<void> postPolycarbonateData() async {
     debugPrint("Posting polycarbonate data...");
     HttpClient client = HttpClient();
@@ -258,6 +256,9 @@ class _PolycarbonateState extends State<Polycarbonate> {
     final categoryName = categoryMeta?["categories"];
     print("this os $categoryId");
     print("this os $categoryName");
+
+    // Use global order ID if available, otherwise null for first time
+    final globalOrderManager = GlobalOrderManager();
     final headers = {"Content-Type": "application/json"};
     final data = {
       "customer_id": 377423,
@@ -267,7 +268,7 @@ class _PolycarbonateState extends State<Polycarbonate> {
       "product_base_name": "$selectedBaseProductName",
       "category_id": categoryId,
       "category_name": categoryName,
-      "OrderID": newOrderId
+      "OrderID": globalOrderManager.globalOrderId
     };
 
     debugPrint("Request Body: $data");
@@ -297,6 +298,15 @@ class _PolycarbonateState extends State<Polycarbonate> {
           orderIDD = int.tryParse(orderID);
           orderNO = responseData["order_no"]?.toString() ?? "Unknown";
           apiResponseData = responseData;
+
+          // Set global order ID if this is the first time
+          if (!globalOrderManager.hasGlobalOrderId()) {
+            globalOrderManager.setGlobalOrderId(int.parse(orderID), orderNO!);
+          }
+
+          // Update local variables
+          orderIDD = globalOrderManager.globalOrderId;
+          orderNO = globalOrderManager.globalOrderNo;
 
           if (responseData["lebels"] != null &&
               responseData["lebels"].isNotEmpty) {

@@ -271,8 +271,6 @@ class _IronSteelState extends State<IronSteel> {
   List<Map<String, dynamic>> apiResponseData = [];
   Map<String, dynamic>? apiResponse;
 
-  int? newOrderId = GlobalOrderSession().getNewOrderId();
-
   Future<void> postAllData() async {
     HttpClient client = HttpClient();
     client.badCertificateCallback =
@@ -328,7 +326,7 @@ class _IronSteelState extends State<IronSteel> {
 
             // Set global order ID if this is the first time
             if (!globalOrderManager.hasGlobalOrderId()) {
-              globalOrderManager.setGlobalOrderId(orderIDD!, orderNo!);
+              globalOrderManager.setGlobalOrderId(int.parse(orderID), orderNo!);
             }
 
             // Update local variables
