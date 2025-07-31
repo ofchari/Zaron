@@ -284,6 +284,9 @@ class _IronSteelState extends State<IronSteel> {
     final categoryName = categoryMeta?["categories"];
     print("this os $categoryId");
     print("this os $categoryName");
+
+    // Use global order ID if available, otherwise null for first time
+    final globalOrderManager = GlobalOrderManager();
     final headers = {"Content-Type": "application/json"};
     final data = {
       "customer_id": UserSession().userId,
@@ -293,7 +296,7 @@ class _IronSteelState extends State<IronSteel> {
       "product_base_name": "$selectedBaseProductName",
       "category_id": categoryId,
       "category_name": categoryName,
-      "OrderID": newOrderId
+      "OrderID": globalOrderManager.globalOrderId
     };
 
     print("This is a body data: $data");
@@ -322,6 +325,15 @@ class _IronSteelState extends State<IronSteel> {
 
             String orderNos = responseData["order_no"]?.toString() ?? "Unknown";
             orderNo = orderNos.isEmpty ? "Unknown" : orderNos;
+
+            // Set global order ID if this is the first time
+            if (!globalOrderManager.hasGlobalOrderId()) {
+              globalOrderManager.setGlobalOrderId(orderIDD!, orderNo!);
+            }
+
+            // Update local variables
+            orderIDD = globalOrderManager.globalOrderId;
+            orderNo = globalOrderManager.globalOrderNo;
 
             // Get the new data
             List<Map<String, dynamic>> newData =

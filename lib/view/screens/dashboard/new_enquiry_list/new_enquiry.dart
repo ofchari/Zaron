@@ -24,6 +24,7 @@ import 'package:zaron/view/screens/dashboard/new_enquiry_list/upvc_tiles.dart';
 import 'package:zaron/view/widgets/buttons.dart';
 
 import '../../../universal_api/api&key.dart';
+import '../../../widgets/text.dart';
 import '../../global_user/global_oredrID.dart';
 import 'linear_sheets.dart';
 
@@ -517,17 +518,44 @@ class _NewEnquiryState extends State<NewEnquiry> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        centerTitle: true,
         elevation: 0,
-        title: Text(
-          "New Enquiry",
-          style: GoogleFonts.inter(
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
-            color: const Color(0xFF1A1A1A),
+        backgroundColor: Colors.transparent,
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                Color(0xFF6366F1),
+                Color(0xFF4F46E5),
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.only(
+              bottomLeft: Radius.circular(25),
+              bottomRight: Radius.circular(25),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 5,
+                offset: Offset(0, 5),
+              ),
+            ],
           ),
         ),
-        centerTitle: true,
+        title: Container(
+          padding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.2),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: Colors.white.withOpacity(0.3)),
+          ),
+          child: MyText(
+              text: "New Enquiry Dashboard",
+              weight: FontWeight.w600,
+              color: Colors.white),
+        ),
       ),
       body: categories.isEmpty
           ? const Center(child: CircularProgressIndicator())

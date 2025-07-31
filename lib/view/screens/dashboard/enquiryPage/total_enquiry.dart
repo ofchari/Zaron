@@ -8,7 +8,8 @@ import 'package:http/http.dart' as http;
 import 'package:zaron/view/screens/dashboard/enquiryPage/total_enquiry_view.dart';
 import 'package:zaron/view/screens/global_user/global_user.dart';
 import 'package:zaron/view/universal_api/api&key.dart';
-import 'package:zaron/view/widgets/subhead.dart';
+
+import '../../../widgets/text.dart';
 
 class TotalEnquiryPage extends StatefulWidget {
   const TotalEnquiryPage({super.key});
@@ -152,13 +153,44 @@ class _TotalEnquiryPageState extends State<TotalEnquiryPage> {
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
-        elevation: 0,
         centerTitle: true,
-        backgroundColor: Colors.white,
-        title: Subhead(
-            text: "Total Enquiry",
-            weight: FontWeight.w500,
-            color: Colors.black),
+        elevation: 0,
+        backgroundColor: Colors.transparent,
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                Colors.purple.shade200,
+                Colors.purple.shade100,
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.only(
+              bottomLeft: Radius.circular(25),
+              bottomRight: Radius.circular(25),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 5,
+                offset: Offset(0, 5),
+              ),
+            ],
+          ),
+        ),
+        title: Container(
+          padding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.2),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: Colors.purple.withOpacity(0.3)),
+          ),
+          child: MyText(
+              text: "Total Enquiry",
+              weight: FontWeight.w600,
+              color: Colors.black87),
+        ),
         shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(
             bottom: Radius.circular(15),

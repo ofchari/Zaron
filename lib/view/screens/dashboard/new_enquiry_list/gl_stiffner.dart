@@ -394,6 +394,8 @@ class _GIStiffnerState extends State<GIStiffner> {
     // Extract values
     final giStifferID = matchingAccessory?["id"];
     print("this os $giStifferID");
+    // Use global order ID if available, otherwise null for first time
+    final globalOrderManager = GlobalOrderManager();
 
     final headers = {"Content-Type": "application/json"};
     final data = {
@@ -404,7 +406,7 @@ class _GIStiffnerState extends State<GIStiffner> {
       "product_base_name": "$selectedBaseProductId",
       "category_id": categoryId,
       "category_name": categoryName,
-      "OrderID": newOrderId
+      "OrderID": globalOrderManager.globalOrderId
     };
     print("This is a body data: $data");
     final url = "$apiUrl/addbag";
@@ -427,6 +429,15 @@ class _GIStiffnerState extends State<GIStiffner> {
           orderIDD = int.parse(orderID);
           String orderNos = responseData["order_no"]?.toString() ?? "Unknown";
           orderNo = orderNos.isEmpty ? "Unknown" : orderNos;
+
+          // Set global order ID if this is the first time
+          if (!globalOrderManager.hasGlobalOrderId()) {
+            globalOrderManager.setGlobalOrderId(int.parse(orderID), orderNo!);
+          }
+
+          // Update local variables
+          orderIDD = globalOrderManager.globalOrderId;
+          orderNo = globalOrderManager.globalOrderNo;
           apiResponseData = responseData;
           // Extract the products from the response
           if (responseData['lebels'] != null &&

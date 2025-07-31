@@ -331,18 +331,22 @@ class _TotalQuoationViewState extends State<TotalQuoationView> {
   }
 
   /// Create Quotation Post Method ///
+<<<<<<< HEAD
   Future<void> postCreateQuotation() async {
     HttpClient client = HttpClient();
     client.badCertificateCallback =
         ((X509Certificate cert, String host, int port) => true);
     IOClient ioClient = IOClient(client);
 
+=======
+  Future<void> postCreateQuotation(BuildContext context) async {
+>>>>>>> 1786e56f849f9d1f5b9d5652d9b9214e0c032c42
     final headers = {"Content-Type": "application/json"};
     final payload = {
       "customer_id": UserSession().userId,
       "order_id": widget.id,
     };
-    print("User Input Data Fields${payload}");
+    print("User Input Data Fields $payload");
 
     final url = "https://demo.zaron.in:8181/ci3app/api/createquotation";
     final body = json.encode(payload);
@@ -350,21 +354,91 @@ class _TotalQuoationViewState extends State<TotalQuoationView> {
     try {
       final response =
           await http.post(Uri.parse(url), headers: headers, body: body);
+      print("This is the status code ${response.statusCode}");
+
+      if (response.statusCode == 200) {
+        print("This is a post Data response: ${response.body}");
+
+        if (_isSnackBarVisible) return;
+
+        _isSnackBarVisible = true;
+        ScaffoldMessenger.of(context)
+            .showSnackBar(
+              SnackBar(
+                backgroundColor: Colors.green,
+                behavior: SnackBarBehavior.floating,
+                content: Text("Create Quotation Successfully"),
+                duration: Duration(seconds: 2),
+              ),
+            )
+            .closed
+            .then((_) {
+          _isSnackBarVisible = false;
+        });
+
+        // Or if you prefer Get.snackbar:
+        // Get.snackbar("Success", "Quotation created successfully", ...);
+      }
+    } catch (e) {
+      print("Error: $e");
+      // Handle error snackbar or dialog if needed
+    }
+  }
+
+  /// Overview Post method ///
+  Future<void> postOverView() async {
+    HttpClient client = HttpClient();
+    client.badCertificateCallback =
+        ((X509Certificate cert, String host, int port) => true);
+    IOClient ioClient = IOClient(client);
+    final headers = {"Content-Type": "application/json"};
+    final payload = {
+      // "customer_id": UserSession().userId,
+      "order_id": widget.id,
+    };
+    print("User Input Data Fields${payload}");
+    final url = "$apiUrl/quotation_overview";
+    final body = json.encode(payload);
+    try {
+      final response =
+          await http.post(Uri.parse(url), headers: headers, body: body);
       print("This is the status code${response.statusCode}");
       if (response.statusCode == 200) {
         print("this is a post Data response : ${response.body}");
+
+// Parse the JSON response
+        final responseData = json.decode(response.body);
+
+// Extract the overview URL
+        if (responseData['overview'] != null) {
+          String overviewUrl = responseData['overview'];
+
+// Remove escape characters from the URL
+          overviewUrl = overviewUrl.replaceAll(r'\/', '/');
+
+          print("Original Overview URL: ${responseData['overview']}");
+          print("Cleaned Overview URL: $overviewUrl");
+
+// Now open the overview URL in browser
+          await openOverviewInBrowser(overviewUrl);
+        } else {
+          print("Overview URL not found in response");
+        }
+
         Get.snackbar(
-          "Success Create Quotation",
+          "Success OverView",
           "Data Added Successfully",
           colorText: Colors.white,
           backgroundColor: Colors.green,
         );
       }
     } catch (e) {
+      print("Error posting data: $e");
       throw Exception("Error posting data: $e");
     }
   }
 
+<<<<<<< HEAD
   /// Overview Post method ///
   Future<void> postOverView() async {
     HttpClient client = HttpClient();
@@ -418,20 +492,32 @@ class _TotalQuoationViewState extends State<TotalQuoationView> {
     }
   }
 
+=======
+>>>>>>> 1786e56f849f9d1f5b9d5652d9b9214e0c032c42
   /// Call the URL to open the overview in browser ///
   Future<void> openOverviewInBrowser(String overviewUrl) async {
     try {
       print("Opening overview URL in browser: $overviewUrl");
 
+<<<<<<< HEAD
       // Create Uri object
+=======
+// Create Uri object
+>>>>>>> 1786e56f849f9d1f5b9d5652d9b9214e0c032c42
       Uri uri = Uri.parse(overviewUrl);
       print("Parsed URI: $uri");
       print("URI scheme: ${uri.scheme}");
       print("URI host: ${uri.host}");
 
+<<<<<<< HEAD
       // Try different launch methods
       try {
         // Method 1: External application
+=======
+// Try different launch methods
+      try {
+// Method 1: External application
+>>>>>>> 1786e56f849f9d1f5b9d5652d9b9214e0c032c42
         bool launched = await launchUrl(
           uri,
           mode: LaunchMode.externalApplication,
@@ -445,7 +531,11 @@ class _TotalQuoationViewState extends State<TotalQuoationView> {
       }
 
       try {
+<<<<<<< HEAD
         // Method 2: Platform default
+=======
+// Method 2: Platform default
+>>>>>>> 1786e56f849f9d1f5b9d5652d9b9214e0c032c42
         bool launched = await launchUrl(
           uri,
           mode: LaunchMode.platformDefault,
@@ -459,7 +549,11 @@ class _TotalQuoationViewState extends State<TotalQuoationView> {
       }
 
       try {
+<<<<<<< HEAD
         // Method 3: In-app web view
+=======
+// Method 3: In-app web view
+>>>>>>> 1786e56f849f9d1f5b9d5652d9b9214e0c032c42
         bool launched = await launchUrl(
           uri,
           mode: LaunchMode.inAppWebView,
@@ -472,7 +566,11 @@ class _TotalQuoationViewState extends State<TotalQuoationView> {
         print("In-app web view launch failed: $e");
       }
 
+<<<<<<< HEAD
       // If all methods fail
+=======
+// If all methods fail
+>>>>>>> 1786e56f849f9d1f5b9d5652d9b9214e0c032c42
       print("All launch methods failed");
       Get.snackbar(
         "Error",
@@ -496,6 +594,8 @@ class _TotalQuoationViewState extends State<TotalQuoationView> {
     remarkController.dispose();
     super.dispose();
   }
+
+  bool _isSnackBarVisible = false;
 
   /// Inside your _TotalEnquiryViewState class
   Future<void> deleteItem(String itemId) async {
@@ -698,8 +798,13 @@ class _TotalQuoationViewState extends State<TotalQuoationView> {
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
+<<<<<<< HEAD
                   Colors.deepPurple.shade200,
                   Colors.deepPurple,
+=======
+                  Colors.blue.shade200,
+                  Colors.blue,
+>>>>>>> 1786e56f849f9d1f5b9d5652d9b9214e0c032c42
                 ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
@@ -735,6 +840,7 @@ class _TotalQuoationViewState extends State<TotalQuoationView> {
               onTap: () {
                 postOverView();
               },
+<<<<<<< HEAD
               child: Icon(Icons.add_circle_outline_rounded,
                   color: Colors.white, size: 30),
             ),
@@ -781,6 +887,26 @@ class _TotalQuoationViewState extends State<TotalQuoationView> {
                     ),
                   )),
             )
+=======
+              child: Icon(
+                Icons.language,
+                color: Colors.white,
+                size: 28,
+              ),
+            ),
+            Gap(8),
+            GestureDetector(
+              onTap: () {
+                postCreateQuotation(context);
+              },
+              child: Icon(
+                Icons.add,
+                color: Colors.white,
+                size: 28,
+              ),
+            ),
+            Gap(10),
+>>>>>>> 1786e56f849f9d1f5b9d5652d9b9214e0c032c42
           ],
         ),
         body: isLoading
@@ -798,7 +924,6 @@ class _TotalQuoationViewState extends State<TotalQuoationView> {
                                 category['category_id'].toString();
                             final labels = categoryLabels[categoryId] ?? [];
                             final data = categoryData[categoryId] ?? [];
-
                             return Column(
                               children: [
                                 Padding(

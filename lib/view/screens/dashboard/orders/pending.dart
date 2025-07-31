@@ -63,6 +63,28 @@ class _AllOrdersState extends State<AllOrders> with TickerProviderStateMixin {
     super.dispose();
   }
 
+  bool _isSnackBarVisible = false;
+
+  void _showOnceSnackBar(BuildContext context) {
+    if (_isSnackBarVisible) return;
+
+    _isSnackBarVisible = true;
+
+    ScaffoldMessenger.of(context)
+        .showSnackBar(
+          SnackBar(
+            backgroundColor: Colors.grey,
+            behavior: SnackBarBehavior.floating,
+            content: Text("No data found"),
+            duration: Duration(seconds: 2),
+          ),
+        )
+        .closed
+        .then((_) {
+      _isSnackBarVisible = false;
+    });
+  }
+
   Widget _buildCard(String title, IconData icon, Color bgColor, Widget? route,
       List<Color> gradient, int index) {
     return AnimatedBuilder(
@@ -75,11 +97,7 @@ class _AllOrdersState extends State<AllOrders> with TickerProviderStateMixin {
               if (route != null) {
                 Get.to(route);
               } else {
-                Get.snackbar(
-                  "Error",
-                  "No route defined for $title",
-                  snackPosition: SnackPosition.BOTTOM,
-                );
+                _showOnceSnackBar(context);
               }
             },
             child: Container(
@@ -148,26 +166,44 @@ class _AllOrdersState extends State<AllOrders> with TickerProviderStateMixin {
     return Scaffold(
       backgroundColor: Colors.grey.shade100,
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        centerTitle: true,
         elevation: 0,
+        backgroundColor: Colors.transparent,
         flexibleSpace: Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              colors: [Color(0xFF1565C0), Color(0xFF42A5F5)],
+              colors: [
+                Colors.deepPurple.shade200,
+                Colors.deepPurple,
+              ],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
+            borderRadius: BorderRadius.only(
+              bottomLeft: Radius.circular(25),
+              bottomRight: Radius.circular(25),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 5,
+                offset: Offset(0, 5),
+              ),
+            ],
           ),
         ),
-        title: Text(
-          'Orders',
-          style: TextStyle(
-            fontWeight: FontWeight.w600,
-            fontSize: 20.sp,
-            color: Colors.white,
+        title: Container(
+          padding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.2),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: Colors.white.withOpacity(0.3)),
           ),
+          child: MyText(
+              text: "Orders Dashboard",
+              weight: FontWeight.w600,
+              color: Colors.white),
         ),
-        centerTitle: true,
         leading: IconButton(
           icon: Icon(Icons.arrow_back_ios, color: Colors.white, size: 20.w),
           onPressed: () => Get.back(),
