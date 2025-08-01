@@ -312,7 +312,7 @@ class _RollSheetState extends State<RollSheet> {
   Map<String, dynamic>? apiResponseData;
   List<dynamic> responseProducts = [];
   Map<String, Map<String, String>> uomOptions = {};
-  int? newOrderId = GlobalOrderSession().getNewOrderId();
+
   Future<void> postAllData() async {
     HttpClient client = HttpClient();
     client.badCertificateCallback =
@@ -324,6 +324,9 @@ class _RollSheetState extends State<RollSheet> {
     final categoryName = categoryMeta?["categories"];
     print("this os $categoryId");
     print("this os $categoryName");
+
+    // Use global order ID if available, otherwise null for first time
+    final globalOrderManager = GlobalOrderManager();
 
     // Find the matching item from rawAccessoriesData
     final matchingAccessory = rawRollsheet.firstWhere(
@@ -342,7 +345,7 @@ class _RollSheetState extends State<RollSheet> {
       "product_base_name": "$selectedProductBaseId",
       "category_id": categoryId,
       "category_name": categoryName,
-      "OrderID": newOrderId
+      "OrderID": globalOrderManager.globalOrderId
     };
 
     print("This is a body data: $data");
@@ -369,6 +372,15 @@ class _RollSheetState extends State<RollSheet> {
           orderIDD = int.tryParse(orderID);
           orderNO = responseData["order_no"]?.toString() ?? "Unknown";
           apiResponseData = responseData;
+
+          // Set global order ID if this is the first time
+          if (!globalOrderManager.hasGlobalOrderId()) {
+            globalOrderManager.setGlobalOrderId(int.parse(orderID), orderNO!);
+          }
+
+          // Update local variables
+          orderIDD = globalOrderManager.globalOrderId;
+          orderNO = globalOrderManager.globalOrderNo;
 
           if (responseData['lebels'] != null &&
               responseData['lebels'].isNotEmpty) {

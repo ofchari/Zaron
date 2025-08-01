@@ -392,7 +392,6 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
   bool showApiResponse = false;
 
   // 2. MODIFY the postAllData() method to store the response (replace your existing postAllData method)
-  int? newOrderId = GlobalOrderSession().getNewOrderId();
 
   Future<void> postAllData() async {
     HttpClient client = HttpClient();
@@ -405,6 +404,9 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
     final categoryName = categoryMeta?["categories"];
     print("this os $categoryId");
     print("this os $categoryName");
+
+    // Use global order ID if available, otherwise null for first time
+    final globalOrderManager = GlobalOrderManager();
 
     // Find the matching item from rawAccessoriesData
     final matchingAccessory = rawCUTtoLength.firstWhere(
@@ -424,7 +426,7 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
       "product_base_name": "$selectedBaseProductName",
       "category_id": categoryId,
       "category_name": categoryName,
-      "OrderID": newOrderId
+      "OrderID": globalOrderManager.globalOrderId
     };
 
     print("This is a body data: $data");
@@ -461,59 +463,21 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
           String orderNos = responseData["order_no"]?.toString() ?? "Unknown";
           orderNO = orderNos.isEmpty ? "Unknown" : orderNos;
           showApiResponse = true;
+
+          // Set global order ID if this is the first time
+          if (!globalOrderManager.hasGlobalOrderId()) {
+            globalOrderManager.setGlobalOrderId(int.parse(orderID), orderNO!);
+          }
+
+          // Update local variables
+          orderIDD = globalOrderManager.globalOrderId;
+          orderNO = globalOrderManager.globalOrderNo;
         });
       }
     } catch (e) {
       throw Exception("Error posting data: $e");
     }
   }
-
-  // 3. ADD THIS NEW METHOD to build the API response UI
-  // Widget _buildApiResponseSection() {
-  //   if (!showApiResponse || apiResponse == null) return SizedBox.shrink();
-  //
-  //   final labels = apiResponse!['lebels'] as List;
-  //   if (labels.isEmpty) return SizedBox.shrink();
-  //
-  //   final categoryData = labels[0];
-  //   final categoryLabels = categoryData['labels'] as List<dynamic>;
-  //   final categoryDataList = categoryData['data'] as List<dynamic>;
-  //
-  //   return Card(
-  //     elevation: 2,
-  //     margin: EdgeInsets.symmetric(vertical: 16),
-  //     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-  //     child: Padding(
-  //       padding: EdgeInsets.all(16),
-  //       child: Column(
-  //         crossAxisAlignment: CrossAxisAlignment.start,
-  //         children: [
-  //           Row(
-  //             mainAxisAlignment: MainAxisAlignment.spaceBetween,
-  //             children: [
-  //               Subhead(
-  //                 text: "Order Details",
-  //                 weight: FontWeight.w600,
-  //                 color: Colors.black,
-  //               ),
-  //               Text(
-  //                 "Order ID: ${apiResponse!['order_id']}",
-  //                 style: TextStyle(
-  //                   color: Colors.green,
-  //                   fontWeight: FontWeight.w500,
-  //                 ),
-  //               ),
-  //             ],
-  //           ),
-  //           SizedBox(height: 16),
-  //           ...categoryDataList
-  //               .map((item) => _buildApiResponseItem(item, categoryLabels))
-  //               .toList(),
-  //         ],
-  //       ),
-  //     ),
-  //   );
-  // }
 
   // 4. ADD THIS NEW METHOD to build individual API response items
   Widget _buildProductDetailInRows(Map<String, dynamic> data) {

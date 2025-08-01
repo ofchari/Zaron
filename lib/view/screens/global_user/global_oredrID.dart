@@ -1,26 +1,3 @@
-class GlobalOrderSession {
-  static final GlobalOrderSession _instance = GlobalOrderSession._internal();
-
-  factory GlobalOrderSession() => _instance;
-
-  GlobalOrderSession._internal();
-
-  int? orderId;
-  int? newOrderId;
-
-  void setOrderId(int id) {
-    orderId = id;
-  }
-
-  int? getOrderId() => orderId;
-
-  void setNewOrderId(int id) {
-    newOrderId = id;
-  }
-
-  int? getNewOrderId() => newOrderId;
-}
-
 // Create a singleton class to manage global order ID
 class GlobalOrderManager {
   static final GlobalOrderManager _instance = GlobalOrderManager._internal();

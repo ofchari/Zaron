@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
-import 'package:zaron/view/screens/dashboard/quotationPage/cancel_quotation.dart';
 
 import '../../../widgets/text.dart';
 import 'quotation.dart';
@@ -38,7 +37,8 @@ class _AllQuotationState extends State<AllQuotation>
       "title": "Cancelled Quotations",
       "icon": FontAwesomeIcons.circleXmark,
       "color": const Color(0xFFD32F2F),
-      "route": CancelQuotation(),
+      // "route": CancelQuotation(),
+      "route": null,
       "gradient": [Color(0xFFD32F2F), Color(0xFFEF5350)],
     },
     {

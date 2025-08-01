@@ -315,8 +315,6 @@ class _TileSheetPageState extends State<TileSheetPage> {
     }
   }
 
-  int? newOrderId = GlobalOrderSession().getNewOrderId();
-
   ///post All Data
   Future<void> postAllData() async {
     HttpClient client = HttpClient();
@@ -329,6 +327,9 @@ class _TileSheetPageState extends State<TileSheetPage> {
     final categoryName = categoryMeta?["categories"];
     print("this os $categoryId");
     print("this os $categoryName");
+
+    // Use global order ID if available, otherwise null for first time
+    final globalOrderManager = GlobalOrderManager();
 
     // Find the matching item from rawAccessoriesData
     final matchingAccessory = rawTilesheet.firstWhere(
@@ -347,7 +348,7 @@ class _TileSheetPageState extends State<TileSheetPage> {
       "product_base_name": "$selectedBrands,$selectedColors,$selectedThickness",
       "category_id": categoryId,
       "category_name": categoryName,
-      "OrderID": newOrderId
+      "OrderID": globalOrderManager.globalOrderId
     };
 
     print("This is a body data: $data");
@@ -375,6 +376,14 @@ class _TileSheetPageState extends State<TileSheetPage> {
           final String orderID = responseData["order_id"]?.toString() ?? "";
           orderIDD = int.tryParse(orderID);
           orderNO = responseData["order_no"]?.toString() ?? "Unknown";
+          // Set global order ID if this is the first time
+          if (!globalOrderManager.hasGlobalOrderId()) {
+            globalOrderManager.setGlobalOrderId(int.parse(orderID), orderNO!);
+          }
+
+          // Update local variables
+          orderIDD = globalOrderManager.globalOrderId;
+          orderNO = globalOrderManager.globalOrderNo;
           apiResponseData = responseData;
 
           if (responseData["lebels"] != null &&

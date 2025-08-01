@@ -265,8 +265,6 @@ class _AluminumState extends State<Aluminum> {
     }
   }
 
-  int? newOrderId = GlobalOrderSession().getNewOrderId();
-
   Future<void> postAllData() async {
     HttpClient client = HttpClient();
     client.badCertificateCallback =

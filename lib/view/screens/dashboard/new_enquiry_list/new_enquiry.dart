@@ -68,7 +68,6 @@ class _NewEnquiryState extends State<NewEnquiry> {
           if (message["new_order_id"] != null) {
             int? parsed = int.tryParse(message["new_order_id"].toString());
             if (parsed != null) {
-              GlobalOrderSession().setNewOrderId(parsed);
               print("✅ Stored new_order_id globally: $parsed");
             }
           }

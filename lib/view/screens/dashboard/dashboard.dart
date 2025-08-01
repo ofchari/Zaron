@@ -4,6 +4,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:gap/gap.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:liquid_pull_to_refresh/liquid_pull_to_refresh.dart';
 import 'package:zaron/view/screens/dashboard/enquiryPage/all_enquiry.dart';
 import 'package:zaron/view/screens/dashboard/new_enquiry_list/new_enquiry.dart';
 import 'package:zaron/view/screens/dashboard/orders/pending.dart';
@@ -88,6 +89,10 @@ class _DashboardState extends State<Dashboard> {
         "route": AllOrders()
       },
     ];
+
+    Future<void> refresh() async {
+      return await Future.delayed(Duration(milliseconds: 500));
+    }
 
     return Scaffold(
       backgroundColor: Colors.grey[100],
@@ -267,101 +272,110 @@ class _DashboardState extends State<Dashboard> {
           )
         ],
       ),
-      body: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 13.w, vertical: 10.h),
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                width: double.infinity,
-                height: height * 0.28,
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Colors.black, Colors.white],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  // image: DecorationImage(
-                  //     image: AssetImage("assets/scale_bg.jpg"),
-                  //     fit: BoxFit.cover),
-                  borderRadius: BorderRadius.circular(20.r),
-                ),
-                child: Stack(
-                  clipBehavior: Clip.none, // Allows image to overflow
+      body: LiquidPullToRefresh(
+          showChildOpacityTransition: false,
+          animSpeedFactor: 8,
+          color: Colors.deepPurple,
+          backgroundColor: Colors.deepPurple[200],
+          height: 100.h,
+          onRefresh: refresh,
+          child: ListView(children: [
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 13.w, vertical: 10.h),
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Positioned(
-                      right: -28.w, // Adjusted for better positioning
-                      bottom: 10.h, // Position from bottom
-                      child: Transform.rotate(
-                        angle: 0.03, // Slight rotation for dynamic look
-                        child: Image.asset(
-                          "assets/roofing-sheets.png",
-                          width: width * 0.60, // Increased width
-                          height: height * 0.20, // Match container height
-                          fit: BoxFit.contain,
+                    Container(
+                      width: double.infinity,
+                      height: height * 0.28,
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [Colors.black, Colors.white],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
                         ),
+                        // image: DecorationImage(
+                        //     image: AssetImage("assets/scale_bg.jpg"),
+                        //     fit: BoxFit.cover),
+                        borderRadius: BorderRadius.circular(20.r),
                       ),
-                    ),
-                    Padding(
-                      padding: EdgeInsets.all(20.w),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                      child: Stack(
+                        clipBehavior: Clip.none, // Allows image to overflow
                         children: [
-                          Text(
-                            "Welcome Back!",
-                            style: GoogleFonts.poppins(
-                              fontSize: 24,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.white,
+                          Positioned(
+                            right: -28.w, // Adjusted for better positioning
+                            bottom: 10.h, // Position from bottom
+                            child: Transform.rotate(
+                              angle: 0.03, // Slight rotation for dynamic look
+                              child: Image.asset(
+                                "assets/roofing-sheets.png",
+                                width: width * 0.60, // Increased width
+                                height: height * 0.20, // Match container height
+                                fit: BoxFit.contain,
+                              ),
                             ),
                           ),
-                          SizedBox(height: 8.h),
-                          Text(
-                            "Manage your enquiries and quotations",
-                            style: GoogleFonts.poppins(
-                              fontSize: 14,
-                              color: Colors.white.withOpacity(0.9),
+                          Padding(
+                            padding: EdgeInsets.all(20.w),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  "Welcome Back!",
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                                SizedBox(height: 8.h),
+                                Text(
+                                  "Manage your enquiries and quotations",
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 14,
+                                    color: Colors.white.withOpacity(0.9),
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ],
                       ),
                     ),
+                    SizedBox(height: 24.h),
+                    Subhead(
+                      text: "Quick Actions",
+                      weight: FontWeight.w600,
+                      color: const Color(0xFF212121),
+                    ),
+                    SizedBox(height: 16.h),
+                    GridView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2,
+                        crossAxisSpacing: 16.w,
+                        mainAxisSpacing: 16.h,
+                        childAspectRatio: 1.2,
+                      ),
+                      itemCount: dashboardItems.length,
+                      itemBuilder: (context, index) {
+                        final item = dashboardItems[index];
+                        return _buildCard(
+                          item["title"]!,
+                          item["icon"]!,
+                          item["color"]!,
+                          item["route"],
+                        );
+                      },
+                    ),
+                    Gap(8.h),
                   ],
                 ),
               ),
-              SizedBox(height: 24.h),
-              Subhead(
-                text: "Quick Actions",
-                weight: FontWeight.w600,
-                color: const Color(0xFF212121),
-              ),
-              SizedBox(height: 16.h),
-              GridView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  crossAxisSpacing: 16.w,
-                  mainAxisSpacing: 16.h,
-                  childAspectRatio: 1.2,
-                ),
-                itemCount: dashboardItems.length,
-                itemBuilder: (context, index) {
-                  final item = dashboardItems[index];
-                  return _buildCard(
-                    item["title"]!,
-                    item["icon"]!,
-                    item["color"]!,
-                    item["route"],
-                  );
-                },
-              ),
-              Gap(8.h),
-            ],
-          ),
-        ),
-      ),
+            ),
+          ])),
     );
   }
 

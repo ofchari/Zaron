@@ -337,7 +337,6 @@ class _PurlinState extends State<Purlin> {
   Map<String, dynamic> apiResponseData = {};
   Map<String, dynamic>? apiResponse;
 
-  int? newOrderId = GlobalOrderSession().getNewOrderId();
   // 2. MODIFY the postAllData() method - REPLACE the existing postAllData method with this:
   Future<void> postAllData() async {
     HttpClient client = HttpClient();
@@ -350,6 +349,9 @@ class _PurlinState extends State<Purlin> {
     print("this os $categoryId");
     print("this os $categoryName");
 
+    // Use global order ID if available, otherwise null for first time
+    final globalOrderManager = GlobalOrderManager();
+
     final headers = {"Content-Type": "application/json"};
     final data = {
       "customer_id": UserSession().userId,
@@ -359,7 +361,7 @@ class _PurlinState extends State<Purlin> {
       "product_base_name": "$selectedBaseProductName",
       "category_id": categoryId,
       "category_name": categoryName,
-      "OrderID": newOrderId
+      "OrderID": globalOrderManager.globalOrderId
     };
 
     print("This is a body data: $data");
@@ -383,6 +385,14 @@ class _PurlinState extends State<Purlin> {
           final String orderID = responseData["order_id"]?.toString() ?? "";
           orderIDD = int.tryParse(orderID);
           orderNO = responseData["order_no"]?.toString() ?? "Unknown";
+          // Set global order ID if this is the first time
+          if (!globalOrderManager.hasGlobalOrderId()) {
+            globalOrderManager.setGlobalOrderId(int.parse(orderID), orderNO!);
+          }
+
+          // Update local variables
+          orderIDD = globalOrderManager.globalOrderId;
+          orderNO = globalOrderManager.globalOrderNo;
           apiResponseData = responseData;
 
           // Handle label data safely

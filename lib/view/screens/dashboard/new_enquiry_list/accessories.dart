@@ -331,9 +331,12 @@ class _AccessoriesState extends State<Accessories> {
     }
   }
 
+<<<<<<< HEAD
   int? newOrderId = GlobalOrderSession().getNewOrderId();
   bool isFirstPost = true;
 
+=======
+>>>>>>> 244ad64b9364b57bd87925f72508e0cb58a957c8
   Future<void> postAllData() async {
     if (selectedAccessories == null ||
         selectedBrands == null ||
