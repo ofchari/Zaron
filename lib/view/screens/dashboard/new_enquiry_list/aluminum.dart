@@ -266,15 +266,11 @@ class _AluminumState extends State<Aluminum> {
   }
 
   int? newOrderId = GlobalOrderSession().getNewOrderId();
-<<<<<<< HEAD
-  bool isFirstPost = true;
-=======
->>>>>>> 1786e56f849f9d1f5b9d5652d9b9214e0c032c42
 
   Future<void> postAllData() async {
     HttpClient client = HttpClient();
     client.badCertificateCallback =
-    ((X509Certificate cert, String host, int port) => true);
+        ((X509Certificate cert, String host, int port) => true);
     IOClient ioClient = IOClient(client);
 
     final categoryId = categoryMeta?["category_id"];
@@ -350,9 +346,9 @@ class _AluminumState extends State<Aluminum> {
                 if (product["UOM"] != null &&
                     product["UOM"]["options"] != null) {
                   uomOptions[product["id"].toString()] =
-                  Map<String, String>.from(
+                      Map<String, String>.from(
                     (product["UOM"]["options"] as Map).map(
-                          (key, value) =>
+                      (key, value) =>
                           MapEntry(key.toString(), value.toString()),
                     ),
                   );
@@ -895,7 +891,7 @@ class _AluminumState extends State<Aluminum> {
     return fieldControllers[productId]![key]!;
   }
 
-  /// Add this method for debounced calculation
+  // Add this method for debounced calculation
   void _debounceCalculation(Map<String, dynamic> data) {
     _debounceTimer?.cancel();
     _debounceTimer = Timer(Duration(seconds: 1), () {

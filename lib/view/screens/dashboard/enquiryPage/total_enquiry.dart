@@ -88,6 +88,7 @@ class _TotalEnquiryPageState extends State<TotalEnquiryPage> {
 // 'no': (enquiryList.indexOf(item) + 1).toString(),
                     'id': item['id'] ?? '',
                     'order_no': item['order_no'] ?? '',
+
                     'bill_total': item['bill_total'] ?? '',
                     'create_date': item['create_date'] ?? '',
                     'create_time': item['create_time'] ?? '',
