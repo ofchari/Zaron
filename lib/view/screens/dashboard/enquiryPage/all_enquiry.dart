@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
+import 'package:zaron/view/screens/dashboard/enquiryPage/cancel_enquiry.dart';
+import 'package:zaron/view/screens/dashboard/enquiryPage/missed_enquiry.dart';
 
 import '../../../widgets/text.dart';
 import 'total_enquiry.dart';
@@ -29,15 +31,14 @@ class _AllEnquiryState extends State<AllEnquiry> with TickerProviderStateMixin {
       "title": "Missed Enquiry",
       "icon": FontAwesomeIcons.circleExclamation,
       "color": const Color(0xFFE65100),
-      "route": null,
+      "route": MissedEnquiry(),
       "gradient": [Color(0xFFE65100), Color(0xFFFF9800)],
     },
     {
       "title": "Cancelled Enquiry",
       "icon": FontAwesomeIcons.ban,
       "color": const Color(0xFFD32F2F),
-      "route": null,
-      // "route": CancelEnquiry(),
+      "route": CancelEnquiry(),
       "gradient": [Color(0xFFD32F2F), Color(0xFFEF5350)],
     },
   ];

@@ -81,44 +81,61 @@ class _DeliveryScopeBottomSheetState extends State<DeliveryScopeBottomSheet> {
   bool isPosting = false;
 
   Future<void> postMoveQuotation() async {
-    if (!mounted) return; // prevent multiple calls
-    isPosting = true;
+    if (!mounted) return;
 
-    await postCustomerAddress();
-    if (customerAddressId.isNotEmpty) {
-      final payload = {
-        "customer_id": UserSession().userId,
-        "customer_address_id": customerAddressId,
-        "order_id": widget.id,
-        "delivery_status": deliveryScope == 'Zaron' ? "2" : "1",
-        "payment_mode": paymentMode,
-        "delivery_date": DateFormat('yyyy-MM-dd').format(widget.deliveryDate),
-        "delivery_time": widget.deliveryTime.format(context),
-      };
+    setState(() {
+      isPosting = true;
+    });
 
-      final headers = {"Content-Type": "application/json"};
-      final url = "$apiUrl/createorder";
-      final body = json.encode(payload);
-      print("User Input Data Fields: $payload");
+    try {
+      await postCustomerAddress();
 
-      try {
+      if (!mounted) return; // Re-check before accessing context
+
+      if (customerAddressId.isNotEmpty) {
+        final payload = {
+          "customer_id": UserSession().userId,
+          "customer_address_id": customerAddressId,
+          "order_id": widget.id,
+          "delivery_status": deliveryScope == 'Zaron' ? "2" : "1",
+          "payment_mode": paymentMode,
+          "delivery_date": DateFormat('yyyy-MM-dd').format(widget.deliveryDate),
+          "delivery_time": widget.deliveryTime.format(context),
+        };
+
+        final headers = {"Content-Type": "application/json"};
+        final url = "$apiUrl/createorder";
+        final body = json.encode(payload);
+        print("User Input Data Fields: $payload");
+
         final response =
             await http.post(Uri.parse(url), headers: headers, body: body);
         print("Status: ${response.statusCode}");
-        if (response.statusCode == 200) {
+
+        if (response.statusCode == 200 && mounted) {
           print("Response: ${response.body}");
-          Get.snackbar("Moved", "Data Successfully Posted",
+          Get.snackbar("Success", "Move to  Order \n created successfully",
               colorText: Colors.white, backgroundColor: Colors.green);
+        } else {
+          throw Exception(
+              "Server returned status code: ${response.statusCode}");
         }
-      } catch (e) {
-        throw Exception("Error posting data: $e");
-      } finally {
-        isPosting = false;
+      } else {
+        throw Exception("Customer address ID not found");
       }
-    } else {
-      isPosting = false;
-      Get.snackbar("Error", "Customer address ID not found",
-          colorText: Colors.white, backgroundColor: Colors.red);
+    } catch (e) {
+      print("Error in postMoveQuotation: $e");
+      if (mounted) {
+        Get.snackbar("Error", "Failed to create order: $e",
+            colorText: Colors.white, backgroundColor: Colors.red);
+      }
+      rethrow; // Re-throw so the calling code can handle it
+    } finally {
+      if (mounted) {
+        setState(() {
+          isPosting = false;
+        });
+      }
     }
   }
 
@@ -454,28 +471,45 @@ class _DeliveryScopeBottomSheetState extends State<DeliveryScopeBottomSheet> {
                 const SizedBox(width: 16),
                 Expanded(
                   child: ElevatedButton(
-                    onPressed: () {
-                      if (deliveryScope == null) {
-                        Get.snackbar(
-                          "Error",
-                          "Please select a delivery scope",
-                          colorText: Colors.white,
-                          backgroundColor: Colors.red,
-                        );
-                        return;
-                      }
-                      if (paymentMode == null) {
-                        Get.snackbar(
-                          "Error",
-                          "Please select a payment method",
-                          colorText: Colors.white,
-                          backgroundColor: Colors.red,
-                        );
-                        return;
-                      }
-                      postMoveQuotation();
-                      Navigator.pop(context);
-                    },
+                    onPressed: isPosting
+                        ? null
+                        : () async {
+                            // Disable button while posting
+                            if (deliveryScope == null) {
+                              Get.snackbar(
+                                "Error",
+                                "Please select a delivery scope",
+                                colorText: Colors.white,
+                                backgroundColor: Colors.red,
+                              );
+                              return;
+                            }
+                            if (paymentMode == null) {
+                              Get.snackbar(
+                                "Error",
+                                "Please select a payment method",
+                                colorText: Colors.white,
+                                backgroundColor: Colors.red,
+                              );
+                              return;
+                            }
+
+                            try {
+                              await postMoveQuotation(); // Wait for the operation to complete
+                              if (mounted) {
+                                // Check if widget is still mounted before navigating
+                                Navigator.pop(context);
+                              }
+                            } catch (e) {
+                              // Handle any errors
+                              Get.snackbar(
+                                "Error",
+                                "Failed to process request: $e",
+                                colorText: Colors.white,
+                                backgroundColor: Colors.red,
+                              );
+                            }
+                          },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.green.shade600,
                       padding: const EdgeInsets.symmetric(vertical: 16),
@@ -487,11 +521,21 @@ class _DeliveryScopeBottomSheetState extends State<DeliveryScopeBottomSheet> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Icon(Icons.check_circle,
-                            color: Colors.white, size: 20),
+                        if (isPosting)
+                          const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2,
+                            ),
+                          )
+                        else
+                          const Icon(Icons.check_circle,
+                              color: Colors.white, size: 20),
                         const SizedBox(width: 8),
                         Text(
-                          "Next",
+                          isPosting ? "Processing..." : "Next",
                           style: GoogleFonts.outfit(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
+import 'package:zaron/view/screens/dashboard/quotationPage/cancel_quotation.dart';
+import 'package:zaron/view/screens/dashboard/quotationPage/missed_quotation.dart';
 
 import '../../../widgets/text.dart';
 import 'quotation.dart';
@@ -27,25 +29,18 @@ class _AllQuotationState extends State<AllQuotation>
       "gradient": [Color(0xFF1565C0), Color(0xFF42A5F5)],
     },
     {
-      "title": "Open Quotations",
-      "icon": FontAwesomeIcons.solidFolderOpen,
-      "color": Colors.green,
-      "route": null,
-      "gradient": [Colors.green, Colors.green.shade200],
-    },
-    {
       "title": "Cancelled Quotations",
       "icon": FontAwesomeIcons.circleXmark,
       "color": const Color(0xFFD32F2F),
       // "route": CancelQuotation(),
-      "route": null,
+      "route": CancelQuotation(),
       "gradient": [Color(0xFFD32F2F), Color(0xFFEF5350)],
     },
     {
       "title": "Missed Quotations",
       "icon": FontAwesomeIcons.triangleExclamation,
       "color": Colors.yellow,
-      "route": null,
+      "route": MissedQuotation(),
       "gradient": [Colors.orangeAccent.shade700, Colors.yellow],
     },
   ];

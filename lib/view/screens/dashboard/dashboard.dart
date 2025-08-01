@@ -7,7 +7,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:liquid_pull_to_refresh/liquid_pull_to_refresh.dart';
 import 'package:zaron/view/screens/dashboard/enquiryPage/all_enquiry.dart';
 import 'package:zaron/view/screens/dashboard/new_enquiry_list/new_enquiry.dart';
-import 'package:zaron/view/screens/dashboard/orders/pending.dart';
+import 'package:zaron/view/screens/dashboard/orders/all_orders.dart';
 import 'package:zaron/view/screens/dashboard/quotationPage/all_quotation.dart';
 import 'package:zaron/view/screens/login.dart';
 import 'package:zaron/view/widgets/subhead.dart';

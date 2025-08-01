@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
+import 'package:zaron/view/screens/dashboard/orders/approved_order.dart';
+import 'package:zaron/view/screens/dashboard/orders/cancelled_order.dart';
+import 'package:zaron/view/screens/dashboard/orders/pending_order.dart';
 
 import '../../../widgets/text.dart';
 
@@ -21,21 +24,21 @@ class _AllOrdersState extends State<AllOrders> with TickerProviderStateMixin {
       "title": "Pending",
       "icon": FontAwesomeIcons.clock,
       "color": const Color(0xFF1565C0),
-      "route": null,
+      "route": PendingOrder(),
       "gradient": [Color(0xFF1565C0), Color(0xFF42A5F5)],
     },
     {
       "title": "Approved",
       "icon": FontAwesomeIcons.circleCheck,
       "color": Colors.green,
-      "route": null,
+      "route": ApprovedOrder(),
       "gradient": [Colors.green, Colors.green.shade200],
     },
     {
       "title": "Cancelled",
       "icon": FontAwesomeIcons.ban,
       "color": const Color(0xFFD32F2F),
-      "route": null,
+      "route": CancelledOrder(),
       "gradient": [Color(0xFFD32F2F), Color(0xFFEF5350)],
     },
   ];
