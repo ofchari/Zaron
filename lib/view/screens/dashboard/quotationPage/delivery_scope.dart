@@ -33,8 +33,10 @@ class DeliveryScopeBottomSheet extends StatefulWidget {
 class _DeliveryScopeBottomSheetState extends State<DeliveryScopeBottomSheet> {
   String? deliveryScope = 'Zaron';
   String? paymentMode = 'Cash';
+  String customerAddressId = '';
 
-  Future<void> postMoveQuotation() async {
+  /// Post the  Customer Address //
+  Future<void> postCustomerAddress() async {
     HttpClient client = HttpClient();
     client.badCertificateCallback =
         ((X509Certificate cert, String host, int port) => true);
@@ -43,16 +45,11 @@ class _DeliveryScopeBottomSheetState extends State<DeliveryScopeBottomSheet> {
     final headers = {"Content-Type": "application/json"};
     final payload = {
       "customer_id": UserSession().userId,
-      "order_id": widget.id,
-      "delivery_status": deliveryScope == 'Zaron' ? "2" : "1", // 👈 Logic here,
-      "payment_mode": paymentMode,
-      "delivery_date": DateFormat('yyyy-MM-dd').format(widget.deliveryDate),
-      "delivery_time": widget.deliveryTime.format(context),
     };
     print("User Input Data Fields$payload");
     print(widget.id);
 
-    final url = "$apiUrl/move_quotation";
+    final url = "$apiUrl/customer_address";
     final body = json.encode(payload);
 
     try {
@@ -60,16 +57,68 @@ class _DeliveryScopeBottomSheetState extends State<DeliveryScopeBottomSheet> {
           await http.post(Uri.parse(url), headers: headers, body: body);
       print("This is the status code${response.statusCode}");
       if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        final addressList = data['customeradddrss'] as List;
+        if (addressList.isNotEmpty) {
+          customerAddressId = addressList[0]['id'].toString();
+          print("Customer Address ID: $customerAddressId");
+        }
         print("this is a post Data response : ${response.body}");
         Get.snackbar(
-          "Moved ",
+          "Customer Address",
           "Data Successfully Posted",
           colorText: Colors.white,
           backgroundColor: Colors.green,
         );
+        print("this is a post Data response : ${response.body}");
       }
     } catch (e) {
       throw Exception("Error posting data: $e");
+    }
+  }
+
+  /// Post the Move Quotation //
+  bool isPosting = false;
+
+  Future<void> postMoveQuotation() async {
+    if (!mounted) return; // prevent multiple calls
+    isPosting = true;
+
+    await postCustomerAddress();
+    if (customerAddressId.isNotEmpty) {
+      final payload = {
+        "customer_id": UserSession().userId,
+        "customer_address_id": customerAddressId,
+        "order_id": widget.id,
+        "delivery_status": deliveryScope == 'Zaron' ? "2" : "1",
+        "payment_mode": paymentMode,
+        "delivery_date": DateFormat('yyyy-MM-dd').format(widget.deliveryDate),
+        "delivery_time": widget.deliveryTime.format(context),
+      };
+
+      final headers = {"Content-Type": "application/json"};
+      final url = "$apiUrl/createorder";
+      final body = json.encode(payload);
+      print("User Input Data Fields: $payload");
+
+      try {
+        final response =
+            await http.post(Uri.parse(url), headers: headers, body: body);
+        print("Status: ${response.statusCode}");
+        if (response.statusCode == 200) {
+          print("Response: ${response.body}");
+          Get.snackbar("Moved", "Data Successfully Posted",
+              colorText: Colors.white, backgroundColor: Colors.green);
+        }
+      } catch (e) {
+        throw Exception("Error posting data: $e");
+      } finally {
+        isPosting = false;
+      }
+    } else {
+      isPosting = false;
+      Get.snackbar("Error", "Customer address ID not found",
+          colorText: Colors.white, backgroundColor: Colors.red);
     }
   }
 
