@@ -26,7 +26,7 @@ class IronSteel extends StatefulWidget {
 
 class _IronSteelState extends State<IronSteel> {
   Map<String, dynamic>? categoryMeta;
-  int? billamt;
+  double? billamt;
   String? orderNo;
   int? orderIDD;
   late TextEditingController editController;
@@ -294,7 +294,7 @@ class _IronSteelState extends State<IronSteel> {
       "product_base_name": "$selectedBaseProductName",
       "category_id": categoryId,
       "category_name": categoryName,
-      "OrderID": globalOrderManager.globalOrderId
+      "OrderID": (orderIDD != null) ? orderIDD : null
     };
 
     print("This is a body data: $data");
@@ -727,13 +727,26 @@ class _IronSteelState extends State<IronSteel> {
           child: Padding(
             padding: const EdgeInsets.all(8.0),
             child: SizedBox(
-              width: 100.w,
               child: Row(
                 children: [
                   Expanded(
                     child: _buildDetailItem(
                       "Amount",
                       _editableTextField(data, "Amount"),
+                    ),
+                  ),
+                  SizedBox(width: 10),
+                  Expanded(
+                    child: _buildDetailItem(
+                      "Cgst",
+                      _editableTextField(data, "Cgst"),
+                    ),
+                  ),
+                  SizedBox(width: 10),
+                  Expanded(
+                    child: _buildDetailItem(
+                      "Sgst",
+                      _editableTextField(data, "Sgst"),
                     ),
                   ),
                 ],
@@ -843,7 +856,11 @@ class _IronSteelState extends State<IronSteel> {
     return SizedBox(
       height: 38.h,
       child: TextField(
-        readOnly: (key == "Basic Rate" || key == "Amount" || key == "SQMtr")
+        readOnly: (key == "Basic Rate" ||
+                key == "Amount" ||
+                key == "SQMtr" ||
+                key == "Cgst" ||
+                key == "Sgst")
             ? true
             : false,
         style: GoogleFonts.figtree(
@@ -1074,6 +1091,8 @@ class _IronSteelState extends State<IronSteel> {
 
         if (responseData["status"] == "success") {
           setState(() {
+            billamt = responseData["bill_total"] ?? 0.0;
+            print(billamt);
             calculationResults[productId] = responseData;
 
             // Update Profile/Length
@@ -1133,6 +1152,21 @@ class _IronSteelState extends State<IronSteel> {
               }
             }
 
+            if (responseData["cgst"] != null) {
+              data["Cgst"] = responseData["cgst"].toString();
+              if (fieldControllers[productId]?["Cgst"] != null) {
+                fieldControllers[productId]!["Cgst"]!.text =
+                    responseData["cgst"].toString();
+              }
+            }
+            if (responseData["sgst"] != null) {
+              data["Sgst"] = responseData["sgst"].toString();
+              if (fieldControllers[productId]?["Sgst"] != null) {
+                fieldControllers[productId]!["Sgst"]!.text =
+                    responseData["sgst"].toString();
+              }
+            }
+
             // Update Amount
             if (responseData["Amount"] != null) {
               data["Amount"] = responseData["Amount"].toString();
@@ -1146,7 +1180,7 @@ class _IronSteelState extends State<IronSteel> {
 
           print("=== CALCULATION SUCCESS ===");
           print(
-            "Updated data: Length=${data["Profile"]}, Nos=${data["Nos"]}, Height=${data["Crimp"]}, Amount=${data["Amount"]}",
+            "Updated data: Length=${data["Profile"]}, Nos=${data["Nos"]}, Height=${data["Crimp"]}, Amount=${data["Amount"]} Cgst=${data["Cgst"]}, SQMtr=${data["SQMtr"]}, Sgst=${data["Sgst"]}",
           );
         } else {
           print("API returned error status: ${responseData["status"]}");
@@ -1571,7 +1605,7 @@ class _IronSteelState extends State<IronSteel> {
                                         ),
                                         SizedBox(height: 4),
                                         Text(
-                                          "₹${billamt ?? 0}",
+                                          "₹${billamt ?? 0.0}",
                                           style: TextStyle(
                                             color: Colors.white,
                                             fontSize: 20,

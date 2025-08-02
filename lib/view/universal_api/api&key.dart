@@ -1,1 +1,1 @@
-String apiUrl = 'https://demo.zaron.in:8181/ci3app/api';
+String apiUrl = 'https://erp.zaron.in/ci3app/api';

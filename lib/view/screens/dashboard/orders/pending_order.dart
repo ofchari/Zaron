@@ -1,9 +1,13 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
+import 'package:http/io_client.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:zaron/view/screens/global_user/global_user.dart';
 import 'package:zaron/view/widgets/subhead.dart';
 
@@ -40,6 +44,131 @@ class _PendingOrderPageState extends State<PendingOrder> {
 
   void _onEnquiryNumberChanged() {
     filterData();
+  }
+
+  /// Overview Post method ///
+  Future<void> postOverView(String id) async {
+    HttpClient client = HttpClient();
+    client.badCertificateCallback =
+        ((X509Certificate cert, String host, int port) => true);
+    IOClient ioClient = IOClient(client);
+    final headers = {"Content-Type": "application/json"};
+    final payload = {
+      "order_id": id,
+    };
+    print("User Input Data Fields${payload}");
+    final url = "$apiUrl/order_overview";
+    final body = json.encode(payload);
+    try {
+      final response =
+          await http.post(Uri.parse(url), headers: headers, body: body);
+      print("This is the status code${response.statusCode}");
+      if (response.statusCode == 200) {
+        print("this is a post Data response : ${response.body}");
+
+// Parse the JSON response
+        final responseData = json.decode(response.body);
+
+        // Extract the overview URL
+        if (responseData['overview'] != null) {
+          String overviewUrl = responseData['overview'];
+
+// Remove escape characters from the URL
+          overviewUrl = overviewUrl.replaceAll(r'\/', '/');
+
+          print("Original Overview URL: ${responseData['overview']}");
+          print("Cleaned Overview URL: $overviewUrl");
+
+// Now open the overview URL in browser
+          await openOverviewInBrowser(overviewUrl);
+        } else {
+          print("Overview URL not found in response");
+        }
+
+        Get.snackbar(
+          "Success OverView",
+          "Data Added Successfully",
+          colorText: Colors.white,
+          backgroundColor: Colors.green,
+        );
+      }
+    } catch (e) {
+      print("Error posting data: $e");
+      throw Exception("Error posting data: $e");
+    }
+  }
+
+  /// Call the URL to open the overview in browser ///
+  Future<void> openOverviewInBrowser(String overviewUrl) async {
+    try {
+      print("Opening overview URL in browser: $overviewUrl");
+
+// Create Uri object
+      Uri uri = Uri.parse(overviewUrl);
+      print("Parsed URI: $uri");
+      print("URI scheme: ${uri.scheme}");
+      print("URI host: ${uri.host}");
+
+// Try different launch methods
+      try {
+// Method 1: External application
+        bool launched = await launchUrl(
+          uri,
+          mode: LaunchMode.externalApplication,
+        );
+        if (launched) {
+          print("Successfully launched with externalApplication mode");
+          return;
+        }
+      } catch (e) {
+        print("External application launch failed: $e");
+      }
+
+      try {
+// Method 2: Platform default
+        bool launched = await launchUrl(
+          uri,
+          mode: LaunchMode.platformDefault,
+        );
+        if (launched) {
+          print("Successfully launched with platformDefault mode");
+          return;
+        }
+      } catch (e) {
+        print("Platform default launch failed: $e");
+      }
+
+      try {
+// Method 3: In-app web view
+        bool launched = await launchUrl(
+          uri,
+          mode: LaunchMode.inAppWebView,
+        );
+        if (launched) {
+          print("Successfully launched with inAppWebView mode");
+          return;
+        }
+      } catch (e) {
+        print("In-app web view launch failed: $e");
+      }
+
+// If all methods fail
+      print("All launch methods failed");
+      Get.snackbar(
+        "Error",
+        "Could not open the overview URL. All methods failed.",
+        colorText: Colors.white,
+        backgroundColor: Colors.red,
+      );
+    } catch (e) {
+      print("Error opening overview URL: $e");
+      Get.snackbar(
+        "Error",
+        "Failed to open overview URL: $e",
+        colorText: Colors.white,
+        backgroundColor: Colors.red,
+      );
+    }
   }
 
   Future<void> fetchEnquiryData() async {
@@ -344,8 +473,24 @@ class _PendingOrderPageState extends State<PendingOrder> {
                                   ),
                                   DataCell(
                                     Center(
-                                      child: Icon(Icons.visibility,
-                                          color: Colors.blue, size: 20.sp),
+                                      child: IconButton(
+                                        icon: Icon(Icons.visibility,
+                                            color: Colors.blue, size: 20.sp),
+                                        onPressed: () {
+                                          final orderId =
+                                              entry.value['id'] ?? '';
+                                          if (orderId.isNotEmpty) {
+                                            postOverView(orderId);
+                                          } else {
+                                            Get.snackbar(
+                                              "Missing ID",
+                                              "Order ID is not available for this row.",
+                                              backgroundColor: Colors.orange,
+                                              colorText: Colors.white,
+                                            );
+                                          }
+                                        },
+                                      ),
                                     ),
                                   ),
                                 ],

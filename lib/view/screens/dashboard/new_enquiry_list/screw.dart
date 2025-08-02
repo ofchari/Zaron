@@ -24,7 +24,7 @@ class Screw extends StatefulWidget {
 
 class _ScrewState extends State<Screw> {
   Map<String, dynamic>? categoryMeta;
-  int? billamt;
+  double? billamt;
   late TextEditingController editController;
   int? orderIDD;
   String? orderNO;
@@ -272,7 +272,7 @@ class _ScrewState extends State<Screw> {
       "product_base_name": selectedBaseProductName,
       "category_id": categoryId,
       "category_name": categoryName,
-      "OrderID": globalOrderManager.globalOrderId,
+      "OrderID": (orderIDD != null) ? orderIDD : null,
     };
 
     debugPrint("Request Body: $data");
@@ -498,6 +498,23 @@ class _ScrewState extends State<Screw> {
           ],
         ),
         SizedBox(height: 16),
+        Row(
+          children: [
+            Expanded(
+              child: _buildDetailItem(
+                "Cgst",
+                _editableTextField(data, "Cgst"),
+              ),
+            ),
+            SizedBox(width: 10),
+            Expanded(
+              child: _buildDetailItem(
+                "Sgst",
+                _editableTextField(data, "Sgst"),
+              ),
+            ),
+          ],
+        )
       ],
     );
   }
@@ -527,7 +544,10 @@ class _ScrewState extends State<Screw> {
     return SizedBox(
       height: 38.h,
       child: TextField(
-        readOnly: (key == "Basic Rate" || key == "Amount"),
+        readOnly: (key == "Basic Rate" ||
+            key == "Amount" ||
+            key == "Cgst" ||
+            key == "Sgst"),
         style: GoogleFonts.figtree(
           fontWeight: FontWeight.w500,
           color: Colors.black,
@@ -730,9 +750,10 @@ class _ScrewState extends State<Screw> {
         final responseData = jsonDecode(response.body);
         if (responseData["status"] == "success") {
           setState(() {
-            billamt = responseData["bill_total"] ?? 0;
+            billamt = responseData["bill_total"] ?? 0.0;
             print("billamt updated to: $billamt");
             calculationResults[productId] = responseData;
+
             if (responseData["Nos"] != null) {
               String newNos = responseData["Nos"].toString().trim();
               String currentInput =
@@ -755,11 +776,26 @@ class _ScrewState extends State<Screw> {
                     responseData["Amount"].toString();
               }
             }
+
+            if (responseData["cgst"] != null) {
+              data["Cgst"] = responseData["cgst"].toString();
+              if (fieldControllers[productId]?["Cgst"] != null) {
+                fieldControllers[productId]!["Cgst"]!.text =
+                    responseData["cgst"].toString();
+              }
+            }
+            if (responseData["sgst"] != null) {
+              data["Sgst"] = responseData["sgst"].toString();
+              if (fieldControllers[productId]?["Sgst"] != null) {
+                fieldControllers[productId]!["Sgst"]!.text =
+                    responseData["sgst"].toString();
+              }
+            }
             previousUomValues[productId] = currentUom;
           });
           debugPrint("=== CALCULATION SUCCESS ===");
           debugPrint(
-              "Updated data: Nos=${data["Nos"]}, Amount=${data["Amount"]}");
+              "Updated data: Nos=${data["Nos"]}, Amount=${data["Amount"]},gst=${data["Cgst"]}, Sgst=${data["Sgst"]}");
         } else {
           debugPrint("API returned error status: ${responseData["status"]}");
         }
@@ -1157,7 +1193,7 @@ class _ScrewState extends State<Screw> {
                                       ),
                                       SizedBox(height: 4),
                                       Text(
-                                        "₹${billamt ?? 0}",
+                                        "₹${billamt ?? 0.0}",
                                         style: TextStyle(
                                           color: Colors.white,
                                           fontSize: 20,

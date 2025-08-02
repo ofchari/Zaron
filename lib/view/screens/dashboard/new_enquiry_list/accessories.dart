@@ -73,6 +73,11 @@ class _AccessoriesState extends State<Accessories> {
     editController = TextEditingController();
     _fetchAccessories();
     _fetchBrandData();
+    clearOldSelections();
+    // Clear any previous data from other pages
+    responseProducts.clear();
+    apiResponseData?.clear();
+    uomOptions.clear();
   }
 
   @override
@@ -331,7 +336,28 @@ class _AccessoriesState extends State<Accessories> {
     }
   }
 
+  void clearOldSelections() {
+    setState(() {
+      // Clear accessories data
+      selectedAccessories = null;
+      selectedBrands = null;
+      selectedColors = null;
+      selectedThickness = null;
+      selectedCoatingMass = null;
+    });
+  }
+
   Future<void> postAllData() async {
+    setState(() {
+      responseProducts.clear();
+      apiResponseData?.clear();
+      uomOptions.clear();
+
+      print("Before API call state:");
+      print(responseProducts);
+      print(apiResponseData);
+      print(uomOptions);
+    });
     if (selectedAccessories == null ||
         selectedBrands == null ||
         selectedColors == null ||
@@ -405,7 +431,7 @@ class _AccessoriesState extends State<Accessories> {
             String categoryName = responseData["category_name"] ?? "";
             categoryyName = categoryName.isEmpty ? "Accessories" : categoryName;
 
-            List<dynamic> fullList = responseData["lebels"][0]["data"];
+            List<dynamic> fullList = responseData["lebels"][1]["data"];
             List<Map<String, dynamic>> newProducts = [];
 
             for (var item in fullList) {
@@ -432,7 +458,13 @@ class _AccessoriesState extends State<Accessories> {
                 }
               }
             }
-            responseProducts.addAll(newProducts);
+            // To this:
+            setState(() {
+              responseProducts = newProducts; // Replace instead of add
+              print("Before API call state:");
+              print(responseProducts);
+              print(newProducts);
+            });
           }
         });
       } else {
@@ -1905,7 +1937,10 @@ class _AccessoriesState extends State<Accessories> {
         backgroundColor: Colors.white,
         leading: IconButton(
           icon: Icon(Icons.arrow_back, color: Colors.black87),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () => {
+            clearOldSelections(), // Add this line
+            Navigator.pop(context),
+          },
         ),
       ),
       body: Container(

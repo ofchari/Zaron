@@ -54,6 +54,7 @@ class _TotalEnquiryViewState extends State<TotalEnquiryView> {
   void initState() {
     super.initState();
     fetchTableData();
+    print(widget.id);
   }
 
   Future<void> fetchTableData() async {
@@ -338,7 +339,7 @@ class _TotalEnquiryViewState extends State<TotalEnquiryView> {
     };
     print("User Input Data Fields $payload");
 
-    final url = "https://demo.zaron.in:8181/ci3app/api/createquotation";
+    final url = "$apiUrl/createquotation";
     final body = json.encode(payload);
 
     try {
@@ -554,7 +555,7 @@ class _TotalEnquiryViewState extends State<TotalEnquiryView> {
 
     if (confirm != true) return;
 
-    final response = await http.get(
+    final response = await http.delete(
       Uri.parse('$apiUrl/enquirydelete/$itemId'),
     );
 

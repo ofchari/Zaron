@@ -53,6 +53,10 @@ class _AluminumState extends State<Aluminum> {
     editController = TextEditingController(text: widget.data["Base Product"]);
     print(UserSession().userId);
     _fetchMaterialType();
+    clearOldSelections();
+    responseProducts.clear();
+    apiProductsList.clear();
+    uomOptions.clear();
   }
 
   @override
@@ -266,6 +270,16 @@ class _AluminumState extends State<Aluminum> {
   }
 
   Future<void> postAllData() async {
+    setState(() {
+      responseProducts.clear();
+      apiProductsList.clear();
+      uomOptions.clear();
+
+      print("Before API call state:");
+      print(responseProducts);
+      print(apiProductsList);
+      print(uomOptions);
+    });
     HttpClient client = HttpClient();
     client.badCertificateCallback =
         ((X509Certificate cert, String host, int port) => true);
@@ -353,13 +367,30 @@ class _AluminumState extends State<Aluminum> {
                 }
               }
             }
-            responseProducts.addAll(newProducts);
+            // To this:
+            setState(() {
+              responseProducts = newProducts; // Replace instead of add
+              print("After API call state:");
+              print(responseProducts);
+              print(newProducts);
+            });
           }
         });
       }
     } catch (e) {
       throw Exception("Error posting data: $e");
     }
+  }
+
+  void clearOldSelections() {
+    setState(() {
+      // Clear aluminum data
+      selectedMaterialType = null;
+      selectedBrand = null;
+      selectedColor = null;
+      selectedBaseProductName = null;
+      selectedProductBaseId = null;
+    });
   }
 
   // Add these variables after line 25 (after the existing List declarations)
@@ -1176,7 +1207,10 @@ class _AluminumState extends State<Aluminum> {
         backgroundColor: Colors.white,
         leading: IconButton(
           icon: Icon(Icons.arrow_back, color: Colors.black87),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () => {
+            clearOldSelections(), // Add this line
+            Navigator.pop(context),
+          },
         ),
       ),
       body: Container(
