@@ -370,11 +370,11 @@ class _TotalEnquiryPageState extends State<TotalEnquiryPage> {
                                         style: GoogleFonts.outfit(
                                             fontSize: 16.sp,
                                             fontWeight: FontWeight.w500))),
-                                DataColumn(
-                                    label: Text('ID',
-                                        style: GoogleFonts.outfit(
-                                            fontSize: 16.sp,
-                                            fontWeight: FontWeight.w500))),
+                                // DataColumn(
+                                //     label: Text('ID',
+                                //         style: GoogleFonts.outfit(
+                                //             fontSize: 16.sp,
+                                //             fontWeight: FontWeight.w500))),
                                 DataColumn(
                                     label: Text('Order No',
                                         style: GoogleFonts.outfit(
@@ -431,9 +431,9 @@ class _TotalEnquiryPageState extends State<TotalEnquiryPage> {
                                     DataCell(Text("${index + 1}",
                                         style: GoogleFonts.dmSans(
                                             fontSize: 14.sp))),
-                                    DataCell(Text(row['id'] ?? '',
-                                        style: GoogleFonts.dmSans(
-                                            fontSize: 14.sp))),
+                                    // DataCell(Text(row['id'] ?? '',
+                                    //     style: GoogleFonts.dmSans(
+                                    //         fontSize: 14.sp))),
                                     DataCell(Text(row['order_no'] ?? '',
                                         style: GoogleFonts.dmSans(
                                             fontSize: 14.sp))),

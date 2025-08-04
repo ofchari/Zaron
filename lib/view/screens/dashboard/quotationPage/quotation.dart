@@ -385,18 +385,18 @@ class _QuotationPageState extends State<QuotationPage> {
                                   ),
                                 ),
                               ),
-                              DataColumn(
-                                label: Text(
-                                  'ID',
-                                  style: GoogleFonts.outfit(
-                                    textStyle: TextStyle(
-                                      fontSize: 16.sp,
-                                      fontWeight: FontWeight.w500,
-                                      color: Colors.black,
-                                    ),
-                                  ),
-                                ),
-                              ),
+                              // DataColumn(
+                              //   label: Text(
+                              //     'ID',
+                              //     style: GoogleFonts.outfit(
+                              //       textStyle: TextStyle(
+                              //         fontSize: 16.sp,
+                              //         fontWeight: FontWeight.w500,
+                              //         color: Colors.black,
+                              //       ),
+                              //     ),
+                              //   ),
+                              // ),
                               DataColumn(
                                 label: Text(
                                   'Order No',
@@ -494,18 +494,18 @@ class _QuotationPageState extends State<QuotationPage> {
                                       ),
                                     ),
                                   ),
-                                  DataCell(
-                                    Text(
-                                      row['id'] ?? '',
-                                      style: GoogleFonts.dmSans(
-                                        textStyle: TextStyle(
-                                          fontSize: 14.sp,
-                                          fontWeight: FontWeight.w400,
-                                          color: Colors.black,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
+                                  // DataCell(
+                                  //   Text(
+                                  //     row['id'] ?? '',
+                                  //     style: GoogleFonts.dmSans(
+                                  //       textStyle: TextStyle(
+                                  //         fontSize: 14.sp,
+                                  //         fontWeight: FontWeight.w400,
+                                  //         color: Colors.black,
+                                  //       ),
+                                  //     ),
+                                  //   ),
+                                  // ),
                                   DataCell(
                                     Text(
                                       row['order_no'] ?? '',
