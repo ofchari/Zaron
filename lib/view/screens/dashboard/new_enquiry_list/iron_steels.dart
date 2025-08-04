@@ -717,7 +717,6 @@ class _IronSteelState extends State<IronSteel> {
                   _editableTextField(data, "SQMtr"),
                 ),
               ),
-              SizedBox(width: 10),
             ],
           ),
         ),
@@ -726,18 +725,29 @@ class _IronSteelState extends State<IronSteel> {
           alignment: Alignment.bottomLeft,
           child: Padding(
             padding: const EdgeInsets.all(8.0),
-            child: SizedBox(
-              width: 100.w,
-              child: Row(
-                children: [
-                  Expanded(
-                    child: _buildDetailItem(
-                      "Amount",
-                      _editableTextField(data, "Amount"),
-                    ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: _buildDetailItem(
+                    "Amount",
+                    _editableTextField(data, "Amount"),
                   ),
-                ],
-              ),
+                ),
+                SizedBox(width: 10),
+                Expanded(
+                  child: _buildDetailItem(
+                    "CGST",
+                    _editableTextField(data, "cgst"),
+                  ),
+                ),
+                SizedBox(width: 10),
+                Expanded(
+                  child: _buildDetailItem(
+                    "SGST",
+                    _editableTextField(data, "sgst"),
+                  ),
+                ),
+              ],
             ),
           ),
         ),
@@ -843,7 +853,11 @@ class _IronSteelState extends State<IronSteel> {
     return SizedBox(
       height: 38.h,
       child: TextField(
-        readOnly: (key == "Basic Rate" || key == "Amount" || key == "SQMtr")
+        readOnly: (key == "Basic Rate" ||
+                key == "Amount" ||
+                key == "SQMtr" ||
+                key == "cgst" ||
+                key == "sgst")
             ? true
             : false,
         style: GoogleFonts.figtree(
@@ -876,7 +890,9 @@ class _IronSteelState extends State<IronSteel> {
           if (key == "Length" ||
               key == "Nos" ||
               key == "Basic Rate" ||
-              key == "height") {
+              key == "height" ||
+              key == "cgst" ||
+              key == "sgst") {
             print("Triggering calculation for $key with value: $val");
             _debounceCalculation(data);
           }
@@ -1074,6 +1090,8 @@ class _IronSteelState extends State<IronSteel> {
 
         if (responseData["status"] == "success") {
           setState(() {
+            billamt = responseData["bill_total"] ?? 0;
+            print("billamt updated to: $billamt");
             calculationResults[productId] = responseData;
 
             // Update Profile/Length
@@ -1130,6 +1148,22 @@ class _IronSteelState extends State<IronSteel> {
               if (fieldControllers[productId]?["SQMtr"] != null) {
                 fieldControllers[productId]!["SQMtr"]!.text =
                     responseData["sqmtr"].toString();
+              }
+            }
+
+            if (responseData["cgst"] != null) {
+              data["cgst"] = responseData["cgst"].toString();
+              if (fieldControllers[productId]?["cgst"] != null) {
+                fieldControllers[productId]!["cgst"]!.text =
+                    responseData["cgst"].toString();
+              }
+            }
+
+            if (responseData["sgst"] != null) {
+              data["sgst"] = responseData["sgst"].toString();
+              if (fieldControllers[productId]?["sgst"] != null) {
+                fieldControllers[productId]!["sgst"]!.text =
+                    responseData["sgst"].toString();
               }
             }
 

@@ -272,7 +272,7 @@ class _ScrewState extends State<Screw> {
       "product_base_name": selectedBaseProductName,
       "category_id": categoryId,
       "category_name": categoryName,
-      "OrderID": globalOrderManager.globalOrderId,
+      "OrderID": (orderIDD != null) ? orderIDD : null
     };
 
     debugPrint("Request Body: $data");
@@ -498,6 +498,24 @@ class _ScrewState extends State<Screw> {
           ],
         ),
         SizedBox(height: 16),
+        Row(
+          children: [
+            Gap(5),
+            Expanded(
+              child: _buildDetailItem(
+                "CGST",
+                _editableTextField(data, "cgst"),
+              ),
+            ),
+            SizedBox(width: 10),
+            Expanded(
+              child: _buildDetailItem(
+                "SGST",
+                _editableTextField(data, "sgst"),
+              ),
+            ),
+          ],
+        ),
       ],
     );
   }
@@ -527,7 +545,10 @@ class _ScrewState extends State<Screw> {
     return SizedBox(
       height: 38.h,
       child: TextField(
-        readOnly: (key == "Basic Rate" || key == "Amount"),
+        readOnly: (key == "Basic Rate" ||
+            key == "Amount" ||
+            key == "cgst" ||
+            key == "sgst"),
         style: GoogleFonts.figtree(
           fontWeight: FontWeight.w500,
           color: Colors.black,
@@ -544,7 +565,10 @@ class _ScrewState extends State<Screw> {
           debugPrint("Field $key changed to: $val");
           debugPrint("Controller text: ${controller.text}");
           debugPrint("Data after change: ${data[key]}");
-          if (key == "Nos" || key == "Basic Rate") {
+          if (key == "Nos" ||
+              key == "Basic Rate" ||
+              key == "cgst" ||
+              key == "sgst") {
             debugPrint("Triggering calculation for $key with value: $val");
             _debounceCalculation(data);
           }
@@ -748,6 +772,23 @@ class _ScrewState extends State<Screw> {
                     "Nos NOT updated because user input = '$currentInput'");
               }
             }
+
+            if (responseData["cgst"] != null) {
+              data["cgst"] = responseData["cgst"].toString();
+              if (fieldControllers[productId]?["cgst"] != null) {
+                fieldControllers[productId]!["cgst"]!.text =
+                    responseData["cgst"].toString();
+              }
+            }
+
+            if (responseData["sgst"] != null) {
+              data["sgst"] = responseData["sgst"].toString();
+              if (fieldControllers[productId]?["sgst"] != null) {
+                fieldControllers[productId]!["sgst"]!.text =
+                    responseData["sgst"].toString();
+              }
+            }
+
             if (responseData["Amount"] != null) {
               data["Amount"] = responseData["Amount"].toString();
               if (fieldControllers[productId]?["Amount"] != null) {
