@@ -308,7 +308,7 @@ class _TotalQuoationViewState extends State<TotalQuoationView> {
       "remarks": remarkController.text,
       ...additionalValues,
     };
-    print("User Input Data Fields${payload}");
+    print("User Input Data Fields$payload");
 
     final url = "$apiUrl/quotation_storeaddinfo";
     final body = json.encode(payload);
@@ -382,7 +382,7 @@ class _TotalQuoationViewState extends State<TotalQuoationView> {
 
     if (confirm != true) return;
 
-    final response = await http.get(
+    final response = await http.delete(
       Uri.parse('$apiUrl/enquirydelete/$itemId'),
     );
 

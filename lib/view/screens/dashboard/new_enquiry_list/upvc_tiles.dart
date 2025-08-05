@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:gap/gap.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:http/http.dart' as http;
 import 'package:http/io_client.dart';
 import 'package:zaron/view/universal_api/api&key.dart';
 
@@ -274,6 +275,7 @@ class _UpvcTilesState extends State<UpvcTiles> {
           final String orderID = responseData["order_id"]?.toString() ?? "";
           orderIDD = int.tryParse(orderID);
           orderNO = responseData["order_no"]?.toString() ?? "Unknown";
+
           // Set global order ID if this is the first time
           if (!globalOrderManager.hasGlobalOrderId()) {
             globalOrderManager.setGlobalOrderId(int.parse(orderID), orderNO!);
@@ -290,12 +292,12 @@ class _UpvcTilesState extends State<UpvcTiles> {
                 List<Map<String, dynamic>>.from(
                     responseData['lebels'][0]['data'] ?? []);
 
-            // Filter out items already in apiResponseData based on a unique key
+            // Use unique ID-based duplicate check instead of product_base_id
             for (var item in newItems) {
               final alreadyExists = apiResponseData.any((existingItem) =>
-                  existingItem["product_base_id"] == item["product_base_id"]);
+                  existingItem["id"]?.toString() == item["id"]?.toString());
               if (!alreadyExists) {
-                apiResponseData.add(item); // only add if not duplicate
+                apiResponseData.add(item);
               }
             }
           }
@@ -303,6 +305,26 @@ class _UpvcTilesState extends State<UpvcTiles> {
       }
     } catch (e) {
       throw Exception("Error posting data: $e");
+    }
+  }
+
+  ///delete cards ///
+  Future<void> deleteCards(String deleteId) async {
+    final url = '$apiUrl/enquirydelete/$deleteId';
+    try {
+      final response = await http.delete(
+        Uri.parse(url),
+      );
+      if (response.statusCode == 200) {
+        print("delee response ${response.statusCode}");
+      } else {
+        throw Exception("Failed to delete card with ID $deleteId");
+      }
+    } catch (e) {
+      print("Error deleting card: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error deleting card: $e")),
+      );
     }
   }
 
@@ -329,12 +351,10 @@ class _UpvcTilesState extends State<UpvcTiles> {
         ),
       );
     }
-
     return Column(
       children: apiResponseData.asMap().entries.map((entry) {
         int index = entry.key;
         Map<String, dynamic> data = entry.value;
-
         return Card(
           margin: EdgeInsets.symmetric(vertical: 10),
           elevation: 2,
@@ -397,6 +417,7 @@ class _UpvcTilesState extends State<UpvcTiles> {
                                 ElevatedButton(
                                   onPressed: () {
                                     setState(() {
+                                      deleteCards(data["id"].toString());
                                       apiResponseData.removeAt(index);
                                     });
                                     Navigator.pop(context);

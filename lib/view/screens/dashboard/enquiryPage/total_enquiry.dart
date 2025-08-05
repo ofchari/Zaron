@@ -370,11 +370,6 @@ class _TotalEnquiryPageState extends State<TotalEnquiryPage> {
                                         style: GoogleFonts.outfit(
                                             fontSize: 16.sp,
                                             fontWeight: FontWeight.w500))),
-                                // DataColumn(
-                                //     label: Text('ID',
-                                //         style: GoogleFonts.outfit(
-                                //             fontSize: 16.sp,
-                                //             fontWeight: FontWeight.w500))),
                                 DataColumn(
                                     label: Text('Order No',
                                         style: GoogleFonts.outfit(
@@ -452,7 +447,7 @@ class _TotalEnquiryPageState extends State<TotalEnquiryPage> {
                                           icon: const Icon(Icons.visibility,
                                               color: Colors.blue),
                                           onPressed: () {
-                                            Get.to(TotalEnquiryView(
+                                            Get.to(() => TotalEnquiryView(
                                                 id: row['id'] ?? ''));
                                           },
                                         ),

@@ -80,8 +80,7 @@ class _AllEnquiryState extends State<AllEnquiry> with TickerProviderStateMixin {
             content: Text("No data found"),
             duration: Duration(seconds: 2),
           ),
-        )
-        .closed
+        ).closed
         .then((_) {
       _isSnackBarVisible = false;
     });

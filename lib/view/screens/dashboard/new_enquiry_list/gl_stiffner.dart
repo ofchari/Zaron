@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:gap/gap.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:http/http.dart' as http;
 import 'package:http/io_client.dart';
 import 'package:zaron/view/universal_api/api&key.dart';
 import 'package:zaron/view/widgets/subhead.dart';
@@ -449,6 +450,26 @@ class _GIStiffnerState extends State<GIStiffner> {
     }
   }
 
+  ///delete cards ///
+  Future<void> deleteCards(String deleteId) async {
+    final url = '$apiUrl/enquirydelete/$deleteId';
+    try {
+      final response = await http.delete(
+        Uri.parse(url),
+      );
+      if (response.statusCode == 200) {
+        print("delee response ${response.statusCode}");
+      } else {
+        throw Exception("Failed to delete card with ID $deleteId");
+      }
+    } catch (e) {
+      print("Error deleting card: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error deleting card: $e")),
+      );
+    }
+  }
+
   // 3. MODIFY the _submitData() method - REPLACE the existing method with this:
   void _submitData() {
     if (selectedMeterial == null ||
@@ -840,6 +861,7 @@ class _GIStiffnerState extends State<GIStiffner> {
                                   ElevatedButton(
                                     onPressed: () {
                                       setState(() {
+                                        deleteCards(data['id'].toString());
                                         responseProducts.removeAt(index);
                                       });
                                       Navigator.pop(context);

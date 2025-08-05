@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:gap/gap.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:http/http.dart' as http;
 import 'package:http/io_client.dart';
 import 'package:zaron/view/screens/global_user/global_user.dart';
 import 'package:zaron/view/universal_api/api&key.dart';
@@ -432,6 +433,26 @@ class _TileSheetPageState extends State<TileSheetPage> {
     }
   }
 
+  ///delete cards ///
+  Future<void> deleteCards(String deleteId) async {
+    final url = '$apiUrl/enquirydelete/$deleteId';
+    try {
+      final response = await http.delete(
+        Uri.parse(url),
+      );
+      if (response.statusCode == 200) {
+        print("delee response ${response.statusCode}");
+      } else {
+        throw Exception("Failed to delete card with ID $deleteId");
+      }
+    } catch (e) {
+      print("Error deleting card: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error deleting card: $e")),
+      );
+    }
+  }
+
   TextEditingController baseProductController = TextEditingController();
   List<dynamic> baseProductResults = [];
   bool isSearchingBaseProduct = false;
@@ -602,6 +623,7 @@ class _TileSheetPageState extends State<TileSheetPage> {
                                   ElevatedButton(
                                     onPressed: () {
                                       setState(() {
+                                        deleteCards(data["id"].toString());
                                         responseProducts.removeAt(index);
                                       });
                                       Navigator.pop(context);

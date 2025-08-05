@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:gap/gap.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:http/http.dart' as http;
 import 'package:http/io_client.dart';
 import 'package:zaron/view/universal_api/api&key.dart';
 import 'package:zaron/view/widgets/subhead.dart';
@@ -431,7 +432,7 @@ class _AccessoriesState extends State<Accessories> {
             String categoryName = responseData["category_name"] ?? "";
             categoryyName = categoryName.isEmpty ? "Accessories" : categoryName;
 
-            List<dynamic> fullList = responseData["lebels"][1]["data"];
+            List<dynamic> fullList = responseData["lebels"][0]["data"];
             List<Map<String, dynamic>> newProducts = [];
 
             for (var item in fullList) {
@@ -475,6 +476,25 @@ class _AccessoriesState extends State<Accessories> {
         SnackBar(content: Text("Error adding product: $e")),
       );
       throw Exception("Error posting data: $e");
+    }
+  }
+
+  Future<void> deleteCards(String deleteId) async {
+    final url = '$apiUrl/enquirydelete/$deleteId';
+    try {
+      final response = await http.delete(
+        Uri.parse(url),
+      );
+      if (response.statusCode == 200) {
+        print("delee response ${response.statusCode}");
+      } else {
+        throw Exception("Failed to delete card with ID $deleteId");
+      }
+    } catch (e) {
+      print("Error deleting card: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error deleting card: $e")),
+      );
     }
   }
 
@@ -1071,7 +1091,6 @@ class _AccessoriesState extends State<Accessories> {
       children: responseProducts.asMap().entries.map((entry) {
         int index = entry.key;
         Map<String, dynamic> data = Map<String, dynamic>.from(entry.value);
-
         return Card(
           margin: EdgeInsets.symmetric(vertical: 10),
           elevation: 2,
@@ -1195,6 +1214,7 @@ class _AccessoriesState extends State<Accessories> {
                                   ElevatedButton(
                                     onPressed: () {
                                       setState(() {
+                                        deleteCards(data["id"].toString());
                                         responseProducts.removeAt(index);
                                       });
                                       Navigator.pop(context);
