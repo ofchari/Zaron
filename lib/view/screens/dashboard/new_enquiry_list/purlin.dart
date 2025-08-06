@@ -13,6 +13,7 @@ import 'package:http/io_client.dart';
 import 'package:zaron/view/universal_api/api&key.dart';
 import 'package:zaron/view/widgets/subhead.dart';
 
+import '../../camera_upload/purlin_uploads/purlin_attatchment.dart';
 import '../../global_user/global_oredrID.dart';
 import '../../global_user/global_user.dart';
 
@@ -39,6 +40,7 @@ class _PurlinState extends State<Purlin> {
   String? selectedMaterialType;
   String? selectedProductBaseId;
   String? selectedBaseProductName;
+  String? currentMainProductId;
 
   List<String> productList = [];
   List<String> brandsList = [];
@@ -395,6 +397,7 @@ class _PurlinState extends State<Purlin> {
           orderIDD = globalOrderManager.globalOrderId;
           orderNO = globalOrderManager.globalOrderNo;
           apiResponseData = responseData;
+          currentMainProductId = responseData["product_id"]?.toString();
 
           // Handle label data safely
           if (responseData["lebels"] != null &&
@@ -558,6 +561,38 @@ class _PurlinState extends State<Purlin> {
                         fontSize: 12,
                         color: Colors.blue[700],
                         fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                  Material(
+                    color: Colors.green[50],
+                    borderRadius: BorderRadius.circular(8),
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(8),
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => PurlinAttachment(
+                              productId: data['id'].toString(),
+                              mainProductId:
+                                  currentMainProductId ?? "Unknown ID",
+                            ),
+                          ),
+                        );
+                      },
+                      child: Container(
+                        height: 36,
+                        width: 36,
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.green[100]!),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Icon(
+                          Icons.attach_file,
+                          color: Colors.green[600],
+                          size: 18,
+                        ),
                       ),
                     ),
                   ),

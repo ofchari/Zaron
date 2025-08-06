@@ -11,6 +11,8 @@ import 'package:zaron/view/universal_api/api&key.dart';
 import 'package:zaron/view/widgets/subhead.dart';
 import 'package:zaron/view/widgets/text.dart';
 
+import '../../camera_upload/gi_glutter_uploads/gi_glutter_attachement.dart';
+import '../../global_user/global_oredrID.dart';
 import '../../global_user/global_user.dart';
 
 class GIGlutter extends StatefulWidget {
@@ -23,6 +25,10 @@ class GIGlutter extends StatefulWidget {
 }
 
 class _GIGlutterState extends State<GIGlutter> {
+  Map<String, dynamic>? categoryMeta;
+  int? billamt;
+  String? orderNo;
+  int? orderIDD;
   late TextEditingController editController;
   String? selectedProduct;
   String? selectedMeterial;
@@ -32,6 +38,7 @@ class _GIGlutterState extends State<GIGlutter> {
   String? selectedBrand;
   String? selectedProductBaseId;
   String? selectedBaseProductName;
+  String? currentMainProductId;
 
   List<String> productList = [];
   List<String> meterialList = [];
@@ -39,6 +46,7 @@ class _GIGlutterState extends State<GIGlutter> {
   List<String> coatMassList = [];
   List<String> yieldsListt = [];
   List<String> brandList = [];
+  List<dynamic> rawGIutter = [];
   List<Map<String, dynamic>> submittedData = [];
 
   // Form key for validation
@@ -364,17 +372,34 @@ class _GIGlutterState extends State<GIGlutter> {
     client.badCertificateCallback =
         ((X509Certificate cert, String host, int port) => true);
     IOClient ioClient = IOClient(client);
+    // From saved categoryMeta
+    final categoryId = categoryMeta?["category_id"];
+    final categoryName = categoryMeta?["categories"];
+    print("this os $categoryId");
+    print("this os $categoryName");
+
+    // Find the matching item from rawAccessoriesData
+    final matchingAccessory = rawGIutter.firstWhere(
+      (item) => item["product_name"] == selectedProduct,
+      orElse: () => null,
+    );
+    // Extract values
+    final giglutterId = matchingAccessory?["id"];
+    print("this os $giglutterId");
+    // Use global order ID if available, otherwise null for first time
+    final globalOrderManager = GlobalOrderManager();
+
     final headers = {"Content-Type": "application/json"};
     final data = {
       "customer_id": UserSession().userId,
-      "product_id": 1070,
+      "product_id": giglutterId,
       "product_name": selectedProduct,
       "product_base_id": selectedProductBaseId,
-      "product_base_name": "$selectedBaseProductName",
-      "category_id": 628,
-      "category_name": "GI GUTTER",
+      "product_base_name": "$selectedBaseProduct",
+      "category_id": categoryId,
+      "category_name": categoryName,
+      "OrderID": globalOrderManager.globalOrderId
     };
-
     print("This is a body data: $data");
     final url = "$apiUrl/addbag";
     final body = jsonEncode(data);
@@ -386,19 +411,28 @@ class _GIGlutterState extends State<GIGlutter> {
       );
 
       debugPrint("This is a response: ${response.body}");
-      if (selectedMeterial == null ||
-          selectedThichness == null ||
-          selsectedCoat == null ||
-          selectedyie == null ||
-          selectedBrand == null) {
-        return;
-      }
 
       if (response.statusCode == 200) {
         // PARSE THE API RESPONSE
         final responseData = jsonDecode(response.body);
         setState(() {
+          final String orderID = responseData["order_id"].toString();
+          print("Order IDDDD: $orderID");
+          orderIDD = int.parse(orderID);
+          String orderNos = responseData["order_no"]?.toString() ?? "Unknown";
+          orderNo = orderNos.isEmpty ? "Unknown" : orderNos;
+
+          // Set global order ID if this is the first time
+          if (!globalOrderManager.hasGlobalOrderId()) {
+            globalOrderManager.setGlobalOrderId(int.parse(orderID), orderNo!);
+          }
+
+          // Update local variables
+          orderIDD = globalOrderManager.globalOrderId;
+          orderNo = globalOrderManager.globalOrderNo;
           apiResponseData = responseData;
+          currentMainProductId = responseData["product_id"]?.toString();
+          // Extract the products from the response
           if (responseData['lebels'] != null &&
               responseData['lebels'].isNotEmpty) {
             responseProducts = responseData['lebels'][0]['data'] ?? [];
@@ -645,8 +679,7 @@ class _GIGlutterState extends State<GIGlutter> {
         selectedThichness == null ||
         selsectedCoat == null ||
         selectedyie == null ||
-        selectedBrand == null ||
-        selectedProduct == null) {
+        selectedBrand == null) {
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
@@ -775,6 +808,31 @@ class _GIGlutterState extends State<GIGlutter> {
                         color: Colors.blue[700],
                         fontWeight: FontWeight.w500,
                       ),
+                    ),
+                  ),
+                  Container(
+                    height: 40.h,
+                    width: 40.w,
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.green[100]!),
+                      borderRadius: BorderRadius.circular(10),
+                      color: Colors.green[50],
+                    ),
+                    child: IconButton(
+                      icon: Icon(Icons.attach_file,
+                          color: Colors.green[600], size: 20),
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => GIGlutterAttachment(
+                              productId: data['id'].toString(),
+                              mainProductId:
+                                  currentMainProductId ?? "Unknown ID",
+                            ),
+                          ),
+                        );
+                      },
                     ),
                   ),
                   Padding(

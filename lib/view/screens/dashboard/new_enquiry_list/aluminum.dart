@@ -1,3 +1,4 @@
+//alumi
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
@@ -26,7 +27,7 @@ class Aluminum extends StatefulWidget {
 
 class _AluminumState extends State<Aluminum> {
   Map<String, dynamic>? categoryMeta;
-  int? billamt;
+  double? billamt;
   String? orderNO;
   int? orderIDD;
   late TextEditingController editController;
@@ -54,10 +55,6 @@ class _AluminumState extends State<Aluminum> {
     editController = TextEditingController(text: widget.data["Base Product"]);
     print(UserSession().userId);
     _fetchMaterialType();
-    clearOldSelections();
-    responseProducts.clear();
-    apiProductsList.clear();
-    uomOptions.clear();
   }
 
   @override
@@ -271,16 +268,6 @@ class _AluminumState extends State<Aluminum> {
   }
 
   Future<void> postAllData() async {
-    setState(() {
-      responseProducts.clear();
-      apiProductsList.clear();
-      uomOptions.clear();
-
-      print("Before API call state:");
-      print(responseProducts);
-      print(apiProductsList);
-      print(uomOptions);
-    });
     HttpClient client = HttpClient();
     client.badCertificateCallback =
         ((X509Certificate cert, String host, int port) => true);
@@ -368,13 +355,7 @@ class _AluminumState extends State<Aluminum> {
                 }
               }
             }
-            // To this:
-            setState(() {
-              responseProducts = newProducts; // Replace instead of add
-              print("After API call state:");
-              print(responseProducts);
-              print(newProducts);
-            });
+            responseProducts.addAll(newProducts);
           }
         });
       }
@@ -383,7 +364,6 @@ class _AluminumState extends State<Aluminum> {
     }
   }
 
-  ///delete card
   Future<void> deleteCards(String deleteId) async {
     final url = '$apiUrl/enquirydelete/$deleteId';
     try {
@@ -401,17 +381,6 @@ class _AluminumState extends State<Aluminum> {
         SnackBar(content: Text("Error deleting card: $e")),
       );
     }
-  }
-
-  void clearOldSelections() {
-    setState(() {
-      // Clear aluminum data
-      selectedMaterialType = null;
-      selectedBrand = null;
-      selectedColor = null;
-      selectedBaseProductName = null;
-      selectedProductBaseId = null;
-    });
   }
 
   // Add these variables after line 25 (after the existing List declarations)
@@ -471,7 +440,6 @@ class _AluminumState extends State<Aluminum> {
           padding: const EdgeInsets.all(8.0),
           child: Row(
             children: [
-              Gap(10),
               Expanded(
                 child: _buildDetailItem(
                   "SQMtr",
@@ -483,6 +451,27 @@ class _AluminumState extends State<Aluminum> {
                 child: _buildDetailItem(
                   "Amount",
                   _editableTextField(data, "Amount"),
+                ),
+              ),
+              SizedBox(width: 10),
+              Expanded(
+                child: _buildDetailItem(
+                  "CGST",
+                  _editableTextField(data, "cgst"),
+                ),
+              ),
+            ],
+          ),
+        ),
+        Gap(5.h),
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Row(
+            children: [
+              Expanded(
+                child: _buildDetailItem(
+                  "SGST",
+                  _editableTextField(data, "sgst"),
                 ),
               ),
             ],
@@ -1063,7 +1052,7 @@ class _AluminumState extends State<Aluminum> {
 
         if (responseData["status"] == "success") {
           setState(() {
-            billamt = responseData["bill_total"] ?? 0;
+            billamt = responseData["bill_total"].toDouble() ?? 0.0;
             print("billamt updated to: $billamt");
             calculationResults[productId] = responseData;
 
@@ -1119,6 +1108,21 @@ class _AluminumState extends State<Aluminum> {
               if (fieldControllers[productId]?["SQMtr"] != null) {
                 fieldControllers[productId]!["SQMtr"]!.text =
                     responseData["sqmtr"].toString();
+              }
+            }
+
+            if (responseData["cgst"] != null) {
+              data["cgst"] = responseData["cgst"].toString();
+              if (fieldControllers[productId]?["cgst"] != null) {
+                fieldControllers[productId]!["cgst"]!.text =
+                    responseData["cgst"].toString();
+              }
+            }
+            if (responseData["sgst"] != null) {
+              data["sgst"] = responseData["sgst"].toString();
+              if (fieldControllers[productId]?["sgst"] != null) {
+                fieldControllers[productId]!["sgst"]!.text =
+                    responseData["sgst"].toString();
               }
             }
 
@@ -1229,10 +1233,7 @@ class _AluminumState extends State<Aluminum> {
         backgroundColor: Colors.white,
         leading: IconButton(
           icon: Icon(Icons.arrow_back, color: Colors.black87),
-          onPressed: () => {
-            clearOldSelections(), // Add this line
-            Navigator.pop(context),
-          },
+          onPressed: () => Navigator.pop(context),
         ),
       ),
       body: Container(

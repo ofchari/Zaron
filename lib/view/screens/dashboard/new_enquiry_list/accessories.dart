@@ -1,3 +1,4 @@
+//acce
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
@@ -27,7 +28,7 @@ class Accessories extends StatefulWidget {
 }
 
 class _AccessoriesState extends State<Accessories> {
-  int? billamt;
+  double? billamt;
   late TextEditingController editController;
   int? orderIDD;
   String? selectedAccessories;
@@ -74,11 +75,6 @@ class _AccessoriesState extends State<Accessories> {
     editController = TextEditingController();
     _fetchAccessories();
     _fetchBrandData();
-    clearOldSelections();
-    // Clear any previous data from other pages
-    responseProducts.clear();
-    apiResponseData?.clear();
-    uomOptions.clear();
   }
 
   @override
@@ -337,28 +333,7 @@ class _AccessoriesState extends State<Accessories> {
     }
   }
 
-  void clearOldSelections() {
-    setState(() {
-      // Clear accessories data
-      selectedAccessories = null;
-      selectedBrands = null;
-      selectedColors = null;
-      selectedThickness = null;
-      selectedCoatingMass = null;
-    });
-  }
-
   Future<void> postAllData() async {
-    setState(() {
-      responseProducts.clear();
-      apiResponseData?.clear();
-      uomOptions.clear();
-
-      print("Before API call state:");
-      print(responseProducts);
-      print(apiResponseData);
-      print(uomOptions);
-    });
     if (selectedAccessories == null ||
         selectedBrands == null ||
         selectedColors == null ||
@@ -459,13 +434,7 @@ class _AccessoriesState extends State<Accessories> {
                 }
               }
             }
-            // To this:
-            setState(() {
-              responseProducts = newProducts; // Replace instead of add
-              print("Before API call state:");
-              print(responseProducts);
-              print(newProducts);
-            });
+            responseProducts.addAll(newProducts);
           }
         });
       } else {
@@ -1091,6 +1060,7 @@ class _AccessoriesState extends State<Accessories> {
       children: responseProducts.asMap().entries.map((entry) {
         int index = entry.key;
         Map<String, dynamic> data = Map<String, dynamic>.from(entry.value);
+
         return Card(
           margin: EdgeInsets.symmetric(vertical: 10),
           elevation: 2,
@@ -1356,6 +1326,23 @@ class _AccessoriesState extends State<Accessories> {
                           ),
                         ],
                       ),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _buildCompactField(
+                              "CGST",
+                              _editableTextField(data, "cgst"),
+                            ),
+                          ),
+                          SizedBox(width: 12),
+                          Expanded(
+                            child: _buildCompactField(
+                              "SGST",
+                              _editableTextField(data, "sgst"),
+                            ),
+                          ),
+                        ],
+                      ),
                     ],
                   ),
                 ),
@@ -1570,7 +1557,9 @@ class _AccessoriesState extends State<Accessories> {
         readOnly: (key == "Basic Rate" ||
                 key == "Amount" ||
                 key == "R.Ft" ||
-                key == "bill_total")
+                key == "bill_total" ||
+                key == "cgst" ||
+                key == "sgst")
             ? true
             : false,
         style: GoogleFonts.figtree(
@@ -1601,7 +1590,9 @@ class _AccessoriesState extends State<Accessories> {
                 if (key == "Profile" ||
                     key == "Nos" ||
                     key == "Basic Rate" ||
-                    key == "bill_total") {
+                    key == "bill_total" ||
+                    key == "cgst" ||
+                    key == "sgst") {
                   print("Triggering calculation for $key with value: $val");
                   _debounceCalculation(data);
                 }
@@ -1687,6 +1678,23 @@ class _AccessoriesState extends State<Accessories> {
           ],
         ),
         Gap(5),
+        Row(
+          children: [
+            Expanded(
+              child: _buildDetailItem(
+                "CGST",
+                _editableTextField(data, "cgst"),
+              ),
+            ),
+            SizedBox(width: 12),
+            Expanded(
+              child: _buildDetailItem(
+                "SGST",
+                _editableTextField(data, "sgst"),
+              ),
+            ),
+          ],
+        ),
       ],
     );
   }
@@ -1814,7 +1822,7 @@ class _AccessoriesState extends State<Accessories> {
         final responseData = jsonDecode(response.body);
         if (responseData["status"] == "success") {
           setState(() {
-            billamt = responseData["bill_total"] ?? 0;
+            billamt = responseData["bill_total"].toDouble() ?? 0.0;
             print("billamt updated to: $billamt");
             calculationResults[productId] = responseData;
             if (responseData["Length"] != null) {
@@ -1852,6 +1860,22 @@ class _AccessoriesState extends State<Accessories> {
                     responseData["bill_total"].toString();
               }
             }
+
+            if (responseData["cgst"] != null) {
+              data["cgst"] = responseData["cgst"].toString();
+              if (fieldControllers[productId]?["cgst"] != null) {
+                fieldControllers[productId]!["cgst"]!.text =
+                    responseData["cgst"].toString();
+              }
+            }
+            if (responseData["sgst"] != null) {
+              data["sgst"] = responseData["sgst"].toString();
+              if (fieldControllers[productId]?["sgst"] != null) {
+                fieldControllers[productId]!["sgst"]!.text =
+                    responseData["sgst"].toString();
+              }
+            }
+
             if (responseData["Amount"] != null) {
               data["Amount"] = responseData["Amount"].toString();
               if (fieldControllers[productId]?["Amount"] != null) {
@@ -1957,10 +1981,7 @@ class _AccessoriesState extends State<Accessories> {
         backgroundColor: Colors.white,
         leading: IconButton(
           icon: Icon(Icons.arrow_back, color: Colors.black87),
-          onPressed: () => {
-            clearOldSelections(), // Add this line
-            Navigator.pop(context),
-          },
+          onPressed: () => Navigator.pop(context),
         ),
       ),
       body: Container(

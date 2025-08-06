@@ -830,6 +830,26 @@ class _LinerSheetPageState extends State<LinerSheetPage> {
           ),
         ),
         Gap(5.h),
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Row(
+            children: [
+              Expanded(
+                child: _buildDetailItem(
+                  "CGST",
+                  _editableTextField(data, "cgst"),
+                ),
+              ),
+              SizedBox(width: 12),
+              Expanded(
+                child: _buildDetailItem(
+                  "SGST",
+                  _editableTextField(data, "sgst"),
+                ),
+              ),
+            ],
+          ),
+        ),
       ],
     );
   }
@@ -1152,18 +1172,26 @@ class _LinerSheetPageState extends State<LinerSheetPage> {
               }
             }
 
-            // if (responseData["R.Ft"] != null) {
-            //   data["R.Ft"] = responseData["R.Ft"].toString();
-            //   if (fieldControllers[productId]?["R.Ft"] != null) {
-            //     fieldControllers[productId]!["R.Ft"]!.text =
-            //         responseData["R.Ft"].toString();
-            //   }
-            // }
             if (responseData["sqmtr"] != null) {
               data["SQMtr"] = responseData["sqmtr"].toString();
               if (fieldControllers[productId]?["SQMtr"] != null) {
                 fieldControllers[productId]!["SQMtr"]!.text =
                     responseData["sqmtr"].toString();
+              }
+            }
+
+            if (responseData["cgst"] != null) {
+              data["cgst"] = responseData["cgst"].toString();
+              if (fieldControllers[productId]?["cgst"] != null) {
+                fieldControllers[productId]!["cgst"]!.text =
+                    responseData["cgst"].toString();
+              }
+            }
+            if (responseData["sgst"] != null) {
+              data["sgst"] = responseData["sgst"].toString();
+              if (fieldControllers[productId]?["sgst"] != null) {
+                fieldControllers[productId]!["sgst"]!.text =
+                    responseData["sgst"].toString();
               }
             }
 

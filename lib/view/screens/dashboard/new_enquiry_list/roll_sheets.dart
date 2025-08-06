@@ -12,6 +12,7 @@ import 'package:http/io_client.dart';
 import 'package:zaron/view/universal_api/api&key.dart';
 import 'package:zaron/view/widgets/subhead.dart';
 
+import '../../camera_upload/roll_sheets_uploads/roll_sheet_attachment.dart';
 import '../../global_user/global_oredrID.dart';
 import '../../global_user/global_user.dart';
 
@@ -37,6 +38,7 @@ class _RollSheetState extends State<RollSheet> {
   String? selectedCoatingMass;
   String? selectedBaseProductID;
   String? selectedProductBaseId;
+  String? currentMainProductId;
 
   List<String> productList = [];
   List<String> brandsList = [];
@@ -373,6 +375,7 @@ class _RollSheetState extends State<RollSheet> {
           orderIDD = int.tryParse(orderID);
           orderNO = responseData["order_no"]?.toString() ?? "Unknown";
           apiResponseData = responseData;
+          currentMainProductId = responseData["product_id"]?.toString();
 
           // Set global order ID if this is the first time
           if (!globalOrderManager.hasGlobalOrderId()) {
@@ -437,7 +440,7 @@ class _RollSheetState extends State<RollSheet> {
         Uri.parse(url),
       );
       if (response.statusCode == 200) {
-        print("delete response ${response.statusCode}");
+        print("delee response ${response.statusCode}");
       } else {
         throw Exception("Failed to delete card with ID $deleteId");
       }
@@ -802,6 +805,31 @@ class _RollSheetState extends State<RollSheet> {
                       ),
                     ),
                   ),
+                  Container(
+                    height: 40.h,
+                    width: 40.w,
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.green[100]!),
+                      borderRadius: BorderRadius.circular(10),
+                      color: Colors.green[50],
+                    ),
+                    child: IconButton(
+                      icon: Icon(Icons.attach_file,
+                          color: Colors.green[600], size: 20),
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => RollAttachment(
+                              productId: data['id'].toString(),
+                              mainProductId:
+                                  currentMainProductId ?? "Unknown ID",
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
                   Padding(
                     padding: const EdgeInsets.all(8.0),
                     child: Container(
@@ -827,7 +855,7 @@ class _RollSheetState extends State<RollSheet> {
                                   ElevatedButton(
                                     onPressed: () {
                                       setState(() {
-                                        deleteCards(data["id"].toString());
+                                        deleteCards(data['id'].toString());
                                         submittedData.removeAt(index);
                                         responseProducts.removeAt(index);
                                       });

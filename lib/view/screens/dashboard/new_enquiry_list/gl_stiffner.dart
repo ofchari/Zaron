@@ -7,8 +7,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:gap/gap.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:http/http.dart' as http;
 import 'package:http/io_client.dart';
+import 'package:zaron/view/screens/camera_upload/gi_stiffner_uploads/gi_stiffner_attachment.dart';
 import 'package:zaron/view/universal_api/api&key.dart';
 import 'package:zaron/view/widgets/subhead.dart';
 
@@ -38,6 +38,7 @@ class _GIStiffnerState extends State<GIStiffner> {
   String? selectedBrand;
   String? selectedProductBaseId;
   String? selectedBaseProductId;
+  String? currentMainProductId; // Store controllers
 
   List<String> productList = [];
   List<String> meterialList = [];
@@ -438,6 +439,7 @@ class _GIStiffnerState extends State<GIStiffner> {
           orderIDD = globalOrderManager.globalOrderId;
           orderNo = globalOrderManager.globalOrderNo;
           apiResponseData = responseData;
+          currentMainProductId = responseData["product_id"]?.toString();
           // Extract the products from the response
           if (responseData['lebels'] != null &&
               responseData['lebels'].isNotEmpty) {
@@ -447,26 +449,6 @@ class _GIStiffnerState extends State<GIStiffner> {
       }
     } catch (e) {
       throw Exception("Error posting data: $e");
-    }
-  }
-
-  ///delete cards ///
-  Future<void> deleteCards(String deleteId) async {
-    final url = '$apiUrl/enquirydelete/$deleteId';
-    try {
-      final response = await http.delete(
-        Uri.parse(url),
-      );
-      if (response.statusCode == 200) {
-        print("delee response ${response.statusCode}");
-      } else {
-        throw Exception("Failed to delete card with ID $deleteId");
-      }
-    } catch (e) {
-      print("Error deleting card: $e");
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error deleting card: $e")),
-      );
     }
   }
 
@@ -836,6 +818,31 @@ class _GIStiffnerState extends State<GIStiffner> {
                       ),
                     ),
                   ),
+                  Container(
+                    height: 40.h,
+                    width: 40.w,
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.green[100]!),
+                      borderRadius: BorderRadius.circular(10),
+                      color: Colors.green[50],
+                    ),
+                    child: IconButton(
+                      icon: Icon(Icons.attach_file,
+                          color: Colors.green[600], size: 20),
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => GIStiffnerAttachment(
+                              productId: data['id'].toString(),
+                              mainProductId:
+                                  currentMainProductId ?? "Unknown ID",
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
                   Padding(
                     padding: const EdgeInsets.all(8.0),
                     child: Container(
@@ -861,7 +868,6 @@ class _GIStiffnerState extends State<GIStiffner> {
                                   ElevatedButton(
                                     onPressed: () {
                                       setState(() {
-                                        deleteCards(data['id'].toString());
                                         responseProducts.removeAt(index);
                                       });
                                       Navigator.pop(context);
@@ -1176,8 +1182,7 @@ class _GIStiffnerState extends State<GIStiffner> {
   Timer? _debounceTimer;
   Map<String, dynamic> calculationResults = {};
   Map<String, String?> previousUomValues = {}; // Track previous UOM values
-  Map<String, Map<String, TextEditingController>> fieldControllers =
-      {}; // Store controllers
+  Map<String, Map<String, TextEditingController>> fieldControllers = {};
 
   // Method to get or create controller for each field
   TextEditingController _getController(Map<String, dynamic> data, String key) {

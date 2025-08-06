@@ -25,7 +25,7 @@ class CutToLengthSheet extends StatefulWidget {
 }
 
 class _CutToLengthSheetState extends State<CutToLengthSheet> {
-  int? billamt;
+  double? billamt;
   Map<String, dynamic>? categoryMeta;
   Map<String, dynamic>? categoryProductsMeta;
   String? orderNO;
@@ -552,6 +552,20 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
                   _editableTextField(data, "Amount"),
                 ),
               ),
+              Gap(10),
+              Expanded(
+                child: _buildDetailItem(
+                  "CGST",
+                  _editableTextField(data, "cgst"),
+                ),
+              ),
+              Gap(10),
+              Expanded(
+                child: _buildDetailItem(
+                  "SGST",
+                  _editableTextField(data, "sgst"),
+                ),
+              ),
             ],
           ),
           Gap(5),
@@ -687,7 +701,11 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
     return SizedBox(
       height: 38.h,
       child: TextField(
-        readOnly: (key == "Basic Rate" || key == "Amount" || key == "qty")
+        readOnly: (key == "Basic Rate" ||
+                key == "Amount" ||
+                key == "qty" ||
+                key == "sgst" ||
+                key == "cgst")
             ? true
             : false,
         style: GoogleFonts.figtree(
@@ -721,7 +739,9 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
               key == "Nos" ||
               key == "Basic Rate" ||
               key == "Crimp" ||
-              key == "qty") {
+              key == "qty" ||
+              key == "sgst" ||
+              key == "cgst") {
             print("Triggering calculation for $key with value: $val");
             _debounceCalculation(data);
           }
@@ -1368,7 +1388,7 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
 
         if (responseData["status"] == "success") {
           setState(() {
-            billamt = responseData["bill_total"] ?? 0;
+            billamt = responseData["bill_total"].toDouble() ?? 0.0;
             print("billamt updated to: $billamt");
             calculationResults[productId] = responseData;
 
@@ -1424,6 +1444,21 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
               if (fieldControllers[productId]?["qty"] != null) {
                 fieldControllers[productId]!["qty"]!.text =
                     responseData["qty"].toString();
+              }
+            }
+
+            if (responseData["cgst"] != null) {
+              data["cgst"] = responseData["cgst"].toString();
+              if (fieldControllers[productId]?["cgst"] != null) {
+                fieldControllers[productId]!["cgst"]!.text =
+                    responseData["cgst"].toString();
+              }
+            }
+            if (responseData["sgst"] != null) {
+              data["sgst"] = responseData["sgst"].toString();
+              if (fieldControllers[productId]?["sgst"] != null) {
+                fieldControllers[productId]!["sgst"]!.text =
+                    responseData["sgst"].toString();
               }
             }
 

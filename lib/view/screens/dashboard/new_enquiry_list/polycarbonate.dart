@@ -552,6 +552,23 @@ class _PolycarbonateState extends State<Polycarbonate> {
           ),
         ),
         Gap(5.h),
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Row(
+            children: [
+              Expanded(
+                child:
+                    _buildDetailItem("CGST", _editableTextField(data, "cgst")),
+              ),
+              SizedBox(width: 10),
+              Expanded(
+                child:
+                    _buildDetailItem("SGST", _editableTextField(data, "sgst")),
+              ),
+            ],
+          ),
+        ),
+        Gap(5.h),
       ],
     );
   }
@@ -580,7 +597,11 @@ class _PolycarbonateState extends State<Polycarbonate> {
     return SizedBox(
       height: 38.h,
       child: TextField(
-        readOnly: (key == "Basic Rate" || key == "Amount" || key == "SQMtr"),
+        readOnly: (key == "Basic Rate" ||
+            key == "Amount" ||
+            key == "SQMtr" ||
+            key == "cgst" ||
+            key == "sgst"),
         style: GoogleFonts.figtree(
           fontWeight: FontWeight.w500,
           color: Colors.black,
@@ -591,7 +612,9 @@ class _PolycarbonateState extends State<Polycarbonate> {
                 key == "Nos" ||
                 key == "Basic Rate" ||
                 key == "Amount" ||
-                key == "SQMtr")
+                key == "SQMtr" ||
+                key == "cgst" ||
+                key == "sgst")
             ? TextInputType.numberWithOptions(decimal: true)
             : TextInputType.numberWithOptions(decimal: true),
         onChanged: (val) {
@@ -897,6 +920,22 @@ class _PolycarbonateState extends State<Polycarbonate> {
                     responseData["sqmtr"].toString();
               }
             }
+
+            if (responseData["cgst"] != null) {
+              data["cgst"] = responseData["cgst"].toString();
+              if (fieldControllers[productId]?["cgst"] != null) {
+                fieldControllers[productId]!["cgst"]!.text =
+                    responseData["cgst"].toString();
+              }
+            }
+            if (responseData["sgst"] != null) {
+              data["sgst"] = responseData["sgst"].toString();
+              if (fieldControllers[productId]?["sgst"] != null) {
+                fieldControllers[productId]!["sgst"]!.text =
+                    responseData["sgst"].toString();
+              }
+            }
+
             if (responseData["Amount"] != null) {
               data["Amount"] = responseData["Amount"].toString();
               if (fieldControllers[productId]?["Amount"] != null) {
