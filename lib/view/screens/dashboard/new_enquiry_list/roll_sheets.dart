@@ -27,7 +27,7 @@ class RollSheet extends StatefulWidget {
 
 class _RollSheetState extends State<RollSheet> {
   Map<String, dynamic>? categoryMeta;
-  int? billamt;
+  double? billamt;
   int? orderIDD;
   String? orderNO;
   late TextEditingController editController;
@@ -936,6 +936,24 @@ class _RollSheetState extends State<RollSheet> {
               ),
             ],
           ),
+          Gap(5),
+          Row(
+            children: [
+              Expanded(
+                child: _buildDetailItem(
+                  "CGST",
+                  _editableTextField(data, "cgst"),
+                ),
+              ),
+              SizedBox(width: 10),
+              Expanded(
+                child: _buildDetailItem(
+                  "SGST",
+                  _editableTextField(data, "sgst"),
+                ),
+              ),
+            ],
+          ),
           Gap(5.h),
           _buildBaseProductSearchField(),
         ],
@@ -1028,7 +1046,11 @@ class _RollSheetState extends State<RollSheet> {
     return SizedBox(
       height: 38.h,
       child: TextField(
-        readOnly: (key == "Basic Rate" || key == "Amount" || key == "SQMtr")
+        readOnly: (key == "Basic Rate" ||
+                key == "Amount" ||
+                key == "SQMtr" ||
+                key == "cgst" ||
+                key == "sgst")
             ? true
             : false,
         style: GoogleFonts.figtree(
@@ -1041,7 +1063,9 @@ class _RollSheetState extends State<RollSheet> {
                 key == "Nos" ||
                 key == "Basic Rate" ||
                 key == "Amount" ||
-                key == "SQMtr")
+                key == "SQMtr" ||
+                key == "cgst" ||
+                key == "sgst")
             ? TextInputType.numberWithOptions(decimal: false)
             : TextInputType.numberWithOptions(decimal: false),
         onChanged: (val) {
@@ -1227,7 +1251,7 @@ class _RollSheetState extends State<RollSheet> {
 
         if (responseData["status"] == "success") {
           setState(() {
-            billamt = responseData["bill_total"] ?? 0;
+            billamt = responseData["bill_total"].toDouble() ?? 0.0;
             print("billamt updated to: $billamt");
             calculationResults[productId] = responseData;
 
@@ -1260,6 +1284,20 @@ class _RollSheetState extends State<RollSheet> {
               if (fieldControllers[productId]?["SQMtr"] != null) {
                 fieldControllers[productId]!["SQMtr"]!.text =
                     responseData["sqmtr"].toString();
+              }
+            }
+            if (responseData["cgst"] != null) {
+              data["cgst"] = responseData["cgst"].toString();
+              if (fieldControllers[productId]?["cgst"] != null) {
+                fieldControllers[productId]!["cgst"]!.text =
+                    responseData["cgst"].toString();
+              }
+            }
+            if (responseData["sgst"] != null) {
+              data["sgst"] = responseData["sgst"].toString();
+              if (fieldControllers[productId]?["sgst"] != null) {
+                fieldControllers[productId]!["sgst"]!.text =
+                    responseData["sgst"].toString();
               }
             }
 

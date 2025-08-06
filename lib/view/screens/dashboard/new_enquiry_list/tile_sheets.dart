@@ -26,7 +26,7 @@ class TileSheetPage extends StatefulWidget {
 
 class _TileSheetPageState extends State<TileSheetPage> {
   Map<String, dynamic>? categoryMeta;
-  int? billamt;
+  double? billamt;
   late TextEditingController editController;
   int? orderIDD;
   String? orderNO;
@@ -708,6 +708,27 @@ class _TileSheetPageState extends State<TileSheetPage> {
             ],
           ),
         ),
+        Gap(5),
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Row(
+            children: [
+              Expanded(
+                child: _buildDetailItem(
+                  "CGST",
+                  _editableTextField(data, "cgst"),
+                ),
+              ),
+              SizedBox(width: 10),
+              Expanded(
+                child: _buildDetailItem(
+                  "SGST",
+                  _editableTextField(data, "sgst"),
+                ),
+              ),
+            ],
+          ),
+        ),
         Gap(5.h),
       ],
     );
@@ -737,7 +758,11 @@ class _TileSheetPageState extends State<TileSheetPage> {
     return SizedBox(
       height: 38.h,
       child: TextField(
-        readOnly: (key == "Basic Rate" || key == "Amount" || key == "SQMtr")
+        readOnly: (key == "Basic Rate" ||
+                key == "Amount" ||
+                key == "SQMtr" ||
+                key == "cgst" ||
+                key == "sgst")
             ? true
             : false,
         style: GoogleFonts.figtree(
@@ -750,7 +775,9 @@ class _TileSheetPageState extends State<TileSheetPage> {
                 key == "Nos" ||
                 key == "Basic Rate" ||
                 key == "Amount" ||
-                key == "SQMtr")
+                key == "SQMtr" ||
+                key == "cgst" ||
+                key == "sgst")
             ? TextInputType.numberWithOptions(decimal: true)
             : TextInputType.numberWithOptions(decimal: true),
         onChanged: (val) {
@@ -1079,7 +1106,8 @@ class _TileSheetPageState extends State<TileSheetPage> {
 
         if (responseData["status"] == "success") {
           setState(() {
-            billamt = responseData["bill_total"] ?? 0;
+            billamt = responseData["bill_total"].toDouble() ?? 0.0;
+
             print("billamt updated to: $billamt");
             calculationResults[productId] = responseData;
 
@@ -1109,18 +1137,26 @@ class _TileSheetPageState extends State<TileSheetPage> {
               }
             }
 
-            // if (responseData["R.Ft"] != null) {
-            //   data["R.Ft"] = responseData["R.Ft"].toString();
-            //   if (fieldControllers[productId]?["R.Ft"] != null) {
-            //     fieldControllers[productId]!["R.Ft"]!.text =
-            //         responseData["R.Ft"].toString();
-            //   }
-            // }
             if (responseData["sqmtr"] != null) {
               data["SQMtr"] = responseData["sqmtr"].toString();
               if (fieldControllers[productId]?["SQMtr"] != null) {
                 fieldControllers[productId]!["SQMtr"]!.text =
                     responseData["sqmtr"].toString();
+              }
+            }
+
+            if (responseData["cgst"] != null) {
+              data["cgst"] = responseData["cgst"].toString();
+              if (fieldControllers[productId]?["cgst"] != null) {
+                fieldControllers[productId]!["cgst"]!.text =
+                    responseData["cgst"].toString();
+              }
+            }
+            if (responseData["sgst"] != null) {
+              data["sgst"] = responseData["sgst"].toString();
+              if (fieldControllers[productId]?["sgst"] != null) {
+                fieldControllers[productId]!["sgst"]!.text =
+                    responseData["sgst"].toString();
               }
             }
 

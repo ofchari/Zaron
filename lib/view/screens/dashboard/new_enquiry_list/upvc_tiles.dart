@@ -25,7 +25,7 @@ class UpvcTiles extends StatefulWidget {
 
 class _UpvcTilesState extends State<UpvcTiles> {
   Map<String, dynamic>? categoryMeta;
-  int? billamt;
+  double? billamt;
   late TextEditingController editController;
   int? orderIDD;
   String? orderNO;
@@ -452,7 +452,7 @@ class _UpvcTilesState extends State<UpvcTiles> {
         Row(
           children: [
             Expanded(child: _buildUOMDropdownFromAPI(data)),
-            SizedBox(width: 12),
+            Gap(10),
             Expanded(
               child: _buildEditableFieldFromAPI("Length", data, "Length"),
             ),
@@ -479,6 +479,16 @@ class _UpvcTilesState extends State<UpvcTiles> {
             Gap(10),
             Expanded(
               child: _buildEditableFieldFromAPI("Amount", data, "Amount"),
+            ),
+          ],
+        ),
+        SizedBox(height: 12),
+        Row(
+          children: [
+            Expanded(child: _buildEditableFieldFromAPI("CGST", data, "cgst")),
+            Gap(10),
+            Expanded(
+              child: _buildEditableFieldFromAPI("SGST", data, "sgst"),
             ),
           ],
         ),
@@ -582,8 +592,11 @@ class _UpvcTilesState extends State<UpvcTiles> {
         SizedBox(
           height: 38.h,
           child: TextField(
-            readOnly:
-                (key == "Basic Rate" || key == "Amount" || key == "Sq.Mtr"),
+            readOnly: (key == "Basic Rate" ||
+                key == "Amount" ||
+                key == "Sq.Mtr" ||
+                key == "cgst" ||
+                key == "sgst"),
             style: GoogleFonts.figtree(
               fontWeight: FontWeight.w500,
               color: Colors.black,
@@ -600,7 +613,11 @@ class _UpvcTilesState extends State<UpvcTiles> {
               }
 
               // Trigger calculation only for valid fields
-              if (key == "Length" || key == "Nos" || key == "Basic Rate") {
+              if (key == "Length" ||
+                  key == "Nos" ||
+                  key == "Basic Rate" ||
+                  key == "cgst" ||
+                  key == "sgst") {
                 debounceCalculation(data);
               }
             },
@@ -803,7 +820,8 @@ class _UpvcTilesState extends State<UpvcTiles> {
 
           if (responseData["status"] == "success") {
             setState(() {
-              billamt = responseData["bill_total"] ?? 0;
+              billamt = responseData["bill_total"].toDouble() ?? 0.0;
+
               print("billamt updated to: $billamt");
               // Update fields based on API response - match exact field names from API
               if (responseData["length"] != null) {
@@ -818,6 +836,22 @@ class _UpvcTilesState extends State<UpvcTiles> {
                 data["Sq.Mtr"] = responseData["sqmtr"].toString();
                 getController(data, "Sq.Mtr").text = data["Sq.Mtr"];
               }
+
+              if (responseData["cgst"] != null) {
+                data["cgst"] = responseData["cgst"].toString();
+                if (fieldControllers[productId]?["cgst"] != null) {
+                  fieldControllers[productId]!["cgst"]!.text =
+                      responseData["cgst"].toString();
+                }
+              }
+              if (responseData["sgst"] != null) {
+                data["sgst"] = responseData["sgst"].toString();
+                if (fieldControllers[productId]?["sgst"] != null) {
+                  fieldControllers[productId]!["sgst"]!.text =
+                      responseData["sgst"].toString();
+                }
+              }
+
               if (responseData["Amount"] != null) {
                 data["Amount"] = responseData["Amount"].toString();
                 getController(data, "Amount").text = data["Amount"];

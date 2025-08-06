@@ -770,7 +770,7 @@ class _ScrewState extends State<Screw> {
         final responseData = jsonDecode(response.body);
         if (responseData["status"] == "success") {
           setState(() {
-            billamt = responseData["bill_total"] ?? 0.0;
+            billamt = responseData["bill_total"].toDouble() ?? 0.0;
             print("billamt updated to: $billamt");
             calculationResults[productId] = responseData;
 

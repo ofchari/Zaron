@@ -206,7 +206,6 @@ class _ScrewAccessoriesState extends State<ScrewAccessories> {
   List<dynamic> responseData = [];
 
   ///postData
-
   Future<void> postAllData() async {
     HttpClient client = HttpClient();
     client.badCertificateCallback =
