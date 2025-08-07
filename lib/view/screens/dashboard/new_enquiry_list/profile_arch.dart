@@ -27,7 +27,7 @@ class ProfileRidgeAndArch extends StatefulWidget {
 
 class _ProfileRidgeAndArchState extends State<ProfileRidgeAndArch> {
   Map<String, dynamic>? categoryMeta;
-  int? billamt;
+  double? billamt;
   int? orderIDD;
   String? orderNO;
   late TextEditingController editController;
@@ -955,6 +955,24 @@ class _ProfileRidgeAndArchState extends State<ProfileRidgeAndArch> {
           Gap(5),
           Row(
             children: [
+              Expanded(
+                child: _buildDetailItem(
+                  "CGST",
+                  _editableTextField(data, "cgst"),
+                ),
+              ),
+              SizedBox(width: 10),
+              Expanded(
+                child: _buildDetailItem(
+                  "SGST",
+                  _editableTextField(data, "sgst"),
+                ),
+              ),
+            ],
+          ),
+          Gap(5),
+          Row(
+            children: [
               Expanded(child: _buildBaseProductSearchField()),
             ],
           ),
@@ -987,7 +1005,11 @@ class _ProfileRidgeAndArchState extends State<ProfileRidgeAndArch> {
     return SizedBox(
       height: 38.h,
       child: TextField(
-        readOnly: (key == "Basic Rate" || key == "Amount" || key == "SQMtr")
+        readOnly: (key == "Basic Rate" ||
+                key == "Amount" ||
+                key == "SQMtr" ||
+                key == "cgst" ||
+                key == "sgst")
             ? true
             : false,
         style: GoogleFonts.figtree(
@@ -1000,7 +1022,9 @@ class _ProfileRidgeAndArchState extends State<ProfileRidgeAndArch> {
                 key == "Nos" ||
                 key == "Basic Rate" ||
                 key == "Amount" ||
-                key == "SQMtr")
+                key == "SQMtr" ||
+                key == "cgst" ||
+                key == "sgst")
             ? TextInputType.numberWithOptions(decimal: true)
             : TextInputType.numberWithOptions(decimal: true),
         onChanged: (val) {
@@ -1299,17 +1323,20 @@ class _ProfileRidgeAndArchState extends State<ProfileRidgeAndArch> {
 
         if (responseData["status"] == "success") {
           setState(() {
-            billamt = responseData["bill_total"] ?? 0;
+            billamt = responseData["bill_total"].toDouble() ?? 0.0;
             print("billamt updated to: $billamt");
             calculationResults[productId] = responseData;
 
             // Update Basic Rate if provided in response
-            if (responseData["basic_rate"] != null) {
-              data["Basic Rate"] = responseData["basic_rate"].toString();
+
+            // ✅ FIX: Update Basic Rate - API returns "rate" not "basic_rate"
+            if (responseData["rate"] != null) {
+              data["Basic Rate"] = responseData["rate"].toString();
               if (fieldControllers[productId]?["Basic Rate"] != null) {
                 fieldControllers[productId]!["Basic Rate"]!.text =
-                    responseData["basic_rate"].toString();
+                    responseData["rate"].toString();
               }
+              print("Basic Rate updated to: ${responseData["rate"]}");
             }
 
             // Update Profile/Length
@@ -1361,6 +1388,21 @@ class _ProfileRidgeAndArchState extends State<ProfileRidgeAndArch> {
               if (fieldControllers[productId]?["SQMtr"] != null) {
                 fieldControllers[productId]!["SQMtr"]!.text =
                     responseData["sqmtr"].toString();
+              }
+            }
+
+            if (responseData["cgst"] != null) {
+              data["cgst"] = responseData["cgst"].toString();
+              if (fieldControllers[productId]?["cgst"] != null) {
+                fieldControllers[productId]!["cgst"]!.text =
+                    responseData["cgst"].toString();
+              }
+            }
+            if (responseData["sgst"] != null) {
+              data["sgst"] = responseData["sgst"].toString();
+              if (fieldControllers[productId]?["sgst"] != null) {
+                fieldControllers[productId]!["sgst"]!.text =
+                    responseData["sgst"].toString();
               }
             }
 

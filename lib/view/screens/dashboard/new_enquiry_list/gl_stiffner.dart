@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:gap/gap.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:http/http.dart' as http;
 import 'package:http/io_client.dart';
 import 'package:zaron/view/screens/camera_upload/gi_stiffner_uploads/gi_stiffner_attachment.dart';
 import 'package:zaron/view/universal_api/api&key.dart';
@@ -26,7 +27,7 @@ class GIStiffner extends StatefulWidget {
 
 class _GIStiffnerState extends State<GIStiffner> {
   Map<String, dynamic>? categoryMeta;
-  int? billamt;
+  double? billamt;
   String? orderNo;
   int? orderIDD;
   late TextEditingController editController;
@@ -452,6 +453,26 @@ class _GIStiffnerState extends State<GIStiffner> {
     }
   }
 
+  ///delete cards ///
+  Future<void> deleteCards(String deleteId) async {
+    final url = '$apiUrl/enquirydelete/$deleteId';
+    try {
+      final response = await http.delete(
+        Uri.parse(url),
+      );
+      if (response.statusCode == 200) {
+        print("delee response ${response.statusCode}");
+      } else {
+        throw Exception("Failed to delete card with ID $deleteId");
+      }
+    } catch (e) {
+      print("Error deleting card: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error deleting card: $e")),
+      );
+    }
+  }
+
   // 3. MODIFY the _submitData() method - REPLACE the existing method with this:
   void _submitData() {
     if (selectedMeterial == null ||
@@ -868,6 +889,7 @@ class _GIStiffnerState extends State<GIStiffner> {
                                   ElevatedButton(
                                     onPressed: () {
                                       setState(() {
+                                        deleteCards(data['id'].toString());
                                         responseProducts.removeAt(index);
                                       });
                                       Navigator.pop(context);
@@ -948,6 +970,20 @@ class _GIStiffnerState extends State<GIStiffner> {
                 child: _buildDetailItem(
                   "Amount",
                   _editableTextField(data, "Amount"),
+                ),
+              ),
+              Gap(10),
+              Expanded(
+                child: _buildDetailItem(
+                  "CGST",
+                  _editableTextField(data, "cgst"),
+                ),
+              ),
+              Gap(10),
+              Expanded(
+                child: _buildDetailItem(
+                  "SGST",
+                  _editableTextField(data, "sgst"),
                 ),
               ),
             ],
@@ -1103,7 +1139,11 @@ class _GIStiffnerState extends State<GIStiffner> {
     return SizedBox(
       height: 38.h,
       child: TextField(
-        readOnly: (key == "Basic Rate" || key == "Amount" || key == "qty")
+        readOnly: (key == "Basic Rate" ||
+                key == "Amount" ||
+                key == "qty" ||
+                key == "cgst" ||
+                key == "sgst")
             ? true
             : false,
         style: GoogleFonts.figtree(
@@ -1116,7 +1156,9 @@ class _GIStiffnerState extends State<GIStiffner> {
                 key == "Nos" ||
                 key == "Basic Rate" ||
                 key == "Amount" ||
-                key == "SQMtr")
+                key == "SQMtr" ||
+                key == "cgst" ||
+                key == "sgst")
             ? TextInputType.numberWithOptions(decimal: true)
             : TextInputType.numberWithOptions(decimal: true),
         onChanged: (val) {
@@ -1136,7 +1178,9 @@ class _GIStiffnerState extends State<GIStiffner> {
           if (key == "Length" ||
               key == "Nos" ||
               key == "Basic Rate" ||
-              key == "qty") {
+              key == "qty" ||
+              key == "cgst" ||
+              key == "sgst") {
             print("Triggering calculation for $key with value: $val");
             _debounceCalculation(data);
           }
@@ -1339,7 +1383,7 @@ class _GIStiffnerState extends State<GIStiffner> {
 
         if (responseData["status"] == "success") {
           setState(() {
-            billamt = responseData["bill_total"] ?? 0;
+            billamt = responseData["bill_total"].toDouble() ?? 0.0;
             print("billamt updated to: $billamt");
             calculationResults[productId] = responseData;
 
@@ -1395,6 +1439,21 @@ class _GIStiffnerState extends State<GIStiffner> {
               if (fieldControllers[productId]?["qty"] != null) {
                 fieldControllers[productId]!["qty"]!.text =
                     responseData["qty"].toString();
+              }
+            }
+
+            if (responseData["cgst"] != null) {
+              data["cgst"] = responseData["cgst"].toString();
+              if (fieldControllers[productId]?["cgst"] != null) {
+                fieldControllers[productId]!["cgst"]!.text =
+                    responseData["cgst"].toString();
+              }
+            }
+            if (responseData["sgst"] != null) {
+              data["sgst"] = responseData["sgst"].toString();
+              if (fieldControllers[productId]?["sgst"] != null) {
+                fieldControllers[productId]!["sgst"]!.text =
+                    responseData["sgst"].toString();
               }
             }
 

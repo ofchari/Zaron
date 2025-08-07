@@ -27,7 +27,7 @@ class UpvcAccessories extends StatefulWidget {
 class _UpvcAccessoriesState extends State<UpvcAccessories> {
   late TextEditingController editController;
   Map<String, dynamic>? categoryMeta;
-  int? billamt;
+  double? billamt;
   String? selectedProductBaseId;
   int? orderIDD;
   String? orderNO;
@@ -564,6 +564,25 @@ class _UpvcAccessoriesState extends State<UpvcAccessories> {
             ),
           ],
         ),
+        Gap(10),
+
+        Row(
+          children: [
+            Expanded(
+              child: _buildDetailItem(
+                "CGST",
+                _buildReadOnlyField(product, "cgst"),
+              ),
+            ),
+            Gap(10),
+            Expanded(
+              child: _buildDetailItem(
+                "SGST",
+                _buildReadOnlyField(product, "sgst"),
+              ),
+            ),
+          ],
+        ),
       ],
     );
   }
@@ -615,7 +634,12 @@ class _UpvcAccessoriesState extends State<UpvcAccessories> {
     return SizedBox(
       height: 38.h,
       child: TextField(
-        readOnly: (key == "Basic Rate" || key == "Amount") ? true : false,
+        readOnly: (key == "Basic Rate" ||
+                key == "Amount" ||
+                key == "cgst" ||
+                key == "sgst")
+            ? true
+            : false,
         controller: controller,
         style: GoogleFonts.figtree(
           fontSize: 15.sp,
@@ -625,7 +649,7 @@ class _UpvcAccessoriesState extends State<UpvcAccessories> {
         onChanged: (val) {
           product[key] = val;
           // Trigger calculation API when Nos changes
-          if (key == "Nos") {
+          if (key == "Nos" || key == "cgst" || key == "sgst") {
             _debounceCalculation(product);
           }
         },
@@ -771,11 +795,12 @@ class _UpvcAccessoriesState extends State<UpvcAccessories> {
       );
 
       if (response.statusCode == 200) {
+        print("Calculation API Response: ${response.body}");
         final responseData = jsonDecode(response.body);
 
         if (responseData["status"] == "success") {
           setState(() {
-            billamt = responseData["bill_total"] ?? 0;
+            billamt = responseData["bill_total"].toDouble() ?? 0.0;
             print("billamt updated to: $billamt");
             // Update fields based on API response
             // if (responseData["Length"] != null) {
@@ -784,6 +809,13 @@ class _UpvcAccessoriesState extends State<UpvcAccessories> {
             if (responseData["Nos"] != null) {
               data["Nos"] = responseData["Nos"].toString();
             }
+            if (responseData["cgst"] != null) {
+              data["cgst"] = responseData["cgst"].toString();
+            }
+            if (responseData["sgst"] != null) {
+              data["sgst"] = responseData["sgst"].toString();
+            }
+
             if (responseData["Amount"] != null) {
               data["Amount"] = responseData["Amount"].toString();
             }

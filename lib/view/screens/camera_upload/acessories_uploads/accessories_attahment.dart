@@ -197,13 +197,9 @@ class _AttachmentScreenState extends State<AttachmentScreen> {
                                     color: Colors.black87,
                                   ),
                                 ),
-                                Text(
-                                  'Main ID: ${widget.mainProductId}',
-                                  style: GoogleFonts.poppins(
-                                    fontSize: 13,
-                                    color: Colors.black54,
-                                  ),
-                                ),
+                                Text('Main ID: ${widget.mainProductId}',
+                                    style: GoogleFonts.poppins(
+                                        fontSize: 13, color: Colors.black54)),
                               ],
                             ),
                           ),

@@ -1113,7 +1113,8 @@ class _IronSteelState extends State<IronSteel> {
 
         if (responseData["status"] == "success") {
           setState(() {
-            billamt = responseData["bill_total"] ?? 0.0;
+            billamt = responseData["bill_total"].toDouble() ?? 0.0;
+
             print(billamt);
             calculationResults[productId] = responseData;
 

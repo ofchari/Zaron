@@ -24,7 +24,7 @@ class Polycarbonate extends StatefulWidget {
 
 class _PolycarbonateState extends State<Polycarbonate> {
   Map<String, dynamic>? categoryMeta;
-  int? billamt;
+  double? billamt;
   int? orderIDD;
   String? orderNO;
   late TextEditingController editController;
@@ -888,7 +888,7 @@ class _PolycarbonateState extends State<Polycarbonate> {
         final responseData = jsonDecode(response.body);
         if (responseData["status"] == "success") {
           setState(() {
-            billamt = responseData["bill_total"] ?? 0;
+            billamt = responseData["bill_total"].toDouble() ?? 0.0;
             print("billamt updated to: $billamt");
             calculationResults[productId] = responseData;
             if (responseData["Length"] != null) {

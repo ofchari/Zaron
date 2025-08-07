@@ -26,7 +26,7 @@ class DeckingSheets extends StatefulWidget {
 
 class _DeckingSheetsState extends State<DeckingSheets> {
   Map<String, dynamic>? categoryMeta;
-  int? billamt;
+  double? billamt;
   int? orderIDD;
   String? orderNO;
   late TextEditingController editController;
@@ -408,6 +408,7 @@ class _DeckingSheetsState extends State<DeckingSheets> {
           final String orderID = responseData["order_id"].toString();
           print("Order IDDDD: $orderID");
           orderIDD = int.parse(orderID);
+          orderNO = responseData["order_no"]?.toString() ?? "Unknown";
 
           // Set global order ID if this is the first time
           if (!globalOrderManager.hasGlobalOrderId()) {
@@ -577,6 +578,20 @@ class _DeckingSheetsState extends State<DeckingSheets> {
                 child: _buildDetailItem(
                     "Amount", _editableTextField(data, "Amount")),
               ),
+              Gap(10),
+              Expanded(
+                child: _buildDetailItem(
+                  "CGST",
+                  _editableTextField(data, "cgst"),
+                ),
+              ),
+              Gap(10),
+              Expanded(
+                child: _buildDetailItem(
+                  "SGST",
+                  _editableTextField(data, "sgst"),
+                ),
+              ),
             ],
           ),
           Gap(5.h),
@@ -709,7 +724,11 @@ class _DeckingSheetsState extends State<DeckingSheets> {
     return SizedBox(
       height: 38.h,
       child: TextField(
-        readOnly: (key == "Basic Rate" || key == "Amount" || key == "qty")
+        readOnly: (key == "Basic Rate" ||
+                key == "Amount" ||
+                key == "qty" ||
+                key == "sgst" ||
+                key == "cgst")
             ? true
             : false,
         style: GoogleFonts.figtree(
@@ -722,7 +741,9 @@ class _DeckingSheetsState extends State<DeckingSheets> {
                 key == "Nos" ||
                 key == "Basic Rate" ||
                 key == "Amount" ||
-                key == "SQMtr")
+                key == "SQMtr" ||
+                key == "sgst" ||
+                key == "cgst")
             ? TextInputType.numberWithOptions(decimal: true)
             : TextInputType.numberWithOptions(decimal: true),
         onChanged: (val) {
@@ -1122,7 +1143,7 @@ class _DeckingSheetsState extends State<DeckingSheets> {
 
         if (responseData["status"] == "success") {
           setState(() {
-            billamt = responseData["bill_total"] ?? 0;
+            billamt = responseData["bill_total"].toDouble() ?? 0.0;
             print("billamt updated to: $billamt");
             calculationResults[productId] = responseData;
 
@@ -1173,6 +1194,20 @@ class _DeckingSheetsState extends State<DeckingSheets> {
               if (fieldControllers[productId]?["qty"] != null) {
                 fieldControllers[productId]!["qty"]!.text =
                     responseData["qty"].toString();
+              }
+            }
+            if (responseData["cgst"] != null) {
+              data["cgst"] = responseData["cgst"].toString();
+              if (fieldControllers[productId]?["cgst"] != null) {
+                fieldControllers[productId]!["cgst"]!.text =
+                    responseData["cgst"].toString();
+              }
+            }
+            if (responseData["sgst"] != null) {
+              data["sgst"] = responseData["sgst"].toString();
+              if (fieldControllers[productId]?["sgst"] != null) {
+                fieldControllers[productId]!["sgst"]!.text =
+                    responseData["sgst"].toString();
               }
             }
 

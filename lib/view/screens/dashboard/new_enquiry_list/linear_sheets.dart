@@ -27,7 +27,7 @@ class LinerSheetPage extends StatefulWidget {
 
 class _LinerSheetPageState extends State<LinerSheetPage> {
   Map<String, dynamic>? categoryMeta;
-  int? billamt;
+  double? billamt;
   String? orderNo;
   int? orderIDD;
   late TextEditingController editController;
@@ -878,7 +878,11 @@ class _LinerSheetPageState extends State<LinerSheetPage> {
     return SizedBox(
       height: 38.h,
       child: TextField(
-        readOnly: (key == "Basic Rate" || key == "Amount" || key == "SQMtr")
+        readOnly: (key == "Basic Rate" ||
+                key == "Amount" ||
+                key == "SQMtr" ||
+                key == "cgst" ||
+                key == "sgst")
             ? true
             : false,
         style: GoogleFonts.figtree(
@@ -908,7 +912,11 @@ class _LinerSheetPageState extends State<LinerSheetPage> {
           //   controller.text = val;
           // }
 
-          if (key == "Length" || key == "Nos" || key == "Basic Rate") {
+          if (key == "Length" ||
+              key == "Nos" ||
+              key == "Basic Rate" ||
+              key == "cgst" ||
+              key == "sgst") {
             print("Triggering calculation for $key with value: $val");
             _debounceCalculation(data);
           }
@@ -1143,7 +1151,7 @@ class _LinerSheetPageState extends State<LinerSheetPage> {
 
         if (responseData["status"] == "success") {
           setState(() {
-            billamt = responseData["bill_total"] ?? 0;
+            billamt = responseData["bill_total"].toDouble() ?? 0.0;
             print("billamt updated to: $billamt");
 
             calculationResults[productId] = responseData;
