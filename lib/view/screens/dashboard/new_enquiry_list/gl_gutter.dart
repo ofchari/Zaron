@@ -7,7 +7,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:gap/gap.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/io_client.dart';
-import 'package:zaron/view/universal_api/api&key.dart';
+import 'package:zaron/view/universal_api/api_key.dart';
 import 'package:zaron/view/widgets/subhead.dart';
 import 'package:zaron/view/widgets/text.dart';
 
@@ -83,7 +83,7 @@ class _GIGlutterState extends State<GIGlutter> {
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         final products = data["message"]["message"][1];
-        debugPrint("PRoduct:::${products}");
+        debugPrint("PRoduct:::$products");
         debugPrint(response.body, wrapWidth: 1024);
 
         if (products is List) {
@@ -627,7 +627,7 @@ class _GIGlutterState extends State<GIGlutter> {
                       ),
                     ),
                   );
-                }).toList(),
+                }),
               ],
             ),
           ),
@@ -894,7 +894,7 @@ class _GIGlutterState extends State<GIGlutter> {
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      Container(
+                      SizedBox(
                         height: 40.h,
                         width: 280.w,
                         child: TextField(

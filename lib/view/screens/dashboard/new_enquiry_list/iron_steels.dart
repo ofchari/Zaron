@@ -9,7 +9,7 @@ import 'package:gap/gap.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/io_client.dart';
-import 'package:zaron/view/universal_api/api&key.dart';
+import 'package:zaron/view/universal_api/api_key.dart';
 import 'package:zaron/view/widgets/subhead.dart';
 
 import '../../../widgets/text.dart';

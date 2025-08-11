@@ -9,7 +9,7 @@ import 'package:gap/gap.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/io_client.dart';
-import 'package:zaron/view/universal_api/api&key.dart';
+import 'package:zaron/view/universal_api/api_key.dart';
 import 'package:zaron/view/widgets/subhead.dart';
 
 import '../../camera_upload/roll_sheets_uploads/roll_sheet_attachment.dart';
@@ -82,7 +82,7 @@ class _RollSheetState extends State<RollSheet> {
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         final products = data["message"]["message"][1];
-        debugPrint("PRoduct:::${products}");
+        debugPrint("PRoduct:::$products");
         debugPrint(response.body, wrapWidth: 1024);
         rawRollsheet = products;
 
@@ -242,7 +242,9 @@ class _RollSheetState extends State<RollSheet> {
     if (selectedBrand == null ||
         selectedColor == null ||
         selectedThickness == null ||
-        !mounted) return;
+        !mounted) {
+      return;
+    }
 
     setState(() {
       coatingMassList = [];
@@ -366,7 +368,9 @@ class _RollSheetState extends State<RollSheet> {
           selectedBrand == null ||
           selectedColor == null ||
           selectedThickness == null ||
-          selectedCoatingMass == null) return;
+          selectedCoatingMass == null) {
+        return;
+      }
 
       if (response.statusCode == 200) {
         final responseData = jsonDecode(response.body);
@@ -629,7 +633,7 @@ class _RollSheetState extends State<RollSheet> {
                       ),
                     ),
                   );
-                }).toList(),
+                }),
               ],
             ),
           ),

@@ -10,7 +10,7 @@ import 'package:gap/gap.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/io_client.dart';
-import 'package:zaron/view/universal_api/api&key.dart';
+import 'package:zaron/view/universal_api/api_key.dart';
 import 'package:zaron/view/widgets/subhead.dart';
 
 import '../../../widgets/text.dart';
@@ -267,7 +267,9 @@ class _AccessoriesState extends State<Accessories> {
     if (selectedBrands == null ||
         selectedColors == null ||
         selectedThickness == null ||
-        !mounted) return;
+        !mounted) {
+      return;
+    }
 
     setState(() {
       coatingAndList = [];
@@ -666,7 +668,7 @@ class _AccessoriesState extends State<Accessories> {
                       ),
                     ),
                   );
-                }).toList(),
+                }),
               ],
             ),
           ),
@@ -1078,7 +1080,7 @@ class _AccessoriesState extends State<Accessories> {
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Expanded(
-                      child: Container(
+                      child: SizedBox(
 // color: Colors.red,
                         height: 65.h,
                         width: 200.w,

@@ -11,7 +11,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/io_client.dart';
 import 'package:zaron/view/screens/global_user/global_user.dart';
-import 'package:zaron/view/universal_api/api&key.dart';
+import 'package:zaron/view/universal_api/api_key.dart';
 
 import '../../../widgets/subhead.dart';
 import '../../global_user/global_oredrID.dart';
@@ -234,7 +234,6 @@ class _AluminumState extends State<Aluminum> {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final colors = data["message"]["message"][0];
         print("Fetching colors for brand: $selectedBrand");
         print("API response: ${response.body}");
 
@@ -640,7 +639,7 @@ class _AluminumState extends State<Aluminum> {
     String currentValue = billingData['value']?.toString() ?? "";
     Map<String, dynamic> options = billingData['options'] ?? {};
 
-    return Container(
+    return SizedBox(
       height: 40,
       child: DropdownButtonFormField<String>(
         isExpanded: true,

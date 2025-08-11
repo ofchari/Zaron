@@ -7,7 +7,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'package:zaron/view/screens/dashboard/enquiryPage/total_enquiry_view.dart';
 import 'package:zaron/view/screens/global_user/global_user.dart';
-import 'package:zaron/view/universal_api/api&key.dart';
+import 'package:zaron/view/universal_api/api_key.dart';
 
 import '../../../widgets/text.dart';
 
@@ -110,7 +110,7 @@ class _TotalEnquiryPageState extends State<TotalEnquiryPage> {
             'API Error: ${response.statusCode} - ${response.reasonPhrase}');
       }
     } catch (e) {
-      print('❌ Error fetching enquiry data: $e');
+      print('Error fetching enquiry data: $e');
       setState(() => isLoading = false);
     }
   }
@@ -403,8 +403,8 @@ class _TotalEnquiryPageState extends State<TotalEnquiryPage> {
                                 return DataRow(
                                   // Row background color logic
                                   color:
-                                      MaterialStateProperty.resolveWith<Color?>(
-                                    (Set<MaterialState> states) {
+                                      WidgetStateProperty.resolveWith<Color?>(
+                                    (Set<WidgetState> states) {
                                       if (selectedRowIndex == index) {
                                         return Colors.grey.shade300;
                                       }
@@ -447,8 +447,11 @@ class _TotalEnquiryPageState extends State<TotalEnquiryPage> {
                                           icon: const Icon(Icons.visibility,
                                               color: Colors.blue),
                                           onPressed: () {
-                                            Get.to(() => TotalEnquiryView(
-                                                id: row['id'] ?? ''));
+                                            row["id"].isEmpty
+                                                ? Get.to(() => TotalEnquiryView(
+                                                    id: row['id'] ?? ''))
+                                                : Get.to(() => TotalEnquiryView(
+                                                    id: row['id'] ?? ''));
                                           },
                                         ),
                                       ],

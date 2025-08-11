@@ -7,7 +7,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'package:zaron/view/screens/dashboard/quotationPage/total_quoation_view.dart';
 import 'package:zaron/view/screens/global_user/global_user.dart';
-import 'package:zaron/view/universal_api/api&key.dart';
+import 'package:zaron/view/universal_api/api_key.dart';
 
 import '../../../widgets/text.dart';
 
@@ -349,7 +349,7 @@ class _QuotationPageState extends State<QuotationPage> {
                       scrollDirection: Axis.vertical,
                       child: SingleChildScrollView(
                         scrollDirection: Axis.horizontal,
-                        padding: const EdgeInsets.all(16.0),
+                        padding: const EdgeInsets.all(13.0),
                         child: Container(
                           decoration: BoxDecoration(
                             color: Colors.white,
@@ -385,18 +385,6 @@ class _QuotationPageState extends State<QuotationPage> {
                                   ),
                                 ),
                               ),
-                              // DataColumn(
-                              //   label: Text(
-                              //     'ID',
-                              //     style: GoogleFonts.outfit(
-                              //       textStyle: TextStyle(
-                              //         fontSize: 16.sp,
-                              //         fontWeight: FontWeight.w500,
-                              //         color: Colors.black,
-                              //       ),
-                              //     ),
-                              //   ),
-                              // ),
                               DataColumn(
                                 label: Text(
                                   'Order No',
@@ -467,9 +455,8 @@ class _QuotationPageState extends State<QuotationPage> {
                                     selectedRowIndex = rowIndex;
                                   });
                                 },
-                                color:
-                                    MaterialStateProperty.resolveWith<Color?>(
-                                  (Set<MaterialState> states) {
+                                color: WidgetStateProperty.resolveWith<Color?>(
+                                  (Set<WidgetState> states) {
                                     if (selectedRowIndex == rowIndex) {
                                       return Colors.grey.shade200;
                                     }

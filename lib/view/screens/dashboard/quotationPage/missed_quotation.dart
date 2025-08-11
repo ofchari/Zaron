@@ -7,7 +7,7 @@ import 'package:http/http.dart' as http;
 import 'package:zaron/view/screens/global_user/global_user.dart';
 import 'package:zaron/view/widgets/subhead.dart';
 
-import '../../../universal_api/api&key.dart';
+import '../../../universal_api/api_key.dart';
 
 class MissedQuotation extends StatefulWidget {
   const MissedQuotation({super.key});
@@ -166,14 +166,29 @@ class _MissedQuotationPageState extends State<MissedQuotation> {
                       scrollDirection: Axis.vertical,
                       child: SingleChildScrollView(
                         scrollDirection: Axis.horizontal,
-                        child: Padding(
-                          padding: const EdgeInsets.all(8.0),
+                        padding: const EdgeInsets.all(13.0),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.grey.withOpacity(0.1),
+                                spreadRadius: 2,
+                                blurRadius: 5,
+                                offset: const Offset(0, 3),
+                              ),
+                            ],
+                          ),
                           child: DataTable(
+                            showCheckboxColumn: false,
                             border: TableBorder.all(
-                                color: Colors.purple, width: 0.5),
-                            dataRowHeight: 60,
+                              color: Colors.purple.withOpacity(0.3),
+                              width: 1,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
                             columnSpacing: 40,
-                            headingRowHeight: 56,
+                            headingRowHeight: 70,
                             columns: [
                               DataColumn(
                                 label: Text(
@@ -187,18 +202,6 @@ class _MissedQuotationPageState extends State<MissedQuotation> {
                                   ),
                                 ),
                               ),
-                              // DataColumn(
-                              //   label: Text(
-                              //     'ID',
-                              //     style: GoogleFonts.outfit(
-                              //       textStyle: TextStyle(
-                              //         fontSize: 16.sp,
-                              //         fontWeight: FontWeight.w500,
-                              //         color: Colors.black,
-                              //       ),
-                              //     ),
-                              //   ),
-                              // ),
                               DataColumn(
                                 label: Text(
                                   'Order No',
@@ -329,35 +332,6 @@ class _MissedQuotationPageState extends State<MissedQuotation> {
                                         ),
                                       ),
                                     ),
-
-                                    // Row(
-                                    //   children: [
-                                    //     IconButton(
-                                    //       icon: const Icon(Icons.visibility,
-                                    //           color: Colors.blue),
-                                    //       onPressed: () {
-                                    //         ScaffoldMessenger.of(context)
-                                    //             .showSnackBar(
-                                    //           SnackBar(
-                                    //               content: Text(
-                                    //                   "View details for ${entry.value['order_no']}")),
-                                    //         );
-                                    //       },
-                                    //     ),
-                                    //     IconButton(
-                                    //       icon: const Icon(Icons.edit,
-                                    //           color: Colors.green),
-                                    //       onPressed: () {
-                                    //         ScaffoldMessenger.of(context)
-                                    //             .showSnackBar(
-                                    //           SnackBar(
-                                    //               content: Text(
-                                    //                   "Edit ${entry.value['order_no']}")),
-                                    //         );
-                                    //       },
-                                    //     ),
-                                    //   ],
-                                    // ),
                                   ),
                                 ],
                               );

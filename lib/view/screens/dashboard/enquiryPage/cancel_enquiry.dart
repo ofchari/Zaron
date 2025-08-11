@@ -7,7 +7,7 @@ import 'package:http/http.dart' as http;
 import 'package:zaron/view/screens/global_user/global_user.dart';
 import 'package:zaron/view/widgets/subhead.dart';
 
-import '../../../universal_api/api&key.dart';
+import '../../../universal_api/api_key.dart';
 
 class CancelEnquiry extends StatefulWidget {
   const CancelEnquiry({super.key});
@@ -176,16 +176,29 @@ class _CancelEnquiryPageState extends State<CancelEnquiry> {
                       scrollDirection: Axis.vertical,
                       child: SingleChildScrollView(
                         scrollDirection: Axis.horizontal,
-                        child: Padding(
-                          padding: const EdgeInsets.all(8.0),
+                        padding: const EdgeInsets.all(16.0),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.grey.withOpacity(0.1),
+                                spreadRadius: 2,
+                                blurRadius: 5,
+                                offset: const Offset(0, 3),
+                              ),
+                            ],
+                          ),
                           child: DataTable(
+                            showCheckboxColumn: false,
                             border: TableBorder.all(
-                              color: Colors.purple,
-                              width: 0.5,
+                              color: Colors.purple.withOpacity(0.3),
+                              width: 1,
+                              borderRadius: BorderRadius.circular(12),
                             ),
-                            dataRowHeight: 60,
                             columnSpacing: 40,
-                            headingRowHeight: 56,
+                            headingRowHeight: 70,
                             columns: [
                               DataColumn(
                                 label: Text(

@@ -10,7 +10,7 @@ import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/io_client.dart';
-import 'package:zaron/view/universal_api/api&key.dart';
+import 'package:zaron/view/universal_api/api_key.dart';
 import 'package:zaron/view/widgets/subhead.dart';
 
 import '../../camera_upload/purlin_uploads/purlin_attatchment.dart';
@@ -28,7 +28,7 @@ class Purlin extends StatefulWidget {
 
 class _PurlinState extends State<Purlin> {
   Map<String, dynamic>? categoryMeta;
-  int? billamt;
+  double? billamt;
   int? orderIDD;
   String? orderNO;
   late TextEditingController editController;
@@ -487,6 +487,7 @@ class _PurlinState extends State<Purlin> {
   bool isSearchingBaseProduct = false;
   String? selectedBaseProduct;
   FocusNode baseProductFocusNode = FocusNode();
+
   // Map<String, dynamic>? apiResponseData;
   List<dynamic> responseProducts = [];
   Map<String, Map<String, String>> uomOptions = {};
@@ -1082,6 +1083,8 @@ class _PurlinState extends State<Purlin> {
 
         if (responseData["status"] == "success") {
           setState(() {
+            billamt = responseData["bill_total"].toDouble() ?? 0.0;
+            print("billamt updated to: $billamt");
             calculationResults[productId] = responseData;
 
             if (responseData["Length"] != null) {
@@ -1091,19 +1094,6 @@ class _PurlinState extends State<Purlin> {
                     responseData["Length"].toString();
               }
             }
-
-            // if (responseData["kg"] != null) {
-            //   String kgValue = responseData["kg"].toString();
-            //   print("KG value: $kgValue");
-            //
-            //   // ✅ Store KG in your data map
-            //   data["KG"] = kgValue;
-            //
-            //   // ✅ If you have a KG field in UI, update it
-            //   if (fieldControllers[productId]?["KG"] != null) {
-            //     fieldControllers[productId]!["KG"]!.text = kgValue;
-            //   }
-            // }
 
             if (responseData["Nos"] != null) {
               String newNos = responseData["Nos"].toString().trim();
@@ -1436,7 +1426,7 @@ class _PurlinState extends State<Purlin> {
                   ),
                 ),
                 SizedBox(height: 24),
-                if (submittedData.isNotEmpty) ...[
+                if (responseProducts.isNotEmpty) ...[
                   SizedBox(height: 24),
                   Container(
                     padding: EdgeInsets.all(16),

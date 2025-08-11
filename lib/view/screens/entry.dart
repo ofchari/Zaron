@@ -27,6 +27,7 @@ class _EntryState extends State<Entry> {
     ));
   }
 
+  @override
   Widget build(BuildContext context) {
     /// Define Sizes //
     var size = MediaQuery.of(context).size;
@@ -90,21 +91,7 @@ class _EntryState extends State<Entry> {
               ),
             ),
           ),
-          // Alternative method - using specific positioning for exact center
-          // Positioned(
-          //   top: (height / 1.8.h - height / 4.h) / 2 + 80.h, // Center vertically in orange area
-          //   left: (width.w - width / 2.w) / 2, // Center horizontally
-          //   child: Container(
-          //     height: height / 4.h,
-          //     width: width / 2.w,
-          //     decoration: BoxDecoration(
-          //       image: DecorationImage(
-          //         image: AssetImage("assets/login.png"),
-          //         fit: BoxFit.cover,
-          //       ),
-          //     ),
-          //   ),
-          // ),
+
           // Clean button design
           Positioned(
             bottom: 80,

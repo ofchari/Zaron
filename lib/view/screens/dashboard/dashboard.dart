@@ -170,7 +170,7 @@ class _DashboardState extends State<Dashboard> {
                         children: [
                           // Cancel button
                           Expanded(
-                            child: Container(
+                            child: SizedBox(
                               height: 50,
                               child: OutlinedButton(
                                 onPressed: () {

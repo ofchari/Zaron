@@ -9,7 +9,7 @@ import 'package:gap/gap.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/io_client.dart';
-import 'package:zaron/view/universal_api/api&key.dart';
+import 'package:zaron/view/universal_api/api_key.dart';
 import 'package:zaron/view/widgets/subhead.dart';
 
 import '../../camera_upload/profile_uploads/profile_attchement.dart';
@@ -92,7 +92,7 @@ class _ProfileRidgeAndArchState extends State<ProfileRidgeAndArch> {
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         final products = data["message"]["message"][1];
-        debugPrint("PRoduct:::${products}");
+        debugPrint("PRoduct:::$products");
         debugPrint(response.body, wrapWidth: 1024);
 
         rawProfilearch = products;
@@ -264,7 +264,9 @@ class _ProfileRidgeAndArchState extends State<ProfileRidgeAndArch> {
     if (selectedBrands == null ||
         selectedColors == null ||
         selectedThickness == null ||
-        !mounted) return;
+        !mounted) {
+      return;
+    }
 
     setState(() {
       coatingAndList = [];
@@ -808,7 +810,7 @@ class _ProfileRidgeAndArchState extends State<ProfileRidgeAndArch> {
                       ),
                     ),
                   );
-                }).toList(),
+                }),
               ],
             ),
           ),

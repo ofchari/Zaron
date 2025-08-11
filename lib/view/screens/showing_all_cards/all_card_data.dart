@@ -7,7 +7,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:gap/gap.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/io_client.dart';
-import 'package:zaron/view/universal_api/api&key.dart';
+import 'package:zaron/view/universal_api/api_key.dart';
 import 'package:zaron/view/widgets/subhead.dart';
 
 import '../camera_upload/acessories_uploads/accessories_attahment.dart';
@@ -298,7 +298,7 @@ class _ProductsViewState extends State<ProductsView> {
                       ),
                     ),
                   );
-                }).toList(),
+                }),
               ],
             ),
           ),
@@ -481,7 +481,7 @@ class _ProductsViewState extends State<ProductsView> {
                         height: 40.h,
                         width: 210.w,
                         child: Text(
-                          "  ${index + 1}.  ${data["Products"]}" ?? "",
+                          "  ${index + 1}.  ${data["Products"] ?? ""}",
                           overflow: TextOverflow.ellipsis,
                           style: GoogleFonts.figtree(
                             fontSize: 18,
@@ -622,7 +622,7 @@ class _ProductsViewState extends State<ProductsView> {
                     Expanded(
                       flex: 3,
                       child: Text(
-                        "${index + 1}. ${data["Products"]}" ?? "",
+                        "${index + 1}. ${data["Products"] ?? ""}",
                         style: GoogleFonts.figtree(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
