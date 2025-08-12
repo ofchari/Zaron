@@ -462,6 +462,14 @@ class _GIStiffnerState extends State<GIStiffner> {
       );
       if (response.statusCode == 200) {
         print("delee response ${response.statusCode}");
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            backgroundColor: Colors.red.shade400,
+            behavior: SnackBarBehavior.floating,
+            content: Text("Data deleted successfully"),
+            duration: Duration(seconds: 2),
+          ),
+        );
       } else {
         throw Exception("Failed to delete card with ID $deleteId");
       }

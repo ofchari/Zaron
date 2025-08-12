@@ -342,242 +342,256 @@ class _QuotationPageState extends State<QuotationPage> {
           // Table
           isLoading
               ? Expanded(child: Center(child: CircularProgressIndicator()))
-              : Expanded(
-                  child: Scrollbar(
-                    thumbVisibility: true,
-                    child: SingleChildScrollView(
-                      scrollDirection: Axis.vertical,
-                      child: SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
-                        padding: const EdgeInsets.all(13.0),
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(12),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.grey.withOpacity(0.1),
-                                spreadRadius: 2,
-                                blurRadius: 5,
-                                offset: const Offset(0, 3),
-                              ),
-                            ],
+              : filteredData.isEmpty
+                  ? Expanded(
+                      child: Center(
+                        child: Text(
+                          'No records found',
+                          style: GoogleFonts.poppins(
+                            fontSize: 16.sp,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.grey,
                           ),
-                          child: DataTable(
-                            showCheckboxColumn: false,
-                            border: TableBorder.all(
-                              color: Colors.purple.withOpacity(0.3),
-                              width: 1,
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            columnSpacing: 40,
-                            headingRowHeight: 70,
-                            columns: [
-                              DataColumn(
-                                label: Text(
-                                  'No',
-                                  style: GoogleFonts.outfit(
-                                    textStyle: TextStyle(
-                                      fontSize: 16.sp,
-                                      fontWeight: FontWeight.w500,
-                                      color: Colors.black,
-                                    ),
+                        ),
+                      ),
+                    )
+                  : Expanded(
+                      child: Scrollbar(
+                        thumbVisibility: true,
+                        child: SingleChildScrollView(
+                          scrollDirection: Axis.vertical,
+                          child: SingleChildScrollView(
+                            scrollDirection: Axis.horizontal,
+                            padding: const EdgeInsets.all(13.0),
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(12),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.grey.withOpacity(0.1),
+                                    spreadRadius: 2,
+                                    blurRadius: 5,
+                                    offset: const Offset(0, 3),
                                   ),
-                                ),
-                              ),
-                              DataColumn(
-                                label: Text(
-                                  'Order No',
-                                  style: GoogleFonts.outfit(
-                                    textStyle: TextStyle(
-                                      fontSize: 16.sp,
-                                      fontWeight: FontWeight.w500,
-                                      color: Colors.black,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              DataColumn(
-                                label: Text(
-                                  'Bill Total',
-                                  style: GoogleFonts.outfit(
-                                    textStyle: TextStyle(
-                                      fontSize: 16.sp,
-                                      fontWeight: FontWeight.w500,
-                                      color: Colors.black,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              DataColumn(
-                                label: Text(
-                                  'Create Date',
-                                  style: GoogleFonts.outfit(
-                                    textStyle: TextStyle(
-                                      fontSize: 16.sp,
-                                      fontWeight: FontWeight.w500,
-                                      color: Colors.black,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              DataColumn(
-                                label: Text(
-                                  'Create Time',
-                                  style: GoogleFonts.outfit(
-                                    textStyle: TextStyle(
-                                      fontSize: 16.sp,
-                                      fontWeight: FontWeight.w500,
-                                      color: Colors.black,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              DataColumn(
-                                label: Text(
-                                  'Action',
-                                  style: GoogleFonts.outfit(
-                                    textStyle: TextStyle(
-                                      fontSize: 16.sp,
-                                      fontWeight: FontWeight.w500,
-                                      color: Colors.black,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                            rows: filteredData.asMap().entries.map((entry) {
-                              int rowIndex = entry.key;
-                              Map<String, dynamic> row = entry.value;
-                              return DataRow(
-                                onSelectChanged: (selected) {
-                                  setState(() {
-                                    selectedRowIndex = rowIndex;
-                                  });
-                                },
-                                color: WidgetStateProperty.resolveWith<Color?>(
-                                  (Set<WidgetState> states) {
-                                    if (selectedRowIndex == rowIndex) {
-                                      return Colors.grey.shade200;
-                                    }
-
-                                    return null;
-
-                                    // entry.key % 2 == 0
-                                    //   ? Colors.white
-                                    //   : Colors.grey.shade200;
-                                  },
-                                ),
-                                cells: [
-                                  DataCell(
-                                    Text(
-                                      "${entry.key + 1}",
-                                      style: GoogleFonts.dmSans(
-                                        textStyle: TextStyle(
-                                          fontSize: 14.sp,
-                                          fontWeight: FontWeight.w400,
-                                          color: Colors.black,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  // DataCell(
-                                  //   Text(
-                                  //     row['id'] ?? '',
-                                  //     style: GoogleFonts.dmSans(
-                                  //       textStyle: TextStyle(
-                                  //         fontSize: 14.sp,
-                                  //         fontWeight: FontWeight.w400,
-                                  //         color: Colors.black,
-                                  //       ),
-                                  //     ),
-                                  //   ),
-                                  // ),
-                                  DataCell(
-                                    Text(
-                                      row['order_no'] ?? '',
-                                      style: GoogleFonts.dmSans(
-                                        textStyle: TextStyle(
-                                          fontSize: 14.sp,
-                                          fontWeight: FontWeight.w400,
-                                          color: Colors.black,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  DataCell(
-                                    Text(
-                                      row['bill_total'] ?? '0',
-                                      style: GoogleFonts.dmSans(
-                                        textStyle: TextStyle(
-                                          fontSize: 14.sp,
-                                          fontWeight: FontWeight.w400,
-                                          color: Colors.black,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  DataCell(
-                                    Text(
-                                      row['create_date'] ?? '',
-                                      style: GoogleFonts.dmSans(
-                                        textStyle: TextStyle(
-                                          fontSize: 14.2.sp,
-                                          fontWeight: FontWeight.w400,
-                                          color: Colors.black,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  DataCell(
-                                    Text(
-                                      row['create_time'] ?? '',
-                                      style: GoogleFonts.dmSans(
-                                        textStyle: TextStyle(
-                                          fontSize: 14.2.sp,
-                                          fontWeight: FontWeight.w400,
-                                          color: Colors.black,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  DataCell(
-                                    Row(
-                                      children: [
-                                        IconButton(
-                                          icon: const Icon(Icons.visibility,
-                                              color: Colors.blue),
-                                          onPressed: () {
-                                            Get.to(() => TotalQuoationView(
-                                                  id: row['id'] ?? '',
-                                                ));
-                                          },
-                                        ),
-                                        // IconButton(
-                                        //   icon: const Icon(Icons.edit,
-                                        //       color: Colors.green),
-                                        //   onPressed: () {
-                                        //     // Edit action
-                                        //     ScaffoldMessenger.of(context)
-                                        //         .showSnackBar(
-                                        //       SnackBar(
-                                        //           content: Text(
-                                        //               "Edit ${row['order_no']}")),
-                                        //     );
-                                        //   },
-                                        // ),
-                                      ],
-                                    ),
-                                  )
                                 ],
-                              );
-                            }).toList(),
+                              ),
+                              child: DataTable(
+                                showCheckboxColumn: false,
+                                border: TableBorder.all(
+                                  color: Colors.purple.withOpacity(0.3),
+                                  width: 1,
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                columnSpacing: 40,
+                                headingRowHeight: 70,
+                                columns: [
+                                  DataColumn(
+                                    label: Text(
+                                      'No',
+                                      style: GoogleFonts.outfit(
+                                        textStyle: TextStyle(
+                                          fontSize: 16.sp,
+                                          fontWeight: FontWeight.w500,
+                                          color: Colors.black,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  DataColumn(
+                                    label: Text(
+                                      'Order No',
+                                      style: GoogleFonts.outfit(
+                                        textStyle: TextStyle(
+                                          fontSize: 16.sp,
+                                          fontWeight: FontWeight.w500,
+                                          color: Colors.black,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  DataColumn(
+                                    label: Text(
+                                      'Bill Total',
+                                      style: GoogleFonts.outfit(
+                                        textStyle: TextStyle(
+                                          fontSize: 16.sp,
+                                          fontWeight: FontWeight.w500,
+                                          color: Colors.black,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  DataColumn(
+                                    label: Text(
+                                      'Create Date',
+                                      style: GoogleFonts.outfit(
+                                        textStyle: TextStyle(
+                                          fontSize: 16.sp,
+                                          fontWeight: FontWeight.w500,
+                                          color: Colors.black,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  DataColumn(
+                                    label: Text(
+                                      'Create Time',
+                                      style: GoogleFonts.outfit(
+                                        textStyle: TextStyle(
+                                          fontSize: 16.sp,
+                                          fontWeight: FontWeight.w500,
+                                          color: Colors.black,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  DataColumn(
+                                    label: Text(
+                                      'Action',
+                                      style: GoogleFonts.outfit(
+                                        textStyle: TextStyle(
+                                          fontSize: 16.sp,
+                                          fontWeight: FontWeight.w500,
+                                          color: Colors.black,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                                rows: filteredData.asMap().entries.map((entry) {
+                                  int rowIndex = entry.key;
+                                  Map<String, dynamic> row = entry.value;
+                                  return DataRow(
+                                    onSelectChanged: (selected) {
+                                      setState(() {
+                                        selectedRowIndex = rowIndex;
+                                      });
+                                    },
+                                    color:
+                                        WidgetStateProperty.resolveWith<Color?>(
+                                      (Set<WidgetState> states) {
+                                        if (selectedRowIndex == rowIndex) {
+                                          return Colors.grey.shade200;
+                                        }
+
+                                        return null;
+
+                                        // entry.key % 2 == 0
+                                        //   ? Colors.white
+                                        //   : Colors.grey.shade200;
+                                      },
+                                    ),
+                                    cells: [
+                                      DataCell(
+                                        Text(
+                                          "${entry.key + 1}",
+                                          style: GoogleFonts.dmSans(
+                                            textStyle: TextStyle(
+                                              fontSize: 14.sp,
+                                              fontWeight: FontWeight.w400,
+                                              color: Colors.black,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                      // DataCell(
+                                      //   Text(
+                                      //     row['id'] ?? '',
+                                      //     style: GoogleFonts.dmSans(
+                                      //       textStyle: TextStyle(
+                                      //         fontSize: 14.sp,
+                                      //         fontWeight: FontWeight.w400,
+                                      //         color: Colors.black,
+                                      //       ),
+                                      //     ),
+                                      //   ),
+                                      // ),
+                                      DataCell(
+                                        Text(
+                                          row['order_no'] ?? '',
+                                          style: GoogleFonts.dmSans(
+                                            textStyle: TextStyle(
+                                              fontSize: 14.sp,
+                                              fontWeight: FontWeight.w400,
+                                              color: Colors.black,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                      DataCell(
+                                        Text(
+                                          row['bill_total'] ?? '0',
+                                          style: GoogleFonts.dmSans(
+                                            textStyle: TextStyle(
+                                              fontSize: 14.sp,
+                                              fontWeight: FontWeight.w400,
+                                              color: Colors.black,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                      DataCell(
+                                        Text(
+                                          row['create_date'] ?? '',
+                                          style: GoogleFonts.dmSans(
+                                            textStyle: TextStyle(
+                                              fontSize: 14.2.sp,
+                                              fontWeight: FontWeight.w400,
+                                              color: Colors.black,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                      DataCell(
+                                        Text(
+                                          row['create_time'] ?? '',
+                                          style: GoogleFonts.dmSans(
+                                            textStyle: TextStyle(
+                                              fontSize: 14.2.sp,
+                                              fontWeight: FontWeight.w400,
+                                              color: Colors.black,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                      DataCell(
+                                        Row(
+                                          children: [
+                                            IconButton(
+                                              icon: const Icon(Icons.visibility,
+                                                  color: Colors.blue),
+                                              onPressed: () {
+                                                Get.to(() => TotalQuoationView(
+                                                      id: row['id'] ?? '',
+                                                    ));
+                                              },
+                                            ),
+                                            // IconButton(
+                                            //   icon: const Icon(Icons.edit,
+                                            //       color: Colors.green),
+                                            //   onPressed: () {
+                                            //     // Edit action
+                                            //     ScaffoldMessenger.of(context)
+                                            //         .showSnackBar(
+                                            //       SnackBar(
+                                            //           content: Text(
+                                            //               "Edit ${row['order_no']}")),
+                                            //     );
+                                            //   },
+                                            // ),
+                                          ],
+                                        ),
+                                      )
+                                    ],
+                                  );
+                                }).toList(),
+                              ),
+                            ),
                           ),
                         ),
                       ),
                     ),
-                  ),
-                ),
         ],
       ),
     );

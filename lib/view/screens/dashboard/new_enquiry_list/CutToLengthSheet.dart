@@ -46,10 +46,17 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
   List<String> coatMassList = [];
   List<String> yieldsListt = [];
   List<String> brandList = [];
+  final Map<String, TextEditingController> baseProductControllers = {};
+  final Map<String, FocusNode> baseProductFocusNodes = {};
+
+  ///change the controller
+  final Map<String, List<dynamic>> baseProductResults = {};
+  final Map<String, String?> selectedBaseProducts = {};
+  final Map<String, bool> isSearchingBaseProducts = {};
   List<Map<String, dynamic>> submittedData = [];
   List<dynamic> rawCUTtoLength = [];
 
-  // Form key for validation
+// Form key for validation
   final _formKey = GlobalKey<FormState>();
 
   @override
@@ -161,10 +168,10 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
         url,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-          // "category_id": "3",
-          // "selectedlabel": "material_type",
-          // "selectedvalue": selectedMeterial,
-          // "label_name": "thickness",
+// "category_id": "3",
+// "selectedlabel": "material_type",
+// "selectedvalue": selectedMeterial,
+// "label_name": "thickness",
           "product_label": "thickness",
           "product_filters": [selectedProduct],
           "product_label_filters": ["product_name"],
@@ -215,10 +222,10 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
         url,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-          // "category_id": "3",
-          // "selectedlabel": "thickness",
-          // "selectedvalue": selectedThichness,
-          // "label_name": "coating_mass",
+// "category_id": "3",
+// "selectedlabel": "thickness",
+// "selectedvalue": selectedThichness,
+// "label_name": "coating_mass",
           "product_label": "coating_mass",
           "product_filters": [selectedProduct],
           "product_label_filters": ["product_name"],
@@ -269,10 +276,10 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
         url,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-          // "category_id": "3",
-          // "selectedlabel": "coating_mass",
-          // "selectedvalue": selsectedCoat,
-          // "label_name": "yield_strength",
+// "category_id": "3",
+// "selectedlabel": "coating_mass",
+// "selectedvalue": selsectedCoat,
+// "label_name": "yield_strength",
           "product_label": "yield_strength",
           "product_filters": [selectedProduct],
           "product_label_filters": ["product_name"],
@@ -363,7 +370,7 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
             });
           }
 
-          // Extract base_product_id and id from message[1]
+// Extract base_product_id and id from message[1]
           if (message.length > 1) {
             final baseProductData = message[1];
             if (baseProductData is List && baseProductData.isNotEmpty) {
@@ -386,13 +393,13 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
     }
   }
 
-  // Add these variables after line 25 (after the existing List declarations)
+// Add these variables after line 25 (after the existing List declarations)
   Map<String, dynamic>? apiResponseData;
   List<dynamic> responseProducts = [];
   Map<String, Map<String, String>> uomOptions = {};
   bool showApiResponse = false;
 
-  // 2. MODIFY the postAllData() method to store the response (replace your existing postAllData method)
+// 2. MODIFY the postAllData() method to store the response (replace your existing postAllData method)
 
   Future<void> postAllData() async {
     HttpClient client = HttpClient();
@@ -400,21 +407,21 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
         ((X509Certificate cert, String host, int port) => true);
     IOClient ioClient = IOClient(client);
 
-    // From saved categoryMeta
+// From saved categoryMeta
     final categoryId = categoryMeta?["category_id"];
     final categoryName = categoryMeta?["categories"];
     print("this os $categoryId");
     print("this os $categoryName");
 
-    // Use global order ID if available, otherwise null for first time
+// Use global order ID if available, otherwise null for first time
     final globalOrderManager = GlobalOrderManager();
 
-    // Find the matching item from rawAccessoriesData
+// Find the matching item from rawAccessoriesData
     final matchingAccessory = rawCUTtoLength.firstWhere(
       (item) => item["product_name"] == selectedProduct,
       orElse: () => null,
     );
-    // Extract values
+// Extract values
     final CuttolengthproID = matchingAccessory?["id"];
     print("this os $CuttolengthproID");
 
@@ -450,7 +457,7 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
         return;
       }
       if (response.statusCode == 200) {
-        // STORE THE API RESPONSE
+// STORE THE API RESPONSE
         setState(() {
           apiResponseData = jsonDecode(response.body);
           if (apiResponseData!['lebels'] != null &&
@@ -465,12 +472,12 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
           orderNO = orderNos.isEmpty ? "Unknown" : orderNos;
           showApiResponse = true;
 
-          // Set global order ID if this is the first time
+// Set global order ID if this is the first time
           if (!globalOrderManager.hasGlobalOrderId()) {
             globalOrderManager.setGlobalOrderId(int.parse(orderID), orderNO!);
           }
 
-          // Update local variables
+// Update local variables
           orderIDD = globalOrderManager.globalOrderId;
           orderNO = globalOrderManager.globalOrderNo;
         });
@@ -489,6 +496,14 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
       );
       if (response.statusCode == 200) {
         print("delee response ${response.statusCode}");
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            backgroundColor: Colors.red.shade400,
+            behavior: SnackBarBehavior.floating,
+            content: Text("Data deleted successfully"),
+            duration: Duration(seconds: 2),
+          ),
+        );
       } else {
         throw Exception("Failed to delete card with ID $deleteId");
       }
@@ -500,7 +515,7 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
     }
   }
 
-  // 4. ADD THIS NEW METHOD to build individual API response items
+// 4. ADD THIS NEW METHOD to build individual API response items
   Widget _buildProductDetailInRows(Map<String, dynamic> data) {
     return Padding(
       padding: const EdgeInsets.all(8.0),
@@ -569,15 +584,15 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
             ],
           ),
           Gap(5),
-          _buildBaseProductSearchField(),
+          _buildBaseProductSearchField(data),
         ],
       ),
     );
   }
 
-  // 5. ADD THESE HELPER METHODS for the API response fields
+// 5. ADD THESE HELPER METHODS for the API response fields
   Widget _uomDropdownFromApi(Map<String, dynamic> data) {
-    // Extract UOM data from the product data
+// Extract UOM data from the product data
     Map<String, dynamic>? uomData = data['UOM'];
     String? currentValue = uomData?['value']?.toString();
     Map<String, dynamic>? options =
@@ -671,7 +686,7 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
             data['Billing Option']['value'] = val;
             data['Billing Option']['options'] = options;
           });
-          // Trigger calculation when billing option changes
+// Trigger calculation when billing option changes
           _debounceCalculation(data);
         },
         decoration: InputDecoration(
@@ -730,10 +745,10 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
           print("Controller text: ${controller.text}");
           print("Data after change: ${data[key]}");
 
-          // 🚫 DO NOT forcefully reset controller.text here!
-          // if (controller.text != val) {
-          //   controller.text = val;
-          // }
+// 🚫 DO NOT forcefully reset controller.text here!
+// if (controller.text != val) {
+//   controller.text = val;
+// }
 
           if (key == "Length" ||
               key == "Nos" ||
@@ -793,22 +808,22 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
 
   /// Base View Products data //
   TextEditingController baseProductController = TextEditingController();
-  List<dynamic> baseProductResults = [];
+
+// List<dynamic> baseProductResults = [];
   bool isSearchingBaseProduct = false;
   String? selectedBaseProduct;
   FocusNode baseProductFocusNode = FocusNode();
 
-  // Add this method for searching base products
-  Future<void> searchBaseProducts(String query) async {
+  Future<void> searchBaseProducts(String query, String productId) async {
     if (query.isEmpty) {
       setState(() {
-        baseProductResults = [];
+        baseProductResults[productId] = [];
       });
       return;
     }
 
     setState(() {
-      isSearchingBaseProduct = true;
+      isSearchingBaseProducts[productId] = true;
     });
 
     HttpClient client = HttpClient();
@@ -816,39 +831,51 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
         ((X509Certificate cert, String host, int port) => true);
     IOClient ioClient = IOClient(client);
     final headers = {"Content-Type": "application/json"};
-    final data = {"category_id": "34", "searchbase": query};
+    final data = {"category_id": "1", "searchbase": query};
 
     try {
       final response = await ioClient.post(
-        Uri.parse("$apiUrl/api/baseproducts_search"),
+        Uri.parse("$apiUrl/baseproducts_search"),
         headers: headers,
         body: jsonEncode(data),
       );
 
       if (response.statusCode == 200) {
         final responseData = jsonDecode(response.body);
-        print("Base product response: $responseData"); // Debug print
+        print("Base product response for $productId: $responseData");
         setState(() {
-          baseProductResults = responseData['base_products'] ?? [];
-          isSearchingBaseProduct = false;
+          baseProductResults[productId] = responseData['base_products'] ?? [];
+          isSearchingBaseProducts[productId] = false;
         });
       } else {
         setState(() {
-          baseProductResults = [];
-          isSearchingBaseProduct = false;
+          baseProductResults[productId] = [];
+          isSearchingBaseProducts[productId] = false;
         });
       }
     } catch (e) {
-      print("Error searching base products: $e");
+      print("Error searching base products for $productId: $e");
       setState(() {
-        baseProductResults = [];
-        isSearchingBaseProduct = false;
+        baseProductResults[productId] = [];
+        isSearchingBaseProducts[productId] = false;
       });
     }
   }
 
-  // Add this method to build the base product search field
-  Widget _buildBaseProductSearchField() {
+  bool isBaseProductUpdated = false;
+
+  Widget _buildBaseProductSearchField(Map<String, dynamic> data) {
+    String productId = data["id"].toString();
+
+// Create a unique controller for this product if it doesn't exist
+    if (!baseProductControllers.containsKey(productId)) {
+      baseProductControllers[productId] = TextEditingController();
+      baseProductFocusNodes[productId] = FocusNode();
+      baseProductResults[productId] = [];
+      selectedBaseProducts[productId] = null;
+      isSearchingBaseProducts[productId] = false;
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -860,24 +887,26 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
             fontSize: 15,
           ),
         ),
-        SizedBox(height: 4),
+        Gap(5),
         Container(
+          height: 40.h,
+          width: 200.w,
           decoration: BoxDecoration(
             border: Border.all(color: Colors.grey[300]!),
             borderRadius: BorderRadius.circular(8),
           ),
           child: TextField(
-            controller: baseProductController,
-            focusNode: baseProductFocusNode,
+            controller: baseProductControllers[productId],
+            focusNode: baseProductFocusNodes[productId],
             decoration: InputDecoration(
               hintText: "Search base product...",
               prefixIcon: Icon(Icons.search),
               border: InputBorder.none,
               contentPadding: EdgeInsets.symmetric(
                 horizontal: 16,
-                vertical: 12,
+                vertical: 10,
               ),
-              suffixIcon: isSearchingBaseProduct
+              suffixIcon: isSearchingBaseProducts[productId] == true
                   ? Padding(
                       padding: EdgeInsets.all(12),
                       child: SizedBox(
@@ -889,19 +918,19 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
                   : null,
             ),
             onChanged: (value) {
-              searchBaseProducts(value);
+              searchBaseProducts(value, productId);
             },
             onTap: () {
-              if (baseProductController.text.isNotEmpty) {
-                searchBaseProducts(baseProductController.text);
+              if (baseProductControllers[productId]!.text.isNotEmpty) {
+                searchBaseProducts(
+                    baseProductControllers[productId]!.text, productId);
               }
             },
           ),
         ),
-
-        // Search Results Display (line by line, not dropdown)
-        if (baseProductResults.isNotEmpty)
+        if (baseProductResults[productId]?.isNotEmpty == true)
           Container(
+            width: 200.w,
             margin: EdgeInsets.only(top: 8),
             padding: EdgeInsets.all(12),
             decoration: BoxDecoration(
@@ -921,13 +950,15 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
                   ),
                 ),
                 SizedBox(height: 8),
-                ...baseProductResults.map((product) {
+                ...baseProductResults[productId]!.map((product) {
                   return GestureDetector(
                     onTap: () {
                       setState(() {
-                        selectedBaseProduct = product.toString();
-                        baseProductController.text = selectedBaseProduct!;
-                        baseProductResults = [];
+                        selectedBaseProducts[productId] = product.toString();
+                        baseProductControllers[productId]!.text =
+                            selectedBaseProducts[productId]!;
+                        baseProductResults[productId] = [];
+                        isBaseProductUpdated = false;
                       });
                     },
                     child: Container(
@@ -977,10 +1008,9 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
               ],
             ),
           ),
-
-        // Selected Base Product Display
-        if (selectedBaseProduct != null)
+        if (selectedBaseProducts[productId] != null)
           Container(
+            width: 200.w,
             margin: EdgeInsets.only(top: 8),
             padding: EdgeInsets.all(12),
             decoration: BoxDecoration(
@@ -994,7 +1024,7 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
                 SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    "Selected: $selectedBaseProduct",
+                    "Selected: ${selectedBaseProducts[productId]}",
                     style: GoogleFonts.figtree(
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
@@ -1005,9 +1035,9 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
                 GestureDetector(
                   onTap: () {
                     setState(() {
-                      selectedBaseProduct = null;
-                      baseProductController.clear();
-                      baseProductResults = [];
+                      selectedBaseProducts[productId] = null;
+                      baseProductControllers[productId]!.clear();
+                      baseProductResults[productId] = [];
                     });
                   },
                   child: Icon(Icons.close, color: Colors.grey[600], size: 20),
@@ -1015,8 +1045,107 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
               ],
             ),
           ),
+        if (selectedBaseProducts[productId] != null && !isBaseProductUpdated)
+          Container(
+            margin: EdgeInsets.only(top: 8),
+            width: 200.w,
+            child: ElevatedButton(
+              onPressed: () {
+                updateSelectedBaseProduct(data["id"].toString());
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blue,
+                padding: EdgeInsets.symmetric(vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: Text(
+                "Update Base Product",
+                style: GoogleFonts.figtree(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ),
       ],
     );
+  }
+
+  Future<void> updateBaseProduct(String productId, String baseProduct) async {
+    HttpClient client = HttpClient();
+    client.badCertificateCallback =
+        ((X509Certificate cert, String host, int port) => true);
+    IOClient ioClient = IOClient(client);
+    final headers = {"Content-Type": "application/json"};
+    final data = {"id": productId, "base_product": baseProduct};
+
+    try {
+      final response = await ioClient.post(
+        Uri.parse("$apiUrl/baseproduct_update"),
+        headers: headers,
+        body: jsonEncode(data),
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final responseData = jsonDecode(response.body);
+        print("Base product updated successfully: $responseData");
+        print("Product Id  xxxx $productId");
+
+// Show success message to user
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Base product updated successfully!"),
+            backgroundColor: Colors.green,
+          ),
+        );
+      } else {
+        print(
+            "Failed to update base product. Status code: ${response.statusCode}");
+        print("Response body: ${response.body}");
+
+// Show error message to user
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Failed to update base product. Please try again."),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      print("Error updating base product: $e");
+
+// Show error message to user
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Error updating base product: $e"),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      ioClient.close();
+    }
+  }
+
+// Method to call when user wants to update the selected base product
+  void updateSelectedBaseProduct(String productId) {
+    if (selectedBaseProducts[productId] != null &&
+        selectedBaseProducts[productId]!.isNotEmpty) {
+      setState(() {
+        isBaseProductUpdated = true;
+// baseProductController.clear();
+      });
+      updateBaseProduct(productId, selectedBaseProducts[productId]!);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Please select a base product first."),
+          backgroundColor: Colors.orange,
+        ),
+      );
+    }
   }
 
   void _submitData() {
@@ -1026,7 +1155,7 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
         selsectedCoat == null ||
         selectedyie == null ||
         selectedBrand == null) {
-      // Show elegant error message
+// Show elegant error message
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
@@ -1065,7 +1194,7 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
         selectedBrand = null;
       });
 
-      // Show success message with a more elegant snackBar
+// Show success message with a more elegant snackBar
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Row(
@@ -1233,14 +1362,14 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
   Map<String, Map<String, TextEditingController>> fieldControllers =
       {}; // Store controllers
 
-  // Method to get or create controller for each field
+// Method to get or create controller for each field
   TextEditingController _getController(Map<String, dynamic> data, String key) {
     String productId = data["id"].toString();
 
-    // Initialize controllers map for this product ID
+// Initialize controllers map for this product ID
     fieldControllers.putIfAbsent(productId, () => {});
 
-    // If controller for this key doesn't exist, create it
+// If controller for this key doesn't exist, create it
     if (!fieldControllers[productId]!.containsKey(key)) {
       String initialValue = (data[key] != null && data[key].toString() != "0")
           ? data[key].toString()
@@ -1252,12 +1381,12 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
 
       print("Created controller for [$key] with value: '$initialValue'");
     } else {
-      // Existing controller: check if it needs sync from data
+// Existing controller: check if it needs sync from data
       final controller = fieldControllers[productId]![key]!;
 
       final dataValue = data[key]?.toString() ?? "";
 
-      // If the controller is empty but data has a value, sync it
+// If the controller is empty but data has a value, sync it
       if (controller.text.isEmpty && dataValue.isNotEmpty && dataValue != "0") {
         controller.text = dataValue;
         print("Synced controller for [$key] to: '$dataValue'");
@@ -1267,7 +1396,7 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
     return fieldControllers[productId]![key]!;
   }
 
-  // Add this method for debounced calculation
+// Add this method for debounced calculation
   void _debounceCalculation(Map<String, dynamic> data) {
     _debounceTimer?.cancel();
     _debounceTimer = Timer(Duration(seconds: 1), () {
@@ -1286,7 +1415,7 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
 
     String productId = data["id"].toString();
 
-    // Get current UOM value
+// Get current UOM value
     String? currentUom;
     if (data["UOM"] is Map) {
       currentUom = data["UOM"]["value"]?.toString();
@@ -1297,7 +1426,7 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
     print("Current UOM: $currentUom");
     print("Previous UOM: ${previousUomValues[productId]}");
 
-    // Get Profile value from controller
+// Get Profile value from controller
     double? profileValue;
     String? profileText;
 
@@ -1316,7 +1445,7 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
       print("Parsed profile value: $profileValue");
     }
 
-    // Get Nos value from controller
+// Get Nos value from controller
     int nosValue = 0;
     String? nosText;
 
@@ -1335,7 +1464,7 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
       nosValue = int.tryParse(nosText) ?? 1;
     }
 
-    // Get Crimp value
+// Get Crimp value
     double? crimpValue;
     String? crimpText = data["Crimp"]?.toString();
 
@@ -1392,10 +1521,10 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
             print("billamt updated to: $billamt");
             calculationResults[productId] = responseData;
 
-            // Update Profile/Length
+// Update Profile/Length
             if (responseData["profile"] != null) {
               String newProfile = responseData["profile"].toString();
-              // Only update if calculation returned different value
+// Only update if calculation returned different value
               if (data["Length"]?.toString() != newProfile) {
                 data["Length"] = newProfile;
                 if (fieldControllers[productId]?["Length"] != null) {
@@ -1405,7 +1534,7 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
               }
             }
 
-            // Update Nos
+// Update Nos
             if (responseData["Nos"] != null) {
               String newNos = responseData["Nos"].toString().trim();
               String currentInput =
@@ -1422,7 +1551,7 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
               }
             }
 
-            // Update Crimp
+// Update Crimp
             if (responseData["crimp"] != null) {
               String newCrimp = responseData["crimp"].toString();
               if (newCrimp != "0" && newCrimp != "0.0") {
@@ -1438,7 +1567,7 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
               }
             }
 
-            // Update SQMtr
+// Update SQMtr
             if (responseData["qty"] != null) {
               data["qty"] = responseData["qty"].toString();
               if (fieldControllers[productId]?["qty"] != null) {
@@ -1462,7 +1591,7 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
               }
             }
 
-            // Update Amount
+// Update Amount
             if (responseData["Amount"] != null) {
               data["Amount"] = responseData["Amount"].toString();
               if (fieldControllers[productId]?["Amount"] != null) {
@@ -1941,7 +2070,7 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
               ),
             ),
             constraints: BoxConstraints(maxHeight: 300),
-            // borderRadius: BorderRadius.circular(12),
+// borderRadius: BorderRadius.circular(12),
           ),
         ),
       ),

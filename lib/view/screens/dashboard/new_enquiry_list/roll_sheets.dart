@@ -45,10 +45,17 @@ class _RollSheetState extends State<RollSheet> {
   List<String> colorsList = [];
   List<String> thicknessList = [];
   List<String> coatingMassList = [];
+  final Map<String, TextEditingController> baseProductControllers = {};
+  final Map<String, FocusNode> baseProductFocusNodes = {};
+
+  ///change the controller
+  final Map<String, List<dynamic>> baseProductResults = {};
+  final Map<String, String?> selectedBaseProducts = {};
+  final Map<String, bool> isSearchingBaseProducts = {};
   List<Map<String, dynamic>> submittedData = [];
   List<dynamic> rawRollsheet = [];
 
-  // Form key for validation
+// Form key for validation
   final _formKey = GlobalKey<FormState>();
 
   @override
@@ -324,21 +331,21 @@ class _RollSheetState extends State<RollSheet> {
         ((X509Certificate cert, String host, int port) => true);
     IOClient ioClient = IOClient(client);
 
-    // From saved categoryMeta
+// From saved categoryMeta
     final categoryId = categoryMeta?["category_id"];
     final categoryName = categoryMeta?["categories"];
     print("this os $categoryId");
     print("this os $categoryName");
 
-    // Use global order ID if available, otherwise null for first time
+// Use global order ID if available, otherwise null for first time
     final globalOrderManager = GlobalOrderManager();
 
-    // Find the matching item from rawAccessoriesData
+// Find the matching item from rawAccessoriesData
     final matchingAccessory = rawRollsheet.firstWhere(
       (item) => item["product_name"] == selectedProduct,
       orElse: () => null,
     );
-    // Extract values
+// Extract values
     final rollsheetProID = matchingAccessory?["id"];
     print("this os $rollsheetProID");
     final headers = {"Content-Type": "application/json"};
@@ -381,12 +388,12 @@ class _RollSheetState extends State<RollSheet> {
           apiResponseData = responseData;
           currentMainProductId = responseData["product_id"]?.toString();
 
-          // Set global order ID if this is the first time
+// Set global order ID if this is the first time
           if (!globalOrderManager.hasGlobalOrderId()) {
             globalOrderManager.setGlobalOrderId(int.parse(orderID), orderNO!);
           }
 
-          // Update local variables
+// Update local variables
           orderIDD = globalOrderManager.globalOrderId;
           orderNO = globalOrderManager.globalOrderNo;
 
@@ -399,7 +406,7 @@ class _RollSheetState extends State<RollSheet> {
               if (item is Map<String, dynamic>) {
                 Map<String, dynamic> product = Map<String, dynamic>.from(item);
 
-                // Check for duplicate product ID
+// Check for duplicate product ID
                 String productId = product["id"].toString();
                 bool alreadyExists = responseProducts
                     .any((existing) => existing["id"].toString() == productId);
@@ -408,7 +415,7 @@ class _RollSheetState extends State<RollSheet> {
                   newProducts.add(product);
                 }
 
-                // Save UOM if present
+// Save UOM if present
                 if (product["UOM"] != null &&
                     product["UOM"]["options"] != null) {
                   uomOptions[product["id"].toString()] =
@@ -423,10 +430,10 @@ class _RollSheetState extends State<RollSheet> {
               }
             }
 
-            // Add only unique new products
+// Add only unique new products
             responseProducts.addAll(newProducts);
 
-            // Update submittedData to reflect responseProducts
+// Update submittedData to reflect responseProducts
             submittedData = List<Map<String, dynamic>>.from(responseProducts);
           }
         });
@@ -445,6 +452,14 @@ class _RollSheetState extends State<RollSheet> {
       );
       if (response.statusCode == 200) {
         print("delee response ${response.statusCode}");
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            backgroundColor: Colors.red.shade400,
+            behavior: SnackBarBehavior.floating,
+            content: Text("Data deleted successfully"),
+            duration: Duration(seconds: 2),
+          ),
+        );
       } else {
         throw Exception("Failed to delete card with ID $deleteId");
       }
@@ -457,21 +472,22 @@ class _RollSheetState extends State<RollSheet> {
   }
 
   TextEditingController baseProductController = TextEditingController();
-  List<dynamic> baseProductResults = [];
+
+// List<dynamic> baseProductResults = [];
   bool isSearchingBaseProduct = false;
   String? selectedBaseProduct;
   FocusNode baseProductFocusNode = FocusNode();
 
-  Future<void> searchBaseProducts(String query) async {
+  Future<void> searchBaseProducts(String query, String productId) async {
     if (query.isEmpty) {
       setState(() {
-        baseProductResults = [];
+        baseProductResults[productId] = [];
       });
       return;
     }
 
     setState(() {
-      isSearchingBaseProduct = true;
+      isSearchingBaseProducts[productId] = true;
     });
 
     HttpClient client = HttpClient();
@@ -479,67 +495,82 @@ class _RollSheetState extends State<RollSheet> {
         ((X509Certificate cert, String host, int port) => true);
     IOClient ioClient = IOClient(client);
     final headers = {"Content-Type": "application/json"};
-    final data = {"category_id": "591", "searchbase": query};
+    final data = {"category_id": "1", "searchbase": query};
 
     try {
       final response = await ioClient.post(
-        Uri.parse("$apiUrl/api/baseproducts_search"),
+        Uri.parse("$apiUrl/baseproducts_search"),
         headers: headers,
         body: jsonEncode(data),
       );
 
       if (response.statusCode == 200) {
         final responseData = jsonDecode(response.body);
-        print("Base product response: $responseData");
+        print("Base product response for $productId: $responseData");
         setState(() {
-          baseProductResults = responseData['base_products'] ?? [];
-          isSearchingBaseProduct = false;
+          baseProductResults[productId] = responseData['base_products'] ?? [];
+          isSearchingBaseProducts[productId] = false;
         });
       } else {
         setState(() {
-          baseProductResults = [];
-          isSearchingBaseProduct = false;
+          baseProductResults[productId] = [];
+          isSearchingBaseProducts[productId] = false;
         });
       }
     } catch (e) {
-      print("Error searching base products: $e");
+      print("Error searching base products for $productId: $e");
       setState(() {
-        baseProductResults = [];
-        isSearchingBaseProduct = false;
+        baseProductResults[productId] = [];
+        isSearchingBaseProducts[productId] = false;
       });
     }
   }
 
-  Widget _buildBaseProductSearchField() {
+  bool isBaseProductUpdated = false;
+
+  Widget _buildBaseProductSearchField(Map<String, dynamic> data) {
+    String productId = data["id"].toString();
+
+// Create a unique controller for this product if it doesn't exist
+    if (!baseProductControllers.containsKey(productId)) {
+      baseProductControllers[productId] = TextEditingController();
+      baseProductFocusNodes[productId] = FocusNode();
+      baseProductResults[productId] = [];
+      selectedBaseProducts[productId] = null;
+      isSearchingBaseProducts[productId] = false;
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           "Base Product",
-          style: GoogleFonts.figtree(
-            fontSize: 16,
+          style: TextStyle(
             fontWeight: FontWeight.w500,
-            color: Colors.black87,
+            color: Colors.grey[700],
+            fontSize: 15,
           ),
         ),
-        SizedBox(height: 8),
+        Gap(5),
         Container(
+          height: 40.h,
+          width: 200.w,
           decoration: BoxDecoration(
             border: Border.all(color: Colors.grey[300]!),
             borderRadius: BorderRadius.circular(8),
           ),
           child: TextField(
-            controller: baseProductController,
-            focusNode: baseProductFocusNode,
+            controller: baseProductControllers[productId],
+            focusNode: baseProductFocusNodes[productId],
             decoration: InputDecoration(
               hintText: "Search base product...",
               prefixIcon: Icon(Icons.search),
               border: InputBorder.none,
               contentPadding: EdgeInsets.symmetric(
                 horizontal: 16,
-                vertical: 12,
+                vertical: 10,
               ),
-              suffixIcon: isSearchingBaseProduct
+              suffixIcon: isSearchingBaseProducts[productId] == true
                   ? Padding(
                       padding: EdgeInsets.all(12),
                       child: SizedBox(
@@ -551,17 +582,19 @@ class _RollSheetState extends State<RollSheet> {
                   : null,
             ),
             onChanged: (value) {
-              searchBaseProducts(value);
+              searchBaseProducts(value, productId);
             },
             onTap: () {
-              if (baseProductController.text.isNotEmpty) {
-                searchBaseProducts(baseProductController.text);
+              if (baseProductControllers[productId]!.text.isNotEmpty) {
+                searchBaseProducts(
+                    baseProductControllers[productId]!.text, productId);
               }
             },
           ),
         ),
-        if (baseProductResults.isNotEmpty)
+        if (baseProductResults[productId]?.isNotEmpty == true)
           Container(
+            width: 200.w,
             margin: EdgeInsets.only(top: 8),
             padding: EdgeInsets.all(12),
             decoration: BoxDecoration(
@@ -581,13 +614,15 @@ class _RollSheetState extends State<RollSheet> {
                   ),
                 ),
                 SizedBox(height: 8),
-                ...baseProductResults.map((product) {
+                ...baseProductResults[productId]!.map((product) {
                   return GestureDetector(
                     onTap: () {
                       setState(() {
-                        selectedBaseProduct = product.toString();
-                        baseProductController.text = selectedBaseProduct!;
-                        baseProductResults = [];
+                        selectedBaseProducts[productId] = product.toString();
+                        baseProductControllers[productId]!.text =
+                            selectedBaseProducts[productId]!;
+                        baseProductResults[productId] = [];
+                        isBaseProductUpdated = false;
                       });
                     },
                     child: Container(
@@ -637,8 +672,9 @@ class _RollSheetState extends State<RollSheet> {
               ],
             ),
           ),
-        if (selectedBaseProduct != null)
+        if (selectedBaseProducts[productId] != null)
           Container(
+            width: 200.w,
             margin: EdgeInsets.only(top: 8),
             padding: EdgeInsets.all(12),
             decoration: BoxDecoration(
@@ -652,7 +688,7 @@ class _RollSheetState extends State<RollSheet> {
                 SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    "Selected: $selectedBaseProduct",
+                    "Selected: ${selectedBaseProducts[productId]}",
                     style: GoogleFonts.figtree(
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
@@ -663,9 +699,9 @@ class _RollSheetState extends State<RollSheet> {
                 GestureDetector(
                   onTap: () {
                     setState(() {
-                      selectedBaseProduct = null;
-                      baseProductController.clear();
-                      baseProductResults = [];
+                      selectedBaseProducts[productId] = null;
+                      baseProductControllers[productId]!.clear();
+                      baseProductResults[productId] = [];
                     });
                   },
                   child: Icon(Icons.close, color: Colors.grey[600], size: 20),
@@ -673,8 +709,107 @@ class _RollSheetState extends State<RollSheet> {
               ],
             ),
           ),
+        if (selectedBaseProducts[productId] != null && !isBaseProductUpdated)
+          Container(
+            margin: EdgeInsets.only(top: 8),
+            width: 200.w,
+            child: ElevatedButton(
+              onPressed: () {
+                updateSelectedBaseProduct(data["id"].toString());
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blue,
+                padding: EdgeInsets.symmetric(vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: Text(
+                "Update Base Product",
+                style: GoogleFonts.figtree(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ),
       ],
     );
+  }
+
+  Future<void> updateBaseProduct(String productId, String baseProduct) async {
+    HttpClient client = HttpClient();
+    client.badCertificateCallback =
+        ((X509Certificate cert, String host, int port) => true);
+    IOClient ioClient = IOClient(client);
+    final headers = {"Content-Type": "application/json"};
+    final data = {"id": productId, "base_product": baseProduct};
+
+    try {
+      final response = await ioClient.post(
+        Uri.parse("$apiUrl/baseproduct_update"),
+        headers: headers,
+        body: jsonEncode(data),
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final responseData = jsonDecode(response.body);
+        print("Base product updated successfully: $responseData");
+        print("Product Id  xxxx $productId");
+
+// Show success message to user
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Base product updated successfully!"),
+            backgroundColor: Colors.green,
+          ),
+        );
+      } else {
+        print(
+            "Failed to update base product. Status code: ${response.statusCode}");
+        print("Response body: ${response.body}");
+
+// Show error message to user
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Failed to update base product. Please try again."),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      print("Error updating base product: $e");
+
+// Show error message to user
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Error updating base product: $e"),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      ioClient.close();
+    }
+  }
+
+// Method to call when user wants to update the selected base product
+  void updateSelectedBaseProduct(String productId) {
+    if (selectedBaseProducts[productId] != null &&
+        selectedBaseProducts[productId]!.isNotEmpty) {
+      setState(() {
+        isBaseProductUpdated = true;
+// baseProductController.clear();
+      });
+      updateBaseProduct(productId, selectedBaseProducts[productId]!);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Please select a base product first."),
+          backgroundColor: Colors.orange,
+        ),
+      );
+    }
   }
 
   void _submitData() {
@@ -959,7 +1094,7 @@ class _RollSheetState extends State<RollSheet> {
             ],
           ),
           Gap(5.h),
-          _buildBaseProductSearchField(),
+          _buildBaseProductSearchField(data),
         ],
       ),
     );

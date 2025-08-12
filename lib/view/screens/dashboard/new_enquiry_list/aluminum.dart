@@ -371,6 +371,14 @@ class _AluminumState extends State<Aluminum> {
       );
       if (response.statusCode == 200) {
         print("delee response ${response.statusCode}");
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            backgroundColor: Colors.red.shade400,
+            behavior: SnackBarBehavior.floating,
+            content: Text("Data deleted successfully"),
+            duration: Duration(seconds: 2),
+          ),
+        );
       } else {
         throw Exception("Failed to delete card with ID $deleteId");
       }
@@ -528,12 +536,6 @@ class _AluminumState extends State<Aluminum> {
           print("Field $key changed to: $val");
           print("Controller text: ${controller.text}");
           print("Data after change: ${data[key]}");
-
-          // 🚫 DO NOT forcefully reset controller.text here!
-          // if (controller.text != val) {
-          //   controller.text = val;
-          // }
-
           if (key == "Length" ||
               key == "Nos" ||
               key == "Basic Rate" ||

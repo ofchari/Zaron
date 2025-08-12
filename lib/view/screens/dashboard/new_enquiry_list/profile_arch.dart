@@ -40,7 +40,7 @@ class _ProfileRidgeAndArchState extends State<ProfileRidgeAndArch> {
   String? selectedBaseProductId;
   String? currentMainProductId;
 
-  // String? selectedBrand;
+// String? selectedBrand;
 
   List<String> materialList = [];
   List<String> brandandList = [];
@@ -48,11 +48,18 @@ class _ProfileRidgeAndArchState extends State<ProfileRidgeAndArch> {
   List<String> thickAndList = [];
   List<String> coatingAndList = [];
   List<dynamic> rawProfilearch = [];
+  final Map<String, TextEditingController> baseProductControllers = {};
+  final Map<String, FocusNode> baseProductFocusNodes = {};
 
-  // List<String> brandList = [];
+  ///change the controller
+  final Map<String, List<dynamic>> baseProductResults = {};
+  final Map<String, String?> selectedBaseProducts = {};
+  final Map<String, bool> isSearchingBaseProducts = {};
+
+// List<String> brandList = [];
   List<Map<String, dynamic>> submittedData = [];
 
-  // Form key for validation
+// Form key for validation
   final _formKey = GlobalKey<FormState>();
 
   @override
@@ -170,10 +177,10 @@ class _ProfileRidgeAndArchState extends State<ProfileRidgeAndArch> {
         url,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-          // "category_id": "3",
-          // "selectedlabel": "brand",
-          // "selectedvalue": selectedBrands,
-          // "label_name": "color",
+// "category_id": "3",
+// "selectedlabel": "brand",
+// "selectedvalue": selectedBrands,
+// "label_name": "color",
           "product_label": "color",
           "product_filters": [selectedMaterial],
           "product_label_filters": ["product_name"],
@@ -224,10 +231,10 @@ class _ProfileRidgeAndArchState extends State<ProfileRidgeAndArch> {
         url,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-          // "category_id": "3",
-          // "selectedlabel": "color",
-          // "selectedvalue": selectedColors,
-          // "label_name": "thickness",
+// "category_id": "3",
+// "selectedlabel": "color",
+// "selectedvalue": selectedColors,
+// "label_name": "thickness",
           "product_label": "thickness",
           "product_filters": [selectedMaterial],
           "product_label_filters": ["product_name"],
@@ -315,7 +322,7 @@ class _ProfileRidgeAndArchState extends State<ProfileRidgeAndArch> {
             });
           }
 
-          // ✅ Extract both id and base_product_id
+// ✅ Extract both id and base_product_id
           final idData = message.length > 1 ? message[1] : null;
           if (idData is List && idData.isNotEmpty && idData.first is Map) {
             selectedProductBaseId = idData.first["id"]?.toString();
@@ -344,21 +351,21 @@ class _ProfileRidgeAndArchState extends State<ProfileRidgeAndArch> {
         ((X509Certificate cert, String host, int port) => true);
     IOClient ioClient = IOClient(client);
 
-    // From saved categoryMeta
+// From saved categoryMeta
     final categoryId = categoryMeta?["category_id"];
     final categoryName = categoryMeta?["categories"];
     print("this os $categoryId");
     print("this os $categoryName");
 
-    // Use global order ID if available, otherwise null for first time
+// Use global order ID if available, otherwise null for first time
     final globalOrderManager = GlobalOrderManager();
 
-    // Find the matching item from rawAccessoriesData
+// Find the matching item from rawAccessoriesData
     final matchingAccessory = rawProfilearch.firstWhere(
       (item) => item["product_name"] == selectedMaterial,
       orElse: () => null,
     );
-    // Extract values
+// Extract values
     final productID = matchingAccessory?["id"];
     print("this os $productID");
     final headers = {"Content-Type": "application/json"};
@@ -391,23 +398,23 @@ class _ProfileRidgeAndArchState extends State<ProfileRidgeAndArch> {
         orderIDD = int.tryParse(orderID);
         orderNO = responseData["order_no"]?.toString() ?? "Unknown";
 
-        // Set global order ID if this is the first time
+// Set global order ID if this is the first time
         if (!globalOrderManager.hasGlobalOrderId()) {
           globalOrderManager.setGlobalOrderId(int.parse(orderID), orderNO!);
         }
 
-        // Update local variables
+// Update local variables
         orderIDD = globalOrderManager.globalOrderId;
         orderNO = globalOrderManager.globalOrderNo;
         apiResponseData = responseData;
         currentMainProductId = responseData["product_id"]?.toString();
         if (responseData["lebels"] != null &&
             responseData["lebels"].isNotEmpty) {
-          // Append new products to the existing list
+// Append new products to the existing list
           final newProducts = responseData["lebels"][0]["data"] ?? [];
           responseProducts.addAll(newProducts);
 
-          // Store UOM options for each product
+// Store UOM options for each product
 
           for (var product in responseProducts) {
             if (product["UOM"] != null && product["UOM"]["options"] != null) {
@@ -420,14 +427,14 @@ class _ProfileRidgeAndArchState extends State<ProfileRidgeAndArch> {
           }
         }
       });
-      // if (selectedMaterial == null ||
-      //         selectedBrands == null ||
-      //         selectedColors == null ||
-      //         selectedThickness == null
-      //     // || selectedCoatingMass == null
-      //     ) {
-      //   return;
-      // }
+// if (selectedMaterial == null ||
+//         selectedBrands == null ||
+//         selectedColors == null ||
+//         selectedThickness == null
+//     // || selectedCoatingMass == null
+//     ) {
+//   return;
+// }
     } catch (e) {
       throw Exception("Error posting data: $e");
     }
@@ -442,6 +449,14 @@ class _ProfileRidgeAndArchState extends State<ProfileRidgeAndArch> {
       );
       if (response.statusCode == 200) {
         print("delee response ${response.statusCode}");
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            backgroundColor: Colors.red.shade400,
+            behavior: SnackBarBehavior.floating,
+            content: Text("Data deleted successfully"),
+            duration: Duration(seconds: 2),
+          ),
+        );
       } else {
         throw Exception("Failed to delete card with ID $deleteId");
       }
@@ -454,7 +469,8 @@ class _ProfileRidgeAndArchState extends State<ProfileRidgeAndArch> {
   }
 
   TextEditingController baseProductController = TextEditingController();
-  List<dynamic> baseProductResults = [];
+
+// List<dynamic> baseProductResults = [];
   bool isSearchingBaseProduct = false;
   String? selectedBaseProduct;
   FocusNode baseProductFocusNode = FocusNode();
@@ -464,10 +480,10 @@ class _ProfileRidgeAndArchState extends State<ProfileRidgeAndArch> {
             selectedBrands == null ||
             selectedColors == null ||
             selectedThickness == null
-        // ||
-        // selectedCoatingMass == null
+// ||
+// selectedCoatingMass == null
         ) {
-      // Show elegant error message
+// Show elegant error message
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
@@ -512,7 +528,7 @@ class _ProfileRidgeAndArchState extends State<ProfileRidgeAndArch> {
         _fetchBrandData();
       });
 
-      // Show success message with a more elegant snackBar
+// Show success message with a more elegant snackBar
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Row(
@@ -690,35 +706,99 @@ class _ProfileRidgeAndArchState extends State<ProfileRidgeAndArch> {
   List<dynamic> responseProducts = [];
   Map<String, Map<String, String>> uomOptions = {};
 
-  // Add this method to build the base product search field
-  Widget _buildBaseProductSearchField() {
+  Future<void> searchBaseProducts(String query, String productId) async {
+    if (query.isEmpty) {
+      setState(() {
+        baseProductResults[productId] = [];
+      });
+      return;
+    }
+
+    setState(() {
+      isSearchingBaseProducts[productId] = true;
+    });
+
+    HttpClient client = HttpClient();
+    client.badCertificateCallback =
+        ((X509Certificate cert, String host, int port) => true);
+    IOClient ioClient = IOClient(client);
+    final headers = {"Content-Type": "application/json"};
+    final data = {"category_id": "1", "searchbase": query};
+
+    try {
+      final response = await ioClient.post(
+        Uri.parse("$apiUrl/baseproducts_search"),
+        headers: headers,
+        body: jsonEncode(data),
+      );
+
+      if (response.statusCode == 200) {
+        final responseData = jsonDecode(response.body);
+        print("Base product response for $productId: $responseData");
+        setState(() {
+          baseProductResults[productId] = responseData['base_products'] ?? [];
+          isSearchingBaseProducts[productId] = false;
+        });
+      } else {
+        setState(() {
+          baseProductResults[productId] = [];
+          isSearchingBaseProducts[productId] = false;
+        });
+      }
+    } catch (e) {
+      print("Error searching base products for $productId: $e");
+      setState(() {
+        baseProductResults[productId] = [];
+        isSearchingBaseProducts[productId] = false;
+      });
+    }
+  }
+
+  bool isBaseProductUpdated = false;
+
+  Widget _buildBaseProductSearchField(Map<String, dynamic> data) {
+    String productId = data["id"].toString();
+
+// Create a unique controller for this product if it doesn't exist
+    if (!baseProductControllers.containsKey(productId)) {
+      baseProductControllers[productId] = TextEditingController();
+      baseProductFocusNodes[productId] = FocusNode();
+      baseProductResults[productId] = [];
+      selectedBaseProducts[productId] = null;
+      isSearchingBaseProducts[productId] = false;
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           "Base Product",
-          style: GoogleFonts.figtree(
-            fontSize: 16,
+          style: TextStyle(
             fontWeight: FontWeight.w500,
-            color: Colors.black87,
+            color: Colors.grey[700],
+            fontSize: 15,
           ),
         ),
-        SizedBox(height: 8),
+        Gap(5),
         Container(
+          height: 40.h,
+          width: 200.w,
           decoration: BoxDecoration(
             border: Border.all(color: Colors.grey[300]!),
             borderRadius: BorderRadius.circular(8),
           ),
           child: TextField(
-            controller: baseProductController,
-            focusNode: baseProductFocusNode,
+            controller: baseProductControllers[productId],
+            focusNode: baseProductFocusNodes[productId],
             decoration: InputDecoration(
               hintText: "Search base product...",
               prefixIcon: Icon(Icons.search),
               border: InputBorder.none,
-              contentPadding:
-                  EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              suffixIcon: isSearchingBaseProduct
+              contentPadding: EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 10,
+              ),
+              suffixIcon: isSearchingBaseProducts[productId] == true
                   ? Padding(
                       padding: EdgeInsets.all(12),
                       child: SizedBox(
@@ -730,17 +810,19 @@ class _ProfileRidgeAndArchState extends State<ProfileRidgeAndArch> {
                   : null,
             ),
             onChanged: (value) {
-              searchBaseProducts(value);
+              searchBaseProducts(value, productId);
             },
             onTap: () {
-              if (baseProductController.text.isNotEmpty) {
-                searchBaseProducts(baseProductController.text);
+              if (baseProductControllers[productId]!.text.isNotEmpty) {
+                searchBaseProducts(
+                    baseProductControllers[productId]!.text, productId);
               }
             },
           ),
         ),
-        if (baseProductResults.isNotEmpty)
+        if (baseProductResults[productId]?.isNotEmpty == true)
           Container(
+            width: 200.w,
             margin: EdgeInsets.only(top: 8),
             padding: EdgeInsets.all(12),
             decoration: BoxDecoration(
@@ -760,19 +842,23 @@ class _ProfileRidgeAndArchState extends State<ProfileRidgeAndArch> {
                   ),
                 ),
                 SizedBox(height: 8),
-                ...baseProductResults.map((product) {
+                ...baseProductResults[productId]!.map((product) {
                   return GestureDetector(
                     onTap: () {
                       setState(() {
-                        selectedBaseProduct = product.toString();
-                        baseProductController.text = selectedBaseProduct!;
-                        baseProductResults = [];
+                        selectedBaseProducts[productId] = product.toString();
+                        baseProductControllers[productId]!.text =
+                            selectedBaseProducts[productId]!;
+                        baseProductResults[productId] = [];
+                        isBaseProductUpdated = false;
                       });
                     },
                     child: Container(
                       width: double.infinity,
-                      padding:
-                          EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+                      padding: EdgeInsets.symmetric(
+                        vertical: 12,
+                        horizontal: 12,
+                      ),
                       margin: EdgeInsets.only(bottom: 6),
                       decoration: BoxDecoration(
                         color: Colors.white,
@@ -814,8 +900,9 @@ class _ProfileRidgeAndArchState extends State<ProfileRidgeAndArch> {
               ],
             ),
           ),
-        if (selectedBaseProduct != null)
+        if (selectedBaseProducts[productId] != null)
           Container(
+            width: 200.w,
             margin: EdgeInsets.only(top: 8),
             padding: EdgeInsets.all(12),
             decoration: BoxDecoration(
@@ -829,7 +916,7 @@ class _ProfileRidgeAndArchState extends State<ProfileRidgeAndArch> {
                 SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    "Selected: $selectedBaseProduct",
+                    "Selected: ${selectedBaseProducts[productId]}",
                     style: GoogleFonts.figtree(
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
@@ -840,9 +927,9 @@ class _ProfileRidgeAndArchState extends State<ProfileRidgeAndArch> {
                 GestureDetector(
                   onTap: () {
                     setState(() {
-                      selectedBaseProduct = null;
-                      baseProductController.clear();
-                      baseProductResults = [];
+                      selectedBaseProducts[productId] = null;
+                      baseProductControllers[productId]!.clear();
+                      baseProductResults[productId] = [];
                     });
                   },
                   child: Icon(Icons.close, color: Colors.grey[600], size: 20),
@@ -850,62 +937,110 @@ class _ProfileRidgeAndArchState extends State<ProfileRidgeAndArch> {
               ],
             ),
           ),
+        if (selectedBaseProducts[productId] != null && !isBaseProductUpdated)
+          Container(
+            margin: EdgeInsets.only(top: 8),
+            width: 200.w,
+            child: ElevatedButton(
+              onPressed: () {
+                updateSelectedBaseProduct(data["id"].toString());
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blue,
+                padding: EdgeInsets.symmetric(vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: Text(
+                "Update Base Product",
+                style: GoogleFonts.figtree(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ),
       ],
     );
   }
 
-  // Add this method for searching base products
-  Future<void> searchBaseProducts(String query) async {
-    if (query.isEmpty) {
-      setState(() {
-        baseProductResults = [];
-      });
-      return;
-    }
-
-    setState(() {
-      isSearchingBaseProduct = true;
-    });
-
+  Future<void> updateBaseProduct(String productId, String baseProduct) async {
     HttpClient client = HttpClient();
     client.badCertificateCallback =
         ((X509Certificate cert, String host, int port) => true);
     IOClient ioClient = IOClient(client);
-
     final headers = {"Content-Type": "application/json"};
-    final data = {"category_id": "32", "searchbase": query};
+    final data = {"id": productId, "base_product": baseProduct};
 
     try {
       final response = await ioClient.post(
-        Uri.parse("$apiUrl/api/baseproducts_search"),
+        Uri.parse("$apiUrl/baseproduct_update"),
         headers: headers,
         body: jsonEncode(data),
       );
 
-      if (response.statusCode == 200) {
+      if (response.statusCode == 200 || response.statusCode == 201) {
         final responseData = jsonDecode(response.body);
-        final List<dynamic> results = responseData['base_products'] ?? [];
+        print("Base product updated successfully: $responseData");
+        print("Product Id  xxxx $productId");
 
-        setState(() {
-          baseProductResults = results;
-          isSearchingBaseProduct = false;
-        });
+// Show success message to user
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Base product updated successfully!"),
+            backgroundColor: Colors.green,
+          ),
+        );
       } else {
-        setState(() {
-          baseProductResults = [];
-          isSearchingBaseProduct = false;
-        });
+        print(
+            "Failed to update base product. Status code: ${response.statusCode}");
+        print("Response body: ${response.body}");
+
+// Show error message to user
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Failed to update base product. Please try again."),
+            backgroundColor: Colors.red,
+          ),
+        );
       }
     } catch (e) {
-      print("Error searching base products: $e");
-      setState(() {
-        baseProductResults = [];
-        isSearchingBaseProduct = false;
-      });
+      print("Error updating base product: $e");
+
+// Show error message to user
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Error updating base product: $e"),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      ioClient.close();
     }
   }
 
-  // New method that organizes fields in rows, two fields per row
+// Method to call when user wants to update the selected base product
+  void updateSelectedBaseProduct(String productId) {
+    if (selectedBaseProducts[productId] != null &&
+        selectedBaseProducts[productId]!.isNotEmpty) {
+      setState(() {
+        isBaseProductUpdated = true;
+// baseProductController.clear();
+      });
+      updateBaseProduct(productId, selectedBaseProducts[productId]!);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Please select a base product first."),
+          backgroundColor: Colors.orange,
+        ),
+      );
+    }
+  }
+
+// New method that organizes fields in rows, two fields per row
   Widget _buildProductDetailInRows(Map<String, dynamic> data) {
     return Padding(
       padding: const EdgeInsets.all(8.0),
@@ -975,7 +1110,7 @@ class _ProfileRidgeAndArchState extends State<ProfileRidgeAndArch> {
           Gap(5),
           Row(
             children: [
-              Expanded(child: _buildBaseProductSearchField()),
+              Expanded(child: _buildBaseProductSearchField(data)),
             ],
           ),
         ],
@@ -1038,10 +1173,10 @@ class _ProfileRidgeAndArchState extends State<ProfileRidgeAndArch> {
           print("Controller text: ${controller.text}");
           print("Data after change: ${data[key]}");
 
-          // 🚫 DO NOT forcefully reset controller.text here!
-          // if (controller.text != val) {
-          //   controller.text = val;
-          // }
+// 🚫 DO NOT forcefully reset controller.text here!
+// if (controller.text != val) {
+//   controller.text = val;
+// }
 
           if (key == "Length" ||
               key == "Nos" ||
@@ -1082,22 +1217,22 @@ class _ProfileRidgeAndArchState extends State<ProfileRidgeAndArch> {
   Widget _uomDropdownFromApi(Map<String, dynamic> data) {
     String productId = data["id"].toString();
 
-    // Extract UOM data from the response
+// Extract UOM data from the response
     Map<String, dynamic>? uomData;
     if (data["UOM"] is Map) {
       uomData = Map<String, dynamic>.from(data["UOM"]);
     }
 
-    // If no UOM data, return text field
+// If no UOM data, return text field
     if (uomData == null || !uomData.containsKey('options')) {
       return _editableTextField(data, "UOM");
     }
 
-    // Get the options map
+// Get the options map
     Map<String, String> options =
         Map<String, String>.from(uomData['options'] as Map);
 
-    // Get current value
+// Get current value
     String currentValue = uomData['value']?.toString() ?? options.keys.first;
 
     return SizedBox(
@@ -1119,7 +1254,7 @@ class _ProfileRidgeAndArchState extends State<ProfileRidgeAndArch> {
         onChanged: (val) {
           if (val != null) {
             setState(() {
-              // Update the UOM data structure
+// Update the UOM data structure
               data["UOM"] = {
                 "value": val,
                 "options": options,
@@ -1170,14 +1305,14 @@ class _ProfileRidgeAndArchState extends State<ProfileRidgeAndArch> {
   Map<String, Map<String, TextEditingController>> fieldControllers =
       {}; // Store controllers
 
-  // Method to get or create controller for each field
+// Method to get or create controller for each field
   TextEditingController _getController(Map<String, dynamic> data, String key) {
     String productId = data["id"].toString();
 
-    // Initialize controllers map for this product ID
+// Initialize controllers map for this product ID
     fieldControllers.putIfAbsent(productId, () => {});
 
-    // If controller for this key doesn't exist, create it
+// If controller for this key doesn't exist, create it
     if (!fieldControllers[productId]!.containsKey(key)) {
       String initialValue = (data[key] != null && data[key].toString() != "0")
           ? data[key].toString()
@@ -1189,12 +1324,12 @@ class _ProfileRidgeAndArchState extends State<ProfileRidgeAndArch> {
 
       print("Created controller for [$key] with value: '$initialValue'");
     } else {
-      // Existing controller: check if it needs sync from data
+// Existing controller: check if it needs sync from data
       final controller = fieldControllers[productId]![key]!;
 
       final dataValue = data[key]?.toString() ?? "";
 
-      // If the controller is empty but data has a value, sync it
+// If the controller is empty but data has a value, sync it
       if (controller.text.isEmpty && dataValue.isNotEmpty && dataValue != "0") {
         controller.text = dataValue;
         print("Synced controller for [$key] to: '$dataValue'");
@@ -1204,7 +1339,7 @@ class _ProfileRidgeAndArchState extends State<ProfileRidgeAndArch> {
     return fieldControllers[productId]![key]!;
   }
 
-  // Add this method for debounced calculation
+// Add this method for debounced calculation
   void _debounceCalculation(Map<String, dynamic> data) {
     _debounceTimer?.cancel();
     _debounceTimer = Timer(Duration(seconds: 1), () {
@@ -1223,7 +1358,7 @@ class _ProfileRidgeAndArchState extends State<ProfileRidgeAndArch> {
 
     String productId = data["id"].toString();
 
-    // Get current UOM value
+// Get current UOM value
     String? currentUom;
     if (data["UOM"] is Map) {
       currentUom = data["UOM"]["value"]?.toString();
@@ -1234,7 +1369,7 @@ class _ProfileRidgeAndArchState extends State<ProfileRidgeAndArch> {
     print("Current UOM: $currentUom");
     print("Previous UOM: ${previousUomValues[productId]}");
 
-    // Get Profile value from controller
+// Get Profile value from controller
     double? profileValue;
     String? profileText;
 
@@ -1253,7 +1388,7 @@ class _ProfileRidgeAndArchState extends State<ProfileRidgeAndArch> {
       profileValue = double.tryParse(profileText);
     }
 
-    // Get Nos value from controller
+// Get Nos value from controller
     int nosValue = 0;
     String? nosText;
 
@@ -1272,7 +1407,7 @@ class _ProfileRidgeAndArchState extends State<ProfileRidgeAndArch> {
       nosValue = int.tryParse(nosText) ?? 1;
     }
 
-    // Get height (crimp) value from controller
+// Get height (crimp) value from controller
     String? heightValue;
     if (fieldControllers.containsKey(productId) &&
         fieldControllers[productId]!.containsKey("height")) {
@@ -1305,7 +1440,7 @@ class _ProfileRidgeAndArchState extends State<ProfileRidgeAndArch> {
                   data["Basic Rate"]?.toString() ??
                   "0") ??
           0,
-      // double.tryParse(data["Basic Rate"]?.toString() ?? "0") ?? 0,
+// double.tryParse(data["Basic Rate"]?.toString() ?? "0") ?? 0,
     };
 
     print("Request Body: ${jsonEncode(requestBody)}");
@@ -1329,9 +1464,9 @@ class _ProfileRidgeAndArchState extends State<ProfileRidgeAndArch> {
             print("billamt updated to: $billamt");
             calculationResults[productId] = responseData;
 
-            // Update Basic Rate if provided in response
+// Update Basic Rate if provided in response
 
-            // ✅ FIX: Update Basic Rate - API returns "rate" not "basic_rate"
+// ✅ FIX: Update Basic Rate - API returns "rate" not "basic_rate"
             if (responseData["rate"] != null) {
               data["Basic Rate"] = responseData["rate"].toString();
               if (fieldControllers[productId]?["Basic Rate"] != null) {
@@ -1341,7 +1476,7 @@ class _ProfileRidgeAndArchState extends State<ProfileRidgeAndArch> {
               print("Basic Rate updated to: ${responseData["rate"]}");
             }
 
-            // Update Profile/Length
+// Update Profile/Length
             if (responseData["Length"] != null) {
               data["Profile"] = responseData["Length"].toString();
               if (fieldControllers[productId]?["Profile"] != null) {
@@ -1349,7 +1484,7 @@ class _ProfileRidgeAndArchState extends State<ProfileRidgeAndArch> {
                     responseData["Length"].toString();
               }
             }
-            // Update Nos
+// Update Nos
             if (responseData["Nos"] != null) {
               String newNos = responseData["Nos"].toString().trim();
               String currentInput =
@@ -1366,7 +1501,7 @@ class _ProfileRidgeAndArchState extends State<ProfileRidgeAndArch> {
               }
             }
 
-            // Update Height/Crimp
+// Update Height/Crimp
             if (responseData["crimp"] != null) {
               String newCrimp = responseData["crimp"].toString();
               String currentCrimp =
@@ -1384,7 +1519,7 @@ class _ProfileRidgeAndArchState extends State<ProfileRidgeAndArch> {
               }
             }
 
-            // Update SQMtr
+// Update SQMtr
             if (responseData["sqmtr"] != null) {
               data["SQMtr"] = responseData["sqmtr"].toString();
               if (fieldControllers[productId]?["SQMtr"] != null) {
@@ -1408,7 +1543,7 @@ class _ProfileRidgeAndArchState extends State<ProfileRidgeAndArch> {
               }
             }
 
-            // Update Amount
+// Update Amount
             if (responseData["Amount"] != null) {
               data["Amount"] = responseData["Amount"].toString();
               if (fieldControllers[productId]?["Amount"] != null) {
@@ -1493,7 +1628,7 @@ class _ProfileRidgeAndArchState extends State<ProfileRidgeAndArch> {
               ),
             ),
             constraints: BoxConstraints(maxHeight: 300),
-            // borderRadius: BorderRadius.circular(12),
+// borderRadius: BorderRadius.circular(12),
           ),
         ),
       ),
@@ -1561,9 +1696,9 @@ class _ProfileRidgeAndArchState extends State<ProfileRidgeAndArch> {
                               setState(() {
                                 selectedMaterial = value;
                               });
-                              // _fetchProductName();
+// _fetchProductName();
                             },
-                            // enabled: productList.isNotEmpty,
+// enabled: productList.isNotEmpty,
                             label: "Material Type",
                             icon: Icons.difference_outlined,
                           ),

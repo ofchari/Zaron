@@ -152,7 +152,7 @@ class _TotalEnquiryPageState extends State<TotalEnquiryPage> {
   Widget build(BuildContext context) {
     var size = MediaQuery.sizeOf(context);
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: Colors.purple[50],
       appBar: AppBar(
         centerTitle: true,
         elevation: 0,
@@ -333,138 +333,149 @@ class _TotalEnquiryPageState extends State<TotalEnquiryPage> {
             // Table
             isLoading
                 ? Expanded(child: Center(child: CircularProgressIndicator()))
-                : Expanded(
-                    child: Scrollbar(
-                      thumbVisibility: true,
-                      child: // Add this in your StatefulWidget class
-                          SingleChildScrollView(
-                        scrollDirection: Axis.vertical,
-                        child: SingleChildScrollView(
-                          scrollDirection: Axis.horizontal,
-                          padding: const EdgeInsets.all(16.0),
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(12),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.grey.withOpacity(0.1),
-                                  spreadRadius: 2,
-                                  blurRadius: 5,
-                                  offset: const Offset(0, 3),
-                                ),
-                              ],
+                : filteredData.isEmpty
+                    ? Expanded(
+                        child: Center(
+                          child: Text(
+                            'No records found',
+                            style: GoogleFonts.poppins(
+                              fontSize: 16.sp,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.grey,
                             ),
-                            child: DataTable(
-                              showCheckboxColumn: false,
-                              border: TableBorder.all(
-                                color: Colors.purple.withOpacity(0.3),
-                                width: 1,
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              columnSpacing: 40,
-                              headingRowHeight: 70,
-                              columns: [
-                                DataColumn(
-                                    label: Text('No',
-                                        style: GoogleFonts.outfit(
-                                            fontSize: 16.sp,
-                                            fontWeight: FontWeight.w500))),
-                                DataColumn(
-                                    label: Text('Order No',
-                                        style: GoogleFonts.outfit(
-                                            fontSize: 16.sp,
-                                            fontWeight: FontWeight.w500))),
-                                DataColumn(
-                                    label: Text('Bill Total',
-                                        style: GoogleFonts.outfit(
-                                            fontSize: 16.sp,
-                                            fontWeight: FontWeight.w500))),
-                                DataColumn(
-                                    label: Text('Create Date',
-                                        style: GoogleFonts.outfit(
-                                            fontSize: 16.sp,
-                                            fontWeight: FontWeight.w500))),
-                                DataColumn(
-                                    label: Text('Create Time',
-                                        style: GoogleFonts.outfit(
-                                            fontSize: 16.sp,
-                                            fontWeight: FontWeight.w500))),
-                                DataColumn(
-                                    label: Text('Action',
-                                        style: GoogleFonts.outfit(
-                                            fontSize: 16.sp,
-                                            fontWeight: FontWeight.w500))),
-                              ],
-                              rows: filteredData.asMap().entries.map((entry) {
-                                int index = entry.key;
-                                var row = entry.value;
-
-                                return DataRow(
-                                  // Row background color logic
-                                  color:
-                                      WidgetStateProperty.resolveWith<Color?>(
-                                    (Set<WidgetState> states) {
-                                      if (selectedRowIndex == index) {
-                                        return Colors.grey.shade300;
-                                      }
-                                      return null;
-                                    },
-                                  ), // Row tap logic
-                                  onSelectChanged: (_) {
-                                    setState(() {
-                                      if (selectedRowIndex == index) {
-                                        selectedRowIndex =
-                                            null; // Deselect if already selected
-                                      } else {
-                                        selectedRowIndex =
-                                            index; // Select new row
-                                      }
-                                    });
-                                  },
-                                  cells: [
-                                    DataCell(Text("${index + 1}",
-                                        style: GoogleFonts.dmSans(
-                                            fontSize: 14.sp))),
-                                    // DataCell(Text(row['id'] ?? '',
-                                    //     style: GoogleFonts.dmSans(
-                                    //         fontSize: 14.sp))),
-                                    DataCell(Text(row['order_no'] ?? '',
-                                        style: GoogleFonts.dmSans(
-                                            fontSize: 14.sp))),
-                                    DataCell(Text(row['bill_total'] ?? '0',
-                                        style: GoogleFonts.dmSans(
-                                            fontSize: 14.sp))),
-                                    DataCell(Text(row['create_date'] ?? '',
-                                        style: GoogleFonts.dmSans(
-                                            fontSize: 14.2.sp))),
-                                    DataCell(Text(row['create_time'] ?? '',
-                                        style: GoogleFonts.dmSans(
-                                            fontSize: 14.2.sp))),
-                                    DataCell(Row(
-                                      children: [
-                                        IconButton(
-                                          icon: const Icon(Icons.visibility,
-                                              color: Colors.blue),
-                                          onPressed: () {
-                                            row["id"].isEmpty
-                                                ? Get.to(() => TotalEnquiryView(
-                                                    id: row['id'] ?? ''))
-                                                : Get.to(() => TotalEnquiryView(
-                                                    id: row['id'] ?? ''));
-                                          },
-                                        ),
-                                      ],
-                                    )),
+                          ),
+                        ),
+                      )
+                    : Expanded(
+                        child: Scrollbar(
+                          thumbVisibility: true,
+                          child: // Add this in your StatefulWidget class
+                              SingleChildScrollView(
+                            scrollDirection: Axis.vertical,
+                            child: SingleChildScrollView(
+                              scrollDirection: Axis.horizontal,
+                              padding: const EdgeInsets.all(16.0),
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(12),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.grey.withOpacity(0.1),
+                                      spreadRadius: 2,
+                                      blurRadius: 5,
+                                      offset: const Offset(0, 3),
+                                    ),
                                   ],
-                                );
-                              }).toList(),
+                                ),
+                                child: DataTable(
+                                  showCheckboxColumn: false,
+                                  border: TableBorder.all(
+                                    color: Colors.purple.withOpacity(0.3),
+                                    width: 1,
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  columnSpacing: 40,
+                                  headingRowHeight: 70,
+                                  columns: [
+                                    DataColumn(
+                                        label: Text('No',
+                                            style: GoogleFonts.outfit(
+                                                fontSize: 16.sp,
+                                                fontWeight: FontWeight.w500))),
+                                    DataColumn(
+                                        label: Text('Order No',
+                                            style: GoogleFonts.outfit(
+                                                fontSize: 16.sp,
+                                                fontWeight: FontWeight.w500))),
+                                    DataColumn(
+                                        label: Text('Bill Total',
+                                            style: GoogleFonts.outfit(
+                                                fontSize: 16.sp,
+                                                fontWeight: FontWeight.w500))),
+                                    DataColumn(
+                                        label: Text('Create Date',
+                                            style: GoogleFonts.outfit(
+                                                fontSize: 16.sp,
+                                                fontWeight: FontWeight.w500))),
+                                    DataColumn(
+                                        label: Text('Create Time',
+                                            style: GoogleFonts.outfit(
+                                                fontSize: 16.sp,
+                                                fontWeight: FontWeight.w500))),
+                                    DataColumn(
+                                        label: Text('Action',
+                                            style: GoogleFonts.outfit(
+                                                fontSize: 16.sp,
+                                                fontWeight: FontWeight.w500))),
+                                  ],
+                                  rows:
+                                      filteredData.asMap().entries.map((entry) {
+                                    int index = entry.key;
+                                    var row = entry.value;
+
+                                    return DataRow(
+                                      // Row background color logic
+                                      color: WidgetStateProperty.resolveWith<
+                                          Color?>(
+                                        (Set<WidgetState> states) {
+                                          if (selectedRowIndex == index) {
+                                            return Colors.purple.shade50;
+                                          }
+                                          return null;
+                                        },
+                                      ), // Row tap logic
+                                      onSelectChanged: (_) {
+                                        setState(() {
+                                          if (selectedRowIndex == index) {
+                                            selectedRowIndex =
+                                                null; // Deselect if already selected
+                                          } else {
+                                            selectedRowIndex =
+                                                index; // Select new row
+                                          }
+                                        });
+                                      },
+                                      cells: [
+                                        DataCell(Text("${index + 1}",
+                                            style: GoogleFonts.dmSans(
+                                                fontSize: 14.sp))),
+                                        // DataCell(Text(row['id'] ?? '',
+                                        //     style: GoogleFonts.dmSans(
+                                        //         fontSize: 14.sp))),
+                                        DataCell(Text(row['order_no'] ?? '',
+                                            style: GoogleFonts.dmSans(
+                                                fontSize: 14.sp))),
+                                        DataCell(Text(row['bill_total'] ?? '0',
+                                            style: GoogleFonts.dmSans(
+                                                fontSize: 14.sp))),
+                                        DataCell(Text(row['create_date'] ?? '',
+                                            style: GoogleFonts.dmSans(
+                                                fontSize: 14.2.sp))),
+                                        DataCell(Text(row['create_time'] ?? '',
+                                            style: GoogleFonts.dmSans(
+                                                fontSize: 14.2.sp))),
+                                        DataCell(Row(
+                                          children: [
+                                            IconButton(
+                                              icon: const Icon(Icons.visibility,
+                                                  color: Colors.blue),
+                                              onPressed: () {
+                                                Get.to(() => TotalEnquiryView(
+                                                    id: row['id'] ?? ''));
+                                              },
+                                            ),
+                                          ],
+                                        )),
+                                      ],
+                                    );
+                                  }).toList(),
+                                ),
+                              ),
                             ),
                           ),
                         ),
                       ),
-                    ),
-                  ),
           ],
         ),
       ),

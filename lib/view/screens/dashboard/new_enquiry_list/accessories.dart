@@ -360,7 +360,7 @@ class _AccessoriesState extends State<Accessories> {
     final url = Uri.parse('$apiUrl/addbag');
     final headers = {'Content-Type': 'application/json'};
 
-    // Use global order ID if available, otherwise null for first time
+// Use global order ID if available, otherwise null for first time
     final globalOrderManager = GlobalOrderManager();
 
     final data = {
@@ -386,24 +386,25 @@ class _AccessoriesState extends State<Accessories> {
 
       if (response.statusCode == 200) {
         final responseData = jsonDecode(response.body);
+        debugPrint("coolie power $responseData");
 
         setState(() {
           final String orderID = responseData["order_id"].toString();
           final String orderNo =
               responseData["order_no"]?.toString() ?? "Unknown";
 
-          // Set global order ID if this is the first time
+// Set global order ID if this is the first time
           if (!globalOrderManager.hasGlobalOrderId()) {
             globalOrderManager.setGlobalOrderId(int.parse(orderID), orderNo);
           }
 
-          // Update local variables
+// Update local variables
           orderIDD = globalOrderManager.globalOrderId;
           orderNoo = globalOrderManager.globalOrderNo;
           apiResponseData = responseData;
           currentMainProductId = responseData["product_id"]?.toString();
 
-          // Rest of your existing logic for processing response...
+// Rest of your existing logic for processing response...
           if (responseData["lebels"] != null &&
               responseData["lebels"].isNotEmpty) {
             String categoryName = responseData["category_name"] ?? "";
@@ -458,6 +459,14 @@ class _AccessoriesState extends State<Accessories> {
       );
       if (response.statusCode == 200) {
         print("delee response ${response.statusCode}");
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            backgroundColor: Colors.red.shade400,
+            behavior: SnackBarBehavior.floating,
+            content: Text("Data deleted successfully"),
+            duration: Duration(seconds: 2),
+          ),
+        );
       } else {
         throw Exception("Failed to delete card with ID $deleteId");
       }
@@ -748,7 +757,7 @@ class _AccessoriesState extends State<Accessories> {
 
     try {
       final response = await ioClient.post(
-        Uri.parse("$apiUrl/api/baseproduct_update"),
+        Uri.parse("$apiUrl/baseproduct_update"),
         headers: headers,
         body: jsonEncode(data),
       );
@@ -922,7 +931,7 @@ class _AccessoriesState extends State<Accessories> {
             padding: EdgeInsets.all(10),
             child: Row(
               children: [
-                // Total Amount Section - Fixed width to prevent overflow
+// Total Amount Section - Fixed width to prevent overflow
                 Expanded(
                   flex: 3,
                   child: Column(
