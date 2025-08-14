@@ -295,7 +295,7 @@ class _IronSteelState extends State<IronSteel> {
       "product_base_name": "$selectedBaseProductName",
       "category_id": categoryId,
       "category_name": categoryName,
-      "OrderID": (orderIDD != null) ? orderIDD : null
+      "OrderID": globalOrderManager.globalOrderId
     };
 
     print("This is a body data: $data");

@@ -273,7 +273,7 @@ class _ScrewState extends State<Screw> {
       "product_base_name": selectedBaseProductName,
       "category_id": categoryId,
       "category_name": categoryName,
-      "OrderID": (orderIDD != null) ? orderIDD : null,
+      "OrderID": globalOrderManager.globalOrderId
     };
 
     debugPrint("Request Body: $data");
