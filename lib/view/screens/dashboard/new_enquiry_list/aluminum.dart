@@ -512,7 +512,11 @@ class _AluminumState extends State<Aluminum> {
     return SizedBox(
       height: 38.h,
       child: TextField(
-        readOnly: (key == "Basic Rate" || key == "Amount" || key == "SQMtr")
+        readOnly: (key == "Basic Rate" ||
+                key == "Amount" ||
+                key == "SQMtr" ||
+                key == "cgst" ||
+                key == "sgst")
             ? true
             : false,
         style: GoogleFonts.figtree(
@@ -940,6 +944,238 @@ class _AluminumState extends State<Aluminum> {
     });
   }
 
+  //
+  // // Helper method to get field value prioritizing controller over data
+  // String _getFieldValue(
+  //     String productId, String fieldName, Map<String, dynamic> data) {
+  //   String? value;
+  //
+  //   // First priority: Controller text (what user typed)
+  //   if (fieldControllers.containsKey(productId) &&
+  //       fieldControllers[productId]!.containsKey(fieldName)) {
+  //     value = fieldControllers[productId]![fieldName]!.text.trim();
+  //     print("$fieldName from controller: '$value'");
+  //   }
+  //
+  //   // Second priority: Data map
+  //   if (value == null || value.isEmpty || value == "0") {
+  //     value = data[fieldName]?.toString();
+  //     print("$fieldName from data: '$value'");
+  //   }
+  //
+  //   // Return empty string if still null
+  //   return value ?? "";
+  // }
+  //
+  // Future<void> _performCalculation(Map<String, dynamic> data) async {
+  //   print("=== STARTING CALCULATION API ===");
+  //   print("Data received: $data");
+  //
+  //   final client = IOClient(
+  //     HttpClient()..badCertificateCallback = (_, __, ___) => true,
+  //   );
+  //   final url = Uri.parse('$apiUrl/calculation');
+  //
+  //   String productId = data["id"].toString();
+  //
+  //   // Get current UOM value
+  //   String? currentUom;
+  //   if (data["UOM"] is Map) {
+  //     currentUom = data["UOM"]["value"]?.toString();
+  //   } else {
+  //     currentUom = data["UOM"]?.toString();
+  //   }
+  //
+  //   print("Current UOM: $currentUom");
+  //   print("Previous UOM: ${previousUomValues[productId]}");
+  //
+  //   // Use helper method to get field values
+  //   String lengthText = _getFieldValue(productId, "Length", data);
+  //   String nosText = _getFieldValue(productId, "Nos", data);
+  //   String crimpText = _getFieldValue(productId, "Crimp", data);
+  //
+  //   // Parse Length
+  //   double profileValue = 0.0;
+  //   if (lengthText.isNotEmpty && lengthText != "0") {
+  //     profileValue = double.tryParse(lengthText) ?? 0.0;
+  //   }
+  //
+  //   // Parse Nos
+  //   int nosValue = 1;
+  //   if (nosText.isNotEmpty && nosText != "0") {
+  //     nosValue = int.tryParse(nosText) ?? 1;
+  //   }
+  //
+  //   // Parse Crimp
+  //   double crimpValue = 0.0;
+  //   if (crimpText.isNotEmpty && crimpText != "0") {
+  //     crimpValue = double.tryParse(crimpText) ?? 0.0;
+  //   }
+  //
+  //   print(
+  //       "Final Values - Length: $profileValue, Nos: $nosValue, Crimp: $crimpValue");
+  //
+  //   final requestBody = {
+  //     "id": int.tryParse(data["id"].toString()) ?? 0,
+  //     "category_id": 36,
+  //     "product": data["Products"]?.toString() ?? "",
+  //     "height": crimpValue.toInt(),
+  //     "previous_uom": previousUomValues[productId] != null
+  //         ? int.tryParse(previousUomValues[productId]!)
+  //         : null,
+  //     "current_uom": currentUom != null ? int.tryParse(currentUom) : null,
+  //     "length": profileValue,
+  //     "nos": nosValue,
+  //     "basic_rate": double.tryParse(data["Basic Rate"]?.toString() ?? "0") ?? 0,
+  //     "billing_option": data["Billing Option"] is Map
+  //         ? int.tryParse(data["Billing Option"]["value"]?.toString() ?? "2")
+  //         : null,
+  //   };
+  //
+  //   print("Request Body: ${jsonEncode(requestBody)}");
+  //
+  //   try {
+  //     final response = await client.post(
+  //       url,
+  //       headers: {'Content-Type': 'application/json'},
+  //       body: jsonEncode(requestBody),
+  //     );
+  //
+  //     print("Response Status: ${response.statusCode}");
+  //     print("Response Body: ${response.body}");
+  //
+  //     if (response.statusCode == 200) {
+  //       final responseData = jsonDecode(response.body);
+  //
+  //       if (responseData["status"] == "success") {
+  //         setState(() {
+  //           billamt = responseData["bill_total"].toDouble() ?? 0.0;
+  //           print("billamt updated to: $billamt");
+  //           calculationResults[productId] = responseData;
+  //
+  //           // Update Length/Profile - only if API returns a different value
+  //           String newProfile = responseData["length"]?.toString() ?? "0";
+  //           if (newProfile != "0" && newProfile != lengthText) {
+  //             data["Length"] = newProfile;
+  //             if (fieldControllers[productId]?["Length"] != null) {
+  //               fieldControllers[productId]!["Length"]!.text = newProfile;
+  //             }
+  //             print("Length/Profile updated to: $newProfile");
+  //           }
+  //
+  //           // Update Nos - only if user hasn't provided input
+  //           if (responseData["Nos"] != null) {
+  //             String newNos = responseData["Nos"].toString().trim();
+  //             String currentInput =
+  //                 fieldControllers[productId]?["Nos"]?.text.trim() ?? "";
+  //
+  //             if (currentInput.isEmpty || currentInput == "0") {
+  //               data["Nos"] = newNos;
+  //               if (fieldControllers[productId]?["Nos"] != null) {
+  //                 fieldControllers[productId]!["Nos"]!.text = newNos;
+  //               }
+  //               print("Nos field updated to: $newNos");
+  //             } else {
+  //               print("Nos NOT updated because user input = '$currentInput'");
+  //             }
+  //           }
+  //
+  //           // Update Crimp - only if API returns a different value
+  //           String newCrimp = responseData["crimp"]?.toString() ?? "0";
+  //           if (newCrimp != "0" && newCrimp != crimpText) {
+  //             data["Crimp"] = newCrimp;
+  //             if (fieldControllers[productId]?["Crimp"] != null) {
+  //               fieldControllers[productId]!["Crimp"]!.text = newCrimp;
+  //             }
+  //             print("Crimp field updated to: $newCrimp");
+  //           }
+  //
+  //           // Update other fields
+  //           if (responseData["sqmtr"] != null) {
+  //             data["SQMtr"] = responseData["sqmtr"].toString();
+  //             if (fieldControllers[productId]?["SQMtr"] != null) {
+  //               fieldControllers[productId]!["SQMtr"]!.text =
+  //                   responseData["sqmtr"].toString();
+  //             }
+  //           }
+  //
+  //           if (responseData["cgst"] != null) {
+  //             data["cgst"] = responseData["cgst"].toString();
+  //             if (fieldControllers[productId]?["cgst"] != null) {
+  //               fieldControllers[productId]!["cgst"]!.text =
+  //                   responseData["cgst"].toString();
+  //             }
+  //           }
+  //
+  //           if (responseData["sgst"] != null) {
+  //             data["sgst"] = responseData["sgst"].toString();
+  //             if (fieldControllers[productId]?["sgst"] != null) {
+  //               fieldControllers[productId]!["sgst"]!.text =
+  //                   responseData["sgst"].toString();
+  //             }
+  //           }
+  //
+  //           if (responseData["Amount"] != null) {
+  //             data["Amount"] = responseData["Amount"].toString();
+  //             if (fieldControllers[productId]?["Amount"] != null) {
+  //               fieldControllers[productId]!["Amount"]!.text =
+  //                   responseData["Amount"].toString();
+  //             }
+  //           }
+  //
+  //           // Update previous UOM
+  //           previousUomValues[productId] = currentUom;
+  //         });
+  //
+  //         print("=== CALCULATION SUCCESS ===");
+  //         print(
+  //           "Updated data: Length=${data["Length"]}, Nos=${data["Nos"]}, Crimp=${data["Crimp"]}, Amount=${data["Amount"]}",
+  //         );
+  //       } else {
+  //         print("API returned error status: ${responseData["status"]}");
+  //       }
+  //     } else {
+  //       print("HTTP Error: ${response.statusCode}");
+  //     }
+  //   } catch (e) {
+  //     print("Calculation API Error: $e");
+  //   }
+  // }
+
+  // Helper method to get field value prioritizing controller over data
+  String _getFieldValue(
+      String productId, String fieldName, Map<String, dynamic> data) {
+    String? value;
+
+    // First priority: Controller text (what user typed)
+    if (fieldControllers.containsKey(productId) &&
+        fieldControllers[productId]!.containsKey(fieldName)) {
+      value = fieldControllers[productId]![fieldName]!.text.trim();
+      print("$fieldName from controller: '$value'");
+    }
+
+    // Second priority: Data map
+    if (value == null || value.isEmpty) {
+      // Removed || value == "0" check
+      value = data[fieldName]?.toString();
+      print("$fieldName from data: '$value'");
+    }
+
+    // Return empty string if still null
+    return value ?? "";
+  }
+
+// Helper method to check if a string represents a valid non-zero number (including decimals)
+  bool _isValidNonZeroNumber(String value) {
+    if (value.isEmpty) return false;
+
+    double? parsedValue = double.tryParse(value);
+    if (parsedValue == null) return false;
+
+    // Consider any non-zero value as valid (including small decimals like 0.055)
+    return parsedValue != 0.0;
+  }
+
   Future<void> _performCalculation(Map<String, dynamic> data) async {
     print("=== STARTING CALCULATION API ===");
     print("Data received: $data");
@@ -962,73 +1198,42 @@ class _AluminumState extends State<Aluminum> {
     print("Current UOM: $currentUom");
     print("Previous UOM: ${previousUomValues[productId]}");
 
-    // Get Profile value from controller
-    double? profileValue;
-    String? profileText;
+    // Use helper method to get field values
+    String lengthText = _getFieldValue(productId, "Length", data);
+    String nosText = _getFieldValue(productId, "Nos", data);
+    String crimpText = _getFieldValue(productId, "Crimp", data);
 
-    if (fieldControllers.containsKey(productId) &&
-        fieldControllers[productId]!.containsKey("Length")) {
-      profileText = data["Length"]?.toString(); // First check the latest data
-      if (profileText == null || profileText.isEmpty) {
-        profileText = fieldControllers[productId]!["Length"]!
-            .text; // Then check controller
-      }
-      print("Length/Profile from data/controller: $profileText");
+    // Parse Length - include decimal values like 0.055
+    double profileValue = 0.0;
+    if (_isValidNonZeroNumber(lengthText)) {
+      profileValue = double.tryParse(lengthText) ?? 0.0;
     }
 
-    if (profileText != null && profileText.isNotEmpty) {
-      profileValue = double.tryParse(profileText);
-      print("Parsed profile value: $profileValue");
-    }
-
-    // Get Nos value from controller
-    int nosValue = 0;
-    String? nosText;
-
-    if (fieldControllers.containsKey(productId) &&
-        fieldControllers[productId]!.containsKey("Nos")) {
-      nosText = fieldControllers[productId]!["Nos"]!.text;
-      print("Nos from controller: $nosText");
-    }
-
-    if (nosText == null || nosText.isEmpty) {
-      nosText = data["Nos"]?.toString();
-      print("Nos from data: $nosText");
-    }
-
-    if (nosText != null && nosText.isNotEmpty) {
+    // Parse Nos - for Nos, still treat "0" as invalid but allow decimals
+    int nosValue = 1;
+    if (_isValidNonZeroNumber(nosText)) {
       nosValue = int.tryParse(nosText) ?? 1;
     }
 
-    // Get Crimp value
-    double? crimpValue;
-    String? crimpText = data["Crimp"]?.toString();
-
-    if (crimpText == null || crimpText.isEmpty || crimpText == "0") {
-      if (fieldControllers.containsKey(productId) &&
-          fieldControllers[productId]!.containsKey("Crimp")) {
-        crimpText = fieldControllers[productId]!["Crimp"]!.text.trim();
-      }
+    // Parse Crimp - include decimal values like 0.055
+    double crimpValue = 0.0;
+    if (_isValidNonZeroNumber(crimpText)) {
+      crimpValue = double.tryParse(crimpText) ?? 0.0;
     }
 
-    if (crimpText != null && crimpText.isNotEmpty) {
-      crimpValue = double.tryParse(crimpText);
-      print("Using crimp value: $crimpValue from text: $crimpText");
-    }
-
-    print("Final Profile Value: $profileValue");
-    print("Final Nos Value: $nosValue");
+    print(
+        "Final Values - Length: $profileValue (from '$lengthText'), Nos: $nosValue (from '$nosText'), Crimp: $crimpValue (from '$crimpText')");
 
     final requestBody = {
       "id": int.tryParse(data["id"].toString()) ?? 0,
       "category_id": 36,
       "product": data["Products"]?.toString() ?? "",
-      "height": crimpValue != null ? crimpValue.toInt() : 0,
+      "height": crimpValue, // Send as double to preserve decimals
       "previous_uom": previousUomValues[productId] != null
           ? int.tryParse(previousUomValues[productId]!)
           : null,
       "current_uom": currentUom != null ? int.tryParse(currentUom) : null,
-      "length": profileValue ?? 0,
+      "length": profileValue,
       "nos": nosValue,
       "basic_rate": double.tryParse(data["Basic Rate"]?.toString() ?? "0") ?? 0,
       "billing_option": data["Billing Option"] is Map
@@ -1057,26 +1262,23 @@ class _AluminumState extends State<Aluminum> {
             print("billamt updated to: $billamt");
             calculationResults[productId] = responseData;
 
-            // Update Profile/Length
-            if (responseData["profile"] != null) {
-              String newProfile = responseData["profile"].toString();
-              // Only update if calculation returned different value
-              if (data["Length"]?.toString() != newProfile) {
-                data["Length"] = newProfile;
-                if (fieldControllers[productId]?["Length"] != null) {
-                  fieldControllers[productId]!["Length"]!.text = newProfile;
-                }
-                print("Length/Profile updated to: $newProfile");
+            // Update Length/Profile - only if API returns a different value
+            String newProfile = responseData["length"]?.toString() ?? "0";
+            if (_isValidNonZeroNumber(newProfile) && newProfile != lengthText) {
+              data["Length"] = newProfile;
+              if (fieldControllers[productId]?["Length"] != null) {
+                fieldControllers[productId]!["Length"]!.text = newProfile;
               }
+              print("Length/Profile updated to: $newProfile");
             }
 
-            // Update Nos
+            // Update Nos - only if user hasn't provided input
             if (responseData["Nos"] != null) {
               String newNos = responseData["Nos"].toString().trim();
               String currentInput =
-                  fieldControllers[productId]!["Nos"]!.text.trim();
+                  fieldControllers[productId]?["Nos"]?.text.trim() ?? "";
 
-              if (currentInput.isEmpty || currentInput == "0") {
+              if (!_isValidNonZeroNumber(currentInput)) {
                 data["Nos"] = newNos;
                 if (fieldControllers[productId]?["Nos"] != null) {
                   fieldControllers[productId]!["Nos"]!.text = newNos;
@@ -1087,23 +1289,17 @@ class _AluminumState extends State<Aluminum> {
               }
             }
 
-            // Update Crimp
-            if (responseData["crimp"] != null) {
-              String newCrimp = responseData["crimp"].toString();
-              if (newCrimp != "0" && newCrimp != "0.0") {
-                data["Crimp"] = newCrimp;
-                if (fieldControllers[productId]?["Crimp"] != null) {
-                  String currentCrimp =
-                      fieldControllers[productId]!["Crimp"]!.text.trim();
-                  if (currentCrimp.isEmpty || currentCrimp == "0") {
-                    fieldControllers[productId]!["Crimp"]!.text = newCrimp;
-                    print("Crimp field updated to: $newCrimp");
-                  }
-                }
+            // Update Crimp - only if API returns a different value
+            String newCrimp = responseData["crimp"]?.toString() ?? "0";
+            if (_isValidNonZeroNumber(newCrimp) && newCrimp != crimpText) {
+              data["Crimp"] = newCrimp;
+              if (fieldControllers[productId]?["Crimp"] != null) {
+                fieldControllers[productId]!["Crimp"]!.text = newCrimp;
               }
+              print("Crimp field updated to: $newCrimp");
             }
 
-            // Update SQMtr
+            // Update other fields
             if (responseData["sqmtr"] != null) {
               data["SQMtr"] = responseData["sqmtr"].toString();
               if (fieldControllers[productId]?["SQMtr"] != null) {
@@ -1119,6 +1315,7 @@ class _AluminumState extends State<Aluminum> {
                     responseData["cgst"].toString();
               }
             }
+
             if (responseData["sgst"] != null) {
               data["sgst"] = responseData["sgst"].toString();
               if (fieldControllers[productId]?["sgst"] != null) {
@@ -1127,7 +1324,6 @@ class _AluminumState extends State<Aluminum> {
               }
             }
 
-            // Update Amount
             if (responseData["Amount"] != null) {
               data["Amount"] = responseData["Amount"].toString();
               if (fieldControllers[productId]?["Amount"] != null) {
@@ -1135,12 +1331,14 @@ class _AluminumState extends State<Aluminum> {
                     responseData["Amount"].toString();
               }
             }
+
+            // Update previous UOM
             previousUomValues[productId] = currentUom;
           });
 
           print("=== CALCULATION SUCCESS ===");
           print(
-            "Updated data: Length=${data["Profile"]}, Nos=${data["Nos"]}, Height=${data["Crimp"]}, Amount=${data["Amount"]}",
+            "Updated data: Length=${data["Length"]}, Nos=${data["Nos"]}, Crimp=${data["Crimp"]}, Amount=${data["Amount"]}",
           );
         } else {
           print("API returned error status: ${responseData["status"]}");

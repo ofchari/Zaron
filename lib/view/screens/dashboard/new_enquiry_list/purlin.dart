@@ -72,7 +72,8 @@ class _PurlinState extends State<Purlin> {
     });
 
     final client = IOClient(
-      HttpClient()..badCertificateCallback = (_, __, ___) => true,
+      HttpClient()
+        ..badCertificateCallback = (_, __, ___) => true,
     );
     final url = Uri.parse('$apiUrl/showlables/5');
 
@@ -116,7 +117,8 @@ class _PurlinState extends State<Purlin> {
     });
 
     final client = IOClient(
-      HttpClient()..badCertificateCallback = (_, __, ___) => true,
+      HttpClient()
+        ..badCertificateCallback = (_, __, ___) => true,
     );
     final url = Uri.parse('$apiUrl/labelinputdata');
 
@@ -167,7 +169,8 @@ class _PurlinState extends State<Purlin> {
     });
 
     final client = IOClient(
-      HttpClient()..badCertificateCallback = (_, __, ___) => true,
+      HttpClient()
+        ..badCertificateCallback = (_, __, ___) => true,
     );
     final url = Uri.parse('$apiUrl/labelinputdata');
 
@@ -218,7 +221,8 @@ class _PurlinState extends State<Purlin> {
     });
 
     final client = IOClient(
-      HttpClient()..badCertificateCallback = (_, __, ___) => true,
+      HttpClient()
+        ..badCertificateCallback = (_, __, ___) => true,
     );
     final url = Uri.parse('$apiUrl/labelinputdata');
 
@@ -273,7 +277,8 @@ class _PurlinState extends State<Purlin> {
     });
 
     final client = IOClient(
-      HttpClient()..badCertificateCallback = (_, __, ___) => true,
+      HttpClient()
+        ..badCertificateCallback = (_, __, ___) => true,
     );
     final url = Uri.parse('$apiUrl/labelinputdata');
 
@@ -344,7 +349,7 @@ class _PurlinState extends State<Purlin> {
   Future<void> postAllData() async {
     HttpClient client = HttpClient();
     client.badCertificateCallback =
-        ((X509Certificate cert, String host, int port) => true);
+    ((X509Certificate cert, String host, int port) => true);
     IOClient ioClient = IOClient(client);
     // From saved categoryMeta
     final categoryId = categoryMeta?["category_id"];
@@ -421,9 +426,9 @@ class _PurlinState extends State<Purlin> {
                 if (product["UOM"] != null &&
                     product["UOM"]["options"] != null) {
                   uomOptions[product["id"].toString()] =
-                      Map<String, String>.from(
+                  Map<String, String>.from(
                     (product["UOM"]["options"] as Map).map(
-                      (key, value) =>
+                          (key, value) =>
                           MapEntry(key.toString(), value.toString()),
                     ),
                   );
@@ -441,7 +446,8 @@ class _PurlinState extends State<Purlin> {
         });
       } else {
         print(
-            "API request failed with status ${response.statusCode}: ${response.body}");
+            "API request failed with status ${response.statusCode}: ${response
+                .body}");
         Get.snackbar(
           "Error",
           "Failed to add product: Server error",
@@ -519,7 +525,10 @@ class _PurlinState extends State<Purlin> {
     }
 
     return Column(
-      children: responseProducts.asMap().entries.map((entry) {
+      children: responseProducts
+          .asMap()
+          .entries
+          .map((entry) {
         int index = entry.key;
         Map<String, dynamic> data = Map<String, dynamic>.from(entry.value);
 
@@ -582,11 +591,12 @@ class _PurlinState extends State<Purlin> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => PurlinAttachment(
-                              productId: data['id'].toString(),
-                              mainProductId:
+                            builder: (context) =>
+                                PurlinAttachment(
+                                  productId: data['id'].toString(),
+                                  mainProductId:
                                   currentMainProductId ?? "Unknown ID",
-                            ),
+                                ),
                           ),
                         );
                       },
@@ -755,10 +765,10 @@ class _PurlinState extends State<Purlin> {
         ),
         controller: controller,
         keyboardType: (key == "Length" ||
-                key == "Nos" ||
-                key == "Basic Rate" ||
-                key == "Amount" ||
-                key == "SQMtr")
+            key == "Nos" ||
+            key == "Basic Rate" ||
+            key == "Amount" ||
+            key == "SQMtr")
             ? TextInputType.numberWithOptions(decimal: true)
             : TextInputType.numberWithOptions(decimal: true),
         onChanged: (val) {
@@ -770,10 +780,12 @@ class _PurlinState extends State<Purlin> {
           print("Controller text: ${controller.text}");
           print("Data after change: ${data[key]}");
 
-          if (key == "Length" ||
+          if (key == "Profile" ||
               key == "Nos" ||
               key == "Basic Rate" ||
-              key == "Profile") {
+              key == "bill_total" ||
+              key == "cgst" ||
+              key == "sgst") {
             print("Triggering calculation for $key with value: $val");
             _debounceCalculation(data);
           }
@@ -794,7 +806,9 @@ class _PurlinState extends State<Purlin> {
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(6),
             borderSide: BorderSide(
-              color: Theme.of(context).primaryColor,
+              color: Theme
+                  .of(context)
+                  .primaryColor,
               width: 2,
             ),
           ),
@@ -827,11 +841,12 @@ class _PurlinState extends State<Purlin> {
         value: currentValue,
         items: options.entries
             .map(
-              (entry) => DropdownMenuItem(
+              (entry) =>
+              DropdownMenuItem(
                 value: entry.key,
                 child: Text(entry.value),
               ),
-            )
+        )
             .toList(),
         onChanged: (val) {
           setState(() {
@@ -857,7 +872,9 @@ class _PurlinState extends State<Purlin> {
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(6),
             borderSide: BorderSide(
-              color: Theme.of(context).primaryColor,
+              color: Theme
+                  .of(context)
+                  .primaryColor,
               width: 2,
             ),
           ),
@@ -876,18 +893,19 @@ class _PurlinState extends State<Purlin> {
         selectedMaterialType == null) {
       showDialog(
         context: context,
-        builder: (context) => AlertDialog(
-          title: Text('Incomplete Form'),
-          content: Text(
-            'Please fill all required fields to add a product.',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text('OK'),
+        builder: (context) =>
+            AlertDialog(
+              title: Text('Incomplete Form'),
+              content: Text(
+                'Please fill all required fields to add a product.',
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: Text('OK'),
+                ),
+              ],
             ),
-          ],
-        ),
       );
       return;
     }
@@ -953,7 +971,7 @@ class _PurlinState extends State<Purlin> {
   Map<String, dynamic> calculationResults = {};
   Map<String, String?> previousUomValues = {}; // Track previous UOM values
   Map<String, Map<String, TextEditingController>> fieldControllers =
-      {}; // Store controllers
+  {}; // Store controllers
 
   // Method to get or create controller for each field
   TextEditingController _getController(Map<String, dynamic> data, String key) {
@@ -1002,7 +1020,8 @@ class _PurlinState extends State<Purlin> {
     print("Data received: $data");
 
     final client = IOClient(
-      HttpClient()..badCertificateCallback = (_, __, ___) => true,
+      HttpClient()
+        ..badCertificateCallback = (_, __, ___) => true,
     );
     final url = Uri.parse('$apiUrl/calculation');
 
@@ -1019,21 +1038,17 @@ class _PurlinState extends State<Purlin> {
     print("Current UOM: $currentUom");
     print("Previous UOM: ${previousUomValues[productId]}");
 
-    // Get Profile value from controller
     double? profileValue;
     String? profileText;
-
     if (fieldControllers.containsKey(productId) &&
         fieldControllers[productId]!.containsKey("Profile")) {
       profileText = fieldControllers[productId]!["Profile"]!.text;
       print("Profile from controller: $profileText");
     }
-
     if (profileText == null || profileText.isEmpty) {
       profileText = data["Profile"]?.toString();
       print("Profile from data: $profileText");
     }
-
     if (profileText != null && profileText.isNotEmpty) {
       profileValue = double.tryParse(profileText);
     }
@@ -1094,19 +1109,27 @@ class _PurlinState extends State<Purlin> {
             billamt = responseData["bill_total"].toDouble() ?? 0.0;
             print("billamt updated to: $billamt");
             calculationResults[productId] = responseData;
-
-            if (responseData["Length"] != null) {
-              data["Profile"] = responseData["Length"].toString();
+            //
+            // if (responseData["Length"] != null) {
+            //   data["Profile"] = responseData["Length"].toString();
+            //   if (fieldControllers[productId]?["Profile"] != null) {
+            //     fieldControllers[productId]!["Profile"]!.text =
+            //         responseData["Length"].toString();
+            //   }
+            // }
+            if (responseData["length"] != null) {
+              String lengthValue = responseData["length"].toString();
+              data["Profile"] = lengthValue;
               if (fieldControllers[productId]?["Profile"] != null) {
-                fieldControllers[productId]!["Profile"]!.text =
-                    responseData["Length"].toString();
+                fieldControllers[productId]!["Profile"]!.text = lengthValue;
+                print("Length/Profile updated to: $lengthValue");
               }
             }
 
             if (responseData["Nos"] != null) {
               String newNos = responseData["Nos"].toString().trim();
               String currentInput =
-                  fieldControllers[productId]!["Nos"]!.text.trim();
+              fieldControllers[productId]!["Nos"]!.text.trim();
 
               if (currentInput.isEmpty || currentInput == "0") {
                 data["Nos"] = newNos;
@@ -1154,14 +1177,13 @@ class _PurlinState extends State<Purlin> {
     }
   }
 
-  Widget _buildAnimatedDropdown(
-    List<String> items,
-    String? selectedValue,
-    ValueChanged<String?> onChanged, {
-    bool enabled = true,
-    required String label,
-    required IconData icon,
-  }) {
+  Widget _buildAnimatedDropdown(List<String> items,
+      String? selectedValue,
+      ValueChanged<String?> onChanged, {
+        bool enabled = true,
+        required String label,
+        required IconData icon,
+      }) {
     return Padding(
       padding: EdgeInsets.only(bottom: 16),
       child: AnimatedContainer(
@@ -1174,12 +1196,12 @@ class _PurlinState extends State<Purlin> {
           ),
           boxShadow: enabled
               ? [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.03),
-                    blurRadius: 8,
-                    offset: Offset(0, 2),
-                  ),
-                ]
+            BoxShadow(
+              color: Colors.black.withOpacity(0.03),
+              blurRadius: 8,
+              offset: Offset(0, 2),
+            ),
+          ]
               : [],
         ),
         child: DropdownSearch<String>(
@@ -1275,7 +1297,7 @@ class _PurlinState extends State<Purlin> {
                           _buildAnimatedDropdown(
                             productList,
                             selectProduct,
-                            (value) {
+                                (value) {
                               setState(() {
                                 selectProduct = value;
                                 // Clear dependent fields
@@ -1296,7 +1318,7 @@ class _PurlinState extends State<Purlin> {
                           _buildAnimatedDropdown(
                             sizeList,
                             selectedSize,
-                            (value) {
+                                (value) {
                               setState(() {
                                 selectedSize = value;
                                 // Clear dependent fields
@@ -1316,7 +1338,7 @@ class _PurlinState extends State<Purlin> {
                           _buildAnimatedDropdown(
                             materialTypeList,
                             selectedMaterialType,
-                            (value) {
+                                (value) {
                               setState(() {
                                 selectedMaterialType = value;
                                 // Clear dependent fields
@@ -1334,7 +1356,7 @@ class _PurlinState extends State<Purlin> {
                           _buildAnimatedDropdown(
                             thicknessList,
                             selectedThickness,
-                            (value) {
+                                (value) {
                               setState(() {
                                 selectedThickness = value;
                                 // Clear dependent fields
@@ -1350,7 +1372,7 @@ class _PurlinState extends State<Purlin> {
                           _buildAnimatedDropdown(
                             brandsList,
                             selectedBrand,
-                            (value) {
+                                (value) {
                               setState(() {
                                 selectedBrand = value;
                               });
@@ -1466,7 +1488,7 @@ class _PurlinState extends State<Purlin> {
                               padding: EdgeInsets.all(8),
                               decoration: BoxDecoration(
                                 color:
-                                    Colors.deepPurple.shade100.withOpacity(0.5),
+                                Colors.deepPurple.shade100.withOpacity(0.5),
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: Icon(
@@ -1489,7 +1511,7 @@ class _PurlinState extends State<Purlin> {
                         SizedBox(height: 16),
                         Container(
                           padding:
-                              EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                           decoration: BoxDecoration(
                             color: Colors.white60,
                             borderRadius: BorderRadius.circular(10),
@@ -1512,7 +1534,7 @@ class _PurlinState extends State<Purlin> {
                                   color: Colors.blue.shade50,
                                   borderRadius: BorderRadius.circular(20),
                                   border:
-                                      Border.all(color: Colors.blue.shade200),
+                                  Border.all(color: Colors.blue.shade200),
                                 ),
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,
@@ -1566,7 +1588,7 @@ class _PurlinState extends State<Purlin> {
                                   flex: 3,
                                   child: Column(
                                     crossAxisAlignment:
-                                        CrossAxisAlignment.start,
+                                    CrossAxisAlignment.start,
                                     children: [
                                       Text(
                                         "TOTAL AMOUNT",

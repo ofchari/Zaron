@@ -16,6 +16,7 @@ import '../../global_user/global_oredrID.dart';
 
 class Polycarbonate extends StatefulWidget {
   const Polycarbonate({super.key, required this.data});
+
   final Map<String, dynamic> data;
 
   @override
@@ -899,11 +900,13 @@ class _PolycarbonateState extends State<Polycarbonate> {
             billamt = responseData["bill_total"].toDouble() ?? 0.0;
             print("billamt updated to: $billamt");
             calculationResults[productId] = responseData;
-            if (responseData["Length"] != null) {
-              data["Profile"] = responseData["Length"].toString();
+
+            if (responseData["length"] != null) {
+              String lengthValue = responseData["length"].toString();
+              data["Profile"] = lengthValue;
               if (fieldControllers[productId]?["Profile"] != null) {
-                fieldControllers[productId]!["Profile"]!.text =
-                    responseData["Length"].toString();
+                fieldControllers[productId]!["Profile"]!.text = lengthValue;
+                print("Length/Profile updated to: $lengthValue");
               }
             }
             if (responseData["Nos"] != null) {

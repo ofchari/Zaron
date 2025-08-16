@@ -351,23 +351,25 @@ class _ProfileRidgeAndArchState extends State<ProfileRidgeAndArch> {
         ((X509Certificate cert, String host, int port) => true);
     IOClient ioClient = IOClient(client);
 
-// From saved categoryMeta
+    // From saved categoryMeta
     final categoryId = categoryMeta?["category_id"];
     final categoryName = categoryMeta?["categories"];
     print("this os $categoryId");
     print("this os $categoryName");
 
-// Use global order ID if available, otherwise null for first time
+    // Use global order ID if available, otherwise null for first time
     final globalOrderManager = GlobalOrderManager();
 
-// Find the matching item from rawAccessoriesData
+    // Find the matching item from rawProfilearch
     final matchingAccessory = rawProfilearch.firstWhere(
       (item) => item["product_name"] == selectedMaterial,
       orElse: () => null,
     );
-// Extract values
+
+    // Extract values
     final productID = matchingAccessory?["id"];
     print("this os $productID");
+
     final headers = {"Content-Type": "application/json"};
     final data = {
       "customer_id": UserSession().userId,
@@ -383,6 +385,7 @@ class _ProfileRidgeAndArchState extends State<ProfileRidgeAndArch> {
     print("This is a body data: $data");
     final url = "$apiUrl/addbag";
     final body = jsonEncode(data);
+
     try {
       final response = await ioClient.post(
         Uri.parse(url),
@@ -398,43 +401,50 @@ class _ProfileRidgeAndArchState extends State<ProfileRidgeAndArch> {
         orderIDD = int.tryParse(orderID);
         orderNO = responseData["order_no"]?.toString() ?? "Unknown";
 
-// Set global order ID if this is the first time
+        // Set global order ID if this is the first time
         if (!globalOrderManager.hasGlobalOrderId()) {
           globalOrderManager.setGlobalOrderId(int.parse(orderID), orderNO!);
         }
 
-// Update local variables
+        // Update local variables
         orderIDD = globalOrderManager.globalOrderId;
         orderNO = globalOrderManager.globalOrderNo;
         apiResponseData = responseData;
         currentMainProductId = responseData["product_id"]?.toString();
+
         if (responseData["lebels"] != null &&
             responseData["lebels"].isNotEmpty) {
-// Append new products to the existing list
-          final newProducts = responseData["lebels"][0]["data"] ?? [];
-          responseProducts.addAll(newProducts);
+          List<dynamic> fullList = responseData["lebels"][0]["data"];
+          List<Map<String, dynamic>> newProducts = [];
 
-// Store UOM options for each product
+          for (var item in fullList) {
+            if (item is Map<String, dynamic>) {
+              Map<String, dynamic> product = Map<String, dynamic>.from(item);
+              String productId = product["id"].toString();
 
-          for (var product in responseProducts) {
-            if (product["UOM"] != null && product["UOM"]["options"] != null) {
-              uomOptions[product["id"].toString()] = Map<String, String>.from(
-                product["UOM"]["options"].map(
-                  (key, value) => MapEntry(key.toString(), value.toString()),
-                ),
-              );
+              // ✅ check if product already exists
+              bool alreadyExists = responseProducts
+                  .any((existing) => existing["id"].toString() == productId);
+
+              if (!alreadyExists) {
+                newProducts.add(product);
+              }
+
+              // Store UOM options
+              if (product["UOM"] != null && product["UOM"]["options"] != null) {
+                uomOptions[product["id"].toString()] = Map<String, String>.from(
+                  (product["UOM"]["options"] as Map).map(
+                    (key, value) => MapEntry(key.toString(), value.toString()),
+                  ),
+                );
+              }
             }
           }
+
+          // Add only new products (avoids duplicates)
+          responseProducts.addAll(newProducts);
         }
       });
-// if (selectedMaterial == null ||
-//         selectedBrands == null ||
-//         selectedColors == null ||
-//         selectedThickness == null
-//     // || selectedCoatingMass == null
-//     ) {
-//   return;
-// }
     } catch (e) {
       throw Exception("Error posting data: $e");
     }
@@ -1501,22 +1511,14 @@ class _ProfileRidgeAndArchState extends State<ProfileRidgeAndArch> {
               }
             }
 
-// Update Height/Crimp
+            // Update Height/Crimp
             if (responseData["crimp"] != null) {
               String newCrimp = responseData["crimp"].toString();
-              String currentCrimp =
-                  fieldControllers[productId]!["height"]?.text.trim() ?? "";
-
-              if (currentCrimp.isEmpty || currentCrimp == "0") {
-                data["height"] = newCrimp;
-                if (fieldControllers[productId]?["height"] != null) {
-                  fieldControllers[productId]!["height"]!.text = newCrimp;
-                }
-                print("Height field updated to: $newCrimp");
-              } else {
-                print(
-                    "Height NOT updated because user input = '$currentCrimp'");
+              data["height"] = newCrimp;
+              if (fieldControllers[productId]?["height"] != null) {
+                fieldControllers[productId]!["height"]!.text = newCrimp;
               }
+              print("Height field updated to: $newCrimp");
             }
 
 // Update SQMtr

@@ -386,25 +386,25 @@ class _AccessoriesState extends State<Accessories> {
 
       if (response.statusCode == 200) {
         final responseData = jsonDecode(response.body);
-        debugPrint("coolie power $responseData");
+        debugPrint("data power $responseData");
 
         setState(() {
           final String orderID = responseData["order_id"].toString();
           final String orderNo =
               responseData["order_no"]?.toString() ?? "Unknown";
 
-// Set global order ID if this is the first time
+          // Set global order ID if this is the first time
           if (!globalOrderManager.hasGlobalOrderId()) {
             globalOrderManager.setGlobalOrderId(int.parse(orderID), orderNo);
           }
 
-// Update local variables
+          // Update local variables
           orderIDD = globalOrderManager.globalOrderId;
           orderNoo = globalOrderManager.globalOrderNo;
           apiResponseData = responseData;
           currentMainProductId = responseData["product_id"]?.toString();
 
-// Rest of your existing logic for processing response...
+          // Rest of your existing logic for processing response...
           if (responseData["lebels"] != null &&
               responseData["lebels"].isNotEmpty) {
             String categoryName = responseData["category_name"] ?? "";

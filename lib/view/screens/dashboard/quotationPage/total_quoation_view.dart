@@ -529,7 +529,7 @@ class _TotalQuoationViewState extends State<TotalQuoationView> {
 
   Widget _smallBuildLayout() {
     return Scaffold(
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.blue.shade50,
         appBar: AppBar(
           centerTitle: true,
           elevation: 0,
@@ -672,7 +672,7 @@ class _TotalQuoationViewState extends State<TotalQuoationView> {
                                       child: DataTable(
                                         showCheckboxColumn: false,
                                         border: TableBorder.all(
-                                          color: Colors.purple.withOpacity(0.3),
+                                          color: Colors.blue.withOpacity(0.3),
                                           width: 1,
                                           borderRadius:
                                               BorderRadius.circular(12),

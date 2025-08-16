@@ -710,7 +710,7 @@ class _TotalEnquiryViewState extends State<TotalEnquiryView> {
 
   Widget _smallBuildLayout() {
     return Scaffold(
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.blue.shade50,
         appBar: AppBar(
           centerTitle: true,
           elevation: 0,
@@ -882,7 +882,7 @@ class _TotalEnquiryViewState extends State<TotalEnquiryView> {
                                             child: DataTable(
                                               showCheckboxColumn: false,
                                               border: TableBorder.all(
-                                                color: Colors.purple
+                                                color: Colors.blue
                                                     .withOpacity(0.3),
                                                 width: 1,
                                                 borderRadius:
@@ -1030,7 +1030,7 @@ class _TotalEnquiryViewState extends State<TotalEnquiryView> {
                                                         ),
                                                       );
                                                     } else if (label ==
-                                                            "Length" ||
+                                                            "profile" ||
                                                         label == "Nos") {
                                                       return DataCell(
                                                         SizedBox(

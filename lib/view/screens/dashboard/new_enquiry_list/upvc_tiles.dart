@@ -1,3 +1,4 @@
+//// upvc tiles
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
@@ -39,7 +40,9 @@ class _UpvcTilesState extends State<UpvcTiles> {
   List<String> thicknessList = [];
   String? selectedProductBaseId;
 
-  List<Map<String, dynamic>> submittedData = [];
+  // Static list to persist data across instances
+  static List<Map<String, dynamic>> submittedData = [];
+  static List<Map<String, dynamic>> apiResponseData = [];
 
   // Form key for validation
   final _formKey = GlobalKey<FormState>();
@@ -48,6 +51,12 @@ class _UpvcTilesState extends State<UpvcTiles> {
   void initState() {
     super.initState();
     editController = TextEditingController(text: widget.data["Base Product"]);
+    // Restore data from submittedData if available
+    if (submittedData.isNotEmpty) {
+      setState(() {
+        apiResponseData = List<Map<String, dynamic>>.from(submittedData);
+      });
+    }
     _fetchMaterial();
   }
 
@@ -226,9 +235,9 @@ class _UpvcTilesState extends State<UpvcTiles> {
     }
   }
 
-  // 1. ADD THESE VARIABLES after your existing variables (around line 25)
-  List<Map<String, dynamic>> apiResponseData = [];
-  Map<String, dynamic>? apiResponse;
+  // // 1. ADD THESE VARIABLES after your existing variables (around line 25)
+  // List<Map<String, dynamic>> apiResponseData = [];
+  // Map<String, dynamic>? apiResponse;
 
   // 2. MODIFY the postUPVCData() method - REPLACE the existing method with this:
   Future<void> postUPVCData() async {
@@ -286,7 +295,8 @@ class _UpvcTilesState extends State<UpvcTiles> {
           // Update local variables
           orderIDD = globalOrderManager.globalOrderId;
           orderNO = globalOrderManager.globalOrderNo;
-          apiResponse = responseData;
+
+          // apiResponse = responseData;
 
           if (responseData['lebels'] != null &&
               responseData['lebels'].isNotEmpty) {
@@ -299,7 +309,9 @@ class _UpvcTilesState extends State<UpvcTiles> {
               final alreadyExists = apiResponseData.any((existingItem) =>
                   existingItem["id"]?.toString() == item["id"]?.toString());
               if (!alreadyExists) {
-                apiResponseData.add(item);
+                apiResponseData.add(Map<String, dynamic>.from(item));
+                // Also add to submittedData for persistence
+                submittedData.add(Map<String, dynamic>.from(item));
               }
             }
           }
@@ -428,7 +440,12 @@ class _UpvcTilesState extends State<UpvcTiles> {
                                   onPressed: () {
                                     setState(() {
                                       deleteCards(data["id"].toString());
-                                      apiResponseData.removeAt(index);
+                                      apiResponseData.removeWhere((item) =>
+                                          item["id"].toString() ==
+                                          data["id"].toString());
+                                      submittedData.removeWhere((item) =>
+                                          item["id"].toString() ==
+                                          data["id"].toString());
                                     });
                                     Navigator.pop(context);
                                   },

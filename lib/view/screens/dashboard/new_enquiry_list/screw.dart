@@ -49,6 +49,20 @@ class _ScrewState extends State<Screw> {
     super.initState();
     editController = TextEditingController(text: widget.data["Base Product"]);
     _fetchBrand();
+
+    // *** Add this to restore any existing calculated values ***
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _ensureDataIntegrity();
+    });
+  }
+
+  // *** Add this new method ***
+  void _ensureDataIntegrity() {
+    debugPrint("=== ENSURING DATA INTEGRITY ===");
+    for (var product in responseProducts) {
+      debugPrint(
+          "Product ${product["id"]}: Cgst=${product["Cgst"]}, Sgst=${product["Sgst"]}");
+    }
   }
 
   @override
@@ -249,6 +263,7 @@ class _ScrewState extends State<Screw> {
     );
   }
 
+// 1. First, modify your postScrewData method to initialize CGST/SGST fields:
   Future<void> postScrewData() async {
     debugPrint("Posting screw data...");
     HttpClient client = HttpClient();
@@ -256,13 +271,11 @@ class _ScrewState extends State<Screw> {
         ((X509Certificate cert, String host, int port) => true);
     IOClient ioClient = IOClient(client);
 
-    // From saved categoryMeta
     final categoryId = categoryMeta?["category_id"];
     final categoryName = categoryMeta?["categories"];
     print("this os $categoryId");
     print("this os $categoryName");
 
-    // Use global order ID if available, otherwise null for first time
     final globalOrderManager = GlobalOrderManager();
     final headers = {"Content-Type": "application/json"};
     final data = {
@@ -302,12 +315,11 @@ class _ScrewState extends State<Screw> {
           final String orderID = decodedResponse["order_id"]?.toString() ?? "";
           orderIDD = int.tryParse(orderID);
           orderNO = decodedResponse["order_no"]?.toString() ?? "Unknown";
-          // Set global order ID if this is the first time
+
           if (!globalOrderManager.hasGlobalOrderId()) {
             globalOrderManager.setGlobalOrderId(int.parse(orderID), orderNO!);
           }
 
-          // Update local variables
           orderIDD = globalOrderManager.globalOrderId;
           orderNO = globalOrderManager.globalOrderNo;
           apiResponse = decodedResponse;
@@ -323,6 +335,17 @@ class _ScrewState extends State<Screw> {
                 if (item is Map<String, dynamic>) {
                   Map<String, dynamic> product =
                       Map<String, dynamic>.from(item);
+
+// *** CRITICAL FIX: Initialize CGST/SGST fields if they don't exist ***
+                  if (!product.containsKey("Cgst") || product["Cgst"] == null) {
+                    product["Cgst"] =
+                        "0"; // Initialize with "0" instead of null
+                  }
+                  if (!product.containsKey("Sgst") || product["Sgst"] == null) {
+                    product["Sgst"] =
+                        "0"; // Initialize with "0" instead of null
+                  }
+
                   String productId = product["id"].toString();
                   bool alreadyExists = responseProducts.any(
                       (existing) => existing["id"].toString() == productId);
@@ -340,12 +363,17 @@ class _ScrewState extends State<Screw> {
                       );
                     }
                     debugPrint(
-                        "Product added: ${product["id"]} - ${product["Products"]}");
+                        "Product added with initialized CGST/SGST: ${product["id"]} - ${product["Products"]}");
+                    debugPrint(
+                        "CGST: ${product["Cgst"]}, SGST: ${product["Sgst"]}");
                   }
                 }
               }
               responseProducts.addAll(newProducts);
               debugPrint("Updated responseProducts: $responseProducts");
+
+// *** TRIGGER INITIAL CALCULATIONS FOR NEW PRODUCTS ***
+              _triggerInitialCalculations(newProducts);
             }
           }
         });
@@ -355,6 +383,18 @@ class _ScrewState extends State<Screw> {
     } catch (e) {
       debugPrint("Error posting data: $e");
       _showErrorSnackBar("Failed to add product. Please try again.");
+    }
+  }
+
+  void _triggerInitialCalculations(List<Map<String, dynamic>> newProducts) {
+    debugPrint("=== TRIGGERING INITIAL CALCULATIONS ===");
+    for (var product in newProducts) {
+// Add a small delay to prevent overwhelming the API
+      Future.delayed(Duration(milliseconds: 500), () {
+        if (mounted) {
+          _performCalculation(product);
+        }
+      });
     }
   }
 
@@ -685,34 +725,9 @@ class _ScrewState extends State<Screw> {
   Map<String, String?> previousUomValues = {};
   Map<String, Map<String, TextEditingController>> fieldControllers = {};
 
-  TextEditingController _getController(Map<String, dynamic> data, String key) {
-    String productId = data["id"].toString();
-    fieldControllers.putIfAbsent(productId, () => {});
-    if (!fieldControllers[productId]!.containsKey(key)) {
-      String initialValue = (data[key] != null && data[key].toString() != "0")
-          ? data[key].toString()
-          : "";
-      fieldControllers[productId]![key] =
-          TextEditingController(text: initialValue);
-      debugPrint("Created controller for [$key] with value: '$initialValue'");
-    } else {
-      final controller = fieldControllers[productId]![key]!;
-      final dataValue = data[key]?.toString() ?? "";
-      if (controller.text.isEmpty && dataValue.isNotEmpty && dataValue != "0") {
-        controller.text = dataValue;
-        debugPrint("Synced controller for [$key] to: '$dataValue'");
-      }
-    }
-    return fieldControllers[productId]![key]!;
-  }
+// Replace your _performCalculation method with this fixed version:
 
-  void _debounceCalculation(Map<String, dynamic> data) {
-    _debounceTimer?.cancel();
-    _debounceTimer = Timer(Duration(milliseconds: 1500), () {
-      _performCalculation(data);
-    });
-  }
-
+// 4. Enhanced _performCalculation with better persistence:
   Future<void> _performCalculation(Map<String, dynamic> data) async {
     debugPrint("=== STARTING CALCULATION API ===");
     debugPrint("Data received: $data");
@@ -730,22 +745,19 @@ class _ScrewState extends State<Screw> {
       currentUom = data["UOM"]?.toString();
     }
 
-    debugPrint("Current UOM: $currentUom");
-    debugPrint("Previous UOM: ${previousUomValues[productId]}");
-
     int nosValue = 0;
     String? nosText;
     if (fieldControllers.containsKey(productId) &&
         fieldControllers[productId]!.containsKey("Nos")) {
       nosText = fieldControllers[productId]!["Nos"]!.text;
-      debugPrint("Nos from controller: $nosText");
     }
     if (nosText == null || nosText.isEmpty) {
       nosText = data["Nos"]?.toString();
-      debugPrint("Nos from data: $nosText");
     }
-    if (nosText != null && nosText.isNotEmpty) {
+    if (nosText != null && nosText.isNotEmpty && nosText != "0") {
       nosValue = int.tryParse(nosText) ?? 1;
+    } else {
+      nosValue = 1; // Default to 1 if no quantity specified
     }
 
     debugPrint("Final Nos Value: $nosValue");
@@ -778,61 +790,171 @@ class _ScrewState extends State<Screw> {
         final responseData = jsonDecode(response.body);
         if (responseData["status"] == "success") {
           setState(() {
-            billamt = responseData["bill_total"].toDouble() ?? 0.0;
-            print("billamt updated to: $billamt");
+            billamt = responseData["bill_total"]?.toDouble() ?? 0.0;
+            debugPrint("billamt updated to: $billamt");
+
+// Store calculation results
             calculationResults[productId] = responseData;
 
-            if (responseData["Nos"] != null) {
-              String newNos = responseData["Nos"].toString().trim();
-              String currentInput =
-                  fieldControllers[productId]!["Nos"]!.text.trim();
-              if (currentInput.isEmpty || currentInput == "0") {
-                data["Nos"] = newNos;
-                if (fieldControllers[productId]?["Nos"] != null) {
-                  fieldControllers[productId]!["Nos"]!.text = newNos;
+// *** CRITICAL: Update BOTH the local data AND responseProducts list ***
+// Find the product in responseProducts and update it
+            for (int i = 0; i < responseProducts.length; i++) {
+              if (responseProducts[i]["id"].toString() == productId) {
+// Update Nos
+                if (responseData["Nos"] != null) {
+                  String newNos = responseData["Nos"].toString();
+                  responseProducts[i]["Nos"] = newNos;
+                  data["Nos"] = newNos;
+                  fieldControllers[productId]?["Nos"]?.text = newNos;
+                  debugPrint("✅ Updated and persisted Nos: $newNos");
                 }
-                debugPrint("Nos field updated to: $newNos");
-              } else {
+
+// Update Amount
+                if (responseData["Amount"] != null) {
+                  String newAmount = responseData["Amount"].toString();
+                  responseProducts[i]["Amount"] = newAmount;
+                  data["Amount"] = newAmount;
+                  fieldControllers[productId]?["Amount"]?.text = newAmount;
+                  debugPrint("✅ Updated and persisted Amount: $newAmount");
+                }
+
+// *** CRITICAL: Update and persist CGST ***
+                if (responseData["cgst"] != null) {
+                  String newCgst = responseData["cgst"].toString();
+                  responseProducts[i]["Cgst"] =
+                      newCgst; // *** PERSIST IN MAIN LIST ***
+                  data["Cgst"] = newCgst; // *** UPDATE LOCAL DATA ***
+                  fieldControllers[productId]?["Cgst"]?.text = newCgst;
+                  debugPrint("✅ Updated and persisted CGST: $newCgst");
+                }
+
+// *** CRITICAL: Update and persist SGST ***
+                if (responseData["sgst"] != null) {
+                  String newSgst = responseData["sgst"].toString();
+                  responseProducts[i]["Sgst"] =
+                      newSgst; // *** PERSIST IN MAIN LIST ***
+                  data["Sgst"] = newSgst; // *** UPDATE LOCAL DATA ***
+                  fieldControllers[productId]?["Sgst"]?.text = newSgst;
+                  debugPrint("✅ Updated and persisted SGST: $newSgst");
+                }
+
                 debugPrint(
-                    "Nos NOT updated because user input = '$currentInput'");
-              }
-            }
-            if (responseData["Amount"] != null) {
-              data["Amount"] = responseData["Amount"].toString();
-              if (fieldControllers[productId]?["Amount"] != null) {
-                fieldControllers[productId]!["Amount"]!.text =
-                    responseData["Amount"].toString();
+                    "✅ PERSISTENCE CHECK - Product ${responseProducts[i]["id"]}:");
+                debugPrint("   - Cgst: ${responseProducts[i]["Cgst"]}");
+                debugPrint("   - Sgst: ${responseProducts[i]["Sgst"]}");
+                debugPrint("   - Amount: ${responseProducts[i]["Amount"]}");
+                debugPrint("   - Nos: ${responseProducts[i]["Nos"]}");
+
+                break;
               }
             }
 
-            if (responseData["cgst"] != null) {
-              data["Cgst"] = responseData["cgst"].toString();
-              if (fieldControllers[productId]?["Cgst"] != null) {
-                fieldControllers[productId]!["Cgst"]!.text =
-                    responseData["cgst"].toString();
-              }
-            }
-            if (responseData["sgst"] != null) {
-              data["Sgst"] = responseData["sgst"].toString();
-              if (fieldControllers[productId]?["Sgst"] != null) {
-                fieldControllers[productId]!["Sgst"]!.text =
-                    responseData["sgst"].toString();
-              }
-            }
             previousUomValues[productId] = currentUom;
           });
-          debugPrint("=== CALCULATION SUCCESS ===");
-          debugPrint(
-              "Updated data: Nos=${data["Nos"]}, Amount=${data["Amount"]},gst=${data["Cgst"]}, Sgst=${data["Sgst"]}");
+
+          debugPrint("=== CALCULATION SUCCESS - VALUES PERSISTED ===");
         } else {
-          debugPrint("API returned error status: ${responseData["status"]}");
+          debugPrint("❌ API returned error status: ${responseData["status"]}");
         }
       } else {
-        debugPrint("HTTP Error: ${response.statusCode}");
+        debugPrint("❌ HTTP Error: ${response.statusCode}");
       }
     } catch (e) {
-      debugPrint("Calculation API Error: $e");
+      debugPrint("❌ Calculation API Error: $e");
     }
+  }
+
+  TextEditingController _getController(Map<String, dynamic> data, String key) {
+    String productId = data["id"].toString();
+
+    debugPrint("=== DEBUG _getController ===");
+    debugPrint("ProductId: $productId, Key: $key");
+    debugPrint("Data for key '$key': ${data[key]}");
+    debugPrint("Data type: ${data[key].runtimeType}");
+
+    fieldControllers.putIfAbsent(productId, () => {});
+
+    if (!fieldControllers[productId]!.containsKey(key)) {
+      String initialValue = "";
+
+// *** ENHANCED: Better handling of different data types and null values ***
+      if (data[key] != null) {
+        String dataValue = data[key].toString();
+// For CGST/SGST, treat "0" as empty but preserve calculated values
+        if (key == "Cgst" || key == "Sgst") {
+          if (dataValue != "0" && dataValue != "null" && dataValue.isNotEmpty) {
+            initialValue = dataValue;
+            debugPrint("Found calculated $key in data: $initialValue");
+          }
+        }
+// For other fields, use non-zero values
+        else if (dataValue != "0" &&
+            dataValue != "null" &&
+            dataValue.isNotEmpty) {
+          initialValue = dataValue;
+          debugPrint("Found $key in data: $initialValue");
+        }
+      }
+
+// *** FALLBACK: Check calculation results ***
+      if (initialValue.isEmpty && calculationResults.containsKey(productId)) {
+        var calcResult = calculationResults[productId];
+        debugPrint("Checking calculation results for $productId: $calcResult");
+
+        if (key == "Cgst" && calcResult["cgst"] != null) {
+          initialValue = calcResult["cgst"].toString();
+          debugPrint("Found CGST in calculationResults: $initialValue");
+        } else if (key == "Sgst" && calcResult["sgst"] != null) {
+          initialValue = calcResult["sgst"].toString();
+          debugPrint("Found SGST in calculationResults: $initialValue");
+        } else if (key == "Amount" && calcResult["Amount"] != null) {
+          initialValue = calcResult["Amount"].toString();
+          debugPrint("Found Amount in calculationResults: $initialValue");
+        } else if (key == "Nos" && calcResult["Nos"] != null) {
+          initialValue = calcResult["Nos"].toString();
+          debugPrint("Found Nos in calculationResults: $initialValue");
+        }
+      }
+
+      fieldControllers[productId]![key] =
+          TextEditingController(text: initialValue);
+      debugPrint("Created controller for [$key] with value: '$initialValue'");
+    } else {
+// *** ENHANCED: Controller exists, ensure sync with latest data ***
+      final controller = fieldControllers[productId]![key]!;
+      debugPrint(
+          "Controller already exists for [$key] with value: '${controller.text}'");
+
+// *** Check if we need to update controller with latest calculated values ***
+      if ((key == "Cgst" || key == "Sgst") && controller.text.isEmpty) {
+        if (data[key] != null) {
+          String dataValue = data[key].toString();
+          if (dataValue != "0" && dataValue != "null" && dataValue.isNotEmpty) {
+            controller.text = dataValue;
+            debugPrint(
+                "Synced $key controller to calculated value: $dataValue");
+          }
+        }
+      }
+
+// *** For other fields, sync if controller is empty but data has value ***
+      else if (controller.text.isEmpty && data[key] != null) {
+        String dataValue = data[key].toString();
+        if (dataValue != "0" && dataValue != "null" && dataValue.isNotEmpty) {
+          controller.text = dataValue;
+          debugPrint("Synced controller for [$key] to: $dataValue");
+        }
+      }
+    }
+
+    return fieldControllers[productId]![key]!;
+  }
+
+  void _debounceCalculation(Map<String, dynamic> data) {
+    _debounceTimer?.cancel();
+    _debounceTimer = Timer(Duration(milliseconds: 1500), () {
+      _performCalculation(data);
+    });
   }
 
   Widget _buildAnimatedDropdown(

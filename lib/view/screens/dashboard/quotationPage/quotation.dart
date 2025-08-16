@@ -147,7 +147,7 @@ class _QuotationPageState extends State<QuotationPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: Colors.purple[50],
       appBar: AppBar(
         centerTitle: true,
         elevation: 0,
@@ -463,23 +463,24 @@ class _QuotationPageState extends State<QuotationPage> {
                                   int rowIndex = entry.key;
                                   Map<String, dynamic> row = entry.value;
                                   return DataRow(
-                                    onSelectChanged: (selected) {
+                                    onSelectChanged: (_) {
                                       setState(() {
-                                        selectedRowIndex = rowIndex;
+                                        if (selectedRowIndex == rowIndex) {
+                                          selectedRowIndex =
+                                              null; // Deselect if already selected
+                                        } else {
+                                          selectedRowIndex =
+                                              rowIndex; // Select new row
+                                        }
                                       });
                                     },
                                     color:
                                         WidgetStateProperty.resolveWith<Color?>(
                                       (Set<WidgetState> states) {
                                         if (selectedRowIndex == rowIndex) {
-                                          return Colors.grey.shade200;
+                                          return Colors.purple.shade50;
                                         }
-
                                         return null;
-
-                                        // entry.key % 2 == 0
-                                        //   ? Colors.white
-                                        //   : Colors.grey.shade200;
                                       },
                                     ),
                                     cells: [
@@ -567,19 +568,6 @@ class _QuotationPageState extends State<QuotationPage> {
                                                     ));
                                               },
                                             ),
-                                            // IconButton(
-                                            //   icon: const Icon(Icons.edit,
-                                            //       color: Colors.green),
-                                            //   onPressed: () {
-                                            //     // Edit action
-                                            //     ScaffoldMessenger.of(context)
-                                            //         .showSnackBar(
-                                            //       SnackBar(
-                                            //           content: Text(
-                                            //               "Edit ${row['order_no']}")),
-                                            //     );
-                                            //   },
-                                            // ),
                                           ],
                                         ),
                                       )

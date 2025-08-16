@@ -227,27 +227,6 @@ class _MissedQuotationPageState extends State<MissedQuotation> {
                       color: Colors.orange,
                     ),
                   ),
-                  // if (filteredData.length != totalRecords) ...[
-                  //   Spacer(),
-                  //   Container(
-                  //     padding:
-                  //         EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
-                  //     decoration: BoxDecoration(
-                  //       color: Colors.purple.withOpacity(0.1),
-                  //       borderRadius: BorderRadius.circular(20.r),
-                  //       border:
-                  //           Border.all(color: Colors.purple.withOpacity(0.3)),
-                  //     ),
-                  //     child: Text(
-                  //       'Showing: ${filteredData.length}',
-                  //       style: GoogleFonts.poppins(
-                  //         fontSize: 13.sp,
-                  //         fontWeight: FontWeight.w500,
-                  //         color: Colors.purple,
-                  //       ),
-                  //     ),
-                  //   ),
-                  // ],
                 ],
               ),
             ),
@@ -291,7 +270,7 @@ class _MissedQuotationPageState extends State<MissedQuotation> {
                                 child: DataTable(
                                   showCheckboxColumn: false,
                                   border: TableBorder.all(
-                                    color: Colors.purple.withOpacity(0.3),
+                                    color: Colors.orange.withOpacity(0.3),
                                     width: 1,
                                     borderRadius: BorderRadius.circular(12),
                                   ),

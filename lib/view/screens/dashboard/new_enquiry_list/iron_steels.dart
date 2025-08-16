@@ -1156,21 +1156,33 @@ class _IronSteelState extends State<IronSteel> {
               }
             }
 
+            // // Update Height/Crimp
+            // if (responseData["crimp"] != null) {
+            //   String newCrimp = responseData["crimp"].toString();
+            //   String currentCrimp =
+            //       fieldControllers[productId]!["height"]?.text.trim() ?? "";
+            //
+            //   if (currentCrimp.isEmpty || currentCrimp == "0") {
+            //     data["height"] = newCrimp;
+            //     if (fieldControllers[productId]?["height"] != null) {
+            //       fieldControllers[productId]!["height"]!.text = newCrimp;
+            //     }
+            //     print("Height field updated to: $newCrimp");
+            //   } else {
+            //     print(
+            //         "Height NOT updated because user input = '$currentCrimp'");
+            //   }
+            // }
             // Update Height/Crimp
             if (responseData["crimp"] != null) {
               String newCrimp = responseData["crimp"].toString();
-              String currentCrimp =
-                  fieldControllers[productId]!["height"]?.text.trim() ?? "";
+              print("New crimp value from API: $newCrimp");
 
-              if (currentCrimp.isEmpty || currentCrimp == "0") {
-                data["height"] = newCrimp;
-                if (fieldControllers[productId]?["height"] != null) {
-                  fieldControllers[productId]!["height"]!.text = newCrimp;
-                }
-                print("Height field updated to: $newCrimp");
-              } else {
+              data["height"] = newCrimp;
+              if (fieldControllers[productId]?["height"] != null) {
+                fieldControllers[productId]!["height"]!.text = newCrimp;
                 print(
-                    "Height NOT updated because user input = '$currentCrimp'");
+                    "Updated height field controller with crimp value: $newCrimp");
               }
             }
 

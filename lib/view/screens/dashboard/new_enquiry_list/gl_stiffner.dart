@@ -1278,6 +1278,39 @@ class _GIStiffnerState extends State<GIStiffner> {
     });
   }
 
+  // Helper method to get field value prioritizing controller over data
+  String _getFieldValue(
+      String productId, String fieldName, Map<String, dynamic> data) {
+    String? value;
+
+    // First priority: Controller text (what user typed)
+    if (fieldControllers.containsKey(productId) &&
+        fieldControllers[productId]!.containsKey(fieldName)) {
+      value = fieldControllers[productId]![fieldName]!.text.trim();
+      print("$fieldName from controller: '$value'");
+    }
+
+    // Second priority: Data map
+    if (value == null || value.isEmpty) {
+      value = data[fieldName]?.toString();
+      print("$fieldName from data: '$value'");
+    }
+
+    // Return empty string if still null
+    return value ?? "";
+  }
+
+// Helper method to check if a string represents a valid non-zero number (including decimals)
+  bool _isValidNonZeroNumber(String value) {
+    if (value.isEmpty) return false;
+
+    double? parsedValue = double.tryParse(value);
+    if (parsedValue == null) return false;
+
+    // Consider any non-zero value as valid (including small decimals like 0.055)
+    return parsedValue != 0.0;
+  }
+
   Future<void> _performCalculation(Map<String, dynamic> data) async {
     print("=== STARTING CALCULATION API ===");
     print("Data received: $data");
@@ -1300,45 +1333,59 @@ class _GIStiffnerState extends State<GIStiffner> {
     print("Current UOM: $currentUom");
     print("Previous UOM: ${previousUomValues[productId]}");
 
-    // Get Profile value from controller
-    double? profileValue;
-    String? profileText;
-
-    if (fieldControllers.containsKey(productId) &&
-        fieldControllers[productId]!.containsKey("Length")) {
-      profileText = data["Length"]?.toString(); // First check the latest data
-      if (profileText == null || profileText.isEmpty) {
-        profileText = fieldControllers[productId]!["Length"]!
-            .text; // Then check controller
-      }
-      print("Length/Profile from data/controller: $profileText");
-    }
-
-    if (profileText != null && profileText.isNotEmpty) {
-      profileValue = double.tryParse(profileText);
-      print("Parsed profile value: $profileValue");
-    }
-
-    // Get Nos value from controller
-    int nosValue = 0;
-    String? nosText;
-
-    if (fieldControllers.containsKey(productId) &&
-        fieldControllers[productId]!.containsKey("Nos")) {
-      nosText = fieldControllers[productId]!["Nos"]!.text;
-      print("Nos from controller: $nosText");
-    }
-
-    if (nosText == null || nosText.isEmpty) {
-      nosText = data["Nos"]?.toString();
-      print("Nos from data: $nosText");
-    }
-
-    if (nosText != null && nosText.isNotEmpty) {
-      nosValue = int.tryParse(nosText) ?? 1;
-    }
+    // // Get Profile value from controller
+    // double? profileValue;
+    // String? profileText;
+    //
+    // if (fieldControllers.containsKey(productId) &&
+    //     fieldControllers[productId]!.containsKey("Length")) {
+    //   profileText = data["Length"]?.toString(); // First check the latest data
+    //   if (profileText == null || profileText.isEmpty) {
+    //     profileText = fieldControllers[productId]!["Length"]!
+    //         .text; // Then check controller
+    //   }
+    //   print("Length/Profile from data/controller: $profileText");
+    // }
+    //
+    // if (profileText != null && profileText.isNotEmpty) {
+    //   profileValue = double.tryParse(profileText);
+    //   print("Parsed profile value: $profileValue");
+    // }
+    //
+    // // Get Nos value from controller
+    // int nosValue = 0;
+    // String? nosText;
+    //
+    // if (fieldControllers.containsKey(productId) &&
+    //     fieldControllers[productId]!.containsKey("Nos")) {
+    //   nosText = fieldControllers[productId]!["Nos"]!.text;
+    //   print("Nos from controller: $nosText");
+    // }
+    //
+    // if (nosText == null || nosText.isEmpty) {
+    //   nosText = data["Nos"]?.toString();
+    //   print("Nos from data: $nosText");
+    // }
+    //
+    // if (nosText != null && nosText.isNotEmpty) {
+    //   nosValue = int.tryParse(nosText) ?? 1;
+    // }
 
     // Get Crimp value
+
+    String lengthText = _getFieldValue(productId, "Length", data);
+    String nosText = _getFieldValue(productId, "Nos", data);
+    // Parse Length - include decimal values
+    double profileValue = 0.0;
+    if (_isValidNonZeroNumber(lengthText)) {
+      profileValue = double.tryParse(lengthText) ?? 0.0;
+    }
+
+    // Parse Nos - for Nos, still treat "0" as invalid but allow decimals
+    int nosValue = 1;
+    if (_isValidNonZeroNumber(nosText)) {
+      nosValue = int.tryParse(nosText) ?? 1;
+    }
     double? crimpValue;
     String? crimpText = data["Crimp"]?.toString();
 
@@ -1395,11 +1442,11 @@ class _GIStiffnerState extends State<GIStiffner> {
             print("billamt updated to: $billamt");
             calculationResults[productId] = responseData;
 
-            // Update Profile/Length
+            // Update Profile/Length - only if API returns a different value
             if (responseData["profile"] != null) {
               String newProfile = responseData["profile"].toString();
-              // Only update if calculation returned different value
-              if (data["Length"]?.toString() != newProfile) {
+              if (_isValidNonZeroNumber(newProfile) &&
+                  newProfile != lengthText) {
                 data["Length"] = newProfile;
                 if (fieldControllers[productId]?["Length"] != null) {
                   fieldControllers[productId]!["Length"]!.text = newProfile;
@@ -1408,13 +1455,25 @@ class _GIStiffnerState extends State<GIStiffner> {
               }
             }
 
-            // Update Nos
+            // Also check for "length" field in response (in case API uses different field name)
+            if (responseData["length"] != null) {
+              String newLength = responseData["length"].toString();
+              if (_isValidNonZeroNumber(newLength) && newLength != lengthText) {
+                data["Length"] = newLength;
+                if (fieldControllers[productId]?["Length"] != null) {
+                  fieldControllers[productId]!["Length"]!.text = newLength;
+                }
+                print("Length updated to: $newLength");
+              }
+            }
+
+            // Update Nos - only if user hasn't provided input
             if (responseData["Nos"] != null) {
               String newNos = responseData["Nos"].toString().trim();
               String currentInput =
-                  fieldControllers[productId]!["Nos"]!.text.trim();
+                  fieldControllers[productId]?["Nos"]?.text.trim() ?? "";
 
-              if (currentInput.isEmpty || currentInput == "0") {
+              if (!_isValidNonZeroNumber(currentInput)) {
                 data["Nos"] = newNos;
                 if (fieldControllers[productId]?["Nos"] != null) {
                   fieldControllers[productId]!["Nos"]!.text = newNos;
@@ -1424,7 +1483,6 @@ class _GIStiffnerState extends State<GIStiffner> {
                 print("Nos NOT updated because user input = '$currentInput'");
               }
             }
-
             // Update Crimp
             if (responseData["crimp"] != null) {
               String newCrimp = responseData["crimp"].toString();

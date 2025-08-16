@@ -1166,11 +1166,12 @@ class _LinerSheetPageState extends State<LinerSheetPage> {
 
             calculationResults[productId] = responseData;
 
-            if (responseData["Length"] != null) {
-              data["Profile"] = responseData["Length"].toString();
-              if (fieldControllers[productId]?["Profile"] != null) {
-                fieldControllers[productId]!["Profile"]!.text =
-                    responseData["Length"].toString();
+            if (responseData["profile"] != null) {
+              final profileValue = responseData["profile"].toString();
+              data["Length"] = profileValue;
+              if (fieldControllers[productId]?["Length"] != null) {
+                fieldControllers[productId]!["Length"]!.text = profileValue;
+                print("Updated Length/Profile to: $profileValue");
               }
             }
 
