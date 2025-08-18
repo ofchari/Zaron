@@ -185,7 +185,7 @@ class _MissedEnquiryPageState extends State<MissedEnquiry> {
                   decoration: InputDecoration(
                     labelText: 'Search Enquiry No',
                     labelStyle: GoogleFonts.poppins(
-                      fontSize: 15.sp,
+                      fontSize: 13.sp,
                       fontWeight: FontWeight.w500,
                       color: Colors.black54,
                     ),

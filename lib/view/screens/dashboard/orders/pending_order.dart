@@ -9,9 +9,9 @@ import 'package:http/http.dart' as http;
 import 'package:http/io_client.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:zaron/view/screens/global_user/global_user.dart';
-import 'package:zaron/view/widgets/subhead.dart';
 
 import '../../../universal_api/api_key.dart';
+import '../../../widgets/text.dart';
 
 class PendingOrder extends StatefulWidget {
   const PendingOrder({super.key});
@@ -237,271 +237,384 @@ class _PendingOrderPageState extends State<PendingOrder> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Colors.lightBlue[50],
       appBar: AppBar(
         centerTitle: true,
-        backgroundColor: Colors.white,
-        title: Subhead(
-            text: "Pending Order",
-            weight: FontWeight.w500,
-            color: Colors.black),
+        elevation: 0,
+        backgroundColor: Colors.transparent,
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                Colors.blue.shade300,
+                Colors.green.shade100,
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.only(
+              bottomLeft: Radius.circular(25),
+              bottomRight: Radius.circular(25),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 5,
+                offset: Offset(0, 5),
+              ),
+            ],
+          ),
+        ),
+        title: Container(
+          padding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.2),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: Colors.purple.withOpacity(0.3)),
+          ),
+          child: MyText(
+              text: "Pending Orders",
+              weight: FontWeight.w600,
+              color: Colors.black87),
+        ),
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(
+            bottom: Radius.circular(15),
+          ),
+        ),
       ),
       body: Column(
         children: [
           // Enquiry No (Search)
           Padding(
-            padding: const EdgeInsets.only(left: 12, right: 12, top: 16),
-            child: TextField(
-              controller: enquiryNoController,
-              decoration: InputDecoration(
-                contentPadding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
-                labelText: 'Search..',
-                labelStyle: GoogleFonts.outfit(
-                  textStyle: TextStyle(
-                    fontSize: 15.sp,
-                    fontWeight: FontWeight.w400,
+            padding: const EdgeInsets.all(16),
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.grey.withOpacity(0.1),
+                    spreadRadius: 1,
+                    blurRadius: 5,
+                    offset: const Offset(0, 3),
+                  ),
+                ],
+              ),
+              padding: const EdgeInsets.all(16),
+              child: TextField(
+                controller: enquiryNoController,
+                decoration: InputDecoration(
+                  labelText: 'Search Enquiry No',
+                  labelStyle: GoogleFonts.poppins(
+                    fontSize: 13.sp,
+                    fontWeight: FontWeight.w500,
                     color: Colors.black54,
                   ),
+                  prefixIcon: const Icon(Icons.search, color: Colors.lightBlue),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: BorderSide(color: Colors.grey.shade300),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: const BorderSide(color: Colors.blue),
+                  ),
                 ),
-                border: const OutlineInputBorder(),
-                suffixIcon: const Icon(Icons.search),
               ),
             ),
           ),
-
           // Total Records Counter
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-            alignment: Alignment.centerLeft,
-            child: Text(
-              'Total Data: $totalRecords',
-              style: GoogleFonts.outfit(
-                textStyle: TextStyle(
-                  fontSize: 16.sp,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.black87,
-                ),
+            margin: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+            padding: EdgeInsets.all(16.r),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [Colors.white, Colors.blue[50]!],
               ),
+              borderRadius: BorderRadius.circular(12.r),
+              border: Border.all(
+                color: Colors.blue,
+                width: 0.5,
+              ),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.analytics_outlined, color: Colors.blue),
+                SizedBox(width: 8.w),
+                Text(
+                  'Total Records: $totalRecords',
+                  style: GoogleFonts.poppins(
+                    fontSize: 15.sp,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.blue,
+                  ),
+                ),
+                // if (filteredData.length != totalRecords) ...[
+                //   Spacer(),
+                //   Container(
+                //     padding:
+                //         EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
+                //     decoration: BoxDecoration(
+                //       color: Colors.purple.withOpacity(0.1),
+                //       borderRadius: BorderRadius.circular(20.r),
+                //       border:
+                //           Border.all(color: Colors.purple.withOpacity(0.3)),
+                //     ),
+                //     child: Text(
+                //       'Showing: ${filteredData.length}',
+                //       style: GoogleFonts.poppins(
+                //         fontSize: 13.sp,
+                //         fontWeight: FontWeight.w500,
+                //         color: Colors.purple,
+                //       ),
+                //     ),
+                //   ),
+                // ],
+              ],
             ),
           ),
           // Table
           isLoading
               ? Expanded(child: Center(child: CircularProgressIndicator()))
-              : Expanded(
-                  child: Scrollbar(
-                    thumbVisibility: true,
-                    child: SingleChildScrollView(
-                      scrollDirection: Axis.vertical,
-                      child: SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
-                        child: Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: DataTable(
-                            border: TableBorder.all(
-                                color: Colors.purple, width: 0.5),
-                            dataRowHeight: 60,
-                            columnSpacing: 40,
-                            headingRowHeight: 56,
-                            columns: [
-                              DataColumn(
-                                label: Text(
-                                  'No',
-                                  style: GoogleFonts.outfit(
-                                    textStyle: TextStyle(
-                                      fontSize: 16.sp,
-                                      fontWeight: FontWeight.w500,
-                                      color: Colors.black,
-                                    ),
+              : filteredData.isEmpty
+                  ? Expanded(
+                      child: Center(
+                        child: Text(
+                          'No records found',
+                          style: GoogleFonts.poppins(
+                            fontSize: 16.sp,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.grey,
+                          ),
+                        ),
+                      ),
+                    )
+                  : Expanded(
+                      child: Scrollbar(
+                        thumbVisibility: true,
+                        child: SingleChildScrollView(
+                          scrollDirection: Axis.vertical,
+                          child: SingleChildScrollView(
+                            scrollDirection: Axis.horizontal,
+                            padding: const EdgeInsets.all(16.0),
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(12),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.grey.withOpacity(0.1),
+                                    spreadRadius: 2,
+                                    blurRadius: 5,
+                                    offset: const Offset(0, 3),
                                   ),
-                                ),
+                                ],
                               ),
-                              // DataColumn(
-                              //   label: Text(
-                              //     'ID',
-                              //     style: GoogleFonts.outfit(
-                              //       textStyle: TextStyle(
-                              //         fontSize: 16.sp,
-                              //         fontWeight: FontWeight.w500,
-                              //         color: Colors.black,
-                              //       ),
-                              //     ),
-                              //   ),
-                              // ),
-                              DataColumn(
-                                label: Text(
-                                  'Order No',
-                                  style: GoogleFonts.outfit(
-                                    textStyle: TextStyle(
-                                      fontSize: 16.sp,
-                                      fontWeight: FontWeight.w500,
-                                      color: Colors.black,
-                                    ),
-                                  ),
+                              child: DataTable(
+                                showCheckboxColumn: false,
+                                border: TableBorder.all(
+                                  color: Colors.purple.withOpacity(0.3),
+                                  width: 1,
+                                  borderRadius: BorderRadius.circular(12),
                                 ),
-                              ),
-                              DataColumn(
-                                label: Text(
-                                  'Bill Total',
-                                  style: GoogleFonts.outfit(
-                                    textStyle: TextStyle(
-                                      fontSize: 16.sp,
-                                      fontWeight: FontWeight.w500,
-                                      color: Colors.black,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              DataColumn(
-                                label: Text(
-                                  'Create Date',
-                                  style: GoogleFonts.outfit(
-                                    textStyle: TextStyle(
-                                      fontSize: 16.sp,
-                                      fontWeight: FontWeight.w500,
-                                      color: Colors.black,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              DataColumn(
-                                label: Text(
-                                  'Create Time',
-                                  style: GoogleFonts.outfit(
-                                    textStyle: TextStyle(
-                                      fontSize: 16.sp,
-                                      fontWeight: FontWeight.w500,
-                                      color: Colors.black,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              DataColumn(
-                                label: Text(
-                                  'Action',
-                                  style: GoogleFonts.outfit(
-                                    textStyle: TextStyle(
-                                      fontSize: 16.sp,
-                                      fontWeight: FontWeight.w500,
-                                      color: Colors.black,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                            rows: filteredData.asMap().entries.map((entry) {
-                              return DataRow(
-                                color: WidgetStateProperty.resolveWith<Color?>(
-                                  (Set<WidgetState> states) {
-                                    return entry.key % 2 == 0
-                                        ? Colors.white
-                                        : Colors.grey.shade200;
-                                  },
-                                ),
-                                cells: [
-                                  DataCell(
-                                    Text(
-                                      "${entry.key + 1}",
-                                      style: GoogleFonts.dmSans(
+                                columnSpacing: 40,
+                                headingRowHeight: 70,
+                                columns: [
+                                  DataColumn(
+                                    label: Text(
+                                      'No',
+                                      style: GoogleFonts.outfit(
                                         textStyle: TextStyle(
-                                          fontSize: 14.sp,
-                                          fontWeight: FontWeight.w400,
+                                          fontSize: 16.sp,
+                                          fontWeight: FontWeight.w500,
                                           color: Colors.black,
                                         ),
                                       ),
                                     ),
                                   ),
-                                  // DataCell(
-                                  //   Text(
-                                  //     entry.value['id'] ?? '',
-                                  //     style: GoogleFonts.dmSans(
-                                  //       textStyle: TextStyle(
-                                  //         fontSize: 14.sp,
-                                  //         fontWeight: FontWeight.w400,
-                                  //         color: Colors.black,
-                                  //       ),
-                                  //     ),
-                                  //   ),
-                                  // ),
-                                  DataCell(
-                                    Text(
-                                      entry.value['order_no'] ?? '',
-                                      style: GoogleFonts.dmSans(
+                                  DataColumn(
+                                    label: Text(
+                                      'Order No',
+                                      style: GoogleFonts.outfit(
                                         textStyle: TextStyle(
-                                          fontSize: 14.sp,
-                                          fontWeight: FontWeight.w400,
+                                          fontSize: 16.sp,
+                                          fontWeight: FontWeight.w500,
                                           color: Colors.black,
                                         ),
                                       ),
                                     ),
                                   ),
-                                  DataCell(
-                                    Text(
-                                      entry.value['bill_total'] ?? '0',
-                                      style: GoogleFonts.dmSans(
+                                  DataColumn(
+                                    label: Text(
+                                      'Bill Total',
+                                      style: GoogleFonts.outfit(
                                         textStyle: TextStyle(
-                                          fontSize: 14.sp,
-                                          fontWeight: FontWeight.w400,
+                                          fontSize: 16.sp,
+                                          fontWeight: FontWeight.w500,
                                           color: Colors.black,
                                         ),
                                       ),
                                     ),
                                   ),
-                                  DataCell(
-                                    Text(
-                                      entry.value['create_date'] ?? '',
-                                      style: GoogleFonts.dmSans(
+                                  DataColumn(
+                                    label: Text(
+                                      'Create Date',
+                                      style: GoogleFonts.outfit(
                                         textStyle: TextStyle(
-                                          fontSize: 14.2.sp,
-                                          fontWeight: FontWeight.w400,
+                                          fontSize: 16.sp,
+                                          fontWeight: FontWeight.w500,
                                           color: Colors.black,
                                         ),
                                       ),
                                     ),
                                   ),
-                                  DataCell(
-                                    Text(
-                                      entry.value['create_time'] ?? '',
-                                      style: GoogleFonts.dmSans(
+                                  DataColumn(
+                                    label: Text(
+                                      'Create Time',
+                                      style: GoogleFonts.outfit(
                                         textStyle: TextStyle(
-                                          fontSize: 14.2.sp,
-                                          fontWeight: FontWeight.w400,
+                                          fontSize: 16.sp,
+                                          fontWeight: FontWeight.w500,
                                           color: Colors.black,
                                         ),
                                       ),
                                     ),
                                   ),
-                                  DataCell(
-                                    Center(
-                                      child: IconButton(
-                                        icon: Icon(Icons.visibility,
-                                            color: Colors.blue, size: 20.sp),
-                                        onPressed: () {
-                                          final orderId =
-                                              entry.value['id'] ?? '';
-                                          if (orderId.isNotEmpty) {
-                                            postOverView(orderId);
-                                          } else {
-                                            Get.snackbar(
-                                              "Missing ID",
-                                              "Order ID is not available for this row.",
-                                              backgroundColor: Colors.orange,
-                                              colorText: Colors.white,
-                                            );
-                                          }
-                                        },
+                                  DataColumn(
+                                    label: Text(
+                                      'Action',
+                                      style: GoogleFonts.outfit(
+                                        textStyle: TextStyle(
+                                          fontSize: 16.sp,
+                                          fontWeight: FontWeight.w500,
+                                          color: Colors.black,
+                                        ),
                                       ),
                                     ),
                                   ),
                                 ],
-                              );
-                            }).toList(),
+                                rows: filteredData.asMap().entries.map((entry) {
+                                  return DataRow(
+                                    color:
+                                        WidgetStateProperty.resolveWith<Color?>(
+                                      (Set<WidgetState> states) {
+                                        return entry.key % 2 == 0
+                                            ? Colors.white
+                                            : Colors.grey.shade200;
+                                      },
+                                    ),
+                                    cells: [
+                                      DataCell(
+                                        Text(
+                                          "${entry.key + 1}",
+                                          style: GoogleFonts.dmSans(
+                                            textStyle: TextStyle(
+                                              fontSize: 14.sp,
+                                              fontWeight: FontWeight.w400,
+                                              color: Colors.black,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                      // DataCell(
+                                      //   Text(
+                                      //     entry.value['id'] ?? '',
+                                      //     style: GoogleFonts.dmSans(
+                                      //       textStyle: TextStyle(
+                                      //         fontSize: 14.sp,
+                                      //         fontWeight: FontWeight.w400,
+                                      //         color: Colors.black,
+                                      //       ),
+                                      //     ),
+                                      //   ),
+                                      // ),
+                                      DataCell(
+                                        Text(
+                                          entry.value['order_no'] ?? '',
+                                          style: GoogleFonts.dmSans(
+                                            textStyle: TextStyle(
+                                              fontSize: 14.sp,
+                                              fontWeight: FontWeight.w400,
+                                              color: Colors.black,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                      DataCell(
+                                        Text(
+                                          entry.value['bill_total'] ?? '0',
+                                          style: GoogleFonts.dmSans(
+                                            textStyle: TextStyle(
+                                              fontSize: 14.sp,
+                                              fontWeight: FontWeight.w400,
+                                              color: Colors.black,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                      DataCell(
+                                        Text(
+                                          entry.value['create_date'] ?? '',
+                                          style: GoogleFonts.dmSans(
+                                            textStyle: TextStyle(
+                                              fontSize: 14.2.sp,
+                                              fontWeight: FontWeight.w400,
+                                              color: Colors.black,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                      DataCell(
+                                        Text(
+                                          entry.value['create_time'] ?? '',
+                                          style: GoogleFonts.dmSans(
+                                            textStyle: TextStyle(
+                                              fontSize: 14.2.sp,
+                                              fontWeight: FontWeight.w400,
+                                              color: Colors.black,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                      DataCell(
+                                        Center(
+                                          child: IconButton(
+                                            icon: Icon(Icons.visibility,
+                                                color: Colors.blue,
+                                                size: 20.sp),
+                                            onPressed: () {
+                                              final orderId =
+                                                  entry.value['id'] ?? '';
+                                              if (orderId.isNotEmpty) {
+                                                postOverView(orderId);
+                                              } else {
+                                                Get.snackbar(
+                                                  "Missing ID",
+                                                  "Order ID is not available for this row.",
+                                                  backgroundColor:
+                                                      Colors.orange,
+                                                  colorText: Colors.white,
+                                                );
+                                              }
+                                            },
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  );
+                                }).toList(),
+                              ),
+                            ),
                           ),
                         ),
                       ),
                     ),
-                  ),
-                ),
         ],
       ),
     );
