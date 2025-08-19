@@ -25,6 +25,7 @@ class _ApprovedOrderPageState extends State<ApprovedOrder> {
   List<Map<String, dynamic>> filteredData = [];
   bool isLoading = true;
   int totalRecords = 0;
+  int? selectedRowIndex;
 
   final TextEditingController enquiryNoController = TextEditingController();
 
@@ -326,6 +327,7 @@ class _ApprovedOrderPageState extends State<ApprovedOrder> {
               ),
             ),
           ),
+
           // Total Records Counter
           Container(
             margin: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
@@ -344,7 +346,7 @@ class _ApprovedOrderPageState extends State<ApprovedOrder> {
             ),
             child: Row(
               children: [
-                Icon(Icons.analytics_outlined, color: Colors.green.shade600),
+                Icon(Icons.task_alt, color: Colors.green.shade600),
                 SizedBox(width: 8.w),
                 Text(
                   'Total Records: $totalRecords',
@@ -499,15 +501,31 @@ class _ApprovedOrderPageState extends State<ApprovedOrder> {
                                   ),
                                 ],
                                 rows: filteredData.asMap().entries.map((entry) {
+                                  int index = entry.key;
+
                                   return DataRow(
+                                    // Row background color logic
                                     color:
                                         WidgetStateProperty.resolveWith<Color?>(
                                       (Set<WidgetState> states) {
-                                        return entry.key % 2 == 0
-                                            ? Colors.white
-                                            : Colors.grey.shade200;
+                                        if (selectedRowIndex == index) {
+                                          return Colors.grey.shade200;
+                                        }
+                                        return null;
                                       },
                                     ),
+                                    // Row tap logic
+                                    onSelectChanged: (_) {
+                                      setState(() {
+                                        if (selectedRowIndex == index) {
+                                          selectedRowIndex =
+                                              null; // Deselect if already selected
+                                        } else {
+                                          selectedRowIndex =
+                                              index; // Select new row
+                                        }
+                                      });
+                                    },
                                     cells: [
                                       DataCell(
                                         Text(

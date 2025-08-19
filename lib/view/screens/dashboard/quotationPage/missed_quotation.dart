@@ -21,6 +21,7 @@ class _MissedQuotationPageState extends State<MissedQuotation> {
   List<Map<String, dynamic>> filteredData = [];
   bool isLoading = true;
   int totalRecords = 0;
+  int? selectedRowIndex;
 
   final TextEditingController enquiryNoController = TextEditingController();
 
@@ -217,7 +218,8 @@ class _MissedQuotationPageState extends State<MissedQuotation> {
               ),
               child: Row(
                 children: [
-                  Icon(Icons.analytics_outlined, color: Colors.orange.shade400),
+                  Icon(Icons.error_outline_rounded,
+                      color: Colors.orange.shade400),
                   SizedBox(width: 8.w),
                   Text(
                     'Total Records: $totalRecords',
@@ -340,15 +342,31 @@ class _MissedQuotationPageState extends State<MissedQuotation> {
                                   ],
                                   rows:
                                       filteredData.asMap().entries.map((entry) {
+                                    int index = entry.key;
+                                    var row = entry.value;
+
                                     return DataRow(
+                                      // Row background color logic
                                       color: WidgetStateProperty.resolveWith<
                                           Color?>(
                                         (Set<WidgetState> states) {
-                                          return entry.key % 2 == 0
-                                              ? Colors.white
-                                              : Colors.grey.shade200;
+                                          if (selectedRowIndex == index) {
+                                            return Colors.orange.shade50;
+                                          }
+                                          return null;
                                         },
-                                      ),
+                                      ), // Row tap logic
+                                      onSelectChanged: (_) {
+                                        setState(() {
+                                          if (selectedRowIndex == index) {
+                                            selectedRowIndex =
+                                                null; // Deselect if already selected
+                                          } else {
+                                            selectedRowIndex =
+                                                index; // Select new row
+                                          }
+                                        });
+                                      },
                                       cells: [
                                         DataCell(
                                           Text(

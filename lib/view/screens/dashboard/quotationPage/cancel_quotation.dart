@@ -336,11 +336,9 @@ class _CancelQuotationPageState extends State<CancelQuotation> {
                                           Color?>(
                                         (Set<WidgetState> states) {
                                           if (selectedRowIndex == index) {
-                                            return Colors.red.shade50;
+                                            return Colors.grey.shade200;
                                           }
-                                          return index % 2 == 0
-                                              ? Colors.white
-                                              : Colors.grey.shade50;
+                                          return null;
                                         },
                                       ),
                                       // Row tap logic

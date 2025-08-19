@@ -223,7 +223,8 @@ class _MissedEnquiryPageState extends State<MissedEnquiry> {
               ),
               child: Row(
                 children: [
-                  Icon(Icons.analytics_outlined, color: Colors.orange.shade400),
+                  Icon(Icons.error_outline_rounded,
+                      color: Colors.orange.shade400),
                   SizedBox(width: 8.w),
                   Text(
                     'Total Records: $totalRecords',

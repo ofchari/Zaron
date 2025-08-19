@@ -25,7 +25,7 @@ class _PendingOrderPageState extends State<PendingOrder> {
   List<Map<String, dynamic>> filteredData = [];
   bool isLoading = true;
   int totalRecords = 0;
-
+  int? selectedRowIndex;
   final TextEditingController enquiryNoController = TextEditingController();
 
   @override
@@ -345,7 +345,7 @@ class _PendingOrderPageState extends State<PendingOrder> {
             ),
             child: Row(
               children: [
-                Icon(Icons.analytics_outlined, color: Colors.blue),
+                Icon(Icons.hourglass_empty, color: Colors.blue),
                 SizedBox(width: 8.w),
                 Text(
                   'Total Records: $totalRecords',
@@ -500,15 +500,31 @@ class _PendingOrderPageState extends State<PendingOrder> {
                                   ),
                                 ],
                                 rows: filteredData.asMap().entries.map((entry) {
+                                  int index = entry.key;
+
                                   return DataRow(
+                                    // Row background color logic
                                     color:
                                         WidgetStateProperty.resolveWith<Color?>(
                                       (Set<WidgetState> states) {
-                                        return entry.key % 2 == 0
-                                            ? Colors.white
-                                            : Colors.grey.shade200;
+                                        if (selectedRowIndex == index) {
+                                          return Colors.grey.shade200;
+                                        }
+                                        return null;
                                       },
                                     ),
+                                    // Row tap logic
+                                    onSelectChanged: (_) {
+                                      setState(() {
+                                        if (selectedRowIndex == index) {
+                                          selectedRowIndex =
+                                              null; // Deselect if already selected
+                                        } else {
+                                          selectedRowIndex =
+                                              index; // Select new row
+                                        }
+                                      });
+                                    },
                                     cells: [
                                       DataCell(
                                         Text(
@@ -522,18 +538,6 @@ class _PendingOrderPageState extends State<PendingOrder> {
                                           ),
                                         ),
                                       ),
-                                      // DataCell(
-                                      //   Text(
-                                      //     entry.value['id'] ?? '',
-                                      //     style: GoogleFonts.dmSans(
-                                      //       textStyle: TextStyle(
-                                      //         fontSize: 14.sp,
-                                      //         fontWeight: FontWeight.w400,
-                                      //         color: Colors.black,
-                                      //       ),
-                                      //     ),
-                                      //   ),
-                                      // ),
                                       DataCell(
                                         Text(
                                           entry.value['order_no'] ?? '',

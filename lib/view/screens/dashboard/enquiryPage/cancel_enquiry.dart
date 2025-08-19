@@ -223,7 +223,7 @@ class _CancelEnquiryPageState extends State<CancelEnquiry> {
               ),
               child: Row(
                 children: [
-                  Icon(Icons.analytics_outlined, color: Colors.red.shade400),
+                  Icon(Icons.cancel_outlined, color: Colors.red.shade400),
                   SizedBox(width: 8.w),
                   Text(
                     'Total Records: $totalRecords',
