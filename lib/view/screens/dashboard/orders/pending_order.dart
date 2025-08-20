@@ -66,14 +66,14 @@ class _PendingOrderPageState extends State<PendingOrder> {
       if (response.statusCode == 200) {
         print("this is a post Data response : ${response.body}");
 
-// Parse the JSON response
+        // Parse the JSON response
         final responseData = json.decode(response.body);
 
         // Extract the overview URL
         if (responseData['overview'] != null) {
           String overviewUrl = responseData['overview'];
 
-// Remove escape characters from the URL
+          // Remove escape characters from the URL
           overviewUrl = overviewUrl.replaceAll(r'\/', '/');
 
           print("Original Overview URL: ${responseData['overview']}");
@@ -125,7 +125,7 @@ class _PendingOrderPageState extends State<PendingOrder> {
       }
 
       try {
-// Method 2: Platform default
+        // Method 2: Platform default
         bool launched = await launchUrl(
           uri,
           mode: LaunchMode.platformDefault,
@@ -355,27 +355,6 @@ class _PendingOrderPageState extends State<PendingOrder> {
                     color: Colors.blue,
                   ),
                 ),
-                // if (filteredData.length != totalRecords) ...[
-                //   Spacer(),
-                //   Container(
-                //     padding:
-                //         EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
-                //     decoration: BoxDecoration(
-                //       color: Colors.purple.withOpacity(0.1),
-                //       borderRadius: BorderRadius.circular(20.r),
-                //       border:
-                //           Border.all(color: Colors.purple.withOpacity(0.3)),
-                //     ),
-                //     child: Text(
-                //       'Showing: ${filteredData.length}',
-                //       style: GoogleFonts.poppins(
-                //         fontSize: 13.sp,
-                //         fontWeight: FontWeight.w500,
-                //         color: Colors.purple,
-                //       ),
-                //     ),
-                //   ),
-                // ],
               ],
             ),
           ),

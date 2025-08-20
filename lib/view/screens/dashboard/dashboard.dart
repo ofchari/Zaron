@@ -593,7 +593,6 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                       ],
                     ),
                     SizedBox(height: 20.h),
-
                     // Enhanced grid with staggered animation
                     AnimatedBuilder(
                       animation: _cardAnimationController,

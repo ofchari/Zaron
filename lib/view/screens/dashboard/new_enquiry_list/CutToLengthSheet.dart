@@ -55,8 +55,12 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
   final Map<String, bool> isSearchingBaseProducts = {};
   List<Map<String, dynamic>> submittedData = [];
   List<dynamic> rawCUTtoLength = [];
+  Map<String, dynamic>? apiResponseData;
+  List<dynamic> responseProducts = [];
+  Map<String, Map<String, String>> uomOptions = {};
+  bool showApiResponse = false;
 
-// Form key for validation
+  // Form key for validation
   final _formKey = GlobalKey<FormState>();
 
   @override
@@ -118,7 +122,7 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
   Future<void> _fetchMeterialType() async {
     setState(() {
       meterialList = [];
-      selectedMeterial;
+      selectedMeterial = null;
     });
 
     final client = IOClient(
@@ -168,10 +172,6 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
         url,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-// "category_id": "3",
-// "selectedlabel": "material_type",
-// "selectedvalue": selectedMeterial,
-// "label_name": "thickness",
           "product_label": "thickness",
           "product_filters": [selectedProduct],
           "product_label_filters": ["product_name"],
@@ -222,10 +222,6 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
         url,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-// "category_id": "3",
-// "selectedlabel": "thickness",
-// "selectedvalue": selectedThichness,
-// "label_name": "coating_mass",
           "product_label": "coating_mass",
           "product_filters": [selectedProduct],
           "product_label_filters": ["product_name"],
@@ -276,10 +272,6 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
         url,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-// "category_id": "3",
-// "selectedlabel": "coating_mass",
-// "selectedvalue": selsectedCoat,
-// "label_name": "yield_strength",
           "product_label": "yield_strength",
           "product_filters": [selectedProduct],
           "product_label_filters": ["product_name"],
@@ -370,19 +362,15 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
             });
           }
 
-// Extract base_product_id and id from message[1]
           if (message.length > 1) {
             final baseProductData = message[1];
             if (baseProductData is List && baseProductData.isNotEmpty) {
               final item = baseProductData.first;
               if (item is Map) {
                 selectedProductBaseId = item["id"]?.toString();
-                selectedBaseProductName =
-                    item["base_product_id"]?.toString(); // <-- New line
+                selectedBaseProductName = item["base_product_id"]?.toString();
                 print("Selected Product Base ID: $selectedProductBaseId");
-                print(
-                  "Base Product Name: $selectedBaseProductName",
-                ); // <-- New line
+                print("Base Product Name: $selectedBaseProductName");
               }
             }
           }
@@ -393,35 +381,23 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
     }
   }
 
-// Add these variables after line 25 (after the existing List declarations)
-  Map<String, dynamic>? apiResponseData;
-  List<dynamic> responseProducts = [];
-  Map<String, Map<String, String>> uomOptions = {};
-  bool showApiResponse = false;
-
-// 2. MODIFY the postAllData() method to store the response (replace your existing postAllData method)
-
   Future<void> postAllData() async {
     HttpClient client = HttpClient();
     client.badCertificateCallback =
         ((X509Certificate cert, String host, int port) => true);
     IOClient ioClient = IOClient(client);
 
-// From saved categoryMeta
     final categoryId = categoryMeta?["category_id"];
     final categoryName = categoryMeta?["categories"];
     print("this os $categoryId");
     print("this os $categoryName");
 
-// Use global order ID if available, otherwise null for first time
     final globalOrderManager = GlobalOrderManager();
 
-// Find the matching item from rawAccessoriesData
     final matchingAccessory = rawCUTtoLength.firstWhere(
       (item) => item["product_name"] == selectedProduct,
       orElse: () => null,
     );
-// Extract values
     final CuttolengthproID = matchingAccessory?["id"];
     print("this os $CuttolengthproID");
 
@@ -457,7 +433,6 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
         return;
       }
       if (response.statusCode == 200) {
-// STORE THE API RESPONSE
         setState(() {
           apiResponseData = jsonDecode(response.body);
           if (apiResponseData!['lebels'] != null &&
@@ -472,14 +447,15 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
           orderNO = orderNos.isEmpty ? "Unknown" : orderNos;
           showApiResponse = true;
 
-// Set global order ID if this is the first time
           if (!globalOrderManager.hasGlobalOrderId()) {
             globalOrderManager.setGlobalOrderId(int.parse(orderID), orderNO!);
           }
 
-// Update local variables
           orderIDD = globalOrderManager.globalOrderId;
           orderNO = globalOrderManager.globalOrderNo;
+
+          // Recalculate total amount after adding a product
+          _updateTotalAmount();
         });
       }
     } catch (e) {
@@ -487,15 +463,36 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
     }
   }
 
+  // New method to calculate total amount from responseProducts
+  void _updateTotalAmount() {
+    double total = 0.0;
+    for (var product in responseProducts) {
+      String amountText = product["Amount"]?.toString() ?? "0";
+      double amount = double.tryParse(amountText) ?? 0.0;
+      total += amount;
+    }
+    setState(() {
+      billamt = total;
+    });
+    print("Total amount updated to: $billamt");
+  }
+
   ///delete cards ///
-  Future<void> deleteCards(String deleteId) async {
+  Future<void> deleteCards(String deleteId, int index) async {
     final url = '$apiUrl/enquirydelete/$deleteId';
     try {
       final response = await http.delete(
         Uri.parse(url),
       );
       if (response.statusCode == 200) {
-        print("delee response ${response.statusCode}");
+        print("delete response ${response.statusCode}");
+        setState(() {
+          responseProducts.removeAt(index);
+          // Recalculate total amount after deletion
+          _updateTotalAmount();
+          // Update showApiResponse based on whether products remain
+          showApiResponse = responseProducts.isNotEmpty;
+        });
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             backgroundColor: Colors.red.shade400,
@@ -515,7 +512,6 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
     }
   }
 
-// 4. ADD THIS NEW METHOD to build individual API response items
   Widget _buildProductDetailInRows(Map<String, dynamic> data) {
     return Padding(
       padding: const EdgeInsets.all(8.0),
@@ -590,9 +586,7 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
     );
   }
 
-// 5. ADD THESE HELPER METHODS for the API response fields
   Widget _uomDropdownFromApi(Map<String, dynamic> data) {
-// Extract UOM data from the product data
     Map<String, dynamic>? uomData = data['UOM'];
     String? currentValue = uomData?['value']?.toString();
     Map<String, dynamic>? options =
@@ -686,7 +680,6 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
             data['Billing Option']['value'] = val;
             data['Billing Option']['options'] = options;
           });
-// Trigger calculation when billing option changes
           _debounceCalculation(data);
         },
         decoration: InputDecoration(
@@ -745,11 +738,6 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
           print("Controller text: ${controller.text}");
           print("Data after change: ${data[key]}");
 
-// 🚫 DO NOT forcefully reset controller.text here!
-// if (controller.text != val) {
-//   controller.text = val;
-// }
-
           if (key == "Length" ||
               key == "Nos" ||
               key == "Basic Rate" ||
@@ -806,10 +794,7 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
     );
   }
 
-  /// Base View Products data //
   TextEditingController baseProductController = TextEditingController();
-
-// List<dynamic> baseProductResults = [];
   bool isSearchingBaseProduct = false;
   String? selectedBaseProduct;
   FocusNode baseProductFocusNode = FocusNode();
@@ -867,7 +852,6 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
   Widget _buildBaseProductSearchField(Map<String, dynamic> data) {
     String productId = data["id"].toString();
 
-// Create a unique controller for this product if it doesn't exist
     if (!baseProductControllers.containsKey(productId)) {
       baseProductControllers[productId] = TextEditingController();
       baseProductFocusNodes[productId] = FocusNode();
@@ -1094,7 +1078,6 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
         print("Base product updated successfully: $responseData");
         print("Product Id  xxxx $productId");
 
-// Show success message to user
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text("Base product updated successfully!"),
@@ -1106,7 +1089,6 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
             "Failed to update base product. Status code: ${response.statusCode}");
         print("Response body: ${response.body}");
 
-// Show error message to user
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text("Failed to update base product. Please try again."),
@@ -1117,7 +1099,6 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
     } catch (e) {
       print("Error updating base product: $e");
 
-// Show error message to user
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text("Error updating base product: $e"),
@@ -1129,13 +1110,11 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
     }
   }
 
-// Method to call when user wants to update the selected base product
   void updateSelectedBaseProduct(String productId) {
     if (selectedBaseProducts[productId] != null &&
         selectedBaseProducts[productId]!.isNotEmpty) {
       setState(() {
         isBaseProductUpdated = true;
-// baseProductController.clear();
       });
       updateBaseProduct(productId, selectedBaseProducts[productId]!);
     } else {
@@ -1155,7 +1134,6 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
         selsectedCoat == null ||
         selectedyie == null ||
         selectedBrand == null) {
-// Show elegant error message
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
@@ -1194,7 +1172,6 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
         selectedBrand = null;
       });
 
-// Show success message with a more elegant snackBar
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Row(
@@ -1244,8 +1221,6 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
       );
     }
 
-    ///old column
-
     return Column(
       children: responseProducts.asMap().entries.map((entry) {
         int index = entry.key;
@@ -1271,7 +1246,7 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
                         height: 40.h,
                         width: 210.w,
                         child: Text(
-                          "  ${index + 1}.  ${data["Products"]}" ?? "",
+                          "  ${index + 1}.  ${data["Products"] ?? ""}",
                           overflow: TextOverflow.ellipsis,
                           style: GoogleFonts.figtree(
                             fontSize: 18,
@@ -1324,10 +1299,7 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
                                 actions: [
                                   ElevatedButton(
                                     onPressed: () {
-                                      setState(() {
-                                        deleteCards(data["id"].toString());
-                                        responseProducts.removeAt(index);
-                                      });
+                                      deleteCards(data["id"].toString(), index);
                                       Navigator.pop(context);
                                     },
                                     child: Text("Yes"),
@@ -1358,22 +1330,18 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
 
   Timer? _debounceTimer;
   Map<String, dynamic> calculationResults = {};
-  Map<String, String?> previousUomValues = {}; // Track previous UOM values
-  Map<String, Map<String, TextEditingController>> fieldControllers =
-      {}; // Store controllers
+  Map<String, String?> previousUomValues = {};
+  Map<String, Map<String, TextEditingController>> fieldControllers = {};
 
-// Method to get or create controller for each field
   TextEditingController _getController(Map<String, dynamic> data, String key) {
     String productId = data["id"].toString();
 
-// Initialize controllers map for this product ID
     fieldControllers.putIfAbsent(productId, () => {});
 
-// If controller for this key doesn't exist, create it
     if (!fieldControllers[productId]!.containsKey(key)) {
       String initialValue = (data[key] != null && data[key].toString() != "0")
           ? data[key].toString()
-          : ""; // Avoid initializing with "0"
+          : "";
 
       fieldControllers[productId]![key] = TextEditingController(
         text: initialValue,
@@ -1381,12 +1349,9 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
 
       print("Created controller for [$key] with value: '$initialValue'");
     } else {
-// Existing controller: check if it needs sync from data
       final controller = fieldControllers[productId]![key]!;
-
       final dataValue = data[key]?.toString() ?? "";
 
-// If the controller is empty but data has a value, sync it
       if (controller.text.isEmpty && dataValue.isNotEmpty && dataValue != "0") {
         controller.text = dataValue;
         print("Synced controller for [$key] to: '$dataValue'");
@@ -1396,7 +1361,6 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
     return fieldControllers[productId]![key]!;
   }
 
-// Add this method for debounced calculation
   void _debounceCalculation(Map<String, dynamic> data) {
     _debounceTimer?.cancel();
     _debounceTimer = Timer(Duration(seconds: 1), () {
@@ -1404,249 +1368,30 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
     });
   }
 
-//   Future<void> _performCalculation(Map<String, dynamic> data) async {
-//     print("=== STARTING CALCULATION API ===");
-//     print("Data received: $data");
-//
-//     final client = IOClient(
-//       HttpClient()..badCertificateCallback = (_, __, ___) => true,
-//     );
-//     final url = Uri.parse('$apiUrl/calculation');
-//
-//     String productId = data["id"].toString();
-//
-// // Get current UOM value
-//     String? currentUom;
-//     if (data["UOM"] is Map) {
-//       currentUom = data["UOM"]["value"]?.toString();
-//     } else {
-//       currentUom = data["UOM"]?.toString();
-//     }
-//
-//     print("Current UOM: $currentUom");
-//     print("Previous UOM: ${previousUomValues[productId]}");
-//
-// // Get Profile value from controller
-//     double? profileValue;
-//     String? profileText;
-//
-//     if (fieldControllers.containsKey(productId) &&
-//         fieldControllers[productId]!.containsKey("Length")) {
-//       profileText = data["Length"]?.toString(); // First check the latest data
-//       if (profileText == null || profileText.isEmpty) {
-//         profileText = fieldControllers[productId]!["Length"]!
-//             .text; // Then check controller
-//       }
-//       print("Length/Profile from data/controller: $profileText");
-//     }
-//
-//     if (profileText != null && profileText.isNotEmpty) {
-//       profileValue = double.tryParse(profileText);
-//       print("Parsed profile value: $profileValue");
-//     }
-//
-// // Get Nos value from controller
-//     int nosValue = 0;
-//     String? nosText;
-//
-//     if (fieldControllers.containsKey(productId) &&
-//         fieldControllers[productId]!.containsKey("Nos")) {
-//       nosText = fieldControllers[productId]!["Nos"]!.text;
-//       print("Nos from controller: $nosText");
-//     }
-//
-//     if (nosText == null || nosText.isEmpty) {
-//       nosText = data["Nos"]?.toString();
-//       print("Nos from data: $nosText");
-//     }
-//
-//     if (nosText != null && nosText.isNotEmpty) {
-//       nosValue = int.tryParse(nosText) ?? 1;
-//     }
-//
-// // Get Crimp value
-//     double? crimpValue;
-//     String? crimpText = data["Crimp"]?.toString();
-//
-//     if (crimpText == null || crimpText.isEmpty || crimpText == "0") {
-//       if (fieldControllers.containsKey(productId) &&
-//           fieldControllers[productId]!.containsKey("Crimp")) {
-//         crimpText = fieldControllers[productId]!["Crimp"]!.text.trim();
-//       }
-//     }
-//
-//     if (crimpText != null && crimpText.isNotEmpty) {
-//       crimpValue = double.tryParse(crimpText);
-//       print("Using crimp value: $crimpValue from text: $crimpText");
-//     }
-//
-//     print("Final Profile Value: $profileValue");
-//     print("Final Nos Value: $nosValue");
-//
-//     final requestBody = {
-//       "id": int.tryParse(data["id"].toString()) ?? 0,
-//       "category_id": 626,
-//       "product": data["Products"]?.toString() ?? "",
-//       "height": null,
-//       "previous_uom": previousUomValues[productId] != null
-//           ? int.tryParse(previousUomValues[productId]!)
-//           : null,
-//       "current_uom": currentUom != null ? int.tryParse(currentUom) : null,
-//       "length": profileValue ?? 0,
-//       "nos": nosValue,
-//       "basic_rate": double.tryParse(data["Basic Rate"]?.toString() ?? "0") ?? 0,
-//       "billing_option": data["Billing Option"] is Map
-//           ? int.tryParse(data["Billing Option"]["value"]?.toString() ?? "2")
-//           : null,
-//     };
-//
-//     print("Request Body: ${jsonEncode(requestBody)}");
-//
-//     try {
-//       final response = await client.post(
-//         url,
-//         headers: {'Content-Type': 'application/json'},
-//         body: jsonEncode(requestBody),
-//       );
-//
-//       print("Response Status: ${response.statusCode}");
-//       print("Response Body: ${response.body}");
-//
-//       if (response.statusCode == 200) {
-//         final responseData = jsonDecode(response.body);
-//
-//         if (responseData["status"] == "success") {
-//           setState(() {
-//             billamt = responseData["bill_total"].toDouble() ?? 0.0;
-//             print("billamt updated to: $billamt");
-//             calculationResults[productId] = responseData;
-//
-// // Update Profile/Length
-//             if (responseData["profile"] != null) {
-//               String newProfile = responseData["profile"].toString();
-// // Only update if calculation returned different value
-//               if (data["Length"]?.toString() != newProfile) {
-//                 data["Length"] = newProfile;
-//                 if (fieldControllers[productId]?["Length"] != null) {
-//                   fieldControllers[productId]!["Length"]!.text = newProfile;
-//                 }
-//                 print("Length/Profile updated to: $newProfile");
-//               }
-//             }
-//
-// // Update Nos
-//             if (responseData["Nos"] != null) {
-//               String newNos = responseData["Nos"].toString().trim();
-//               String currentInput =
-//                   fieldControllers[productId]!["Nos"]!.text.trim();
-//
-//               if (currentInput.isEmpty || currentInput == "0") {
-//                 data["Nos"] = newNos;
-//                 if (fieldControllers[productId]?["Nos"] != null) {
-//                   fieldControllers[productId]!["Nos"]!.text = newNos;
-//                 }
-//                 print("Nos field updated to: $newNos");
-//               } else {
-//                 print("Nos NOT updated because user input = '$currentInput'");
-//               }
-//             }
-//
-// // Update Crimp
-//             if (responseData["crimp"] != null) {
-//               String newCrimp = responseData["crimp"].toString();
-//               if (newCrimp != "0" && newCrimp != "0.0") {
-//                 data["Crimp"] = newCrimp;
-//                 if (fieldControllers[productId]?["Crimp"] != null) {
-//                   String currentCrimp =
-//                       fieldControllers[productId]!["Crimp"]!.text.trim();
-//                   if (currentCrimp.isEmpty || currentCrimp == "0") {
-//                     fieldControllers[productId]!["Crimp"]!.text = newCrimp;
-//                     print("Crimp field updated to: $newCrimp");
-//                   }
-//                 }
-//               }
-//             }
-//
-// // Update SQMtr
-//             if (responseData["qty"] != null) {
-//               data["qty"] = responseData["qty"].toString();
-//               if (fieldControllers[productId]?["qty"] != null) {
-//                 fieldControllers[productId]!["qty"]!.text =
-//                     responseData["qty"].toString();
-//               }
-//             }
-//
-//             if (responseData["cgst"] != null) {
-//               data["cgst"] = responseData["cgst"].toString();
-//               if (fieldControllers[productId]?["cgst"] != null) {
-//                 fieldControllers[productId]!["cgst"]!.text =
-//                     responseData["cgst"].toString();
-//               }
-//             }
-//             if (responseData["sgst"] != null) {
-//               data["sgst"] = responseData["sgst"].toString();
-//               if (fieldControllers[productId]?["sgst"] != null) {
-//                 fieldControllers[productId]!["sgst"]!.text =
-//                     responseData["sgst"].toString();
-//               }
-//             }
-//
-// // Update Amount
-//             if (responseData["Amount"] != null) {
-//               data["Amount"] = responseData["Amount"].toString();
-//               if (fieldControllers[productId]?["Amount"] != null) {
-//                 fieldControllers[productId]!["Amount"]!.text =
-//                     responseData["Amount"].toString();
-//               }
-//             }
-//             previousUomValues[productId] = currentUom;
-//           });
-//
-//           print("=== CALCULATION SUCCESS ===");
-//           print(
-//             "Updated data: Length=${data["Profile"]}, Nos=${data["Nos"]}, Height=${data["Crimp"]}, Amount=${data["Amount"]}",
-//           );
-//         } else {
-//           print("API returned error status: ${responseData["status"]}");
-//         }
-//       } else {
-//         print("HTTP Error: ${response.statusCode}");
-//       }
-//     } catch (e) {
-//       print("Calculation API Error: $e");
-//     }
-//   }
-
-  // Helper method to get field value prioritizing controller over data
   String _getFieldValue(
       String productId, String fieldName, Map<String, dynamic> data) {
     String? value;
 
-    // First priority: Controller text (what user typed)
     if (fieldControllers.containsKey(productId) &&
         fieldControllers[productId]!.containsKey(fieldName)) {
       value = fieldControllers[productId]![fieldName]!.text.trim();
       print("$fieldName from controller: '$value'");
     }
 
-    // Second priority: Data map
     if (value == null || value.isEmpty) {
       value = data[fieldName]?.toString();
       print("$fieldName from data: '$value'");
     }
 
-    // Return empty string if still null
     return value ?? "";
   }
 
-// Helper method to check if a string represents a valid non-zero number (including decimals)
   bool _isValidNonZeroNumber(String value) {
     if (value.isEmpty) return false;
 
     double? parsedValue = double.tryParse(value);
     if (parsedValue == null) return false;
 
-    // Consider any non-zero value as valid (including small decimals like 0.055)
     return parsedValue != 0.0;
   }
 
@@ -1661,7 +1406,6 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
 
     String productId = data["id"].toString();
 
-    // Get current UOM value
     String? currentUom;
     if (data["UOM"] is Map) {
       currentUom = data["UOM"]["value"]?.toString();
@@ -1672,24 +1416,20 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
     print("Current UOM: $currentUom");
     print("Previous UOM: ${previousUomValues[productId]}");
 
-    // Use helper method to get field values
     String lengthText = _getFieldValue(productId, "Length", data);
     String nosText = _getFieldValue(productId, "Nos", data);
     String crimpText = _getFieldValue(productId, "Crimp", data);
 
-    // Parse Length - include decimal values
     double profileValue = 0.0;
     if (_isValidNonZeroNumber(lengthText)) {
       profileValue = double.tryParse(lengthText) ?? 0.0;
     }
 
-    // Parse Nos - for Nos, still treat "0" as invalid but allow decimals
     int nosValue = 1;
     if (_isValidNonZeroNumber(nosText)) {
       nosValue = int.tryParse(nosText) ?? 1;
     }
 
-    // Parse Crimp - include decimal values
     double? crimpValue;
     if (_isValidNonZeroNumber(crimpText)) {
       crimpValue = double.tryParse(crimpText);
@@ -1702,7 +1442,7 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
       "id": int.tryParse(data["id"].toString()) ?? 0,
       "category_id": 626,
       "product": data["Products"]?.toString() ?? "",
-      "height": crimpValue, // Send crimp as double to preserve decimals
+      "height": crimpValue,
       "previous_uom": previousUomValues[productId] != null
           ? int.tryParse(previousUomValues[productId]!)
           : null,
@@ -1736,7 +1476,6 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
             print("billamt updated to: $billamt");
             calculationResults[productId] = responseData;
 
-            // Update Profile/Length - only if API returns a different value
             if (responseData["profile"] != null) {
               String newProfile = responseData["profile"].toString();
               if (_isValidNonZeroNumber(newProfile) &&
@@ -1749,7 +1488,6 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
               }
             }
 
-            // Also check for "length" field in response (in case API uses different field name)
             if (responseData["length"] != null) {
               String newLength = responseData["length"].toString();
               if (_isValidNonZeroNumber(newLength) && newLength != lengthText) {
@@ -1761,7 +1499,6 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
               }
             }
 
-            // Update Nos - only if user hasn't provided input
             if (responseData["Nos"] != null) {
               String newNos = responseData["Nos"].toString().trim();
               String currentInput =
@@ -1778,7 +1515,6 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
               }
             }
 
-            // Update Crimp - only if API returns a different value
             if (responseData["crimp"] != null) {
               String newCrimp = responseData["crimp"].toString();
               if (_isValidNonZeroNumber(newCrimp) && newCrimp != crimpText) {
@@ -1790,7 +1526,6 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
               }
             }
 
-            // Update qty (instead of SQMtr for this API)
             if (responseData["qty"] != null) {
               data["qty"] = responseData["qty"].toString();
               if (fieldControllers[productId]?["qty"] != null) {
@@ -1815,7 +1550,6 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
               }
             }
 
-            // Update Amount
             if (responseData["Amount"] != null) {
               data["Amount"] = responseData["Amount"].toString();
               if (fieldControllers[productId]?["Amount"] != null) {
@@ -1825,6 +1559,8 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
             }
 
             previousUomValues[productId] = currentUom;
+            // Update total amount after calculation
+            _updateTotalAmount();
           });
 
           print("=== CALCULATION SUCCESS ===");
@@ -2062,8 +1798,7 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
                     ),
                   ),
                 ),
-                SizedBox(height: 24),
-                if (submittedData.isNotEmpty) ...[
+                if (showApiResponse && responseProducts.isNotEmpty) ...[
                   SizedBox(height: 24),
                   Container(
                     padding: EdgeInsets.all(16),
@@ -2209,7 +1944,7 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
                                       ),
                                       SizedBox(height: 4),
                                       Text(
-                                        "₹${billamt ?? 0.0}",
+                                        "₹${billamt?.toStringAsFixed(2) ?? 0.0}",
                                         style: TextStyle(
                                           color: Colors.white,
                                           fontSize: 20,
@@ -2295,7 +2030,6 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
               ),
             ),
             constraints: BoxConstraints(maxHeight: 300),
-// borderRadius: BorderRadius.circular(12),
           ),
         ),
       ),
