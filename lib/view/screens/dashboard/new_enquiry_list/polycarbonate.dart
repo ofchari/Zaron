@@ -1269,7 +1269,7 @@ class _PolycarbonateState extends State<Polycarbonate> {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text(
-                                "Decking Sheets",
+                                "Polycarbonate",
                                 style: GoogleFonts.poppins(
                                   fontWeight: FontWeight.w600,
                                   color: Colors.grey.shade700,

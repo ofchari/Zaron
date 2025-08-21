@@ -757,6 +757,7 @@ class _UpvcTilesState extends State<UpvcTiles> {
   }
 
   Timer? debounceTimer;
+
   Map<String, String?> previousUomValues = {}; // Track previous UOM values
   Map<String, Map<String, TextEditingController>> fieldControllers =
       {}; // Store controllers

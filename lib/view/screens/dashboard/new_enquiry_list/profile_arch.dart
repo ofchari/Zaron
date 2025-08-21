@@ -1913,7 +1913,7 @@ class _ProfileRidgeAndArchState extends State<ProfileRidgeAndArch> {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text(
-                                "Decking Sheets",
+                                "Profile Ridge & Arch",
                                 style: GoogleFonts.poppins(
                                   fontWeight: FontWeight.w600,
                                   color: Colors.grey.shade700,

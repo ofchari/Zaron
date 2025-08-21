@@ -1263,7 +1263,7 @@ class _ScrewState extends State<Screw> {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text(
-                                "Decking Sheets",
+                                "Screw",
                                 style: GoogleFonts.poppins(
                                   fontWeight: FontWeight.w600,
                                   color: Colors.grey.shade700,

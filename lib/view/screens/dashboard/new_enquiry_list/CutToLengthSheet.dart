@@ -1944,7 +1944,7 @@ class _CutToLengthSheetState extends State<CutToLengthSheet> {
                                       ),
                                       SizedBox(height: 4),
                                       Text(
-                                        "₹${billamt?.toStringAsFixed(2) ?? 0.0}",
+                                        "₹${billamt ?? 0}",
                                         style: TextStyle(
                                           color: Colors.white,
                                           fontSize: 20,

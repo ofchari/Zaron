@@ -762,7 +762,13 @@ class _TileSheetPageState extends State<TileSheetPage> {
     );
   }
 
+// Modified _editableTextField method to handle Length as dropdown
   Widget _editableTextField(Map<String, dynamic> data, String key) {
+    // If the field is Length, return dropdown instead
+    if (key == "Length") {
+      return _lengthDropdown(data);
+    }
+
     final controller = _getController(data, key);
 
     return SizedBox(
@@ -781,8 +787,7 @@ class _TileSheetPageState extends State<TileSheetPage> {
           fontSize: 15.sp,
         ),
         controller: controller,
-        keyboardType: (key == "Length" ||
-                key == "Nos" ||
+        keyboardType: (key == "Nos" ||
                 key == "Basic Rate" ||
                 key == "Amount" ||
                 key == "SQMtr" ||
@@ -799,12 +804,7 @@ class _TileSheetPageState extends State<TileSheetPage> {
           print("Controller text: ${controller.text}");
           print("Data after change: ${data[key]}");
 
-          // 🚫 DO NOT forcefully reset controller.text here!
-          // if (controller.text != val) {
-          //   controller.text = val;
-          // }
-
-          if (key == "Length" || key == "Nos" || key == "Basic Rate") {
+          if (key == "Nos" || key == "Basic Rate") {
             print("Triggering calculation for $key with value: $val");
             _debounceCalculation(data);
           }
@@ -1022,6 +1022,13 @@ class _TileSheetPageState extends State<TileSheetPage> {
     });
   }
 
+// Add these variables to your class
+  Map<String, List<String>> availableLengths =
+      {}; // Store length options for each product
+  Map<String, String?> selectedLengths =
+      {}; // Store selected length for each product
+
+// Complete _performCalculation method with all keys and values
   Future<void> _performCalculation(Map<String, dynamic> data) async {
     print("=== STARTING CALCULATION API ===");
     print("Data received: $data");
@@ -1044,16 +1051,19 @@ class _TileSheetPageState extends State<TileSheetPage> {
     print("Current UOM: $currentUom");
     print("Previous UOM: ${previousUomValues[productId]}");
 
-    // Get Length value from controller
+    // Get Length value from selected dropdown
     double lengthValue = 0;
     String? lengthText;
 
-    if (fieldControllers.containsKey(productId) &&
-        fieldControllers[productId]!.containsKey("Length")) {
-      lengthText = fieldControllers[productId]!["Length"]!.text;
-      print("Length from controller: $lengthText");
+    // First check if we have a selected length for this product
+    if (selectedLengths.containsKey(productId) &&
+        selectedLengths[productId] != null &&
+        selectedLengths[productId]!.isNotEmpty) {
+      lengthText = selectedLengths[productId];
+      print("Length from dropdown: $lengthText");
     }
 
+    // Fallback to data if no dropdown selection
     if (lengthText == null || lengthText.isEmpty) {
       lengthText = data["Length"]?.toString();
       print("Length from data: $lengthText");
@@ -1082,7 +1092,7 @@ class _TileSheetPageState extends State<TileSheetPage> {
       nosValue = int.tryParse(nosText) ?? 1;
     }
 
-    print("Final Profile Value: $lengthValue");
+    print("Final Length Value: $lengthValue");
     print("Final Nos Value: $nosValue");
 
     final requestBody = {
@@ -1116,25 +1126,81 @@ class _TileSheetPageState extends State<TileSheetPage> {
 
         if (responseData["status"] == "success") {
           setState(() {
-            billamt = responseData["bill_total"].toDouble() ?? 0.0;
-
+            // Update bill amount
+            billamt = responseData["bill_total"]?.toDouble() ?? 0.0;
             print("billamt updated to: $billamt");
+
+            // Store calculation results
             calculationResults[productId] = responseData;
 
-            // Handle Length update
+            // UPDATED: Extract and store available lengths from profile array
+            if (responseData["profile"] != null &&
+                responseData["profile"] is List) {
+              Set<String> lengthSet = {}; // Use Set to avoid duplicates
+
+              for (var profile in responseData["profile"]) {
+                // Check for all possible length units
+                String? lengthValue;
+
+                if (profile["length_mm"] != null) {
+                  lengthValue = profile["length_mm"].toString().trim();
+                } else if (profile["length_feet"] != null) {
+                  lengthValue = profile["length_feet"].toString().trim();
+                } else if (profile["length_mtr"] != null) {
+                  lengthValue = profile["length_mtr"].toString().trim();
+                } else if (profile["length_inch"] != null) {
+                  lengthValue = profile["length_inch"].toString().trim();
+                }
+
+                // Only add non-empty values
+                if (lengthValue != null &&
+                    lengthValue.isNotEmpty &&
+                    lengthValue != "0" &&
+                    lengthValue != "0.0") {
+                  lengthSet.add(lengthValue);
+                }
+              }
+
+              // Convert to list and sort numerically
+              List<String> lengths = lengthSet.toList();
+              lengths.sort((a, b) {
+                double aNum = double.tryParse(a) ?? 0;
+                double bNum = double.tryParse(b) ?? 0;
+                return aNum.compareTo(bNum);
+              });
+
+              availableLengths[productId] = lengths;
+              print("Available lengths for product $productId: $lengths");
+
+              // IMPORTANT: Set initial selected value if not already set
+              if (selectedLengths[productId] == null && lengths.isNotEmpty) {
+                // Try to find current length in available options
+                String? currentLength = data["Length"]?.toString()?.trim();
+                if (currentLength != null && lengths.contains(currentLength)) {
+                  selectedLengths[productId] = currentLength;
+                } else {
+                  // If current length not in list, set to first available option
+                  selectedLengths[productId] = lengths.first;
+                  data["Length"] = lengths.first;
+                }
+                print(
+                    "Initial length selection set to: ${selectedLengths[productId]}");
+              }
+            }
+
+            // Handle Length update - set the selected dropdown value
             if (responseData["length"] != null) {
               String newLength = responseData["length"].toString().trim();
               data["Length"] = newLength;
-              if (fieldControllers[productId]?["Length"] != null) {
-                fieldControllers[productId]!["Length"]!.text = newLength;
-              }
-              print("Length field updated to: $newLength");
+              selectedLengths[productId] = newLength;
+              print("Length dropdown updated to: $newLength");
             }
 
+            // Handle Nos field update
             if (responseData["Nos"] != null) {
               String newNos = responseData["Nos"].toString().trim();
               String currentInput =
-                  fieldControllers[productId]!["Nos"]!.text.trim();
+                  fieldControllers[productId]?["Nos"]?.text.trim() ?? "";
 
               if (currentInput.isEmpty || currentInput == "0") {
                 data["Nos"] = newNos;
@@ -1147,53 +1213,184 @@ class _TileSheetPageState extends State<TileSheetPage> {
               }
             }
 
+            // Handle SQMtr field update
             if (responseData["sqmtr"] != null) {
               data["SQMtr"] = responseData["sqmtr"].toString();
               if (fieldControllers[productId]?["SQMtr"] != null) {
                 fieldControllers[productId]!["SQMtr"]!.text =
                     responseData["sqmtr"].toString();
               }
+              print("SQMtr field updated to: ${responseData["sqmtr"]}");
             }
 
+            // Handle CGST field update
             if (responseData["cgst"] != null) {
               data["cgst"] = responseData["cgst"].toString();
               if (fieldControllers[productId]?["cgst"] != null) {
                 fieldControllers[productId]!["cgst"]!.text =
                     responseData["cgst"].toString();
               }
+              print("CGST field updated to: ${responseData["cgst"]}");
             }
+
+            // Handle SGST field update
             if (responseData["sgst"] != null) {
               data["sgst"] = responseData["sgst"].toString();
               if (fieldControllers[productId]?["sgst"] != null) {
                 fieldControllers[productId]!["sgst"]!.text =
                     responseData["sgst"].toString();
               }
+              print("SGST field updated to: ${responseData["sgst"]}");
             }
 
+            // Handle Amount field update
             if (responseData["Amount"] != null) {
               data["Amount"] = responseData["Amount"].toString();
               if (fieldControllers[productId]?["Amount"] != null) {
                 fieldControllers[productId]!["Amount"]!.text =
                     responseData["Amount"].toString();
               }
+              print("Amount field updated to: ${responseData["Amount"]}");
             }
 
+            // Handle Basic Rate update (if provided in response)
+            if (responseData["rate"] != null) {
+              data["Basic Rate"] = responseData["rate"].toString();
+              if (fieldControllers[productId]?["Basic Rate"] != null) {
+                fieldControllers[productId]!["Basic Rate"]!.text =
+                    responseData["rate"].toString();
+              }
+              print("Basic Rate field updated to: ${responseData["rate"]}");
+            }
+
+            // Store the current UOM as previous UOM for next calculation
             previousUomValues[productId] = currentUom;
           });
 
           print("=== CALCULATION SUCCESS ===");
           print(
-            "Updated data: Length=${data["Profile"]}, Nos=${data["Nos"]}, R.Ft=${data["R.Ft"]}, Amount=${data["Amount"]}",
+            "Updated data: Length=${data["Length"]}, Nos=${data["Nos"]}, SQMtr=${data["SQMtr"]}, Amount=${data["Amount"]}, CGST=${data["cgst"]}, SGST=${data["sgst"]}",
           );
         } else {
           print("API returned error status: ${responseData["status"]}");
+          // Handle error message if provided
+          if (responseData["message"] != null) {
+            print("Error message: ${responseData["message"]}");
+          }
         }
       } else {
         print("HTTP Error: ${response.statusCode}");
+        print("Response body: ${response.body}");
       }
     } catch (e) {
       print("Calculation API Error: $e");
+      // You might want to show a user-friendly error message here
+      // ScaffoldMessenger.of(context).showSnackBar(
+      //   SnackBar(content: Text('Calculation failed. Please try again.')),
+      // );
+    } finally {
+      client.close();
     }
+  }
+
+// SOLUTION 2: Enhanced _lengthDropdown method with better error handling
+  Widget _lengthDropdown(Map<String, dynamic> data) {
+    String productId = data["id"].toString();
+    List<String> lengths = availableLengths[productId] ?? [];
+
+    // If no lengths available, show a loading or empty state
+    if (lengths.isEmpty) {
+      return SizedBox(
+        height: 38.h,
+        child: Container(
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.grey[300]!),
+            borderRadius: BorderRadius.circular(6),
+            color: Colors.grey[50],
+          ),
+          child: Center(
+            child: Text(
+              "Loading lengths...",
+              style: GoogleFonts.figtree(
+                fontWeight: FontWeight.w400,
+                color: Colors.grey[600],
+                fontSize: 15.sp,
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    // Ensure selected value is valid
+    String? selectedValue = selectedLengths[productId];
+    if (selectedValue != null && !lengths.contains(selectedValue)) {
+      selectedValue = null;
+      selectedLengths[productId] = null;
+    }
+
+    return SizedBox(
+      height: 38.h,
+      child: DropdownButtonFormField<String>(
+        value: selectedValue,
+        decoration: InputDecoration(
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(6),
+            borderSide: BorderSide(color: Colors.grey[300]!),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(6),
+            borderSide: BorderSide(color: Colors.grey[300]!),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(6),
+            borderSide: BorderSide(
+              color: Theme.of(context).primaryColor,
+              width: 2,
+            ),
+          ),
+          filled: true,
+          fillColor: Colors.grey[50],
+        ),
+        hint: Text(
+          "Select Length",
+          style: GoogleFonts.figtree(
+            fontWeight: FontWeight.w400,
+            color: Colors.grey[600],
+            fontSize: 15.sp,
+          ),
+        ),
+        style: GoogleFonts.figtree(
+          fontWeight: FontWeight.w500,
+          color: Colors.black,
+          fontSize: 15.sp,
+        ),
+        items: lengths.map((String length) {
+          return DropdownMenuItem<String>(
+            value: length,
+            child: Text('$length ft'),
+          );
+        }).toList(),
+        onChanged: (String? newValue) {
+          if (newValue != null) {
+            setState(() {
+              selectedLengths[productId] = newValue;
+              data["Length"] = newValue;
+            });
+
+            print("Length dropdown changed to: $newValue");
+            _debounceCalculation(data);
+          }
+        },
+        isExpanded: true,
+        icon: Icon(
+          Icons.keyboard_arrow_down,
+          color: Colors.grey[600],
+        ),
+      ),
+    );
   }
 
   @override
@@ -1472,7 +1669,7 @@ class _TileSheetPageState extends State<TileSheetPage> {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text(
-                                "Decking Sheets",
+                                "Tile Sheets",
                                 style: GoogleFonts.poppins(
                                   fontWeight: FontWeight.w600,
                                   color: Colors.grey.shade700,
