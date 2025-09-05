@@ -58,6 +58,7 @@ class _AccessoriesState extends State<Accessories> {
   Timer? _debounceTimer;
   String? categoryyName;
   String? orderNoo;
+
   final Map<String, TextEditingController> baseProductControllers = {};
   final Map<String, FocusNode> baseProductFocusNodes = {};
 

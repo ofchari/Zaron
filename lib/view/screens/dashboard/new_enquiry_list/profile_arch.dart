@@ -1640,366 +1640,301 @@ class _ProfileRidgeAndArchState extends State<ProfileRidgeAndArch> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Subhead(
-          text: ' Profile Ridge & Arch',
-          weight: FontWeight.w500,
-          color: Colors.black,
-        ),
-        centerTitle: true,
-        elevation: 0,
-        backgroundColor: Colors.white,
-      ),
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [Colors.white, Colors.grey.shade50],
+        appBar: AppBar(
+          title: Subhead(
+            text: 'Profile Ridge & Arch',
+            weight: FontWeight.w500,
+            color: Colors.black,
           ),
+          centerTitle: true,
+          elevation: 0,
+          backgroundColor: Colors.white,
         ),
-        child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-          child: SingleChildScrollView(
-            physics: BouncingScrollPhysics(),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.05),
-                        blurRadius: 10,
-                        offset: Offset(0, 5),
-                      ),
-                    ],
-                  ),
-                  child: Padding(
-                    padding:
-                        EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-                    child: Form(
-                      key: _formKey,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Subhead(
-                            text: "Add New Product",
-                            weight: FontWeight.w600,
-                            color: Colors.black,
-                          ),
-                          SizedBox(height: 16),
-                          _buildAnimatedDropdown(
-                            materialList,
-                            selectedMaterial,
-                            (value) {
-                              setState(() {
-                                selectedMaterial = value;
-                              });
-// _fetchProductName();
-                            },
-// enabled: productList.isNotEmpty,
-                            label: "Material Type",
-                            icon: Icons.difference_outlined,
-                          ),
-                          _buildAnimatedDropdown(
-                            brandandList,
-                            selectedBrands,
-                            (value) {
-                              setState(() {
-                                selectedBrands = value;
-
-                                ///clear fields
-                                selectedColors = null;
-                                selectedThickness = null;
-                                selectedCoatingMass = null;
-                                colorandList = [];
-                                thickAndList = [];
-                                coatingAndList = [];
-                              });
-                              _fetchColorData();
-                            },
-                            enabled: brandandList.isNotEmpty,
-                            label: "Brand",
-                            icon: Icons.brightness_auto_outlined,
-                          ),
-                          _buildAnimatedDropdown(
-                            colorandList,
-                            selectedColors,
-                            (value) {
-                              setState(() {
-                                selectedColors = value;
-
-                                ///clear fields
-                                selectedThickness = null;
-                                selectedCoatingMass = null;
-
-                                thickAndList = [];
-                                coatingAndList = [];
-                              });
-                              _fetchThicknessData();
-                            },
-                            enabled: colorandList.isNotEmpty,
-                            label: "Color",
-                            icon: Icons.color_lens_outlined,
-                          ),
-                          _buildAnimatedDropdown(
-                            thickAndList,
-                            selectedThickness,
-                            (value) {
-                              setState(() {
-                                selectedThickness = value;
-
-                                ///clear fields
-                                selectedCoatingMass = null;
-                                coatingAndList = [];
-                              });
-                              _fetchCoatingMassData();
-                            },
-                            enabled: thickAndList.isNotEmpty,
-                            label: "Thickness",
-                            icon: Icons.straighten_outlined,
-                          ),
-                          _buildAnimatedDropdown(
-                            coatingAndList,
-                            selectedCoatingMass,
-                            (value) {
-                              setState(() {
-                                selectedCoatingMass = value;
-                              });
-                            },
-                            enabled: coatingAndList.isNotEmpty,
-                            label: "Coating Mass",
-                            icon: Icons.layers_outlined,
-                          ),
-                          SizedBox(height: 10),
-                          Container(
-                            padding: EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              color: Colors.grey[100],
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(
-                                color: Colors.deepPurple[400]!,
-                                width: 1.5,
-                              ),
+        body: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [Colors.white, Colors.grey.shade50],
+            ),
+          ),
+          child: Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+            child: SingleChildScrollView(
+              physics: BouncingScrollPhysics(),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 10,
+                          offset: Offset(0, 5),
+                        ),
+                      ],
+                    ),
+                    child: Padding(
+                      padding:
+                          EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+                      child: Form(
+                        key: _formKey,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Subhead(
+                              text: "Add New Product",
+                              weight: FontWeight.w600,
+                              color: Colors.black,
                             ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  "Selected Product Details",
-                                  style: GoogleFonts.poppins(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
-                                    color: Colors.deepPurple[400],
-                                  ),
-                                ),
-                                SizedBox(height: 8),
-                                Text(
-                                  _selectedItems(),
-                                  style: GoogleFonts.poppins(
-                                    fontSize: 13.5,
-                                    color: Colors.black,
-                                    height: 1.5,
-                                  ),
-                                ),
-                              ],
+                            SizedBox(height: 16),
+                            _buildAnimatedDropdown(
+                              materialList,
+                              selectedMaterial,
+                              (value) {
+                                setState(() {
+                                  selectedMaterial = value;
+                                });
+                              },
+                              label: "Material Type",
+                              icon: Icons.difference_outlined,
                             ),
-                          ),
-                          SizedBox(height: 24),
-                          AnimatedContainer(
-                            duration: Duration(milliseconds: 300),
-                            width: double.infinity,
-                            height: 54.h,
-                            child: ElevatedButton(
-                              onPressed: _submitData,
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.deepPurple[400],
-                                foregroundColor: Colors.white,
-                                elevation: 0,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
+                            _buildAnimatedDropdown(
+                              brandandList,
+                              selectedBrands,
+                              (value) {
+                                setState(() {
+                                  selectedBrands = value;
+                                  selectedColors = null;
+                                  selectedThickness = null;
+                                  selectedCoatingMass = null;
+                                  colorandList = [];
+                                  thickAndList = [];
+                                  coatingAndList = [];
+                                });
+                                _fetchColorData();
+                              },
+                              enabled: brandandList.isNotEmpty,
+                              label: "Brand",
+                              icon: Icons.brightness_auto_outlined,
+                            ),
+                            _buildAnimatedDropdown(
+                              colorandList,
+                              selectedColors,
+                              (value) {
+                                setState(() {
+                                  selectedColors = value;
+                                  selectedThickness = null;
+                                  selectedCoatingMass = null;
+                                  thickAndList = [];
+                                  coatingAndList = [];
+                                });
+                                _fetchThicknessData();
+                              },
+                              enabled: colorandList.isNotEmpty,
+                              label: "Color",
+                              icon: Icons.color_lens_outlined,
+                            ),
+                            _buildAnimatedDropdown(
+                              thickAndList,
+                              selectedThickness,
+                              (value) {
+                                setState(() {
+                                  selectedThickness = value;
+                                  selectedCoatingMass = null;
+                                  coatingAndList = [];
+                                });
+                                _fetchCoatingMassData();
+                              },
+                              enabled: thickAndList.isNotEmpty,
+                              label: "Thickness",
+                              icon: Icons.straighten_outlined,
+                            ),
+                            _buildAnimatedDropdown(
+                              coatingAndList,
+                              selectedCoatingMass,
+                              (value) {
+                                setState(() {
+                                  selectedCoatingMass = value;
+                                });
+                              },
+                              enabled: coatingAndList.isNotEmpty,
+                              label: "Coating Mass",
+                              icon: Icons.layers_outlined,
+                            ),
+                            SizedBox(height: 10),
+                            Container(
+                              padding: EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: Colors.grey[100],
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: Colors.deepPurple[400]!,
+                                  width: 1.5,
                                 ),
                               ),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Icon(
-                                    Icons.add_shopping_cart_outlined,
-                                    color: Colors.white,
-                                  ),
-                                  SizedBox(width: 10),
                                   Text(
-                                    "Add Product",
+                                    "Selected Product Details",
                                     style: GoogleFonts.poppins(
                                       fontSize: 16,
                                       fontWeight: FontWeight.w600,
+                                      color: Colors.deepPurple[400],
+                                    ),
+                                  ),
+                                  SizedBox(height: 8),
+                                  Text(
+                                    _selectedItems(),
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 13.5,
+                                      color: Colors.black,
+                                      height: 1.5,
                                     ),
                                   ),
                                 ],
                               ),
                             ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-                SizedBox(height: 24),
-                if (submittedData.isNotEmpty) ...[
-                  SizedBox(height: 24),
-                  Container(
-                    padding: EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          Colors.deepPurple.shade100,
-                          Colors.blue.shade50
-                        ],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: Colors.deepPurple.shade100),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
-                          blurRadius: 10,
-                          offset: Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Container(
-                              padding: EdgeInsets.all(8),
-                              decoration: BoxDecoration(
-                                color:
-                                    Colors.deepPurple.shade100.withOpacity(0.5),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Icon(
-                                Icons.shopping_bag_outlined,
-                                color: Colors.deepPurple.shade700,
-                                size: 20,
-                              ),
-                            ),
-                            SizedBox(width: 12),
-                            Text(
-                              "Added Products",
-                              style: GoogleFonts.poppins(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.deepPurple,
-                              ),
-                            ),
-                          ],
-                        ),
-                        SizedBox(height: 16),
-                        Container(
-                          padding:
-                              EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                          decoration: BoxDecoration(
-                            color: Colors.white60,
-                            borderRadius: BorderRadius.circular(10),
-                            border: Border.all(color: Colors.grey.shade200),
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                "Profile Ridge & Arch",
-                                style: GoogleFonts.poppins(
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.grey.shade700,
-                                ),
-                              ),
-                              Container(
-                                padding: EdgeInsets.symmetric(
-                                    horizontal: 10, vertical: 4),
-                                decoration: BoxDecoration(
-                                  color: Colors.blue.shade50,
-                                  borderRadius: BorderRadius.circular(20),
-                                  border:
-                                      Border.all(color: Colors.blue.shade200),
+                            SizedBox(height: 24),
+                            AnimatedContainer(
+                              duration: Duration(milliseconds: 300),
+                              width: double.infinity,
+                              height: 54.h,
+                              child: ElevatedButton(
+                                onPressed: _submitData,
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.deepPurple[400],
+                                  foregroundColor: Colors.white,
+                                  elevation: 0,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
                                 ),
                                 child: Row(
-                                  mainAxisSize: MainAxisSize.min,
+                                  mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
                                     Icon(
-                                      Icons.receipt_outlined,
-                                      size: 14,
-                                      color: Colors.blue.shade700,
+                                      Icons.add_shopping_cart_outlined,
+                                      color: Colors.white,
                                     ),
-                                    SizedBox(width: 4),
+                                    SizedBox(width: 10),
                                     Text(
-                                      "ID: ${orderNO ?? 'N/A'}",
-                                      style: GoogleFonts.figtree(
-                                        fontSize: 13,
+                                      "Add Product",
+                                      style: GoogleFonts.poppins(
+                                        fontSize: 16,
                                         fontWeight: FontWeight.w600,
-                                        color: Colors.blue.shade700,
                                       ),
                                     ),
                                   ],
                                 ),
                               ),
-                            ],
-                          ),
-                        ),
-                        SizedBox(height: 16),
-                        Container(
-                          margin: EdgeInsets.symmetric(vertical: 4),
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [
-                                Colors.deepPurple.shade500,
-                                Colors.deepPurple.shade200
-                              ],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
                             ),
-                            borderRadius: BorderRadius.circular(16),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.blue.withOpacity(0.3),
-                                blurRadius: 8,
-                                offset: Offset(0, 4),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  // Only show "Added Products" section if responseProducts is not empty
+                  if (responseProducts.isNotEmpty) ...[
+                    SizedBox(height: 24),
+                    Container(
+                      padding: EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            Colors.deepPurple.shade100,
+                            Colors.blue.shade50
+                          ],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: Colors.deepPurple.shade100),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.05),
+                            blurRadius: 10,
+                            offset: Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Container(
+                                padding: EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: Colors.deepPurple.shade100
+                                      .withOpacity(0.5),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Icon(
+                                  Icons.shopping_bag_outlined,
+                                  color: Colors.deepPurple.shade700,
+                                  size: 20,
+                                ),
+                              ),
+                              SizedBox(width: 12),
+                              Text(
+                                "Added Products",
+                                style: GoogleFonts.poppins(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.deepPurple,
+                                ),
                               ),
                             ],
                           ),
-                          child: Padding(
-                            padding: EdgeInsets.all(10),
+                          SizedBox(height: 16),
+                          Container(
+                            padding: EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 8),
+                            decoration: BoxDecoration(
+                              color: Colors.white60,
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(color: Colors.grey.shade200),
+                            ),
                             child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Expanded(
-                                  flex: 3,
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
+                                Text(
+                                  "Profile Ridge & Arch",
+                                  style: GoogleFonts.poppins(
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.grey.shade700,
+                                  ),
+                                ),
+                                Container(
+                                  padding: EdgeInsets.symmetric(
+                                      horizontal: 10, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: Colors.blue.shade50,
+                                    borderRadius: BorderRadius.circular(20),
+                                    border:
+                                        Border.all(color: Colors.blue.shade200),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      Text(
-                                        "TOTAL AMOUNT",
-                                        style: TextStyle(
-                                          color: Colors.white70,
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.w500,
-                                          letterSpacing: 0.5,
-                                        ),
+                                      Icon(
+                                        Icons.receipt_outlined,
+                                        size: 14,
+                                        color: Colors.blue.shade700,
                                       ),
-                                      SizedBox(height: 4),
+                                      SizedBox(width: 4),
                                       Text(
-                                        "₹${billamt ?? 0}",
-                                        style: TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 20,
-                                          fontWeight: FontWeight.bold,
+                                        "ID: ${orderNO ?? 'N/A'}",
+                                        style: GoogleFonts.figtree(
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.w600,
+                                          color: Colors.blue.shade700,
                                         ),
-                                        overflow: TextOverflow.ellipsis,
                                       ),
                                     ],
                                   ),
@@ -2007,17 +1942,72 @@ class _ProfileRidgeAndArchState extends State<ProfileRidgeAndArch> {
                               ],
                             ),
                           ),
-                        ),
-                        _buildSubmittedDataList(),
-                      ],
+                          SizedBox(height: 16),
+                          Container(
+                            margin: EdgeInsets.symmetric(vertical: 4),
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [
+                                  Colors.deepPurple.shade500,
+                                  Colors.deepPurple.shade200
+                                ],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                              borderRadius: BorderRadius.circular(16),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.blue.withOpacity(0.3),
+                                  blurRadius: 8,
+                                  offset: Offset(0, 4),
+                                ),
+                              ],
+                            ),
+                            child: Padding(
+                              padding: EdgeInsets.all(10),
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    flex: 3,
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          "TOTAL AMOUNT",
+                                          style: TextStyle(
+                                            color: Colors.white70,
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w500,
+                                            letterSpacing: 0.5,
+                                          ),
+                                        ),
+                                        SizedBox(height: 4),
+                                        Text(
+                                          "₹${billamt ?? 0}",
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 20,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          _buildSubmittedDataList(),
+                        ],
+                      ),
                     ),
-                  ),
+                  ],
                 ],
-              ],
+              ),
             ),
           ),
-        ),
-      ),
-    );
+        ));
   }
 }

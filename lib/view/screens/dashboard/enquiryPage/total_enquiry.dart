@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:gap/gap.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
@@ -150,7 +151,6 @@ class _TotalEnquiryPageState extends State<TotalEnquiryPage> {
 
   @override
   Widget build(BuildContext context) {
-    var size = MediaQuery.sizeOf(context);
     return Scaffold(
       backgroundColor: Colors.purple[50],
       appBar: AppBar(
@@ -199,11 +199,11 @@ class _TotalEnquiryPageState extends State<TotalEnquiryPage> {
         ),
       ),
       body: SafeArea(
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Container(
+        child: Padding(
+          padding: const EdgeInsets.all(10.0),
+          child: Column(
+            children: [
+              Container(
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(12),
@@ -216,7 +216,7 @@ class _TotalEnquiryPageState extends State<TotalEnquiryPage> {
                     ),
                   ],
                 ),
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(8),
                 child: Column(
                   children: [
                     Row(
@@ -275,7 +275,7 @@ class _TotalEnquiryPageState extends State<TotalEnquiryPage> {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 10),
                     TextField(
                       controller: enquiryNoController,
                       decoration: InputDecoration(
@@ -298,185 +298,920 @@ class _TotalEnquiryPageState extends State<TotalEnquiryPage> {
                   ],
                 ),
               ),
-            ),
-            // Total Records Counter
-            Container(
-              margin: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
-              padding: EdgeInsets.all(16.r),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [Colors.white, Colors.purple[50]!],
-                ),
-                borderRadius: BorderRadius.circular(12.r),
-                border: Border.all(
-                  color: Colors.purple,
-                  width: 0.5,
-                ),
-              ),
-              child: Row(
-                children: [
-                  Icon(Icons.analytics_outlined, color: Colors.purple),
-                  SizedBox(width: 8.w),
-                  Text(
-                    'Total Records: $totalRecords',
-                    style: GoogleFonts.poppins(
-                      fontSize: 15.sp,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.purple,
-                    ),
+              // Total Records Counter
+              Gap(10),
+              Container(
+                // margin: EdgeInsets.symmetric(horizontal: 16.w, vertical: 5.h),
+                padding: EdgeInsets.all(14.r),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [Colors.white, Colors.purple[50]!],
                   ),
-                ],
-              ),
-            ),
-            // Table
-            isLoading
-                ? Expanded(child: Center(child: CircularProgressIndicator()))
-                : filteredData.isEmpty
-                    ? Expanded(
-                        child: Center(
-                          child: Text(
-                            'No records found',
-                            style: GoogleFonts.poppins(
-                              fontSize: 16.sp,
-                              fontWeight: FontWeight.w500,
-                              color: Colors.grey,
-                            ),
-                          ),
-                        ),
-                      )
-                    : Expanded(
-                        child: Scrollbar(
-                          thumbVisibility: true,
-                          child: // Add this in your StatefulWidget class
-                              SingleChildScrollView(
-                            scrollDirection: Axis.vertical,
-                            child: SingleChildScrollView(
-                              scrollDirection: Axis.horizontal,
-                              padding: const EdgeInsets.all(16.0),
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.circular(12),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.grey.withOpacity(0.1),
-                                      spreadRadius: 2,
-                                      blurRadius: 5,
-                                      offset: const Offset(0, 3),
-                                    ),
-                                  ],
-                                ),
-                                child: DataTable(
-                                  showCheckboxColumn: false,
-                                  border: TableBorder.all(
-                                    color: Colors.purple.withOpacity(0.3),
-                                    width: 1,
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  columnSpacing: 40,
-                                  headingRowHeight: 70,
-                                  columns: [
-                                    DataColumn(
-                                        label: Text('No',
-                                            style: GoogleFonts.outfit(
-                                                fontSize: 16.sp,
-                                                fontWeight: FontWeight.w500))),
-                                    DataColumn(
-                                        label: Text('Order No',
-                                            style: GoogleFonts.outfit(
-                                                fontSize: 16.sp,
-                                                fontWeight: FontWeight.w500))),
-                                    DataColumn(
-                                        label: Text('Bill Total',
-                                            style: GoogleFonts.outfit(
-                                                fontSize: 16.sp,
-                                                fontWeight: FontWeight.w500))),
-                                    DataColumn(
-                                        label: Text('Create Date',
-                                            style: GoogleFonts.outfit(
-                                                fontSize: 16.sp,
-                                                fontWeight: FontWeight.w500))),
-                                    DataColumn(
-                                        label: Text('Create Time',
-                                            style: GoogleFonts.outfit(
-                                                fontSize: 16.sp,
-                                                fontWeight: FontWeight.w500))),
-                                    DataColumn(
-                                        label: Text('Action',
-                                            style: GoogleFonts.outfit(
-                                                fontSize: 16.sp,
-                                                fontWeight: FontWeight.w500))),
-                                  ],
-                                  rows:
-                                      filteredData.asMap().entries.map((entry) {
-                                    int index = entry.key;
-                                    var row = entry.value;
-
-                                    return DataRow(
-                                      // Row background color logic
-                                      color: WidgetStateProperty.resolveWith<
-                                          Color?>(
-                                        (Set<WidgetState> states) {
-                                          if (selectedRowIndex == index) {
-                                            return Colors.purple.shade50;
-                                          }
-                                          return null;
-                                        },
-                                      ), // Row tap logic
-                                      onSelectChanged: (_) {
-                                        setState(() {
-                                          if (selectedRowIndex == index) {
-                                            selectedRowIndex =
-                                                null; // Deselect if already selected
-                                          } else {
-                                            selectedRowIndex =
-                                                index; // Select new row
-                                          }
-                                        });
-                                      },
-                                      cells: [
-                                        DataCell(Text("${index + 1}",
-                                            style: GoogleFonts.dmSans(
-                                                fontSize: 14.sp))),
-                                        // DataCell(Text(row['id'] ?? '',
-                                        //     style: GoogleFonts.dmSans(
-                                        //         fontSize: 14.sp))),
-                                        DataCell(Text(row['order_no'] ?? '',
-                                            style: GoogleFonts.dmSans(
-                                                fontSize: 14.sp))),
-                                        DataCell(Text(row['bill_total'] ?? '0',
-                                            style: GoogleFonts.dmSans(
-                                                fontSize: 14.sp))),
-                                        DataCell(Text(row['create_date'] ?? '',
-                                            style: GoogleFonts.dmSans(
-                                                fontSize: 14.2.sp))),
-                                        DataCell(Text(row['create_time'] ?? '',
-                                            style: GoogleFonts.dmSans(
-                                                fontSize: 14.2.sp))),
-                                        DataCell(Row(
-                                          children: [
-                                            IconButton(
-                                              icon: const Icon(Icons.visibility,
-                                                  color: Colors.blue),
-                                              onPressed: () {
-                                                Get.to(() => TotalEnquiryView(
-                                                    id: row['id'] ?? ''));
-                                              },
-                                            ),
-                                          ],
-                                        )),
-                                      ],
-                                    );
-                                  }).toList(),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
+                  borderRadius: BorderRadius.circular(12.r),
+                  border: Border.all(
+                    color: Colors.purple,
+                    width: 0.5,
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.analytics_outlined, color: Colors.purple),
+                    SizedBox(width: 8.w),
+                    Text(
+                      'Total Records: $totalRecords',
+                      style: GoogleFonts.poppins(
+                        fontSize: 15.sp,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.purple,
                       ),
-          ],
+                    ),
+                  ],
+                ),
+              ),
+              Gap(10),
+              // Table
+              // Replace the DataTable section with this card-based UI
+              // Keep everything else in your code the same
+
+              // Replace this part in your build method:
+              // From: isLoading ? Expanded(child: Center(child: CircularProgressIndicator()))
+              // To the end of the current DataTable implementation
+
+              isLoading
+                  ? Expanded(child: Center(child: CircularProgressIndicator()))
+                  : filteredData.isEmpty
+                      ? Expanded(
+                          child: Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Container(
+                                  padding: EdgeInsets.all(20),
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    gradient: LinearGradient(
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                      colors: [
+                                        Colors.grey.shade100,
+                                        Colors.grey.shade200,
+                                      ],
+                                    ),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.grey.shade300,
+                                        blurRadius: 20,
+                                        offset: Offset(0, 10),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Icon(
+                                    Icons.inbox_outlined,
+                                    size: 60,
+                                    color: Colors.grey.shade500,
+                                  ),
+                                ),
+                                SizedBox(height: 24),
+                                Text(
+                                  'No records found',
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 20.sp,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.grey.shade700,
+                                  ),
+                                ),
+                                SizedBox(height: 8),
+                                Text(
+                                  'Try adjusting your filters',
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 14.sp,
+                                    color: Colors.grey.shade500,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        )
+                      : Expanded(
+                          child: ListView.builder(
+                            itemCount: filteredData.length,
+                            itemBuilder: (context, index) {
+                              var row = filteredData[index];
+                              bool isSelected = selectedRowIndex == index;
+                              return GestureDetector(
+                                onTap: () {
+                                  setState(() {
+                                    if (selectedRowIndex == index) {
+                                      selectedRowIndex = null;
+                                    } else {
+                                      selectedRowIndex = index;
+                                    }
+                                  });
+                                },
+                                child: Container(
+                                  margin: EdgeInsets.only(bottom: 8.h),
+                                  decoration: BoxDecoration(
+                                    gradient: isSelected
+                                        ? LinearGradient(
+                                            begin: Alignment.topLeft,
+                                            end: Alignment.bottomRight,
+                                            colors: [
+                                              Colors.deepPurple.shade400,
+                                              Colors.indigo.shade600,
+                                            ],
+                                          )
+                                        : LinearGradient(
+                                            begin: Alignment.topLeft,
+                                            end: Alignment.bottomRight,
+                                            colors: [
+                                              Colors.white,
+                                              Colors.grey.shade50,
+                                            ],
+                                          ),
+                                    borderRadius: BorderRadius.circular(24),
+                                    border: Border.all(
+                                      color: isSelected
+                                          ? Colors.white
+                                          : Colors.grey.shade300,
+                                      width: isSelected ? 2 : 1,
+                                    ),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: isSelected
+                                            ? Colors.deepPurple.shade200
+                                            : Colors.grey.shade200,
+                                        spreadRadius: isSelected ? 4 : 0,
+                                        blurRadius: isSelected ? 25 : 15,
+                                        offset: Offset(0, isSelected ? 8 : 4),
+                                      ),
+                                      if (isSelected)
+                                        BoxShadow(
+                                          color: Colors.white70,
+                                          spreadRadius: 1,
+                                          blurRadius: 10,
+                                          offset: Offset(0, -2),
+                                        ),
+                                    ],
+                                  ),
+                                  child: Stack(
+                                    children: [
+                                      // Enhanced decorative elements with gradient orbs
+                                      Positioned(
+                                        top: -30,
+                                        right: -30,
+                                        child: Container(
+                                          width: 120,
+                                          height: 120,
+                                          decoration: BoxDecoration(
+                                            shape: BoxShape.circle,
+                                            gradient: RadialGradient(
+                                              colors: isSelected
+                                                  ? [
+                                                      Colors.white70,
+                                                      Colors.white24,
+                                                    ]
+                                                  : [
+                                                      Colors.purple.shade100,
+                                                      Colors.purple.shade50,
+                                                    ],
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                      Positioned(
+                                        bottom: -20,
+                                        left: -20,
+                                        child: Container(
+                                          width: 80,
+                                          height: 80,
+                                          decoration: BoxDecoration(
+                                            shape: BoxShape.circle,
+                                            gradient: RadialGradient(
+                                              colors: isSelected
+                                                  ? [
+                                                      Colors.white60,
+                                                      Colors.white12,
+                                                    ]
+                                                  : [
+                                                      Colors.cyan.shade100,
+                                                      Colors.cyan.shade50,
+                                                    ],
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                      // Additional floating elements
+                                      Positioned(
+                                        top: 12,
+                                        left: 12,
+                                        child: Container(
+                                          width: 6,
+                                          height: 6,
+                                          decoration: BoxDecoration(
+                                            shape: BoxShape.circle,
+                                            color: isSelected
+                                                ? Colors.white70
+                                                : Colors.pink.shade300,
+                                          ),
+                                        ),
+                                      ),
+                                      Positioned(
+                                        top: 60,
+                                        right: 40,
+                                        child: Container(
+                                          width: 4,
+                                          height: 4,
+                                          decoration: BoxDecoration(
+                                            shape: BoxShape.circle,
+                                            color: isSelected
+                                                ? Colors.white60
+                                                : Colors.green.shade400,
+                                          ),
+                                        ),
+                                      ),
+
+                                      // Main content with glassmorphism effect
+                                      Container(
+                                        decoration: BoxDecoration(
+                                          borderRadius:
+                                              BorderRadius.circular(24),
+                                          gradient: isSelected
+                                              ? LinearGradient(
+                                                  begin: Alignment.topLeft,
+                                                  end: Alignment.bottomRight,
+                                                  colors: [
+                                                    Colors.white70,
+                                                    Colors.white54,
+                                                  ],
+                                                )
+                                              : null,
+                                        ),
+                                        child: Padding(
+                                          padding: EdgeInsets.all(10.r),
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              // Header row with enhanced design
+                                              Row(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment
+                                                        .spaceBetween,
+                                                children: [
+                                                  Container(
+                                                    padding:
+                                                        EdgeInsets.symmetric(
+                                                      horizontal: 16,
+                                                      vertical: 8,
+                                                    ),
+                                                    decoration: BoxDecoration(
+                                                      gradient: LinearGradient(
+                                                        begin:
+                                                            Alignment.topLeft,
+                                                        end: Alignment
+                                                            .bottomRight,
+                                                        colors: isSelected
+                                                            ? [
+                                                                Colors
+                                                                    .deepPurple
+                                                                    .shade400,
+                                                                Colors.indigo
+                                                                    .shade600,
+                                                              ]
+                                                            : [
+                                                                Colors.purple
+                                                                    .shade400,
+                                                                Colors.pink
+                                                                    .shade400,
+                                                              ],
+                                                      ),
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              25),
+                                                      boxShadow: [
+                                                        BoxShadow(
+                                                          color: isSelected
+                                                              ? Colors.white54
+                                                              : Colors.purple
+                                                                  .shade200,
+                                                          blurRadius: 8,
+                                                          offset: Offset(0, 4),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                    child: Row(
+                                                      mainAxisSize:
+                                                          MainAxisSize.min,
+                                                      children: [
+                                                        Container(
+                                                          width: 6,
+                                                          height: 6,
+                                                          decoration:
+                                                              BoxDecoration(
+                                                            shape:
+                                                                BoxShape.circle,
+                                                            color: isSelected
+                                                                ? Colors.white
+                                                                : Colors.white,
+                                                          ),
+                                                        ),
+                                                        SizedBox(width: 8),
+                                                        Text(
+                                                          '#${index + 1}',
+                                                          style: GoogleFonts
+                                                              .poppins(
+                                                            fontSize: 13.sp,
+                                                            fontWeight:
+                                                                FontWeight.w700,
+                                                            color: isSelected
+                                                                ? Colors.white
+                                                                : Colors.white,
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                  Container(
+                                                    decoration: BoxDecoration(
+                                                      gradient: LinearGradient(
+                                                        begin:
+                                                            Alignment.topLeft,
+                                                        end: Alignment
+                                                            .bottomRight,
+                                                        colors: isSelected
+                                                            ? [
+                                                                Colors.white70,
+                                                                Colors.white60,
+                                                              ]
+                                                            : [
+                                                                Colors.blue
+                                                                    .shade400,
+                                                                Colors.cyan
+                                                                    .shade400,
+                                                              ],
+                                                      ),
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              16),
+                                                      boxShadow: [
+                                                        BoxShadow(
+                                                          color: isSelected
+                                                              ? Colors.white54
+                                                              : Colors.blue
+                                                                  .shade200,
+                                                          blurRadius: 8,
+                                                          offset: Offset(0, 4),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                    child: IconButton(
+                                                      icon: Icon(
+                                                        Icons
+                                                            .visibility_rounded,
+                                                        color: isSelected
+                                                            ? Colors.deepPurple
+                                                                .shade700
+                                                            : Colors.white,
+                                                        size: 22,
+                                                      ),
+                                                      onPressed: () {
+                                                        Get.to(() =>
+                                                            TotalEnquiryView(
+                                                                id: row['id'] ??
+                                                                    ''));
+                                                      },
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+
+                                              SizedBox(height: 20),
+
+                                              // Order number with premium design
+                                              Container(
+                                                padding: EdgeInsets.all(8),
+                                                decoration: BoxDecoration(
+                                                  gradient: LinearGradient(
+                                                    begin: Alignment.topLeft,
+                                                    end: Alignment.bottomRight,
+                                                    colors: isSelected
+                                                        ? [
+                                                            Colors.deepPurple
+                                                                .shade400,
+                                                            Colors.indigo
+                                                                .shade600,
+                                                          ]
+                                                        : [
+                                                            Colors
+                                                                .indigo.shade50,
+                                                            Colors.indigo
+                                                                .shade100,
+                                                          ],
+                                                  ),
+                                                  borderRadius:
+                                                      BorderRadius.circular(16),
+                                                  border: Border.all(
+                                                    color: isSelected
+                                                        ? Colors.white
+                                                        : Colors
+                                                            .indigo.shade200,
+                                                    width: 1,
+                                                  ),
+                                                  boxShadow: [
+                                                    BoxShadow(
+                                                      color: isSelected
+                                                          ? Colors.white54
+                                                          : Colors
+                                                              .indigo.shade100,
+                                                      blurRadius: 10,
+                                                      offset: Offset(0, 4),
+                                                    ),
+                                                  ],
+                                                ),
+                                                child: Row(
+                                                  children: [
+                                                    Container(
+                                                      padding:
+                                                          EdgeInsets.all(12),
+                                                      decoration: BoxDecoration(
+                                                        gradient:
+                                                            LinearGradient(
+                                                          colors: isSelected
+                                                              ? [
+                                                                  Colors
+                                                                      .white70,
+                                                                  Colors
+                                                                      .white60,
+                                                                ]
+                                                              : [
+                                                                  Colors.indigo
+                                                                      .shade400,
+                                                                  Colors.purple
+                                                                      .shade400,
+                                                                ],
+                                                        ),
+                                                        borderRadius:
+                                                            BorderRadius
+                                                                .circular(12),
+                                                        boxShadow: [
+                                                          BoxShadow(
+                                                            color: isSelected
+                                                                ? Colors.white54
+                                                                : Colors.indigo
+                                                                    .shade200,
+                                                            blurRadius: 6,
+                                                            offset:
+                                                                Offset(0, 2),
+                                                          ),
+                                                        ],
+                                                      ),
+                                                      child: Icon(
+                                                        Icons
+                                                            .receipt_long_rounded,
+                                                        color: isSelected
+                                                            ? Colors.deepPurple
+                                                                .shade700
+                                                            : Colors.white,
+                                                        size: 20,
+                                                      ),
+                                                    ),
+                                                    SizedBox(width: 16),
+                                                    Expanded(
+                                                      child: Column(
+                                                        crossAxisAlignment:
+                                                            CrossAxisAlignment
+                                                                .start,
+                                                        children: [
+                                                          Text(
+                                                            'Order Number',
+                                                            style: GoogleFonts
+                                                                .poppins(
+                                                              fontSize: 12.sp,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w500,
+                                                              color: isSelected
+                                                                  ? Colors.white
+                                                                  : Colors
+                                                                      .indigo
+                                                                      .shade600,
+                                                            ),
+                                                          ),
+                                                          SizedBox(height: 2),
+                                                          Text(
+                                                            row['order_no'] ??
+                                                                'N/A',
+                                                            style: GoogleFonts
+                                                                .dmSans(
+                                                              fontSize: 16.sp,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w700,
+                                                              color: isSelected
+                                                                  ? Colors.white
+                                                                  : Colors.grey
+                                                                      .shade800,
+                                                            ),
+                                                          ),
+                                                        ],
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+
+                                              SizedBox(height: 20),
+
+                                              // Enhanced grid layout with premium cards
+                                              Row(
+                                                children: [
+                                                  // Bill Total with enhanced design
+                                                  Expanded(
+                                                    child: Container(
+                                                      padding:
+                                                          EdgeInsets.all(16),
+                                                      decoration: BoxDecoration(
+                                                        gradient:
+                                                            LinearGradient(
+                                                          begin:
+                                                              Alignment.topLeft,
+                                                          end: Alignment
+                                                              .bottomRight,
+                                                          colors: isSelected
+                                                              ? [
+                                                                  Colors
+                                                                      .deepPurple
+                                                                      .shade400,
+                                                                  Colors.indigo
+                                                                      .shade600
+                                                                ]
+                                                              : [
+                                                                  Colors.green
+                                                                      .shade50,
+                                                                  Colors.green
+                                                                      .shade100,
+                                                                ],
+                                                        ),
+                                                        borderRadius:
+                                                            BorderRadius
+                                                                .circular(16),
+                                                        border: Border.all(
+                                                          color: isSelected
+                                                              ? Colors.white
+                                                              : Colors.green
+                                                                  .shade200,
+                                                          width: 1,
+                                                        ),
+                                                        boxShadow: [
+                                                          BoxShadow(
+                                                            color: isSelected
+                                                                ? Colors.white54
+                                                                : Colors.green
+                                                                    .shade100,
+                                                            blurRadius: 8,
+                                                            offset:
+                                                                Offset(0, 4),
+                                                          ),
+                                                        ],
+                                                      ),
+                                                      child: Column(
+                                                        crossAxisAlignment:
+                                                            CrossAxisAlignment
+                                                                .start,
+                                                        children: [
+                                                          Row(
+                                                            children: [
+                                                              Container(
+                                                                padding:
+                                                                    EdgeInsets
+                                                                        .all(6),
+                                                                decoration:
+                                                                    BoxDecoration(
+                                                                  gradient:
+                                                                      LinearGradient(
+                                                                    colors:
+                                                                        isSelected
+                                                                            ? [
+                                                                                Colors.white70,
+                                                                                Colors.white60,
+                                                                              ]
+                                                                            : [
+                                                                                Colors.green.shade400,
+                                                                                Colors.green.shade500,
+                                                                              ],
+                                                                  ),
+                                                                  borderRadius:
+                                                                      BorderRadius
+                                                                          .circular(
+                                                                              8),
+                                                                ),
+                                                                child: Icon(
+                                                                  Icons
+                                                                      .currency_rupee_rounded,
+                                                                  color: isSelected
+                                                                      ? Colors
+                                                                          .deepPurple
+                                                                          .shade700
+                                                                      : Colors
+                                                                          .white,
+                                                                  size: 16,
+                                                                ),
+                                                              ),
+                                                              SizedBox(
+                                                                  width: 8),
+                                                              Text(
+                                                                'Bill Total',
+                                                                style:
+                                                                    GoogleFonts
+                                                                        .poppins(
+                                                                  fontSize:
+                                                                      11.sp,
+                                                                  fontWeight:
+                                                                      FontWeight
+                                                                          .w500,
+                                                                  color: isSelected
+                                                                      ? Colors
+                                                                          .white
+                                                                      : Colors
+                                                                          .green
+                                                                          .shade700,
+                                                                ),
+                                                              ),
+                                                            ],
+                                                          ),
+                                                          SizedBox(height: 8),
+                                                          Text(
+                                                            '₹${row['bill_total'] ?? '0'}',
+                                                            style: GoogleFonts
+                                                                .dmSans(
+                                                              fontSize: 15.sp,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w800,
+                                                              color: isSelected
+                                                                  ? Colors.white
+                                                                  : Colors.green
+                                                                      .shade800,
+                                                            ),
+                                                          ),
+                                                        ],
+                                                      ),
+                                                    ),
+                                                  ),
+
+                                                  SizedBox(width: 16),
+
+                                                  // Date & Time with premium design
+                                                  Expanded(
+                                                    child: Container(
+                                                      padding:
+                                                          EdgeInsets.all(16),
+                                                      decoration: BoxDecoration(
+                                                        gradient:
+                                                            LinearGradient(
+                                                          begin:
+                                                              Alignment.topLeft,
+                                                          end: Alignment
+                                                              .bottomRight,
+                                                          colors: isSelected
+                                                              ? [
+                                                                  Colors
+                                                                      .deepPurple
+                                                                      .shade400,
+                                                                  Colors.indigo
+                                                                      .shade600,
+                                                                ]
+                                                              : [
+                                                                  Colors.orange
+                                                                      .shade50,
+                                                                  Colors.orange
+                                                                      .shade100,
+                                                                ],
+                                                        ),
+                                                        borderRadius:
+                                                            BorderRadius
+                                                                .circular(16),
+                                                        border: Border.all(
+                                                          color: isSelected
+                                                              ? Colors.white
+                                                              : Colors.orange
+                                                                  .shade200,
+                                                          width: 1,
+                                                        ),
+                                                        // boxShadow: [
+                                                        //   BoxShadow(
+                                                        //     color: isSelected
+                                                        //         ? Colors.blue
+                                                        //         : Colors.orange
+                                                        //             .shade100,
+                                                        //     blurRadius: 8,
+                                                        //     offset:
+                                                        //         Offset(0, 4),
+                                                        //   ),
+                                                        // ],
+                                                      ),
+                                                      child: Column(
+                                                        crossAxisAlignment:
+                                                            CrossAxisAlignment
+                                                                .start,
+                                                        children: [
+                                                          Row(
+                                                            children: [
+                                                              Container(
+                                                                padding:
+                                                                    EdgeInsets
+                                                                        .all(6),
+                                                                decoration:
+                                                                    BoxDecoration(
+                                                                  gradient:
+                                                                      LinearGradient(
+                                                                    colors:
+                                                                        isSelected
+                                                                            ? [
+                                                                                Colors.white70,
+                                                                                Colors.white60,
+                                                                              ]
+                                                                            : [
+                                                                                Colors.orange.shade400,
+                                                                                Colors.orange.shade500,
+                                                                              ],
+                                                                  ),
+                                                                  borderRadius:
+                                                                      BorderRadius
+                                                                          .circular(
+                                                                              8),
+                                                                ),
+                                                                child: Icon(
+                                                                  Icons
+                                                                      .access_time_rounded,
+                                                                  color: isSelected
+                                                                      ? Colors
+                                                                          .deepPurple
+                                                                          .shade700
+                                                                      : Colors
+                                                                          .white,
+                                                                  size: 16,
+                                                                ),
+                                                              ),
+                                                              SizedBox(
+                                                                  width: 8),
+                                                              Text(
+                                                                'Created',
+                                                                style:
+                                                                    GoogleFonts
+                                                                        .poppins(
+                                                                  fontSize:
+                                                                      11.sp,
+                                                                  fontWeight:
+                                                                      FontWeight
+                                                                          .w500,
+                                                                  color: isSelected
+                                                                      ? Colors
+                                                                          .white
+                                                                      : Colors
+                                                                          .orange
+                                                                          .shade700,
+                                                                ),
+                                                              ),
+                                                            ],
+                                                          ),
+                                                          SizedBox(height: 8),
+                                                          Text(
+                                                            '${row['create_date'] ?? 'N/A'}',
+                                                            style: GoogleFonts
+                                                                .dmSans(
+                                                              fontSize: 12.sp,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w700,
+                                                              color: isSelected
+                                                                  ? Colors.white
+                                                                  : Colors
+                                                                      .orange
+                                                                      .shade800,
+                                                            ),
+                                                            maxLines: 1,
+                                                            overflow:
+                                                                TextOverflow
+                                                                    .ellipsis,
+                                                          ),
+                                                          Text(
+                                                            '${row['create_time'] ?? 'N/A'}',
+                                                            style: GoogleFonts
+                                                                .dmSans(
+                                                              fontSize: 11.sp,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w600,
+                                                              color: isSelected
+                                                                  ? Colors
+                                                                      .white70
+                                                                  : Colors
+                                                                      .orange
+                                                                      .shade700,
+                                                            ),
+                                                          ),
+                                                        ],
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+
+                                              // Enhanced selection indicator
+                                              if (isSelected) ...[
+                                                SizedBox(height: 16),
+                                                Container(
+                                                  width: double.infinity,
+                                                  padding: EdgeInsets.symmetric(
+                                                    horizontal: 16,
+                                                    vertical: 12,
+                                                  ),
+                                                  decoration: BoxDecoration(
+                                                    gradient: LinearGradient(
+                                                      begin: Alignment.topLeft,
+                                                      end:
+                                                          Alignment.bottomRight,
+                                                      colors: [
+                                                        Colors.deepPurple
+                                                            .shade400,
+                                                        Colors.indigo.shade600,
+                                                      ],
+                                                    ),
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            12),
+                                                    border: Border.all(
+                                                      color: Colors.white,
+                                                      width: 1,
+                                                    ),
+                                                    boxShadow: [
+                                                      BoxShadow(
+                                                        color: Colors.white54,
+                                                        blurRadius: 8,
+                                                        offset: Offset(0, 2),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                  child: Row(
+                                                    mainAxisAlignment:
+                                                        MainAxisAlignment
+                                                            .center,
+                                                    children: [
+                                                      Container(
+                                                        padding:
+                                                            EdgeInsets.all(4),
+                                                        decoration:
+                                                            BoxDecoration(
+                                                          shape:
+                                                              BoxShape.circle,
+                                                          gradient:
+                                                              LinearGradient(
+                                                            colors: [
+                                                              Colors.white70,
+                                                              Colors.white60,
+                                                            ],
+                                                          ),
+                                                        ),
+                                                        child: Icon(
+                                                          Icons
+                                                              .check_circle_rounded,
+                                                          color: Colors
+                                                              .deepPurple
+                                                              .shade700,
+                                                          size: 18,
+                                                        ),
+                                                      ),
+                                                      SizedBox(width: 12),
+                                                      Text(
+                                                        'Selected',
+                                                        style:
+                                                            GoogleFonts.poppins(
+                                                          fontSize: 13.sp,
+                                                          fontWeight:
+                                                              FontWeight.w600,
+                                                          color: Colors.white,
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                              ],
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+            ],
+          ),
         ),
       ),
     );

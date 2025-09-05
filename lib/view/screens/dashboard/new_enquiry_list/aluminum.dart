@@ -44,7 +44,6 @@ class _AluminumState extends State<Aluminum> {
   List<String> thicknessList = [];
   List<String> materialTypeList = [];
   List<Map<String, dynamic>> submittedData = [];
-
   List<Map<String, dynamic>> apiProductsList = [];
 
   final _formKey = GlobalKey<FormState>();
@@ -135,7 +134,6 @@ class _AluminumState extends State<Aluminum> {
         final thick = data["message"]["message"][0];
         print("Fetching colors for thick: $selectedMaterialType");
         print("API response: ${response.body}");
-
         if (thick is List) {
           setState(() {
             thicknessList = thick

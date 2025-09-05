@@ -444,6 +444,7 @@ class _TileSheetPageState extends State<TileSheetPage> {
       );
       if (response.statusCode == 200) {
         print("delee response ${response.statusCode}");
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             backgroundColor: Colors.red.shade400,
@@ -635,6 +636,10 @@ class _TileSheetPageState extends State<TileSheetPage> {
                                       setState(() {
                                         deleteCards(data["id"].toString());
                                         responseProducts.removeAt(index);
+                                        if (responseProducts.isEmpty) {
+                                          submittedData.clear();
+                                          // billamt = 0.0;
+                                        }
                                       });
                                       Navigator.pop(context);
                                     },
