@@ -13,6 +13,7 @@ import 'package:zaron/view/universal_api/api_key.dart';
 import 'package:zaron/view/widgets/buttons.dart';
 import 'package:zaron/view/widgets/text.dart';
 
+import '../../../getx/summary_screen.dart';
 import '../../../widgets/subhead.dart';
 import '../../global_user/global_user.dart';
 
@@ -774,6 +775,14 @@ class _TotalEnquiryViewState extends State<TotalEnquiryView> {
               ),
             ),
             Gap(10),
+            IconButton(
+                onPressed: () {
+                  Get.to(SummaryScreen());
+                },
+                icon: Icon(
+                  Icons.note_alt_sharp,
+                  color: Colors.black,
+                )),
           ],
         ),
         body: isLoading

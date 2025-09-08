@@ -9,6 +9,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/io_client.dart';
 
+import '../../../getx/summary_screen.dart';
 import '../../../universal_api/api_key.dart';
 import '../../../widgets/buttons.dart';
 import '../../../widgets/subhead.dart';
@@ -47,6 +48,7 @@ class _TotalQuoationViewState extends State<TotalQuoationView> {
     super.initState();
     print(widget.id);
     fetchTableData();
+    // fetchAdditionalInfo(widget.id);
   }
 
   Future<void> fetchTableData() async {
@@ -56,6 +58,8 @@ class _TotalQuoationViewState extends State<TotalQuoationView> {
 
       if (response.statusCode == 200) {
         final jsonData = json.decode(response.body);
+        print(response.body);
+        print(response.statusCode);
         if (jsonData['status'] == 'success') {
           final categoriesData =
               List<Map<String, dynamic>>.from(jsonData['categories']);
@@ -104,11 +108,14 @@ class _TotalQuoationViewState extends State<TotalQuoationView> {
   }
 
   Future<void> fetchAdditionalInfo(String itemId) async {
-    final response =
-        await http.get(Uri.parse("$apiUrl/quotation_add_info/$itemId"));
+    final response = await http.get(Uri.parse(
+        "https://demo.zaron.in:8181/ci3app/api/quotation_add_info/$itemId"));
+    print("➡️ Fetching additonal : $itemId");
 
     if (response.statusCode == 200) {
       final jsonData = json.decode(response.body);
+      print(response.body);
+      print(response.statusCode);
       try {
         setState(() {
           additionalInfo = jsonData['data'] ?? {};
@@ -310,7 +317,7 @@ class _TotalQuoationViewState extends State<TotalQuoationView> {
     };
     print("User Input Data Fields$payload");
 
-    final url = "$apiUrl/quotation_storeaddinfo";
+    final url = "https://demo.zaron.in:8181/ci3app/api/quotation_storeaddinfo";
     final body = json.encode(payload);
 
     try {
@@ -617,6 +624,14 @@ class _TotalQuoationViewState extends State<TotalQuoationView> {
               ),
             ),
             Gap(10),
+            IconButton(
+                onPressed: () {
+                  Get.to(SummaryScreen());
+                },
+                icon: Icon(
+                  Icons.note_alt_sharp,
+                  color: Colors.black,
+                )),
           ],
         ),
         body: isLoading
@@ -802,7 +817,8 @@ class _TotalQuoationViewState extends State<TotalQuoationView> {
                                                             color: Colors.blue),
                                                         onPressed: () {
                                                           final itemId =
-                                                              row['id'];
+                                                              row['Action']
+                                                                  .toString();
                                                           if (itemId != null) {
                                                             openGroupDialog(
                                                                 itemId);
@@ -815,20 +831,22 @@ class _TotalQuoationViewState extends State<TotalQuoationView> {
                                                             color: Colors.red),
                                                         onPressed: () {
                                                           final itemId =
-                                                              row['id'];
+                                                              row['Action']
+                                                                  .toString();
                                                           if (itemId != null) {
                                                             deleteItem(itemId);
                                                           }
                                                         },
                                                       ),
                                                       IconButton(
-                                                        icon: const Icon(
+                                                        icon: Icon(
                                                             Icons.settings,
                                                             color:
                                                                 Colors.green),
                                                         onPressed: () {
                                                           final itemId =
-                                                              row['id'];
+                                                              row['Action']
+                                                                  .toString();
                                                           if (itemId != null) {
                                                             openAdditionalDrawer(
                                                                 itemId);

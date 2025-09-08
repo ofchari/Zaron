@@ -23,7 +23,9 @@ import 'package:zaron/view/screens/dashboard/new_enquiry_list/upvc_accessories.d
 import 'package:zaron/view/screens/dashboard/new_enquiry_list/upvc_tiles.dart';
 import 'package:zaron/view/widgets/buttons.dart';
 
+import '../../../getx/summary_screen.dart';
 import '../../../universal_api/api_key.dart';
+import '../../../widgets/subhead.dart';
 import '../../../widgets/text.dart';
 import '../../global_user/global_oredrID.dart';
 import 'linear_sheets.dart';
@@ -122,50 +124,99 @@ class _NewEnquiryState extends State<NewEnquiry> {
   }
 
   Widget getCategoryPage(String categoryName, Map<String, dynamic> data) {
+    Widget categoryWidget;
+
     switch (categoryName) {
       case 'Accessories':
-        return Accessories(data: data);
+        categoryWidget = Accessories(data: data);
+        break;
       case 'Iron And Steel Corrugated Sheet':
-        return IronSteel(data: data);
+        categoryWidget = IronSteel(data: data);
+        break;
       case 'Aluminium':
-        return Aluminum(data: data);
+        categoryWidget = Aluminum(data: data);
+        break;
       case 'Cut To Length Sheets':
-        return CutToLengthSheet(data: data);
+        categoryWidget = CutToLengthSheet(data: data);
+        break;
       case 'Decking sheet':
-        return DeckingSheets(data: data);
+        categoryWidget = DeckingSheets(data: data);
+        break;
       case 'Liner Sheets':
-        return LinerSheetPage(data: data);
+        categoryWidget = LinerSheetPage(data: data);
+        break;
       case 'Polycarbonate':
-        return Polycarbonate(data: data);
+        categoryWidget = Polycarbonate(data: data);
+        break;
       case 'Profile ridge & Arch':
-        return ProfileRidgeAndArch(data: data);
+        categoryWidget = ProfileRidgeAndArch(data: data);
+        break;
       case 'Purlin':
-        return Purlin(data: data);
+        categoryWidget = Purlin(data: data);
+        break;
       case 'Roll Sheet':
-        return RollSheet(data: data);
+        categoryWidget = RollSheet(data: data);
+        break;
       case 'Screw':
-        return Screw(data: data);
+        categoryWidget = Screw(data: data);
+        break;
       case 'Screw accessories':
-        return ScrewAccessories(data: data);
+        categoryWidget = ScrewAccessories(data: data);
+        break;
       case 'Tile sheet':
-        return TileSheetPage(data: data);
+        categoryWidget = TileSheetPage(data: data);
+        break;
       case 'UPVC Accessories':
-        return UpvcAccessories(data: data);
+        categoryWidget = UpvcAccessories(data: data);
+        break;
       case 'UPVC Tile':
-        return UpvcTiles(data: data);
+        categoryWidget = UpvcTiles(data: data);
+        break;
       case 'GI GUTTER':
-        return GIGlutter(data: data);
+        categoryWidget = GIGlutter(data: data);
+        break;
       case 'GI Stiffner':
-        return GIStiffner(data: data);
+        categoryWidget = GIStiffner(data: data);
+        break;
 
       default:
         return Scaffold(
           backgroundColor: Colors.white,
           appBar: AppBar(
-              backgroundColor: Colors.white, title: Text("Unknown Category")),
+            backgroundColor: Colors.white,
+            title: Text("Unknown Category"),
+          ),
           body: Center(child: Text("No page found for: $categoryName")),
         );
     }
+
+    // Wrap the category widget + summary screen in a Tab layout
+    return DefaultTabController(
+      length: 2,
+      child: Scaffold(
+        appBar: AppBar(
+          backgroundColor: Colors.white,
+          title: Subhead(
+            text: categoryName,
+            weight: FontWeight.w600,
+            color: Colors.black,
+          ),
+          centerTitle: true,
+          bottom: const TabBar(
+            tabs: [
+              Tab(icon: Icon(Icons.category), text: "Category"),
+              Tab(icon: Icon(Icons.receipt_long), text: "OverView"),
+            ],
+          ),
+        ),
+        body: TabBarView(
+          children: [
+            categoryWidget, // First tab = category screen
+            SummaryScreen(), // Second tab = summary screen
+          ],
+        ),
+      ),
+    );
   }
 
   void _showErrorDialog(BuildContext context, String message) {
@@ -320,6 +371,7 @@ class _NewEnquiryState extends State<NewEnquiry> {
 
   late double height;
   late double width;
+
   Widget _buildCategoryGridItem(String id, String name, String imagePath) {
     var size = MediaQuery.of(context).size;
     height = size.height;
