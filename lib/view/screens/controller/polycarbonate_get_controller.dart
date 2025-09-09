@@ -369,27 +369,32 @@ class PolycarbonateController extends GetxController {
   }
 
   Widget uomDropdown(Map<String, dynamic> data) {
-    String productId = data["id"].toString();
-    Map<String, String>? options = uomOptions[productId];
+    Map<String, dynamic>? uomData = data['UOM'];
+    String? currentValue = uomData?['value']?.toString();
+    Map<String, dynamic>? options =
+        uomData?['options'] as Map<String, dynamic>?;
+
     if (options == null || options.isEmpty) {
-      return editableTextField(data, "UOM", (v) {
-        data["UOM"] = v;
-        debounceCalculation(data);
-      }, fieldControllers: fieldControllers);
+      return editableTextField(data, "UOM", (val) {},
+          fieldControllers: fieldControllers);
     }
-    String? currentValue = data["UOM"] is Map
-        ? data["UOM"]["value"]?.toString()
-        : data["UOM"]?.toString();
+
     return SizedBox(
-      height: 40.h,
+      height: 38.h,
       child: DropdownButtonFormField<String>(
         value: currentValue,
         items: options.entries
-            .map((entry) =>
-                DropdownMenuItem(value: entry.key, child: Text(entry.value)))
+            .map((entry) => DropdownMenuItem(
+                  value: entry.key,
+                  child: Text(entry.value.toString()),
+                ))
             .toList(),
         onChanged: (val) {
-          data["UOM"] = {"value": val, "options": options};
+          if (data['UOM'] is! Map) {
+            data['UOM'] = {};
+          }
+          data['UOM']['value'] = val;
+          data['UOM']['options'] = options;
           debounceCalculation(data);
         },
         decoration: InputDecoration(
@@ -402,7 +407,7 @@ class PolycarbonateController extends GetxController {
               borderSide: BorderSide(color: Colors.grey[300]!)),
           focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(6),
-              borderSide: BorderSide(color: Colors.deepPurple, width: 2)),
+              borderSide: BorderSide(color: Get.theme.primaryColor, width: 2)),
           filled: true,
           fillColor: Colors.grey[50],
         ),

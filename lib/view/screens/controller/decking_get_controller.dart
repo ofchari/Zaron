@@ -781,44 +781,42 @@ class DeckingSheetsController extends GetxController {
   }
 
   Widget billingDropdown(Map<String, dynamic> data) {
-    String productId = data["id"].toString();
-    Map<String, String>? options = uomOptions[productId + "_billing"];
-    if (options == null || options.isEmpty) {
-      return editableTextField(data, "Billing Option", (v) {
-        data["Billing Option"] = v;
-        debounceCalculation(data);
-      });
-    }
-    String? currentValue = data["Billing Option"] is Map
-        ? data["Billing Option"]["value"]?.toString()
-        : data["Billing Option"]?.toString();
+    Map<String, dynamic> billingData = data['Billing Option'] ?? {};
+    String currentValue = billingData['value']?.toString() ?? "";
+    Map<String, dynamic> options = billingData['options'] ?? {};
+
     return SizedBox(
       height: 38.h,
       child: DropdownButtonFormField<String>(
-        value: options.containsKey(currentValue) ? currentValue : null,
+        isExpanded: true,
+        value: (currentValue != null && options.containsKey(currentValue))
+            ? currentValue
+            : null,
         items: options.entries
-            .map((entry) =>
-                DropdownMenuItem(value: entry.key, child: Text(entry.value)))
+            .map((entry) => DropdownMenuItem<String>(
+                  value: entry.key.toString(),
+                  child: Text(entry.value.toString()),
+                ))
             .toList(),
         onChanged: (val) {
-          data["Billing Option"] = {"value": val, "options": options};
+          if (data['Billing Option'] is! Map) {
+            data['Billing Option'] = {};
+          }
+          data['Billing Option']['value'] = val;
+          data['Billing Option']['options'] = options;
           debounceCalculation(data);
         },
-        isExpanded: true,
         decoration: InputDecoration(
           contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 0),
           border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(6),
-            borderSide: BorderSide(color: Colors.grey[300]!),
-          ),
+              borderRadius: BorderRadius.circular(6),
+              borderSide: BorderSide(color: Colors.grey[300]!)),
           enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(6),
-            borderSide: BorderSide(color: Colors.grey[300]!),
-          ),
+              borderRadius: BorderRadius.circular(6),
+              borderSide: BorderSide(color: Colors.grey[300]!)),
           focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(6),
-            borderSide: BorderSide(color: Colors.deepPurple, width: 2),
-          ),
+              borderRadius: BorderRadius.circular(6),
+              borderSide: BorderSide(color: Get.theme.primaryColor, width: 2)),
           filled: true,
           fillColor: Colors.grey[50],
         ),

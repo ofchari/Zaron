@@ -690,38 +690,33 @@ class ProfileRidgeAndArchController extends GetxController {
   }
 
   Widget uomDropdown(Map<String, dynamic> data) {
-    String productId = data["id"].toString();
-    Map<String, dynamic>? uomData =
-        data["UOM"] is Map ? Map<String, dynamic>.from(data["UOM"]) : null;
-    if (uomData == null || !uomData.containsKey('options')) {
-      return editableTextField(data, "UOM", (val) {
-        data["UOM"] = val;
-        debounceCalculation(data);
-      }, fieldControllers: fieldControllers);
+    Map<String, dynamic>? uomData = data['UOM'];
+    String? currentValue = uomData?['value']?.toString();
+    Map<String, dynamic>? options =
+        uomData?['options'] as Map<String, dynamic>?;
+
+    if (options == null || options.isEmpty) {
+      return editableTextField(data, "UOM", (val) {},
+          fieldControllers: fieldControllers);
     }
 
-    Map<String, String> options =
-        Map<String, String>.from(uomData['options'] as Map);
-    String currentValue = uomData['value']?.toString() ?? options.keys.first;
-
     return SizedBox(
-      height: 40.h,
+      height: 38.h,
       child: DropdownButtonFormField<String>(
         value: currentValue,
-        items: options.entries.map((entry) {
-          return DropdownMenuItem<String>(
-            value: entry.key,
-            child: Text(entry.value,
-                style: GoogleFonts.figtree(
-                    fontSize: 15, fontWeight: FontWeight.w600)),
-          );
-        }).toList(),
+        items: options.entries
+            .map((entry) => DropdownMenuItem(
+                  value: entry.key,
+                  child: Text(entry.value.toString()),
+                ))
+            .toList(),
         onChanged: (val) {
-          if (val != null) {
-            data["UOM"] = {"value": val, "options": options};
-            debounceCalculation(data);
-            update();
+          if (data['UOM'] is! Map) {
+            data['UOM'] = {};
           }
+          data['UOM']['value'] = val;
+          data['UOM']['options'] = options;
+          debounceCalculation(data);
         },
         decoration: InputDecoration(
           contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 0),

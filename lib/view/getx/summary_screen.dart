@@ -2901,6 +2901,38 @@ class SummaryScreen extends StatelessWidget {
                                         ),
                                       ],
                                     ),
+                                    Gap(5),
+                                    Row(
+                                      children: [
+                                        Expanded(
+                                          child: buildDetailItem(
+                                            "CGST",
+                                            purlinController.editableTextField(
+                                              data,
+                                              "cgst",
+                                              (v) {},
+                                              readOnly: true,
+                                              fieldControllers: purlinController
+                                                  .fieldControllers,
+                                            ),
+                                          ),
+                                        ),
+                                        Gap(10),
+                                        Expanded(
+                                          child: buildDetailItem(
+                                            "SGST",
+                                            purlinController.editableTextField(
+                                              data,
+                                              "sgst",
+                                              (v) {},
+                                              readOnly: true,
+                                              fieldControllers: purlinController
+                                                  .fieldControllers,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
                                   ],
                                 ),
                               ),

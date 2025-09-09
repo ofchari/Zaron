@@ -331,6 +331,8 @@ class IronSteelController extends GetxController {
         body: jsonEncode(requestBody),
       );
       if (response.statusCode == 200) {
+        print("input data $requestBody");
+        print("ou ${response.body}");
         final responseData = jsonDecode(response.body);
         if (responseData["status"] == "success") {
           billamt.value = responseData["bill_total"]?.toDouble() ?? 0.0;
@@ -398,7 +400,7 @@ class IronSteelController extends GetxController {
     return SizedBox(
       height: 38.h,
       child: DropdownButtonFormField<String>(
-        value: currentValue,
+        value: options.containsKey(currentValue) ? currentValue : null,
         items: options.entries
             .map((entry) =>
                 DropdownMenuItem(value: entry.key, child: Text(entry.value)))

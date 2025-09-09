@@ -247,12 +247,16 @@ class ScrewController extends GetxController {
     final url = Uri.parse('$apiUrl/calculation');
 
     final productId = data["id"].toString();
+
+    // --- UOM ---
     String? currentUom = data["UOM"] is Map
         ? data["UOM"]["value"]?.toString()
         : data["UOM"]?.toString();
+
+    // --- Nos field ---
     String? nosText =
         fieldControllers[productId]?["Nos"]?.text ?? data["Nos"]?.toString();
-    int nosValue = int.tryParse(nosText ?? "1") ?? 1;
+    int nosValue = int.tryParse(nosText ?? "0") ?? 0;
 
     final requestBody = {
       "id": int.tryParse(productId) ?? 0,
@@ -269,24 +273,32 @@ class ScrewController extends GetxController {
     };
 
     try {
-      final response = await client.post(url,
-          headers: {'Content-Type': 'application/json'},
-          body: jsonEncode(requestBody));
+      final response = await client.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(requestBody),
+      );
+
       if (response.statusCode == 200) {
         final responseData = jsonDecode(response.body);
+
         if (responseData["status"] == "success") {
           billamt.value = responseData["bill_total"]?.toDouble() ?? 0.0;
           calculationResults[productId] = responseData;
-          data["Nos"] = responseData["Nos"]?.toString();
+
+          // ✅ Preserve Nos if API does not return it
+          data["Nos"] = responseData["Nos"]?.toString() ?? data["Nos"];
           data["Amount"] = responseData["Amount"]?.toString();
           data["Cgst"] = responseData["cgst"]?.toString() ?? "0";
           data["Sgst"] = responseData["sgst"]?.toString() ?? "0";
+
           if (fieldControllers[productId] != null) {
             fieldControllers[productId]!["Nos"]?.text = data["Nos"] ?? "";
             fieldControllers[productId]!["Amount"]?.text = data["Amount"] ?? "";
             fieldControllers[productId]!["Cgst"]?.text = data["Cgst"] ?? "";
             fieldControllers[productId]!["Sgst"]?.text = data["Sgst"] ?? "";
           }
+
           previousUomValues[productId] = currentUom;
           responseProducts.refresh();
         }

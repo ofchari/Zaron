@@ -182,6 +182,8 @@ class Screw extends GetView<ScrewController> {
                     ),
                   ),
                   Gap(24),
+
+                  ///part 2
                   Obx(() => controller.responseProducts.isEmpty
                       ? Container(
                           padding: EdgeInsets.symmetric(vertical: 40),

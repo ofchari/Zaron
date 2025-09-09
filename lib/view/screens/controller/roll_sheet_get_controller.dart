@@ -654,33 +654,36 @@ class RollSheetController extends GetxController {
           fieldControllers: fieldControllers);
     }
 
-    return DropdownButtonFormField<String>(
-      value: currentValue,
-      items: options.entries
-          .map((entry) => DropdownMenuItem(
-                value: entry.key,
-                child: Text(entry.value.toString()),
-              ))
-          .toList(),
-      onChanged: (val) {
-        if (data['UOM'] is! Map) {
-          data['UOM'] = {};
-        }
-        data['UOM']['value'] = val;
-        data['UOM']['options'] = options;
-        debounceCalculation(data);
-      },
-      decoration: InputDecoration(
-        contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 0),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(6)),
-        enabledBorder:
-            OutlineInputBorder(borderRadius: BorderRadius.circular(6)),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(6),
-          borderSide: BorderSide(color: Colors.deepPurple, width: 2),
+    return SizedBox(
+      height: 38.h,
+      child: DropdownButtonFormField<String>(
+        value: currentValue,
+        items: options.entries
+            .map((entry) => DropdownMenuItem(
+                  value: entry.key,
+                  child: Text(entry.value.toString()),
+                ))
+            .toList(),
+        onChanged: (val) {
+          if (data['UOM'] is! Map) {
+            data['UOM'] = {};
+          }
+          data['UOM']['value'] = val;
+          data['UOM']['options'] = options;
+          debounceCalculation(data);
+        },
+        decoration: InputDecoration(
+          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 0),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(6)),
+          enabledBorder:
+              OutlineInputBorder(borderRadius: BorderRadius.circular(6)),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(6),
+            borderSide: BorderSide(color: Colors.deepPurple, width: 2),
+          ),
+          filled: true,
+          fillColor: Colors.grey[50],
         ),
-        filled: true,
-        fillColor: Colors.grey[50],
       ),
     );
   }
@@ -726,13 +729,15 @@ class RollSheetController extends GetxController {
         onChanged: onChanged,
         decoration: InputDecoration(
           contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 0),
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(6)),
-          enabledBorder:
-              OutlineInputBorder(borderRadius: BorderRadius.circular(6)),
+          border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(6),
+              borderSide: BorderSide(color: Colors.grey[300]!)),
+          enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(6),
+              borderSide: BorderSide(color: Colors.grey[300]!)),
           focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(6),
-            borderSide: BorderSide(color: Colors.deepPurple, width: 2),
-          ),
+              borderRadius: BorderRadius.circular(6),
+              borderSide: BorderSide(color: Colors.deepPurple, width: 2)),
           filled: true,
           fillColor: Colors.grey[50],
         ),

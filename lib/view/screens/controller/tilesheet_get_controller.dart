@@ -75,7 +75,7 @@ class TileSheetController extends GetxController {
     materialList.clear();
     selectedMaterial.value = '';
     final client =
-    IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
+        IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
     final url = Uri.parse('$apiUrl/showlables/26');
 
     try {
@@ -121,7 +121,7 @@ class TileSheetController extends GetxController {
     brandList.clear();
     selectedBrand.value = '';
     final client =
-    IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
+        IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
     final url = Uri.parse('$apiUrl/showlables/26');
 
     try {
@@ -162,7 +162,7 @@ class TileSheetController extends GetxController {
     colorList.clear();
     selectedColor.value = '';
     final client =
-    IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
+        IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
     final url = Uri.parse('$apiUrl/labelinputdata');
 
     try {
@@ -217,7 +217,7 @@ class TileSheetController extends GetxController {
     thicknessList.clear();
     selectedThickness.value = '';
     final client =
-    IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
+        IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
     final url = Uri.parse('$apiUrl/labelinputdata');
 
     try {
@@ -273,7 +273,7 @@ class TileSheetController extends GetxController {
     coatingMassList.clear();
     selectedCoatingMass.value = '';
     final client =
-    IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
+        IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
     final url = Uri.parse('$apiUrl/labelinputdata');
 
     try {
@@ -341,14 +341,14 @@ class TileSheetController extends GetxController {
 
   Future<void> postAllData() async {
     final client =
-    IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
+        IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
     final url = Uri.parse('$apiUrl/addbag');
     final globalOrderManager = GlobalOrderManager();
     final headers = {"Content-Type": "application/json"};
 
     // Find the matching item from rawTilesheet
     final matchingAccessory = rawTilesheet.firstWhereOrNull(
-          (item) => item["material_type"] == selectedMaterial.value,
+      (item) => item["material_type"] == selectedMaterial.value,
     );
     final tileSheetProID = matchingAccessory?["id"];
 
@@ -358,7 +358,7 @@ class TileSheetController extends GetxController {
       "product_name": selectedMaterial.value,
       "product_base_id": selectedProductBaseId.value,
       "product_base_name":
-      "${selectedBrand.value},${selectedColor.value},${selectedThickness.value}",
+          "${selectedBrand.value},${selectedColor.value},${selectedThickness.value}",
       "category_id": categoryMeta["category_id"],
       "category_name": categoryMeta["categories"],
       "OrderID": globalOrderManager.globalOrderId,
@@ -368,7 +368,7 @@ class TileSheetController extends GetxController {
 
     try {
       final response =
-      await client.post(url, headers: headers, body: jsonEncode(data));
+          await client.post(url, headers: headers, body: jsonEncode(data));
       print("postAllData response status: ${response.statusCode}");
       if (response.statusCode == 200) {
         final responseData = jsonDecode(response.body);
@@ -398,7 +398,7 @@ class TileSheetController extends GetxController {
             if (product["UOM"] != null && product["UOM"]["options"] != null) {
               uomOptions[productId] = Map<String, String>.from(
                 (product["UOM"]["options"] as Map).map(
-                        (key, value) => MapEntry(key.toString(), value.toString())),
+                    (key, value) => MapEntry(key.toString(), value.toString())),
               );
             }
           }
@@ -512,7 +512,7 @@ class TileSheetController extends GetxController {
 
   Future<void> performCalculation(Map<String, dynamic> data) async {
     final client =
-    IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
+        IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
     final url = Uri.parse('$apiUrl/calculation');
     String productId = data["id"].toString();
 
@@ -535,7 +535,7 @@ class TileSheetController extends GetxController {
 
     String nosText = _getFieldValue(productId, "Nos", data);
     int nosValue =
-    _isValidNonZeroNumber(nosText) ? (int.tryParse(nosText) ?? 1) : 1;
+        _isValidNonZeroNumber(nosText) ? (int.tryParse(nosText) ?? 1) : 1;
 
     final requestBody = {
       "id": int.tryParse(data["id"].toString()) ?? 0,
@@ -690,40 +690,43 @@ class TileSheetController extends GetxController {
     Map<String, dynamic>? uomData = data['UOM'];
     String? currentValue = uomData?['value']?.toString();
     Map<String, dynamic>? options =
-    uomData?['options'] as Map<String, dynamic>?;
+        uomData?['options'] as Map<String, dynamic>?;
 
     if (options == null || options.isEmpty) {
       return editableTextField(data, "UOM", (val) {},
           fieldControllers: fieldControllers);
     }
 
-    return DropdownButtonFormField<String>(
-      value: currentValue,
-      items: options.entries
-          .map((entry) => DropdownMenuItem(
-        value: entry.key,
-        child: Text(entry.value.toString()),
-      ))
-          .toList(),
-      onChanged: (val) {
-        if (data['UOM'] is! Map) {
-          data['UOM'] = {};
-        }
-        data['UOM']['value'] = val;
-        data['UOM']['options'] = options;
-        debounceCalculation(data);
-      },
-      decoration: InputDecoration(
-        contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 0),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(6)),
-        enabledBorder:
-        OutlineInputBorder(borderRadius: BorderRadius.circular(6)),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(6),
-          borderSide: BorderSide(color: Colors.deepPurple, width: 2),
+    return SizedBox(
+      height: 38.h,
+      child: DropdownButtonFormField<String>(
+        value: currentValue,
+        items: options.entries
+            .map((entry) => DropdownMenuItem(
+                  value: entry.key,
+                  child: Text(entry.value.toString()),
+                ))
+            .toList(),
+        onChanged: (val) {
+          if (data['UOM'] is! Map) {
+            data['UOM'] = {};
+          }
+          data['UOM']['value'] = val;
+          data['UOM']['options'] = options;
+          debounceCalculation(data);
+        },
+        decoration: InputDecoration(
+          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 0),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(6)),
+          enabledBorder:
+              OutlineInputBorder(borderRadius: BorderRadius.circular(6)),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(6),
+            borderSide: BorderSide(color: Colors.deepPurple, width: 2),
+          ),
+          filled: true,
+          fillColor: Colors.grey[50],
         ),
-        filled: true,
-        fillColor: Colors.grey[50],
       ),
     );
   }
@@ -769,7 +772,7 @@ class TileSheetController extends GetxController {
           contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 0),
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(6)),
           enabledBorder:
-          OutlineInputBorder(borderRadius: BorderRadius.circular(6)),
+              OutlineInputBorder(borderRadius: BorderRadius.circular(6)),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(6),
             borderSide: BorderSide(color: Colors.deepPurple, width: 2),
@@ -804,12 +807,12 @@ class TileSheetController extends GetxController {
   }
 
   Widget editableTextField(
-      Map<String, dynamic> data,
-      String key,
-      ValueChanged<String> onChanged, {
-        bool readOnly = false,
-        required RxMap<String, Map<String, TextEditingController>> fieldControllers,
-      }) {
+    Map<String, dynamic> data,
+    String key,
+    ValueChanged<String> onChanged, {
+    bool readOnly = false,
+    required RxMap<String, Map<String, TextEditingController>> fieldControllers,
+  }) {
     String productId = data["id"].toString();
     fieldControllers.putIfAbsent(productId, () => {});
     if (!fieldControllers[productId]!.containsKey(key)) {
@@ -844,13 +847,15 @@ class TileSheetController extends GetxController {
         onChanged: onChanged,
         decoration: InputDecoration(
           contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 0),
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(6)),
-          enabledBorder:
-          OutlineInputBorder(borderRadius: BorderRadius.circular(6)),
+          border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(6),
+              borderSide: BorderSide(color: Colors.grey[300]!)),
+          enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(6),
+              borderSide: BorderSide(color: Colors.grey[300]!)),
           focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(6),
-            borderSide: BorderSide(color: Colors.deepPurple, width: 2),
-          ),
+              borderRadius: BorderRadius.circular(6),
+              borderSide: BorderSide(color: Colors.deepPurple, width: 2)),
           filled: true,
           fillColor: Colors.grey[50],
         ),

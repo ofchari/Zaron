@@ -482,6 +482,9 @@ class PurlinController extends GetxController {
           headers: {'Content-Type': 'application/json'},
           body: jsonEncode(requestBody));
       if (response.statusCode == 200) {
+        print("bodyyy ${response.body}");
+        print("re ${requestBody}");
+
         final responseData = jsonDecode(response.body);
         if (responseData["status"] == "success") {
           billamt.value = responseData["bill_total"].toDouble() ?? 0.0;
@@ -522,6 +525,20 @@ class PurlinController extends GetxController {
                   responseData["Amount"].toString();
             }
           }
+          if (responseData["cgst"] != null) {
+            data["cgst"] = responseData["cgst"].toString();
+            if (fieldControllers[productId]?["cgst"] != null) {
+              fieldControllers[productId]!["cgst"]!.text =
+                  responseData["cgst"].toString();
+            }
+          }
+          if (responseData["sgst"] != null) {
+            data["sgst"] = responseData["sgst"].toString();
+            if (fieldControllers[productId]?["sgst"] != null) {
+              fieldControllers[productId]!["sgst"]!.text =
+                  responseData["sgst"].toString();
+            }
+          }
 
           previousUomValues[productId] = currentUom;
         }
@@ -531,45 +548,91 @@ class PurlinController extends GetxController {
     }
   }
 
+  // Widget uomDropdown(Map<String, dynamic> data) {
+  //   String productId = data["id"].toString();
+  //   Map<String, String>? options = uomOptions[productId];
+  //
+  //   if (options == null || options.isEmpty) {
+  //     return editableTextField(data, "UOM", (val) {},
+  //         fieldControllers: fieldControllers);
+  //   }
+  //
+  //   String? currentValue;
+  //   if (data["UOM"] is Map) {
+  //     currentValue = data["UOM"]["value"]?.toString();
+  //   } else {
+  //     currentValue = data["UOM"]?.toString();
+  //   }
+  //
+  //   return DropdownButtonFormField<String>(
+  //     value: currentValue,
+  //     items: options.entries
+  //         .map((entry) => DropdownMenuItem(
+  //               value: entry.key,
+  //               child: Text(entry.value),
+  //             ))
+  //         .toList(),
+  //     onChanged: (val) {
+  //       data["UOM"] = {"value": val, "options": options};
+  //       debounceCalculation(data);
+  //     },
+  //     decoration: InputDecoration(
+  //       contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 0),
+  //       border: OutlineInputBorder(borderRadius: BorderRadius.circular(6)),
+  //       enabledBorder:
+  //           OutlineInputBorder(borderRadius: BorderRadius.circular(6)),
+  //       focusedBorder: OutlineInputBorder(
+  //         borderRadius: BorderRadius.circular(6),
+  //         borderSide: BorderSide(color: Colors.deepPurple, width: 2),
+  //       ),
+  //       filled: true,
+  //       fillColor: Colors.grey[50],
+  //     ),
+  //   );
+  // }
   Widget uomDropdown(Map<String, dynamic> data) {
-    String productId = data["id"].toString();
-    Map<String, String>? options = uomOptions[productId];
+    Map<String, dynamic>? uomData = data['UOM'];
+    String? currentValue = uomData?['value']?.toString();
+    Map<String, dynamic>? options =
+        uomData?['options'] as Map<String, dynamic>?;
 
     if (options == null || options.isEmpty) {
       return editableTextField(data, "UOM", (val) {},
           fieldControllers: fieldControllers);
     }
 
-    String? currentValue;
-    if (data["UOM"] is Map) {
-      currentValue = data["UOM"]["value"]?.toString();
-    } else {
-      currentValue = data["UOM"]?.toString();
-    }
-
-    return DropdownButtonFormField<String>(
-      value: currentValue,
-      items: options.entries
-          .map((entry) => DropdownMenuItem(
-                value: entry.key,
-                child: Text(entry.value),
-              ))
-          .toList(),
-      onChanged: (val) {
-        data["UOM"] = {"value": val, "options": options};
-        debounceCalculation(data);
-      },
-      decoration: InputDecoration(
-        contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 0),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(6)),
-        enabledBorder:
-            OutlineInputBorder(borderRadius: BorderRadius.circular(6)),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(6),
-          borderSide: BorderSide(color: Colors.deepPurple, width: 2),
+    return SizedBox(
+      height: 38.h,
+      child: DropdownButtonFormField<String>(
+        value: currentValue,
+        items: options.entries
+            .map((entry) => DropdownMenuItem(
+                  value: entry.key,
+                  child: Text(entry.value.toString()),
+                ))
+            .toList(),
+        onChanged: (val) {
+          if (data['UOM'] is! Map) {
+            data['UOM'] = {};
+          }
+          data['UOM']['value'] = val;
+          data['UOM']['options'] = options;
+          debounceCalculation(data);
+        },
+        decoration: InputDecoration(
+          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 0),
+          border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(6),
+              borderSide: BorderSide(color: Colors.grey[300]!)),
+          enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(6),
+              borderSide: BorderSide(color: Colors.grey[300]!)),
+          focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(6),
+              borderSide: BorderSide(color: Colors.deepPurple, width: 2)),
+          filled: true,
+          fillColor: Colors.grey[50],
         ),
-        filled: true,
-        fillColor: Colors.grey[50],
       ),
     );
   }
@@ -605,13 +668,15 @@ class PurlinController extends GetxController {
         onChanged: onChanged,
         decoration: InputDecoration(
           contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 0),
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(6)),
-          enabledBorder:
-              OutlineInputBorder(borderRadius: BorderRadius.circular(6)),
+          border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(6),
+              borderSide: BorderSide(color: Colors.grey[300]!)),
+          enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(6),
+              borderSide: BorderSide(color: Colors.grey[300]!)),
           focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(6),
-            borderSide: BorderSide(color: Colors.deepPurple, width: 2),
-          ),
+              borderRadius: BorderRadius.circular(6),
+              borderSide: BorderSide(color: Colors.deepPurple, width: 2)),
           filled: true,
           fillColor: Colors.grey[50],
         ),

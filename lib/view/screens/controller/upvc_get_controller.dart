@@ -30,6 +30,8 @@ class UpvcTilesController extends GetxController {
   var orderNO = ''.obs;
   var calculationResults = <String, dynamic>{}.obs;
   var previousUomValues = <String, String?>{}.obs;
+  // var availableLengths = <String, List<String>>{}.obs;
+  // var selectedLengths = <String, String?>{}.obs;
   Map<String, Map<String, TextEditingController>> fieldControllers = {};
 
   Timer? debounceTimer;
@@ -259,6 +261,81 @@ class UpvcTilesController extends GetxController {
       );
     }
   }
+
+  // Widget lengthDropdown(Map<String, dynamic> data) {
+  //   String productId = data["id"].toString();
+  //   List<String> lengths = availableLengths[productId] ?? [];
+  //
+  //   if (lengths.isEmpty) {
+  //     return SizedBox(
+  //       height: 38.h,
+  //       child: Container(
+  //         decoration: BoxDecoration(
+  //           border: Border.all(color: Colors.grey[300]!),
+  //           borderRadius: BorderRadius.circular(6),
+  //           color: Colors.grey[50],
+  //         ),
+  //         child: Center(
+  //           child: Text(
+  //             "Loading lengths...",
+  //             style: TextStyle(
+  //               fontWeight: FontWeight.w400,
+  //               color: Colors.grey[600],
+  //               fontSize: 15,
+  //             ),
+  //           ),
+  //         ),
+  //       ),
+  //     );
+  //   }
+  //
+  //   String? selectedValue = selectedLengths[productId];
+  //   if (selectedValue != null && !lengths.contains(selectedValue)) {
+  //     selectedValue = null;
+  //     selectedLengths[productId] = null;
+  //   }
+  //
+  //   return SizedBox(
+  //     height: 38.h,
+  //     child: DropdownButtonFormField<String>(
+  //       value: selectedValue,
+  //       decoration: InputDecoration(
+  //         contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 0),
+  //         border: OutlineInputBorder(borderRadius: BorderRadius.circular(6)),
+  //         enabledBorder:
+  //             OutlineInputBorder(borderRadius: BorderRadius.circular(6)),
+  //         focusedBorder: OutlineInputBorder(
+  //           borderRadius: BorderRadius.circular(6),
+  //           borderSide: BorderSide(color: Colors.deepPurple, width: 2),
+  //         ),
+  //         filled: true,
+  //         fillColor: Colors.grey[50],
+  //       ),
+  //       hint: Text(
+  //         "Select Length",
+  //         style: TextStyle(
+  //           fontWeight: FontWeight.w400,
+  //           color: Colors.grey[600],
+  //           fontSize: 15,
+  //         ),
+  //       ),
+  //       items: lengths.map((String length) {
+  //         return DropdownMenuItem<String>(
+  //           value: length,
+  //           child: Text('$length ft'),
+  //         );
+  //       }).toList(),
+  //       onChanged: (String? newValue) {
+  //         if (newValue != null) {
+  //           selectedLengths[productId] = newValue;
+  //           data["Length"] = newValue;
+  //           debounceCalculation(data);
+  //         }
+  //       },
+  //       isExpanded: true,
+  //     ),
+  //   );
+  // }
 
   Future<void> performCalculation(Map<String, dynamic> data) async {
     final client =

@@ -5,7 +5,6 @@ import 'package:gap/gap.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../../../getx/summary_screen.dart';
 import '../../../widgets/subhead.dart';
 import '../../controller/linear_sheet_get_controller.dart';
 
@@ -95,7 +94,8 @@ class LinerSheetPage extends GetView<LinerSheetController> {
                                       ? controller.selectedBrands.value
                                       : null,
                                   (value) {
-                                    controller.selectedBrands.value = value ?? '';
+                                    controller.selectedBrands.value =
+                                        value ?? '';
                                     controller.selectedColors.value = '';
                                     controller.selectedThickness.value = '';
                                     controller.selectedCoatingMass.value = '';
@@ -114,7 +114,8 @@ class LinerSheetPage extends GetView<LinerSheetController> {
                                       ? controller.selectedColors.value
                                       : null,
                                   (value) {
-                                    controller.selectedColors.value = value ?? '';
+                                    controller.selectedColors.value =
+                                        value ?? '';
                                     controller.selectedThickness.value = '';
                                     controller.selectedCoatingMass.value = '';
                                     controller.thickAndList.clear();
@@ -143,7 +144,8 @@ class LinerSheetPage extends GetView<LinerSheetController> {
                                 )),
                             Obx(() => _buildAnimatedDropdown(
                                   controller.coatingAndList,
-                                  controller.selectedCoatingMass.value.isNotEmpty
+                                  controller
+                                          .selectedCoatingMass.value.isNotEmpty
                                       ? controller.selectedCoatingMass.value
                                       : null,
                                   (value) {
@@ -166,7 +168,8 @@ class LinerSheetPage extends GetView<LinerSheetController> {
                                     ),
                                   ),
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Text(
                                         "Selected Product Details",
@@ -195,7 +198,8 @@ class LinerSheetPage extends GetView<LinerSheetController> {
                               height: 54.h,
                               child: ElevatedButton(
                                 onPressed: () {
-                                  if (controller.selectedProduct.value.isEmpty ||
+                                  if (controller
+                                          .selectedProduct.value.isEmpty ||
                                       controller.selectedBrands.value.isEmpty ||
                                       controller.selectedColors.value.isEmpty ||
                                       controller
@@ -297,8 +301,8 @@ class LinerSheetPage extends GetView<LinerSheetController> {
                                   end: Alignment.bottomRight,
                                 ),
                                 borderRadius: BorderRadius.circular(16),
-                                border:
-                                    Border.all(color: Colors.deepPurple.shade100),
+                                border: Border.all(
+                                    color: Colors.deepPurple.shade100),
                                 boxShadow: [
                                   BoxShadow(
                                     color: Colors.black.withOpacity(0.05),
@@ -317,7 +321,8 @@ class LinerSheetPage extends GetView<LinerSheetController> {
                                         decoration: BoxDecoration(
                                           color: Colors.deepPurple.shade100
                                               .withOpacity(0.5),
-                                          borderRadius: BorderRadius.circular(12),
+                                          borderRadius:
+                                              BorderRadius.circular(12),
                                         ),
                                         child: Icon(
                                           Icons.shopping_bag_outlined,
@@ -343,8 +348,8 @@ class LinerSheetPage extends GetView<LinerSheetController> {
                                     decoration: BoxDecoration(
                                       color: Colors.white60,
                                       borderRadius: BorderRadius.circular(10),
-                                      border:
-                                          Border.all(color: Colors.grey.shade200),
+                                      border: Border.all(
+                                          color: Colors.grey.shade200),
                                     ),
                                     child: Row(
                                       mainAxisAlignment:
@@ -438,7 +443,8 @@ class LinerSheetPage extends GetView<LinerSheetController> {
                                                     fontSize: 20,
                                                     fontWeight: FontWeight.bold,
                                                   ),
-                                                  overflow: TextOverflow.ellipsis,
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
                                                 ),
                                               ],
                                             ),
@@ -651,8 +657,13 @@ class LinerSheetPage extends GetView<LinerSheetController> {
               SizedBox(width: 10),
               Expanded(
                 child: buildDetailItem(
-                  "Length",
-                  controller.lengthDropdown(data),
+                  "Profile",
+                  controller.editableTextField(
+                    data,
+                    "length",
+                    (v) => controller.debounceCalculation(data),
+                    fieldControllers: controller.fieldControllers,
+                  ),
                 ),
               ),
               SizedBox(width: 10),

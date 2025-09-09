@@ -6,7 +6,6 @@ import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:zaron/view/widgets/subhead.dart';
 
-import '../../../getx/summary_screen.dart';
 import '../../controller/decking_get_controller.dart';
 
 class DeckingSheets extends GetView<DeckingSheetsController> {
@@ -80,7 +79,8 @@ class DeckingSheets extends GetView<DeckingSheetsController> {
                             SizedBox(height: 16),
                             Obx(() => _buildAnimatedDropdown(
                                   controller.materialTypeList,
-                                  controller.selectedMaterialType.value.isNotEmpty
+                                  controller
+                                          .selectedMaterialType.value.isNotEmpty
                                       ? controller.selectedMaterialType.value
                                       : null,
                                   (value) {
@@ -121,7 +121,8 @@ class DeckingSheets extends GetView<DeckingSheetsController> {
                                 )),
                             Obx(() => _buildAnimatedDropdown(
                                   controller.coatingMassList,
-                                  controller.selectedCoatingMass.value.isNotEmpty
+                                  controller
+                                          .selectedCoatingMass.value.isNotEmpty
                                       ? controller.selectedCoatingMass.value
                                       : null,
                                   (value) {
@@ -133,14 +134,15 @@ class DeckingSheets extends GetView<DeckingSheetsController> {
                                     controller.brandList.clear();
                                     controller.fetchYieldStrength();
                                   },
-                                  enabled: controller.coatingMassList.isNotEmpty,
+                                  enabled:
+                                      controller.coatingMassList.isNotEmpty,
                                   label: "Coating Mass",
                                   icon: Icons.layers_outlined,
                                 )),
                             Obx(() => _buildAnimatedDropdown(
                                   controller.yieldStrengthList,
-                                  controller
-                                          .selectedYieldStrength.value.isNotEmpty
+                                  controller.selectedYieldStrength.value
+                                          .isNotEmpty
                                       ? controller.selectedYieldStrength.value
                                       : null,
                                   (value) {
@@ -161,7 +163,8 @@ class DeckingSheets extends GetView<DeckingSheetsController> {
                                       ? controller.selectedBrand.value
                                       : null,
                                   (value) {
-                                    controller.selectedBrand.value = value ?? '';
+                                    controller.selectedBrand.value =
+                                        value ?? '';
                                   },
                                   enabled: controller.brandList.isNotEmpty,
                                   label: "Brand",
@@ -179,7 +182,8 @@ class DeckingSheets extends GetView<DeckingSheetsController> {
                                     ),
                                   ),
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Text(
                                         "Selected Product Details",
@@ -208,14 +212,13 @@ class DeckingSheets extends GetView<DeckingSheetsController> {
                               height: 54.h,
                               child: ElevatedButton(
                                 onPressed: () {
-                                  if (controller
-                                          .selectedMaterialType.value.isEmpty ||
+                                  if (controller.selectedMaterialType.value.isEmpty ||
                                       controller
                                           .selectedThickness.value.isEmpty ||
                                       controller
                                           .selectedCoatingMass.value.isEmpty ||
-                                      controller
-                                          .selectedYieldStrength.value.isEmpty ||
+                                      controller.selectedYieldStrength.value
+                                          .isEmpty ||
                                       controller.selectedBrand.value.isEmpty) {
                                     Get.snackbar(
                                       "Error",
@@ -273,8 +276,8 @@ class DeckingSheets extends GetView<DeckingSheetsController> {
                                   end: Alignment.bottomRight,
                                 ),
                                 borderRadius: BorderRadius.circular(16),
-                                border:
-                                    Border.all(color: Colors.deepPurple.shade100),
+                                border: Border.all(
+                                    color: Colors.deepPurple.shade100),
                                 boxShadow: [
                                   BoxShadow(
                                     color: Colors.black.withOpacity(0.05),
@@ -293,7 +296,8 @@ class DeckingSheets extends GetView<DeckingSheetsController> {
                                         decoration: BoxDecoration(
                                           color: Colors.deepPurple.shade100
                                               .withOpacity(0.5),
-                                          borderRadius: BorderRadius.circular(12),
+                                          borderRadius:
+                                              BorderRadius.circular(12),
                                         ),
                                         child: Icon(
                                           Icons.shopping_bag_outlined,
@@ -319,8 +323,8 @@ class DeckingSheets extends GetView<DeckingSheetsController> {
                                     decoration: BoxDecoration(
                                       color: Colors.white60,
                                       borderRadius: BorderRadius.circular(10),
-                                      border:
-                                          Border.all(color: Colors.grey.shade200),
+                                      border: Border.all(
+                                          color: Colors.grey.shade200),
                                     ),
                                     child: Row(
                                       mainAxisAlignment:
@@ -414,7 +418,8 @@ class DeckingSheets extends GetView<DeckingSheetsController> {
                                                     fontSize: 20,
                                                     fontWeight: FontWeight.bold,
                                                   ),
-                                                  overflow: TextOverflow.ellipsis,
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
                                                 ),
                                               ],
                                             ),

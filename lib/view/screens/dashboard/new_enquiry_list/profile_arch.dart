@@ -6,7 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:path/path.dart%20';
 import 'package:zaron/view/widgets/subhead.dart';
 
-import '../../camera_upload/profile_uploads/profile_attchement.dart';
+import '../../camera_upload/acessories_uploads/accessories_attahment.dart';
 import '../../controller/profile_ridge_get_controller.dart';
 
 class ProfileRidgeAndArch extends GetView<ProfileRidgeAndArchController> {
@@ -483,42 +483,6 @@ class ProfileRidgeAndArch extends GetView<ProfileRidgeAndArchController> {
                       ),
                     ),
                   ),
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Container(
-                      height: 40,
-                      width: 40,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(10),
-                        color: Colors.red[50],
-                        border: Border.all(color: Colors.red[200]!),
-                      ),
-                      child: IconButton(
-                        icon: Icon(Icons.delete_outline,
-                            color: Colors.redAccent, size: 20),
-                        onPressed: () => showDialog(
-                          context: context as BuildContext,
-                          builder: (context) => AlertDialog(
-                            title: Text(
-                                "Are you sure you want to delete this item?"),
-                            actions: [
-                              TextButton(
-                                onPressed: () => Navigator.pop(context),
-                                child: Text("No"),
-                              ),
-                              ElevatedButton(
-                                onPressed: () {
-                                  controller.deleteCard(data["id"].toString());
-                                  Navigator.pop(context);
-                                },
-                                child: Text("Yes"),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
                 ],
               ),
 
@@ -647,36 +611,88 @@ class ProfileRidgeAndArch extends GetView<ProfileRidgeAndArchController> {
 
                     /// Row 4: Base Product Search and Attachment Button
                     Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
-                        Expanded(
-                          flex: 3,
-                          child: controller.buildBaseProductSearchField(data),
-                        ),
-                        const SizedBox(width: 12),
-                        Container(
-                          height: 40,
-                          width: 40,
-                          decoration: BoxDecoration(
-                            color: Colors.green[50],
-                            borderRadius: BorderRadius.circular(10),
-                            border: Border.all(color: Colors.green[200]!),
-                          ),
-                          child: IconButton(
-                            icon: Icon(Icons.attach_file,
-                                color: Colors.green[600], size: 20),
-                            onPressed: () {
+                        controller.buildBaseProductSearchField(data),
+                        SizedBox(width: 8),
+                        Material(
+                          color: Colors.green[50],
+                          borderRadius: BorderRadius.circular(8),
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(8),
+                            onTap: () {
                               Navigator.push(
                                 context as BuildContext,
                                 MaterialPageRoute(
-                                  builder: (context) => ProfileAttachment(
+                                  builder: (context) => AttachmentScreen(
                                     productId: data['id'].toString(),
                                     mainProductId:
-                                        controller.currentMainProductId ??
+                                        controller.currentMainProductId.value ??
                                             "Unknown ID",
                                   ),
                                 ),
                               );
                             },
+                            child: Container(
+                              height: 36,
+                              width: 36,
+                              decoration: BoxDecoration(
+                                  border: Border.all(color: Colors.green[100]!),
+                                  borderRadius: BorderRadius.circular(8)),
+                              child: Icon(Icons.attach_file,
+                                  color: Colors.green[600], size: 18),
+                            ),
+                          ),
+                        ),
+                        SizedBox(width: 8),
+                        Material(
+                          color: Colors.red[50],
+                          borderRadius: BorderRadius.circular(8),
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(8),
+                            onTap: () {
+                              showDialog(
+                                context: (context) as BuildContext,
+                                builder: (context) => AlertDialog(
+                                  shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12)),
+                                  title: Subhead(
+                                      text: "Delete This Item?",
+                                      weight: FontWeight.w500,
+                                      color: Colors.black),
+                                  actions: [
+                                    TextButton(
+                                        onPressed: () => Navigator.pop(context),
+                                        child: Text("No",
+                                            style: TextStyle(
+                                                color: Colors.grey[700]))),
+                                    ElevatedButton(
+                                      onPressed: () {
+                                        controller
+                                            .deleteCard(data["id"].toString());
+                                        Navigator.pop(context);
+                                      },
+                                      style: ElevatedButton.styleFrom(
+                                          backgroundColor: Colors.red,
+                                          shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(8))),
+                                      child: Text("Yes"),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
+                            child: Container(
+                              height: 36,
+                              width: 36,
+                              decoration: BoxDecoration(
+                                  border: Border.all(color: Colors.red[100]!),
+                                  borderRadius: BorderRadius.circular(8)),
+                              child: Icon(Icons.delete_outline,
+                                  color: Colors.red[600], size: 20),
+                            ),
                           ),
                         ),
                       ],

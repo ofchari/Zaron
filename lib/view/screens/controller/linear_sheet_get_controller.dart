@@ -559,6 +559,8 @@ class LinerSheetController extends GetxController {
           headers: {'Content-Type': 'application/json'},
           body: jsonEncode(requestBody));
       if (response.statusCode == 200) {
+        print("input data $requestBody");
+        print("ou ${response.body}");
         final responseData = jsonDecode(response.body);
         if (responseData["status"] == "success") {
           billamt.value = responseData["bill_total"].toDouble() ?? 0.0;
@@ -742,7 +744,7 @@ class LinerSheetController extends GetxController {
           "sgst",
         ].contains(key)
             ? TextInputType.numberWithOptions(decimal: true)
-            : TextInputType.text,
+            : TextInputType.numberWithOptions(decimal: true),
         onChanged: onChanged,
         decoration: InputDecoration(
           contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 0),

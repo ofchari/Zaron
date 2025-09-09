@@ -272,6 +272,8 @@ class Purlin extends GetView<PurlinController> {
                       ),
                     ),
                   ),
+
+                  ///part 1
                   Obx(() => controller.responseProducts.isNotEmpty
                       ? Column(
                           children: [
@@ -635,7 +637,7 @@ class Purlin extends GetView<PurlinController> {
             ],
           ),
         ),
-        Gap(5),
+        Gap(5.h),
         Padding(
           padding: const EdgeInsets.all(8.0),
           child: Row(
@@ -682,6 +684,38 @@ class Purlin extends GetView<PurlinController> {
           ),
         ),
         Gap(5.h),
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Row(
+            children: [
+              Expanded(
+                child: buildDetailItem(
+                  "cgst",
+                  controller.editableTextField(
+                    data,
+                    "cgst",
+                    (v) => controller.debounceCalculation(data),
+                    readOnly: true,
+                    fieldControllers: controller.fieldControllers,
+                  ),
+                ),
+              ),
+              SizedBox(width: 10),
+              Expanded(
+                child: buildDetailItem(
+                  "sgst",
+                  controller.editableTextField(
+                    data,
+                    "sgst",
+                    (v) => controller.debounceCalculation(data),
+                    readOnly: true,
+                    fieldControllers: controller.fieldControllers,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        )
       ],
     );
   }

@@ -10,6 +10,7 @@ import '../../controller/upvc_get_controller.dart';
 
 class UpvcTiles extends GetView<UpvcTilesController> {
   const UpvcTiles({super.key, required this.data});
+
   final Map<String, dynamic> data;
 
   @override
@@ -87,7 +88,8 @@ class UpvcTiles extends GetView<UpvcTilesController> {
                                   controller.materialList,
                                   controller.selectMaterial.value,
                                   (value) {
-                                    controller.selectMaterial.value = value ?? '';
+                                    controller.selectMaterial.value =
+                                        value ?? '';
                                     controller.selectedColor.value = '';
                                     controller.selectThickness.value = '';
                                     controller.colorsList.clear();
@@ -101,7 +103,8 @@ class UpvcTiles extends GetView<UpvcTilesController> {
                                   controller.colorsList,
                                   controller.selectedColor.value,
                                   (value) {
-                                    controller.selectedColor.value = value ?? '';
+                                    controller.selectedColor.value =
+                                        value ?? '';
                                     controller.selectThickness.value = '';
                                     controller.thicknessList.clear();
                                     controller.fetchThickness();
@@ -133,7 +136,8 @@ class UpvcTiles extends GetView<UpvcTilesController> {
                                     ),
                                   ),
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Text(
                                         "Selected Product Details",
@@ -181,7 +185,8 @@ class UpvcTiles extends GetView<UpvcTilesController> {
                                       ),
                                     ),
                                     child: Row(
-                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
                                       children: [
                                         Icon(Icons.add_shopping_cart_outlined,
                                             color: Colors.white),
@@ -238,7 +243,8 @@ class UpvcTiles extends GetView<UpvcTilesController> {
                               end: Alignment.bottomRight,
                             ),
                             borderRadius: BorderRadius.circular(16),
-                            border: Border.all(color: Colors.deepPurple.shade100),
+                            border:
+                                Border.all(color: Colors.deepPurple.shade100),
                             boxShadow: [
                               BoxShadow(
                                 color: Colors.black.withOpacity(0.05),
@@ -283,7 +289,8 @@ class UpvcTiles extends GetView<UpvcTilesController> {
                                 decoration: BoxDecoration(
                                   color: Colors.white60,
                                   borderRadius: BorderRadius.circular(10),
-                                  border: Border.all(color: Colors.grey.shade200),
+                                  border:
+                                      Border.all(color: Colors.grey.shade200),
                                 ),
                                 child: Row(
                                   mainAxisAlignment:
@@ -437,7 +444,8 @@ class UpvcTiles extends GetView<UpvcTilesController> {
                                                   color: Colors.redAccent),
                                               onPressed: () => showDialog(
                                                 context: context,
-                                                builder: (context) => AlertDialog(
+                                                builder: (context) =>
+                                                    AlertDialog(
                                                   title: Text("Delete Product"),
                                                   content: Text(
                                                     "Are you sure you want to delete this item?",
@@ -445,7 +453,8 @@ class UpvcTiles extends GetView<UpvcTilesController> {
                                                   actions: [
                                                     TextButton(
                                                       onPressed: () =>
-                                                          Navigator.pop(context),
+                                                          Navigator.pop(
+                                                              context),
                                                       child: Text("Cancel"),
                                                     ),
                                                     ElevatedButton(
@@ -470,14 +479,15 @@ class UpvcTiles extends GetView<UpvcTilesController> {
                                                 Expanded(
                                                     child: buildDetailItem(
                                                         "UOM",
-                                                        controller
-                                                            .uomDropdown(data))),
+                                                        controller.uomDropdown(
+                                                            data))),
                                                 Gap(10),
                                                 Expanded(
                                                     child: buildDetailItem(
                                                         "Length",
                                                         editableTextField(
-                                                            data, "Length", (v) {
+                                                            data, "Length",
+                                                            (v) {
                                                           data["Length"] = v;
                                                           controller
                                                               .debounceCalculation(
@@ -511,7 +521,8 @@ class UpvcTiles extends GetView<UpvcTilesController> {
                                                         editableTextField(
                                                             data, "Basic Rate",
                                                             (v) {
-                                                          data["Basic Rate"] = v;
+                                                          data["Basic Rate"] =
+                                                              v;
                                                           controller
                                                               .debounceCalculation(
                                                                   data);
@@ -548,8 +559,8 @@ class UpvcTiles extends GetView<UpvcTilesController> {
                                                 Expanded(
                                                     child: buildDetailItem(
                                                         "CGST",
-                                                        editableTextField(
-                                                            data, "cgst", (v) {},
+                                                        editableTextField(data,
+                                                            "cgst", (v) {},
                                                             readOnly: true,
                                                             fieldControllers:
                                                                 controller
@@ -558,8 +569,8 @@ class UpvcTiles extends GetView<UpvcTilesController> {
                                                 Expanded(
                                                     child: buildDetailItem(
                                                         "SGST",
-                                                        editableTextField(
-                                                            data, "sgst", (v) {},
+                                                        editableTextField(data,
+                                                            "sgst", (v) {},
                                                             readOnly: true,
                                                             fieldControllers:
                                                                 controller
