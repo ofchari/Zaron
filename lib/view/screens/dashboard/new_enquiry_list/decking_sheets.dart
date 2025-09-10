@@ -566,74 +566,91 @@ class DeckingSheets extends GetView<DeckingSheetsController> {
   }
 
   Widget buildProductDetailInRows(Map<String, dynamic> data) {
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: Column(
-        children: [
-          Row(
+    return Obx(() => // 🔴 wrap once here
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Column(
             children: [
-              Expanded(
-                  child: buildDetailItem("UOM", controller.uomDropdown(data))),
-              Gap(10),
-              Expanded(
-                  child: buildDetailItem(
-                      "Billing Option", controller.billingDropdown(data))),
-              Gap(10),
-              Expanded(
-                  child: buildDetailItem(
+              Row(
+                children: [
+                  Expanded(
+                    child: buildDetailItem("UOM", controller.uomDropdown(data)),
+                  ),
+                  const Gap(10),
+                  Expanded(
+                    child: buildDetailItem(
+                        "Billing Option", controller.billingDropdown(data)),
+                  ),
+                  const Gap(10),
+                  Expanded(
+                    child: buildDetailItem(
                       "Length",
                       controller.editableTextField(data, "Length",
-                          (v) => controller.debounceCalculation(data)))),
-            ],
-          ),
-          Gap(5),
-          Row(
-            children: [
-              Expanded(
-                  child: buildDetailItem(
+                          (v) => controller.debounceCalculation(data)),
+                    ),
+                  ),
+                ],
+              ),
+              const Gap(5),
+              Row(
+                children: [
+                  Expanded(
+                    child: buildDetailItem(
                       "Nos",
                       controller.editableTextField(data, "Nos",
-                          (v) => controller.debounceCalculation(data)))),
-              Gap(10),
-              Expanded(
-                  child: buildDetailItem(
+                          (v) => controller.debounceCalculation(data)),
+                    ),
+                  ),
+                  const Gap(10),
+                  Expanded(
+                    child: buildDetailItem(
                       "Basic Rate",
                       controller.editableTextField(data, "Basic Rate",
-                          (v) => controller.debounceCalculation(data)))),
-              Gap(10),
-              Expanded(
-                  child: buildDetailItem(
+                          (v) => controller.debounceCalculation(data)),
+                    ),
+                  ),
+                  const Gap(10),
+                  Expanded(
+                    child: buildDetailItem(
                       "Qty",
                       controller.editableTextField(data, "qty",
-                          (v) => controller.debounceCalculation(data)))),
-            ],
-          ),
-          Gap(5.h),
-          Row(
-            children: [
-              Expanded(
-                  child: buildDetailItem(
+                          (v) => controller.debounceCalculation(data)),
+                    ),
+                  ),
+                ],
+              ),
+              Gap(5.h),
+              Row(
+                children: [
+                  Expanded(
+                    child: buildDetailItem(
                       "Amount",
                       controller.editableTextField(data, "Amount",
-                          (v) => controller.debounceCalculation(data)))),
-              Gap(10),
-              Expanded(
-                  child: buildDetailItem(
+                          (v) => controller.debounceCalculation(data)),
+                    ),
+                  ),
+                  const Gap(10),
+                  Expanded(
+                    child: buildDetailItem(
                       "CGST",
                       controller.editableTextField(data, "cgst",
-                          (v) => controller.debounceCalculation(data)))),
-              Gap(10),
-              Expanded(
-                  child: buildDetailItem(
+                          (v) => controller.debounceCalculation(data)),
+                    ),
+                  ),
+                  const Gap(10),
+                  Expanded(
+                    child: buildDetailItem(
                       "SGST",
                       controller.editableTextField(data, "sgst",
-                          (v) => controller.debounceCalculation(data)))),
+                          (v) => controller.debounceCalculation(data)),
+                    ),
+                  ),
+                ],
+              ),
+              Gap(5.h),
             ],
           ),
-          Gap(5.h),
-        ],
-      ),
-    );
+        ));
   }
 
   Widget buildDetailItem(String label, Widget field) {

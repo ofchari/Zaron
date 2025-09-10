@@ -354,16 +354,15 @@ class _TotalQuoationViewState extends State<TotalQuoationView> {
           content: Text(
             "Are you sure you want to delete this item?",
             style: GoogleFonts.outfit(
-                textStyle: TextStyle(
-                    fontSize: 15.sp,
-                    fontWeight: FontWeight.w500,
-                    color: Colors.black)),
+              textStyle: TextStyle(
+                  fontSize: 15.sp,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.black),
+            ),
           ),
           actions: [
             GestureDetector(
-                onTap: () {
-                  Navigator.of(context).pop(false);
-                },
+                onTap: () => Navigator.of(context).pop(false),
                 child: Buttons(
                     text: "No",
                     weight: FontWeight.w500,
@@ -372,9 +371,7 @@ class _TotalQuoationViewState extends State<TotalQuoationView> {
                     width: width / 4.2,
                     radius: BorderRadius.circular(15))),
             GestureDetector(
-                onTap: () {
-                  Navigator.of(context).pop(true);
-                },
+                onTap: () => Navigator.of(context).pop(true),
                 child: Buttons(
                     text: "Yes",
                     weight: FontWeight.w500,
@@ -390,21 +387,21 @@ class _TotalQuoationViewState extends State<TotalQuoationView> {
     if (confirm != true) return;
 
     final response = await http.delete(
-      Uri.parse('$apiUrl/enquirydelete/$itemId'),
+      Uri.parse('$apiUrl/quotationdelete/$itemId'),
     );
 
     if (response.statusCode == 200) {
-      final index = data.indexWhere((row) => row['id'] == itemId);
-      if (index != -1) {
-        setState(() {
-          data.removeAt(index);
+      setState(() {
+        // Remove item from the correct categoryData list
+        categoryData.forEach((categoryId, itemList) {
+          itemList.removeWhere((row) => row['Action'].toString() == itemId);
         });
-        print(data);
-        print(itemId);
-      }
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Item deleted successfully.")),
-      );
+      });
+
+      Get.snackbar("Item deleted from Quotation", "deleted successfully",
+          colorText: Colors.white,
+          backgroundColor: Colors.green,
+          snackPosition: SnackPosition.BOTTOM);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Failed to delete the item.")),

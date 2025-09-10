@@ -17,26 +17,6 @@ class CutToLengthSheet extends GetView<CutToLengthSheetController> {
   Widget build(BuildContext context) {
     Get.put(CutToLengthSheetController());
     return Scaffold(
-      // appBar: AppBar(
-      //   title: Subhead(
-      //     text: 'Cut To Length Sheets',
-      //     weight: FontWeight.w500,
-      //     color: Colors.black,
-      //   ),
-      //   centerTitle: true,
-      //   elevation: 0,
-      //   backgroundColor: Colors.white,
-      //   leading: IconButton(
-      //     icon: Icon(Icons.arrow_back, color: Colors.black87),
-      //     onPressed: () => Navigator.pop(context),
-      //   ),
-      //   actions: [
-      //     IconButton(
-      //       icon: Icon(Icons.view_list, color: Colors.black87),
-      //       onPressed: () => Get.to(() => SummaryScreen()),
-      //     ),
-      //   ],
-      // ),
       body: SafeArea(
         child: Container(
           decoration: BoxDecoration(

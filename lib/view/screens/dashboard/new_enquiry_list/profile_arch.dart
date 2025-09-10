@@ -3,10 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:path/path.dart%20';
+import 'package:zaron/view/screens/camera_upload/profile_uploads/profile_attchement.dart';
 import 'package:zaron/view/widgets/subhead.dart';
 
-import '../../camera_upload/acessories_uploads/accessories_attahment.dart';
 import '../../controller/profile_ridge_get_controller.dart';
 
 class ProfileRidgeAndArch extends GetView<ProfileRidgeAndArchController> {
@@ -615,28 +614,25 @@ class ProfileRidgeAndArch extends GetView<ProfileRidgeAndArchController> {
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
                         controller.buildBaseProductSearchField(data),
-                        SizedBox(width: 8),
+                        SizedBox(width: 4),
                         Material(
                           color: Colors.green[50],
                           borderRadius: BorderRadius.circular(8),
                           child: InkWell(
                             borderRadius: BorderRadius.circular(8),
                             onTap: () {
-                              Navigator.push(
-                                context as BuildContext,
-                                MaterialPageRoute(
-                                  builder: (context) => AttachmentScreen(
-                                    productId: data['id'].toString(),
-                                    mainProductId:
-                                        controller.currentMainProductId.value ??
-                                            "Unknown ID",
-                                  ),
+                              Get.to(
+                                ProfileAttachment(
+                                  productId: data['id'].toString(),
+                                  mainProductId:
+                                      controller.currentMainProductId ??
+                                          "Unknown ID",
                                 ),
                               );
                             },
                             child: Container(
-                              height: 36,
-                              width: 36,
+                              height: 40.h,
+                              width: 36.w,
                               decoration: BoxDecoration(
                                   border: Border.all(color: Colors.green[100]!),
                                   borderRadius: BorderRadius.circular(8)),
@@ -645,56 +641,70 @@ class ProfileRidgeAndArch extends GetView<ProfileRidgeAndArchController> {
                             ),
                           ),
                         ),
-                        SizedBox(width: 8),
+                        SizedBox(width: 4),
                         Material(
                           color: Colors.red[50],
                           borderRadius: BorderRadius.circular(8),
                           child: InkWell(
                             borderRadius: BorderRadius.circular(8),
                             onTap: () {
-                              showDialog(
-                                context: (context) as BuildContext,
-                                builder: (context) => AlertDialog(
+                              Get.dialog(
+                                AlertDialog(
                                   shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12)),
-                                  title: Subhead(
-                                      text: "Delete This Item?",
-                                      weight: FontWeight.w500,
-                                      color: Colors.black),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  title: const Text(
+                                    "Delete Item",
+                                    style:
+                                        TextStyle(fontWeight: FontWeight.w600),
+                                  ),
+                                  content: const Text(
+                                    "Are you sure you want to delete this item?",
+                                  ),
                                   actions: [
                                     TextButton(
-                                        onPressed: () => Navigator.pop(context),
-                                        child: Text("No",
-                                            style: TextStyle(
-                                                color: Colors.grey[700]))),
+                                      onPressed: () =>
+                                          Get.back(), // close dialog
+                                      child: Text(
+                                        "Cancel",
+                                        style:
+                                            TextStyle(color: Colors.grey[700]),
+                                      ),
+                                    ),
                                     ElevatedButton(
                                       onPressed: () {
                                         controller
                                             .deleteCard(data["id"].toString());
-                                        Navigator.pop(context);
+                                        Get.back(); // close dialog after delete
                                       },
                                       style: ElevatedButton.styleFrom(
-                                          backgroundColor: Colors.red,
-                                          shape: RoundedRectangleBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(8))),
-                                      child: Text("Yes"),
+                                        backgroundColor: Colors.red,
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(8),
+                                        ),
+                                      ),
+                                      child: const Text("Delete"),
                                     ),
                                   ],
                                 ),
                               );
                             },
                             child: Container(
-                              height: 36,
-                              width: 36,
+                              height: 40.h,
+                              width: 36.w,
                               decoration: BoxDecoration(
-                                  border: Border.all(color: Colors.red[100]!),
-                                  borderRadius: BorderRadius.circular(8)),
-                              child: Icon(Icons.delete_outline,
-                                  color: Colors.red[600], size: 20),
+                                border: Border.all(color: Colors.red[100]!),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Icon(
+                                Icons.delete_outline,
+                                color: Colors.red[600],
+                                size: 20,
+                              ),
                             ),
                           ),
-                        ),
+                        )
                       ],
                     ),
                   ],
@@ -713,11 +723,10 @@ class ProfileRidgeAndArch extends GetView<ProfileRidgeAndArchController> {
       children: [
         Text(
           label,
-          style: const TextStyle(
-            fontSize: 11,
-            fontWeight: FontWeight.w500,
-            color: Color(0xFF757575),
-          ),
+          style: TextStyle(
+              fontWeight: FontWeight.w500,
+              color: Colors.grey[700],
+              fontSize: 15),
         ),
         const SizedBox(height: 6),
         SizedBox(

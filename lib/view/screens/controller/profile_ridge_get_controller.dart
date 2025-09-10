@@ -681,7 +681,7 @@ class ProfileRidgeAndArchController extends GetxController {
               borderSide: BorderSide(color: Colors.grey[300]!)),
           focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(6),
-              borderSide: BorderSide(color: Get.theme.primaryColor, width: 2)),
+              borderSide: BorderSide(color: Colors.deepPurple, width: 2)),
           filled: true,
           fillColor: Colors.grey[50],
         ),
@@ -703,36 +703,36 @@ class ProfileRidgeAndArchController extends GetxController {
     return SizedBox(
       height: 38.h,
       child: DropdownButtonFormField<String>(
-        value: currentValue,
-        items: options.entries
-            .map((entry) => DropdownMenuItem(
-                  value: entry.key,
-                  child: Text(entry.value.toString()),
-                ))
-            .toList(),
-        onChanged: (val) {
-          if (data['UOM'] is! Map) {
-            data['UOM'] = {};
-          }
-          data['UOM']['value'] = val;
-          data['UOM']['options'] = options;
-          debounceCalculation(data);
-        },
-        decoration: InputDecoration(
-          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 0),
-          border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(6),
-              borderSide: BorderSide(color: Colors.grey[300]!)),
-          enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(6),
-              borderSide: BorderSide(color: Colors.grey[300]!)),
-          focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(6),
-              borderSide: BorderSide(color: Get.theme.primaryColor, width: 2)),
-          filled: true,
-          fillColor: Colors.grey[50],
-        ),
-      ),
+          value: currentValue,
+          items: options.entries
+              .map((entry) => DropdownMenuItem(
+                    value: entry.key,
+                    child: Text(entry.value.toString()),
+                  ))
+              .toList(),
+          onChanged: (val) {
+            if (data['UOM'] is! Map) {
+              data['UOM'] = {};
+            }
+            data['UOM']['value'] = val;
+            data['UOM']['options'] = options;
+            debounceCalculation(data);
+          },
+          decoration: InputDecoration(
+            contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 0),
+            border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(6),
+                borderSide: BorderSide(color: Colors.grey[300]!)),
+            enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(6),
+                borderSide: BorderSide(color: Colors.grey[300]!)),
+            focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(6),
+                borderSide:
+                    BorderSide(color: Get.theme.primaryColor, width: 2)),
+            filled: true,
+            fillColor: Colors.grey[50],
+          )),
     );
   }
 

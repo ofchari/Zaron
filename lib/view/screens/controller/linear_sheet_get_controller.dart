@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/io_client.dart';
 
@@ -566,12 +567,9 @@ class LinerSheetController extends GetxController {
           billamt.value = responseData["bill_total"].toDouble() ?? 0.0;
           calculationResults[productId] = responseData;
 
-          String newProfile = responseData["length"]?.toString() ?? "0";
-          if (_isValidNonZeroNumber(newProfile) && newProfile != lengthText) {
-            data["Length"] = newProfile;
-            if (fieldControllers[productId]?["Length"] != null) {
-              fieldControllers[productId]!["Length"]!.text = newProfile;
-            }
+          if (responseData["profile"] != null) {
+            data["Length"] = responseData["profile"].toString();
+            fieldControllers[productId]?["Length"]?.text = data["Length"] ?? "";
           }
 
           if (responseData["Nos"] != null) {
@@ -637,33 +635,36 @@ class LinerSheetController extends GetxController {
           fieldControllers: fieldControllers);
     }
 
-    return DropdownButtonFormField<String>(
-      value: currentValue,
-      items: options.entries
-          .map((entry) => DropdownMenuItem(
-                value: entry.key,
-                child: Text(entry.value.toString()),
-              ))
-          .toList(),
-      onChanged: (val) {
-        if (data['UOM'] is! Map) {
-          data['UOM'] = {};
-        }
-        data['UOM']['value'] = val;
-        data['UOM']['options'] = options;
-        debounceCalculation(data);
-      },
-      decoration: InputDecoration(
-        contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 0),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(6)),
-        enabledBorder:
-            OutlineInputBorder(borderRadius: BorderRadius.circular(6)),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(6),
-          borderSide: BorderSide(color: Colors.deepPurple, width: 2),
+    return SizedBox(
+      height: 38.h,
+      child: DropdownButtonFormField<String>(
+        value: currentValue,
+        items: options.entries
+            .map((entry) => DropdownMenuItem(
+                  value: entry.key,
+                  child: Text(entry.value.toString()),
+                ))
+            .toList(),
+        onChanged: (val) {
+          if (data['UOM'] is! Map) {
+            data['UOM'] = {};
+          }
+          data['UOM']['value'] = val;
+          data['UOM']['options'] = options;
+          debounceCalculation(data);
+        },
+        decoration: InputDecoration(
+          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 0),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(6)),
+          enabledBorder:
+              OutlineInputBorder(borderRadius: BorderRadius.circular(6)),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(6),
+            borderSide: BorderSide(color: Colors.deepPurple, width: 2),
+          ),
+          filled: true,
+          fillColor: Colors.grey[50],
         ),
-        filled: true,
-        fillColor: Colors.grey[50],
       ),
     );
   }
@@ -710,51 +711,51 @@ class LinerSheetController extends GetxController {
   Widget editableTextField(
     Map<String, dynamic> data,
     String key,
-    ValueChanged<String> onChanged, {
+    Function(String) onChanged, {
     bool readOnly = false,
-    required RxMap<String, Map<String, TextEditingController>> fieldControllers,
+    required Map<String, Map<String, TextEditingController>> fieldControllers,
   }) {
     String productId = data["id"].toString();
     fieldControllers.putIfAbsent(productId, () => {});
     if (!fieldControllers[productId]!.containsKey(key)) {
-      String initialValue = (data[key] != null && data[key].toString() != "0")
+      String initialValue = (data[key] != null &&
+              data[key].toString() != "0" &&
+              data[key].toString() != "null")
           ? data[key].toString()
           : "";
       fieldControllers[productId]![key] =
           TextEditingController(text: initialValue);
-    } else {
-      final controller = fieldControllers[productId]![key]!;
-      final dataValue = data[key]?.toString() ?? "";
-      if (controller.text.isEmpty && dataValue.isNotEmpty && dataValue != "0") {
-        controller.text = dataValue;
-      }
+      debugPrint("Created controller for [$key] with value: '$initialValue'");
     }
+    final controller = fieldControllers[productId]![key]!;
+    if (controller.text.isEmpty &&
+        data[key] != null &&
+        data[key].toString() != "0" &&
+        data[key].toString() != "null") {
+      controller.text = data[key].toString();
+      debugPrint("Synced controller for [$key] to: '${data[key]}'");
+    }
+
     return SizedBox(
       height: 38.h,
       child: TextField(
         readOnly: readOnly,
-        controller: fieldControllers[productId]![key],
-        keyboardType: [
-          "Length",
-          "Nos",
-          "Basic Rate",
-          "Amount",
-          "SQMtr",
-          "cgst",
-          "sgst",
-        ].contains(key)
-            ? TextInputType.numberWithOptions(decimal: true)
-            : TextInputType.numberWithOptions(decimal: true),
+        controller: controller,
+        keyboardType: TextInputType.numberWithOptions(decimal: true),
         onChanged: onChanged,
+        style: GoogleFonts.figtree(
+            fontWeight: FontWeight.w500, color: Colors.black, fontSize: 15.sp),
         decoration: InputDecoration(
           contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 0),
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(6)),
-          enabledBorder:
-              OutlineInputBorder(borderRadius: BorderRadius.circular(6)),
+          border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(6),
+              borderSide: BorderSide(color: Colors.grey[300]!)),
+          enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(6),
+              borderSide: BorderSide(color: Colors.grey[300]!)),
           focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(6),
-            borderSide: BorderSide(color: Colors.deepPurple, width: 2),
-          ),
+              borderRadius: BorderRadius.circular(6),
+              borderSide: BorderSide(color: Colors.deepPurple, width: 2)),
           filled: true,
           fillColor: Colors.grey[50],
         ),

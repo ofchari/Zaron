@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:gap/gap.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:zaron/view/screens/controller/billingamount_get_controller.dart';
 import 'package:zaron/view/screens/controller/screw_get_controller.dart';
 import 'package:zaron/view/screens/controller/tilesheet_get_controller.dart';
 
@@ -424,6 +425,7 @@ class SummaryScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final billController = Get.put(BillAmountController());
     final screwController = Get.find<ScrewController>();
     final polyController = Get.find<PolycarbonateController>();
     final upvcController = Get.find<UpvcTilesController>();
@@ -604,15 +606,22 @@ class SummaryScreen extends StatelessWidget {
                                   ),
                                 ),
                                 Gap(4),
-                                Text(
-                                  "₹${totalBill.toStringAsFixed(2)}",
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                  overflow: TextOverflow.ellipsis,
-                                ),
+                                Obx(() {
+                                  final billTotal =
+                                      billController.billOrderData['order_list']
+                                          ?['bill_total'];
+                                  return Text(
+                                    billTotal != null
+                                        ? "₹${billTotal.toString()}"
+                                        : "Loading...",
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                  );
+                                }),
                               ],
                             ),
                           ),

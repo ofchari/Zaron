@@ -5,6 +5,7 @@ import 'package:gap/gap.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../../getx/summary_screen.dart';
 import '../../../widgets/subhead.dart';
 import '../../controller/linear_sheet_get_controller.dart';
 
@@ -658,10 +659,13 @@ class LinerSheetPage extends GetView<LinerSheetController> {
               Expanded(
                 child: buildDetailItem(
                   "Profile",
-                  controller.editableTextField(
+                  editableTextField(
                     data,
-                    "length",
-                    (v) => controller.debounceCalculation(data),
+                    "Length",
+                    (v) {
+                      data["Length"] = v;
+                      controller.debounceCalculation(data);
+                    },
                     fieldControllers: controller.fieldControllers,
                   ),
                 ),

@@ -10,6 +10,7 @@ import 'package:intl/intl.dart';
 import 'package:zaron/view/screens/global_user/global_user.dart';
 
 import '../../../universal_api/api_key.dart';
+import '../orders/pending_order.dart';
 
 class DeliveryScopeBottomSheet extends StatefulWidget {
   final DateTime deliveryDate;
@@ -80,7 +81,7 @@ class _DeliveryScopeBottomSheetState extends State<DeliveryScopeBottomSheet> {
   /// Post the Move Quotation //
   bool isPosting = false;
 
-  Future<void> postMoveQuotation() async {
+  Future<void> postMoveOrder() async {
     if (!mounted) return;
 
     setState(() {
@@ -113,6 +114,7 @@ class _DeliveryScopeBottomSheetState extends State<DeliveryScopeBottomSheet> {
         print("Status: ${response.statusCode}");
 
         if (response.statusCode == 200 && mounted) {
+          Get.to(PendingOrder());
           print("Response: ${response.body}");
           Get.snackbar("Success", "Move to  Order \n created successfully",
               colorText: Colors.white, backgroundColor: Colors.green);
@@ -495,7 +497,7 @@ class _DeliveryScopeBottomSheetState extends State<DeliveryScopeBottomSheet> {
                             }
 
                             try {
-                              await postMoveQuotation(); // Wait for the operation to complete
+                              await postMoveOrder(); // Wait for the operation to complete
                               if (mounted) {
                                 // Check if widget is still mounted before navigating
                                 Navigator.pop(context);

@@ -16,6 +16,7 @@ import 'package:zaron/view/widgets/text.dart';
 import '../../../getx/summary_screen.dart';
 import '../../../widgets/subhead.dart';
 import '../../global_user/global_user.dart';
+import '../quotationPage/quotation.dart';
 
 class TotalEnquiryView extends StatefulWidget {
   const TotalEnquiryView({super.key, required this.id});
@@ -64,6 +65,7 @@ class _TotalEnquiryViewState extends State<TotalEnquiryView> {
           await http.get(Uri.parse('$apiUrl/rowlabels/${widget.id}'));
 
       if (response.statusCode == 200) {
+        print("total amt check ${response.body}");
         final jsonData = json.decode(response.body);
         final categories = jsonData['categories'];
 
@@ -350,6 +352,7 @@ class _TotalEnquiryViewState extends State<TotalEnquiryView> {
 
       if (response.statusCode == 200) {
         print("This is a post Data response: ${response.body}");
+        Get.to(QuotationPage());
 
         if (_isSnackBarVisible) return;
 
@@ -574,11 +577,10 @@ class _TotalEnquiryViewState extends State<TotalEnquiryView> {
       print(data);
       print(itemId);
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            backgroundColor: Colors.green,
-            content: Text("Item deleted successfully.")),
-      );
+      Get.snackbar("Item deleted from Enquiry", "deleted successfully",
+          colorText: Colors.white,
+          backgroundColor: Colors.green,
+          snackPosition: SnackPosition.BOTTOM);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
