@@ -5,10 +5,10 @@ import 'package:intl/intl.dart';
 import 'delivery_scope.dart';
 
 class DeliveryTimeBottomSheet extends StatefulWidget {
-  final Map<String, dynamic> rowData;
+  final List<Map<String, dynamic>> allRows;
   final String id;
   const DeliveryTimeBottomSheet(
-      {super.key, required this.rowData, required this.id});
+      {super.key, required this.allRows, required this.id});
 
   @override
   State<DeliveryTimeBottomSheet> createState() =>
@@ -29,7 +29,7 @@ class _DeliveryTimeBottomSheetState extends State<DeliveryTimeBottomSheet> {
         id: widget.id,
         deliveryDate: selectedDate,
         deliveryTime: selectedTime,
-        rowData: widget.rowData,
+        allRows: widget.allRows,
       ),
     );
   }
@@ -100,7 +100,7 @@ class _DeliveryTimeBottomSheetState extends State<DeliveryTimeBottomSheet> {
                           fontSize: 24,
                           fontWeight: FontWeight.w700,
                           color: Colors.white,
-                          decoration: TextDecoration.none, // Remove underline
+                          decoration: TextDecoration.none,
                         ),
                       ),
                       Text(
@@ -108,7 +108,7 @@ class _DeliveryTimeBottomSheetState extends State<DeliveryTimeBottomSheet> {
                         style: GoogleFonts.outfit(
                           fontSize: 14,
                           color: Colors.white.withOpacity(0.9),
-                          decoration: TextDecoration.none, // Remove underline
+                          decoration: TextDecoration.none,
                         ),
                       ),
                     ],
@@ -177,8 +177,7 @@ class _DeliveryTimeBottomSheetState extends State<DeliveryTimeBottomSheet> {
                                     fontSize: 12,
                                     color: Colors.orange.shade700,
                                     fontWeight: FontWeight.w500,
-                                    decoration:
-                                        TextDecoration.none, // Remove underline
+                                    decoration: TextDecoration.none,
                                   ),
                                 ),
                                 const SizedBox(height: 4),
@@ -189,8 +188,7 @@ class _DeliveryTimeBottomSheetState extends State<DeliveryTimeBottomSheet> {
                                     fontSize: 16,
                                     fontWeight: FontWeight.w600,
                                     color: Colors.orange.shade800,
-                                    decoration:
-                                        TextDecoration.none, // Remove underline
+                                    decoration: TextDecoration.none,
                                   ),
                                 ),
                               ],
@@ -253,8 +251,7 @@ class _DeliveryTimeBottomSheetState extends State<DeliveryTimeBottomSheet> {
                                     fontSize: 12,
                                     color: Colors.purple.shade700,
                                     fontWeight: FontWeight.w500,
-                                    decoration:
-                                        TextDecoration.none, // Remove underline
+                                    decoration: TextDecoration.none,
                                   ),
                                 ),
                                 const SizedBox(height: 4),
@@ -264,8 +261,7 @@ class _DeliveryTimeBottomSheetState extends State<DeliveryTimeBottomSheet> {
                                     fontSize: 16,
                                     fontWeight: FontWeight.w600,
                                     color: Colors.purple.shade800,
-                                    decoration:
-                                        TextDecoration.none, // Remove underline
+                                    decoration: TextDecoration.none,
                                   ),
                                 ),
                               ],
@@ -281,7 +277,7 @@ class _DeliveryTimeBottomSheetState extends State<DeliveryTimeBottomSheet> {
 
                   const SizedBox(height: 20),
 
-                  // Item Details Card - Updated to show actual DataRow data
+                  // Item Details Card
                   _buildSectionCard(
                     title: "Item Details",
                     icon: Icons.inventory_2,
@@ -336,7 +332,7 @@ class _DeliveryTimeBottomSheetState extends State<DeliveryTimeBottomSheet> {
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
                         color: Colors.grey.shade700,
-                        decoration: TextDecoration.none, // Remove underline
+                        decoration: TextDecoration.none,
                       ),
                     ),
                   ),
@@ -362,7 +358,7 @@ class _DeliveryTimeBottomSheetState extends State<DeliveryTimeBottomSheet> {
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
                             color: Colors.white,
-                            decoration: TextDecoration.none, // Remove underline
+                            decoration: TextDecoration.none,
                           ),
                         ),
                         const SizedBox(width: 8),
@@ -380,12 +376,13 @@ class _DeliveryTimeBottomSheetState extends State<DeliveryTimeBottomSheet> {
     );
   }
 
-  // Updated method to build item details list dynamically from rowData
+  // Updated method to build item details list dynamically from allRows
   List<Widget> _buildItemDetailsList() {
     List<Widget> detailWidgets = [];
 
     // Define icons for different data types
     Map<String, IconData> iconMap = {
+      // 'item_name': Icons.inventory_2, // Updated to match assumed field name
       'Product': Icons.inventory_2,
       'product_name': Icons.inventory_2,
       'Item': Icons.inventory_2,
@@ -412,41 +409,49 @@ class _DeliveryTimeBottomSheetState extends State<DeliveryTimeBottomSheet> {
     // Get color for icons
     Color iconColor = Colors.green.shade600;
 
-    // Filter out null/empty values and build detail rows
-    widget.rowData.forEach((key, value) {
-      if (value != null && value.toString().isNotEmpty && value != 'null') {
-        String displayValue;
-
-        // Handle UOM special case (if it's a Map)
-        if (key == 'UOM' && value is Map) {
-          displayValue = value['value']?.toString() ?? value.toString();
-        } else if (key.contains('Price') ||
-            key.contains('Rate') ||
-            key == 'Net_Price') {
-          // Format price fields
-          displayValue = "₹ ${value.toString()}";
-        } else {
-          displayValue = value.toString();
-        }
-
-        // Get appropriate icon
-        IconData icon = iconMap[key] ?? Icons.info_outline;
-
-        detailWidgets.add(
-          _buildDetailRow(
-            _formatLabel(key),
-            displayValue,
-            icon,
-            iconColor,
-          ),
-        );
-
-        // Add divider between items (except for the last item)
-        if (detailWidgets.length < widget.rowData.length) {
-          detailWidgets.add(const Divider(height: 24));
-        }
+    for (var i = 0; i < widget.allRows.length; i++) {
+      var row = widget.allRows[i];
+      if (i > 0) {
+        detailWidgets.add(const Divider(height: 32, thickness: 1));
       }
-    });
+
+      detailWidgets.add(const SizedBox(height: 12));
+
+      // Filter out null/empty values and build detail rows
+      row.forEach((key, value) {
+        if (key == 'Action') return; // Skip 'Action' key
+
+        if (value != null && value.toString().isNotEmpty && value != 'null') {
+          String displayValue;
+
+          // Handle UOM special case (if it's a Map)
+          if (key == 'UOM' && value is Map) {
+            displayValue = value['value']?.toString() ?? value.toString();
+          } else if (key.contains('Price') ||
+              key.contains('Rate') ||
+              key == 'Net_Price') {
+            // Format price fields
+            displayValue = "₹ ${value.toString()}";
+          } else {
+            displayValue = value.toString();
+          }
+
+          // Get appropriate icon
+          IconData icon = iconMap[key] ?? Icons.info_outline;
+
+          detailWidgets.add(
+            _buildDetailRow(
+              _formatLabel(key),
+              displayValue,
+              icon,
+              iconColor,
+            ),
+          );
+
+          detailWidgets.add(const SizedBox(height: 8));
+        }
+      });
+    }
 
     // If no valid data found, show a message
     if (detailWidgets.isEmpty) {
@@ -457,7 +462,7 @@ class _DeliveryTimeBottomSheetState extends State<DeliveryTimeBottomSheet> {
             style: GoogleFonts.outfit(
               fontSize: 14,
               color: Colors.grey.shade600,
-              decoration: TextDecoration.none, // Remove underline
+              decoration: TextDecoration.none,
             ),
           ),
         ),
@@ -504,7 +509,7 @@ class _DeliveryTimeBottomSheetState extends State<DeliveryTimeBottomSheet> {
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
                 color: Colors.grey.shade800,
-                decoration: TextDecoration.none, // Remove underline
+                decoration: TextDecoration.none,
               ),
             ),
           ],
@@ -531,7 +536,7 @@ class _DeliveryTimeBottomSheetState extends State<DeliveryTimeBottomSheet> {
                   fontSize: 12,
                   color: Colors.grey.shade600,
                   fontWeight: FontWeight.w500,
-                  decoration: TextDecoration.none, // Remove underline
+                  decoration: TextDecoration.none,
                 ),
               ),
               const SizedBox(height: 2),
@@ -541,7 +546,7 @@ class _DeliveryTimeBottomSheetState extends State<DeliveryTimeBottomSheet> {
                   fontSize: 15,
                   color: Colors.grey.shade800,
                   fontWeight: FontWeight.w600,
-                  decoration: TextDecoration.none, // Remove underline
+                  decoration: TextDecoration.none,
                 ),
               ),
             ],

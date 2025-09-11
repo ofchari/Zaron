@@ -8,6 +8,7 @@ import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/io_client.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../getx/summary_screen.dart';
 import '../../../universal_api/api_key.dart';
@@ -474,7 +475,7 @@ class _TotalQuoationViewState extends State<TotalQuoationView> {
                   print("Payload: $payload");
 
                   final response = await http.post(
-                    Uri.parse("$apiUrl/grouping"),
+                    Uri.parse("$apiUrl/quotation_grouping"),
                     headers: {"Content-Type": "application/json"},
                     body: json.encode(payload),
                   );
@@ -509,6 +510,133 @@ class _TotalQuoationViewState extends State<TotalQuoationView> {
         );
       },
     );
+  }
+
+  /// Post for Quotation Overview Invoice //
+  Future<void> postOverView() async {
+    HttpClient client = HttpClient();
+    client.badCertificateCallback =
+        ((X509Certificate cert, String host, int port) => true);
+    IOClient ioClient = IOClient(client);
+    final headers = {"Content-Type": "application/json"};
+    final payload = {
+      // "customer_id": UserSession().userId,
+      "order_id": widget.id,
+    };
+    print("User Input Data Fields$payload");
+    final url = "$apiUrl/quotation_overview";
+    final body = json.encode(payload);
+    try {
+      final response =
+          await http.post(Uri.parse(url), headers: headers, body: body);
+      print("This is the status code${response.statusCode}");
+      if (response.statusCode == 200) {
+        print("this is a post Data response : ${response.body}");
+
+// Parse the JSON response
+        final responseData = json.decode(response.body);
+
+// Extract the overview URL
+        if (responseData['overview'] != null) {
+          String overviewUrl = responseData['overview'];
+
+// Remove escape characters from the URL
+          overviewUrl = overviewUrl.replaceAll(r'\/', '/');
+
+          print("Original Overview URL: ${responseData['overview']}");
+          print("Cleaned Overview URL: $overviewUrl");
+
+// Now open the overview URL in browser
+          await openOverviewInBrowser(overviewUrl);
+        } else {
+          print("Overview URL not found in response");
+        }
+
+        Get.snackbar(
+          "Success OverView",
+          "Data Added Successfully",
+          colorText: Colors.white,
+          backgroundColor: Colors.green,
+        );
+      }
+    } catch (e) {
+      print("Error posting data: $e");
+      throw Exception("Error posting data: $e");
+    }
+  }
+
+  /// Url for Open the Browser ///
+  /// Call the URL to open the overview in browser ///
+  Future<void> openOverviewInBrowser(String overviewUrl) async {
+    try {
+      print("Opening overview URL in browser: $overviewUrl");
+
+// Create Uri object
+      Uri uri = Uri.parse(overviewUrl);
+      print("Parsed URI: $uri");
+      print("URI scheme: ${uri.scheme}");
+      print("URI host: ${uri.host}");
+
+// Try different launch methods
+      try {
+// Method 1: External application
+        bool launched = await launchUrl(
+          uri,
+          mode: LaunchMode.externalApplication,
+        );
+        if (launched) {
+          print("Successfully launched with externalApplication mode");
+          return;
+        }
+      } catch (e) {
+        print("External application launch failed: $e");
+      }
+
+      try {
+// Method 2: Platform default
+        bool launched = await launchUrl(
+          uri,
+          mode: LaunchMode.platformDefault,
+        );
+        if (launched) {
+          print("Successfully launched with platformDefault mode");
+          return;
+        }
+      } catch (e) {
+        print("Platform default launch failed: $e");
+      }
+
+      try {
+// Method 3: In-app web view
+        bool launched = await launchUrl(
+          uri,
+          mode: LaunchMode.inAppWebView,
+        );
+        if (launched) {
+          print("Successfully launched with inAppWebView mode");
+          return;
+        }
+      } catch (e) {
+        print("In-app web view launch failed: $e");
+      }
+
+// If all methods fail
+      print("All launch methods failed");
+      Get.snackbar(
+        "Error",
+        "Could not open the overview URL. All methods failed.",
+        colorText: Colors.white,
+        backgroundColor: Colors.red,
+      );
+    } catch (e) {
+      print("Error opening overview URL: $e");
+      Get.snackbar(
+        "Error",
+        "Failed to open overview URL: $e",
+        colorText: Colors.white,
+        backgroundColor: Colors.red,
+      );
+    }
   }
 
   @override
@@ -575,43 +703,29 @@ class _TotalQuoationViewState extends State<TotalQuoationView> {
                 color: Colors.white),
           ),
           actions: [
+            GestureDetector(
+              onTap: () {
+                postOverView();
+              },
+              child: Icon(
+                Icons.language,
+                color: Colors.white,
+                size: 28,
+              ),
+            ),
             Gap(8),
             GestureDetector(
               onTap: () {
-                // Check if any row is selected
-                Map<String, dynamic>? selectedRowData;
-
-                // Find the selected row data
-                if (selectedCategoryId != null) {
-                  final categoryId = selectedCategoryId.toString();
-                  final selectedIndex = selectedIndices[categoryId];
-
-                  if (selectedIndex != null &&
-                      categoryData[categoryId] != null) {
-                    final categoryRows = categoryData[categoryId]!;
-                    if (selectedIndex < categoryRows.length) {
-                      selectedRowData = categoryRows[selectedIndex];
-                    }
-                  }
-                }
-
-                if (selectedRowData == null) {
-                  // Show message if no row is selected
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text("Please select a row first"),
-                      backgroundColor: Colors.orange,
-                    ),
-                  );
-                  return;
-                }
-
+                List<Map<String, dynamic>> allRows = [];
+                categoryData.forEach((key, value) {
+                  allRows.addAll(value);
+                });
                 showModalBottomSheet(
                   context: context,
                   isScrollControlled: true,
                   backgroundColor: Colors.transparent,
-                  builder: (context) => DeliveryTimeBottomSheet(
-                      rowData: selectedRowData!, id: widget.id),
+                  builder: (context) =>
+                      DeliveryTimeBottomSheet(allRows: allRows, id: widget.id),
                 );
               },
               child: Icon(

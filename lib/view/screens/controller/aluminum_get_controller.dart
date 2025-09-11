@@ -493,88 +493,151 @@ class AluminumController extends GetxController {
       final response = await client.post(url,
           headers: {'Content-Type': 'application/json'},
           body: jsonEncode(requestBody));
+
       print("performCalculation response status: ${response.statusCode}");
+      print("Response content type: ${response.headers['content-type']}");
+
       if (response.statusCode == 200) {
-        final responseData = jsonDecode(response.body);
-        if (responseData["status"] == "success") {
-          billamt.value = responseData["bill_total"].toDouble() ?? 0.0;
-          calculationResults[productId] = responseData;
+        // Check if response is JSON before parsing
+        final contentType = response.headers['content-type'] ?? '';
+        if (!contentType.contains('application/json')) {
+          print("Server returned non-JSON response: ${response.body}");
+          Get.snackbar(
+            "Error",
+            "Server returned invalid response format",
+            backgroundColor: Colors.red,
+            colorText: Colors.white,
+          );
+          return;
+        }
 
-          String newProfile = responseData["length"]?.toString() ?? "0";
-          if (_isValidNonZeroNumber(newProfile) && newProfile != lengthText) {
-            data["Length"] = newProfile;
-            if (fieldControllers[productId]?["Length"] != null) {
-              fieldControllers[productId]!["Length"]!.text = newProfile;
-            }
-          }
+        // Validate JSON structure before parsing
+        if (response.body.trim().isEmpty) {
+          print("Server returned empty response");
+          Get.snackbar(
+            "Error",
+            "Server returned empty response",
+            backgroundColor: Colors.red,
+            colorText: Colors.white,
+          );
+          return;
+        }
 
-          if (responseData["Nos"] != null) {
-            String newNos = responseData["Nos"].toString().trim();
-            String currentInput =
-                fieldControllers[productId]?["Nos"]?.text.trim() ?? "";
-            if (!_isValidNonZeroNumber(currentInput)) {
-              data["Nos"] = newNos;
-              if (fieldControllers[productId]?["Nos"] != null) {
-                fieldControllers[productId]!["Nos"]!.text = newNos;
+        // Check if response starts with HTML tags (common error indicator)
+        if (response.body.trim().startsWith('<')) {
+          print("Server returned HTML instead of JSON: ${response.body}");
+          Get.snackbar(
+            "Error",
+            "Server error - please try again later",
+            backgroundColor: Colors.red,
+            colorText: Colors.white,
+          );
+          return;
+        }
+
+        try {
+          final responseData = jsonDecode(response.body);
+
+          if (responseData["status"] == "success") {
+            billamt.value = responseData["bill_total"]?.toDouble() ?? 0.0;
+            calculationResults[productId] = responseData;
+
+            // Update fields with response data
+            String newProfile = responseData["length"]?.toString() ?? "0";
+            if (_isValidNonZeroNumber(newProfile) && newProfile != lengthText) {
+              data["Length"] = newProfile;
+              if (fieldControllers[productId]?["Length"] != null) {
+                fieldControllers[productId]!["Length"]!.text = newProfile;
               }
             }
-          }
 
-          String newCrimp = responseData["crimp"]?.toString() ?? "0";
-          if (_isValidNonZeroNumber(newCrimp) && newCrimp != crimpText) {
-            data["Crimp"] = newCrimp;
-            if (fieldControllers[productId]?["Crimp"] != null) {
-              fieldControllers[productId]!["Crimp"]!.text = newCrimp;
+            if (responseData["Nos"] != null) {
+              String newNos = responseData["Nos"].toString().trim();
+              String currentInput =
+                  fieldControllers[productId]?["Nos"]?.text.trim() ?? "";
+              if (!_isValidNonZeroNumber(currentInput)) {
+                data["Nos"] = newNos;
+                if (fieldControllers[productId]?["Nos"] != null) {
+                  fieldControllers[productId]!["Nos"]!.text = newNos;
+                }
+              }
             }
-          }
 
-          if (responseData["sqmtr"] != null) {
-            data["SQMtr"] = responseData["sqmtr"].toString();
-            if (fieldControllers[productId]?["SQMtr"] != null) {
-              fieldControllers[productId]!["SQMtr"]!.text =
-                  responseData["sqmtr"].toString();
+            String newCrimp = responseData["crimp"]?.toString() ?? "0";
+            if (_isValidNonZeroNumber(newCrimp) && newCrimp != crimpText) {
+              data["Crimp"] = newCrimp;
+              if (fieldControllers[productId]?["Crimp"] != null) {
+                fieldControllers[productId]!["Crimp"]!.text = newCrimp;
+              }
             }
-          }
 
-          if (responseData["cgst"] != null) {
-            data["cgst"] = responseData["cgst"].toString();
-            if (fieldControllers[productId]?["cgst"] != null) {
-              fieldControllers[productId]!["cgst"]!.text =
-                  responseData["cgst"].toString();
+            // Update calculated fields
+            if (responseData["sqmtr"] != null) {
+              data["SQMtr"] = responseData["sqmtr"].toString();
+              if (fieldControllers[productId]?["SQMtr"] != null) {
+                fieldControllers[productId]!["SQMtr"]!.text =
+                    responseData["sqmtr"].toString();
+              }
             }
-          }
 
-          if (responseData["sgst"] != null) {
-            data["sgst"] = responseData["sgst"].toString();
-            if (fieldControllers[productId]?["sgst"] != null) {
-              fieldControllers[productId]!["sgst"]!.text =
-                  responseData["sgst"].toString();
+            if (responseData["cgst"] != null) {
+              data["cgst"] = responseData["cgst"].toString();
+              if (fieldControllers[productId]?["cgst"] != null) {
+                fieldControllers[productId]!["cgst"]!.text =
+                    responseData["cgst"].toString();
+              }
             }
-          }
 
-          if (responseData["Amount"] != null) {
-            data["Amount"] = responseData["Amount"].toString();
-            if (fieldControllers[productId]?["Amount"] != null) {
-              fieldControllers[productId]!["Amount"]!.text =
-                  responseData["Amount"].toString();
+            if (responseData["sgst"] != null) {
+              data["sgst"] = responseData["sgst"].toString();
+              if (fieldControllers[productId]?["sgst"] != null) {
+                fieldControllers[productId]!["sgst"]!.text =
+                    responseData["sgst"].toString();
+              }
             }
-          }
 
-          previousUomValues[productId] = currentUom;
+            if (responseData["Amount"] != null) {
+              data["Amount"] = responseData["Amount"].toString();
+              if (fieldControllers[productId]?["Amount"] != null) {
+                fieldControllers[productId]!["Amount"]!.text =
+                    responseData["Amount"].toString();
+              }
+            }
+
+            previousUomValues[productId] = currentUom;
+          } else {
+            print("API returned error status: ${responseData["status"]}");
+            Get.snackbar(
+              "Error",
+              responseData["message"] ?? "Calculation failed",
+              backgroundColor: Colors.red,
+              colorText: Colors.white,
+            );
+          }
+        } catch (jsonError) {
+          print("JSON parsing error: $jsonError");
+          print("Response body that failed to parse: ${response.body}");
+          Get.snackbar(
+            "Error",
+            "Invalid server response format",
+            backgroundColor: Colors.red,
+            colorText: Colors.white,
+          );
         }
       } else {
+        print("HTTP Error ${response.statusCode}: ${response.body}");
         Get.snackbar(
           "Error",
-          "Failed to perform calculation: ${response.statusCode}",
+          "Server error (${response.statusCode}). Please try again.",
           backgroundColor: Colors.red,
           colorText: Colors.white,
         );
       }
     } catch (e) {
-      print("Calculation API Error: $e");
+      print("Network/Calculation API Error: $e");
       Get.snackbar(
         "Error",
-        "Failed to perform calculation: $e",
+        "Network error. Please check your connection.",
         backgroundColor: Colors.red,
         colorText: Colors.white,
       );
@@ -592,33 +655,36 @@ class AluminumController extends GetxController {
           fieldControllers: fieldControllers);
     }
 
-    return DropdownButtonFormField<String>(
-      value: currentValue,
-      items: options.entries
-          .map((entry) => DropdownMenuItem(
-                value: entry.key,
-                child: Text(entry.value.toString()),
-              ))
-          .toList(),
-      onChanged: (val) {
-        if (data['UOM'] is! Map) {
-          data['UOM'] = {};
-        }
-        data['UOM']['value'] = val;
-        data['UOM']['options'] = options;
-        debounceCalculation(data);
-      },
-      decoration: InputDecoration(
-        contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 0),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(6)),
-        enabledBorder:
-            OutlineInputBorder(borderRadius: BorderRadius.circular(6)),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(6),
-          borderSide: BorderSide(color: Colors.deepPurple, width: 2),
+    return SizedBox(
+      height: 38.h,
+      child: DropdownButtonFormField<String>(
+        value: currentValue,
+        items: options.entries
+            .map((entry) => DropdownMenuItem(
+                  value: entry.key,
+                  child: Text(entry.value.toString()),
+                ))
+            .toList(),
+        onChanged: (val) {
+          if (data['UOM'] is! Map) {
+            data['UOM'] = {};
+          }
+          data['UOM']['value'] = val;
+          data['UOM']['options'] = options;
+          debounceCalculation(data);
+        },
+        decoration: InputDecoration(
+          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 0),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(6)),
+          enabledBorder:
+              OutlineInputBorder(borderRadius: BorderRadius.circular(6)),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(6),
+            borderSide: BorderSide(color: Colors.deepPurple, width: 2),
+          ),
+          filled: true,
+          fillColor: Colors.grey[50],
         ),
-        filled: true,
-        fillColor: Colors.grey[50],
       ),
     );
   }
@@ -628,34 +694,39 @@ class AluminumController extends GetxController {
     String currentValue = billingData['value']?.toString() ?? "";
     Map<String, dynamic> options = billingData['options'] ?? {};
 
-    return DropdownButtonFormField<String>(
-      isExpanded: true,
-      value: currentValue.isNotEmpty ? currentValue : null,
-      items: options.entries
-          .map((entry) => DropdownMenuItem<String>(
-                value: entry.key.toString(),
-                child: Text(entry.value.toString()),
-              ))
-          .toList(),
-      onChanged: (val) {
-        if (data['Billing Option'] is! Map) {
-          data['Billing Option'] = {};
-        }
-        data['Billing Option']['value'] = val;
-        data['Billing Option']['options'] = options;
-        debounceCalculation(data);
-      },
-      decoration: InputDecoration(
-        contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(6)),
-        enabledBorder:
-            OutlineInputBorder(borderRadius: BorderRadius.circular(6)),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(6),
-          borderSide: BorderSide(color: Colors.deepPurple, width: 2),
+    return SizedBox(
+      height: 38.h,
+      child: DropdownButtonFormField<String>(
+        isExpanded: true,
+        value: currentValue.isNotEmpty ? currentValue : null,
+        items: options.entries
+            .map((entry) => DropdownMenuItem<String>(
+                  value: entry.key.toString(),
+                  child: Text(entry.value.toString()),
+                ))
+            .toList(),
+        onChanged: (val) {
+          if (data['Billing Option'] is! Map) {
+            data['Billing Option'] = {};
+          }
+          data['Billing Option']['value'] = val;
+          data['Billing Option']['options'] = options;
+          debounceCalculation(data);
+        },
+        decoration: InputDecoration(
+          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 0),
+          border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(6),
+              borderSide: BorderSide(color: Colors.grey[300]!)),
+          enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(6),
+              borderSide: BorderSide(color: Colors.grey[300]!)),
+          focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(6),
+              borderSide: BorderSide(color: Get.theme.primaryColor, width: 2)),
+          filled: true,
+          fillColor: Colors.grey[50],
         ),
-        filled: true,
-        fillColor: Colors.grey[50],
       ),
     );
   }
@@ -702,13 +773,15 @@ class AluminumController extends GetxController {
         onChanged: onChanged,
         decoration: InputDecoration(
           contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 0),
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(6)),
-          enabledBorder:
-              OutlineInputBorder(borderRadius: BorderRadius.circular(6)),
+          border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(6),
+              borderSide: BorderSide(color: Colors.grey[300]!)),
+          enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(6),
+              borderSide: BorderSide(color: Colors.grey[300]!)),
           focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(6),
-            borderSide: BorderSide(color: Colors.deepPurple, width: 2),
-          ),
+              borderRadius: BorderRadius.circular(6),
+              borderSide: BorderSide(color: Get.theme.primaryColor, width: 2)),
           filled: true,
           fillColor: Colors.grey[50],
         ),

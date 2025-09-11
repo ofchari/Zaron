@@ -392,7 +392,7 @@ class _TotalEnquiryViewState extends State<TotalEnquiryView> {
       "order_id": widget.id,
     };
     print("User Input Data Fields$payload");
-    final url = "$apiUrl/quotation_overview";
+    final url = "$apiUrl/enquiry_overview";
     final body = json.encode(payload);
     try {
       final response =
@@ -531,16 +531,18 @@ class _TotalEnquiryViewState extends State<TotalEnquiryView> {
           ),
           actions: [
             GestureDetector(
-                onTap: () {
-                  Navigator.of(context).pop(false);
-                },
-                child: Buttons(
-                    text: "No",
-                    weight: FontWeight.w500,
-                    color: Colors.green,
-                    height: height / 18.5,
-                    width: width / 4.2,
-                    radius: BorderRadius.circular(15))),
+              onTap: () {
+                Navigator.of(context).pop(false);
+              },
+              child: Buttons(
+                text: "No",
+                weight: FontWeight.w500,
+                color: Colors.green,
+                height: height / 18.5,
+                width: width / 4.2,
+                radius: BorderRadius.circular(15),
+              ),
+            ),
             GestureDetector(
                 onTap: () {
                   Navigator.of(context).pop(true);

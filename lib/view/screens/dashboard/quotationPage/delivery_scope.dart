@@ -7,22 +7,22 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/io_client.dart';
 import 'package:intl/intl.dart';
+import 'package:zaron/view/screens/dashboard/orders/pending_order.dart';
 import 'package:zaron/view/screens/global_user/global_user.dart';
 
 import '../../../universal_api/api_key.dart';
-import '../orders/pending_order.dart';
 
 class DeliveryScopeBottomSheet extends StatefulWidget {
   final DateTime deliveryDate;
   final TimeOfDay deliveryTime;
   final String id;
-  final Map<String, dynamic> rowData;
+  final List<Map<String, dynamic>> allRows;
 
   const DeliveryScopeBottomSheet({
     super.key,
     required this.deliveryDate,
     required this.deliveryTime,
-    required this.rowData,
+    required this.allRows,
     required this.id,
   });
 

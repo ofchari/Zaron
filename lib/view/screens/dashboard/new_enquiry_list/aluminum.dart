@@ -83,7 +83,8 @@ class Aluminum extends GetView<AluminumController> {
                             SizedBox(height: 16),
                             Obx(() => buildAnimatedDropdown(
                                   controller.materialTypeList,
-                                  controller.selectedMaterialType.value.isNotEmpty
+                                  controller
+                                          .selectedMaterialType.value.isNotEmpty
                                       ? controller.selectedMaterialType.value
                                       : null,
                                   (value) {
@@ -124,7 +125,8 @@ class Aluminum extends GetView<AluminumController> {
                                       ? controller.selectedBrand.value
                                       : null,
                                   (value) {
-                                    controller.selectedBrand.value = value ?? '';
+                                    controller.selectedBrand.value =
+                                        value ?? '';
                                     controller.selectedColor.value = '';
                                     controller.colorsList.clear();
                                     controller.fetchColor();
@@ -139,7 +141,8 @@ class Aluminum extends GetView<AluminumController> {
                                       ? controller.selectedColor.value
                                       : null,
                                   (value) {
-                                    controller.selectedColor.value = value ?? '';
+                                    controller.selectedColor.value =
+                                        value ?? '';
                                   },
                                   enabled: controller.colorsList.isNotEmpty,
                                   label: "Color",
@@ -157,7 +160,8 @@ class Aluminum extends GetView<AluminumController> {
                                     ),
                                   ),
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Text(
                                         "Selected Product Details",
@@ -248,8 +252,8 @@ class Aluminum extends GetView<AluminumController> {
                                   end: Alignment.bottomRight,
                                 ),
                                 borderRadius: BorderRadius.circular(16),
-                                border:
-                                    Border.all(color: Colors.deepPurple.shade100),
+                                border: Border.all(
+                                    color: Colors.deepPurple.shade100),
                                 boxShadow: [
                                   BoxShadow(
                                     color: Colors.black.withOpacity(0.05),
@@ -268,7 +272,8 @@ class Aluminum extends GetView<AluminumController> {
                                         decoration: BoxDecoration(
                                           color: Colors.deepPurple.shade100
                                               .withOpacity(0.5),
-                                          borderRadius: BorderRadius.circular(12),
+                                          borderRadius:
+                                              BorderRadius.circular(12),
                                         ),
                                         child: Icon(
                                           Icons.shopping_bag_outlined,
@@ -294,8 +299,8 @@ class Aluminum extends GetView<AluminumController> {
                                     decoration: BoxDecoration(
                                       color: Colors.white60,
                                       borderRadius: BorderRadius.circular(10),
-                                      border:
-                                          Border.all(color: Colors.grey.shade200),
+                                      border: Border.all(
+                                          color: Colors.grey.shade200),
                                     ),
                                     child: Row(
                                       mainAxisAlignment:
@@ -389,7 +394,8 @@ class Aluminum extends GetView<AluminumController> {
                                                     fontSize: 20,
                                                     fontWeight: FontWeight.bold,
                                                   ),
-                                                  overflow: TextOverflow.ellipsis,
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
                                                 ),
                                               ],
                                             ),
