@@ -153,9 +153,9 @@ class ScrewController extends GetxController {
   }
 
   Future<void> postScrewData() async {
-    if (selectedBrand.value.isEmpty ||
-        selectedScrew.value.isEmpty ||
-        selectedThread.value.isEmpty) {
+    if (selectedBrand.value.isEmpty || selectedScrew.value.isEmpty
+        // || selectedThread.value.isEmpty
+        ) {
       Get.snackbar("Error", "Please select all required fields",
           backgroundColor: Colors.red, colorText: Colors.white);
       return;

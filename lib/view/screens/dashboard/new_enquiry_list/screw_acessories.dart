@@ -1,519 +1,589 @@
-import 'dart:convert';
-import 'dart:io';
-
 import 'package:dropdown_search/dropdown_search.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:gap/gap.dart';
+import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:http/io_client.dart';
+import 'package:zaron/view/screens/controller/billingamount_get_controller.dart';
 import 'package:zaron/view/widgets/subhead.dart';
 
-import '../../../universal_api/api_key.dart';
-import '../../global_user/global_oredrID.dart';
+import '../../controller/screw_acesssories_get_controller.dart';
 
-class ScrewAccessories extends StatefulWidget {
+class ScrewAccessories extends GetView<ScrewAccessoriesController> {
   const ScrewAccessories({super.key, required this.data});
 
   final Map<String, dynamic> data;
 
   @override
-  State<ScrewAccessories> createState() => _ScrewAccessoriesState();
-}
-
-class _ScrewAccessoriesState extends State<ScrewAccessories> {
-  late TextEditingController editController;
-  int? orderIDD;
-  String? orderNO;
-  String? selectedProduct;
-  String? selectedColor;
-  String? selsectedBrand;
-  String? selectedProductBaseId;
-  String? selectedBaseProductName;
-
-  List<String> productList = [];
-  List<String> colorsList = [];
-  List<String> brandList = [];
-  List<Map<String, dynamic>> submittedData = [];
-
-  // Form key for validation
-  final _formKey = GlobalKey<FormState>();
-
-  @override
-  void initState() {
-    super.initState();
-    editController = TextEditingController(text: widget.data["Base Product"]);
-    _fetchBrands();
-  }
-
-  @override
-  void dispose() {
-    editController.dispose();
-    super.dispose();
-  }
-
-  Future<void> _fetchBrands() async {
-    setState(() {
-      productList = [];
-      selectedProduct = null;
-    });
-
-    final client = IOClient(
-      HttpClient()..badCertificateCallback = (_, __, ___) => true,
-    );
-    final url = Uri.parse('$apiUrl/showlables/9');
-
-    try {
-      final response = await client.get(url);
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        final products = data["message"]["message"][1];
-
-        debugPrint(response.body);
-
-        if (products is List) {
-          setState(() {
-            productList = products
-                .whereType<Map>()
-                .map((e) => e["product_name"]?.toString())
-                .whereType<String>()
-                .toList();
-          });
-        }
-      }
-    } catch (e) {
-      print("Exception fetching brands: $e");
+  Widget build(BuildContext context) {
+    if (!Get.isRegistered<ScrewAccessoriesController>()) {
+      Get.put(ScrewAccessoriesController(data: data));
     }
-  }
+    final billingController = Get.put(BillAmountController());
 
-  /// fetch colors Api's //
-  Future<void> _fetchColors() async {
-    if (selectedProduct == null) return;
-
-    setState(() {
-      colorsList = [];
-      selectedColor = null;
-    });
-
-    final client = IOClient(
-      HttpClient()..badCertificateCallback = (_, __, ___) => true,
-    );
-    final url = Uri.parse('$apiUrl/labelinputdata');
-
-    try {
-      final response = await client.post(
-        url,
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          "product_label": "color",
-          "product_filters": null,
-          "product_label_filters": null,
-          "product_category_id": null,
-          "base_product_filters": [selectedProduct],
-          "base_label_filters": ["product_name"],
-          "base_category_id": "9",
-        }),
-      );
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        final colors = data["message"]["message"][0];
-        print("Fetching colors for brand: $selectedProduct");
-        print("API response: ${response.body}");
-
-        if (colors is List) {
-          setState(() {
-            colorsList = colors
-                .whereType<Map>()
-                .map((e) => e["color"]?.toString())
-                .whereType<String>()
-                .toList();
-          });
-        }
-      }
-    } catch (e) {
-      print("Exception fetching colors: $e");
-    }
-  }
-
-  /// fetch Thickness Api's ///
-  Future<void> _fetchBrand() async {
-    if (selectedProduct == null) return;
-
-    setState(() {
-      brandList = [];
-      selsectedBrand = null;
-    });
-
-    final client = IOClient(
-      HttpClient()..badCertificateCallback = (_, __, ___) => true,
-    );
-    final url = Uri.parse('$apiUrl/labelinputdata');
-
-    try {
-      final response = await client.post(
-        url,
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          "product_label": "brand",
-          "product_filters": null,
-          "product_label_filters": null,
-          "product_category_id": null,
-          "base_product_filters": [selectedProduct, selectedColor],
-          "base_label_filters": ["product_name", "color"],
-          "base_category_id": "9",
-        }),
-      );
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        final message = data["message"]["message"];
-        print("Fetching brand for product: $selectedProduct");
-        print("API response: ${response.body}");
-
-        if (message is List && message.isNotEmpty) {
-          // Extract brand list
-          final brandListData = message[0];
-          if (brandListData is List) {
-            setState(() {
-              brandList = brandListData
-                  .whereType<Map>()
-                  .map((e) => e["brand"]?.toString())
-                  .whereType<String>()
-                  .toList();
-            });
-          }
-
-          // Extract both id and base_product_id
-          final idData = message.length > 1 ? message[1] : null;
-          if (idData is List && idData.isNotEmpty && idData.first is Map) {
-            selectedProductBaseId = idData.first["id"]?.toString();
-            selectedBaseProductName =
-                idData.first["base_product_id"]?.toString(); // <-- new line
-            print("Selected Base Product ID: $selectedProductBaseId");
-            print(
-              "Base Product Name: $selectedBaseProductName",
-            ); // <-- optional debug
-          }
-        }
-      }
-    } catch (e) {
-      print("Exception fetching brand: $e");
-    }
-  }
-
-  Map<String, dynamic>? apiResponse;
-  List<dynamic> responseData = [];
-
-  ///postData
-  Future<void> postAllData() async {
-    HttpClient client = HttpClient();
-    client.badCertificateCallback =
-        ((X509Certificate cert, String host, int port) => true);
-    IOClient ioClient = IOClient(client);
-
-    // Use global order ID if available, otherwise null for first time
-    final globalOrderManager = GlobalOrderManager();
-
-    final headers = {"Content-Type": "application/json"};
-    final data = {
-      "customer_id": 377423,
-      "product_id": null,
-      "product_name": null,
-      "product_base_id": selectedProductBaseId,
-      "product_base_name": "$selectedBaseProductName",
-      "category_id": 9,
-      "category_name": "Screw accessories",
-      "OrderID": globalOrderManager.globalOrderId
-    };
-
-    print("User input Data $data");
-    final url = "$apiUrl/addbag";
-    final body = jsonEncode(data);
-
-    try {
-      final response = await ioClient.post(
-        Uri.parse(url),
-        headers: headers,
-        body: body,
-      );
-
-      debugPrint("This is a response: ${response.body}");
-
-      if (response.statusCode == 200) {
-        final jsonResponse = jsonDecode(response.body);
-        setState(() {
-          final String orderID = jsonResponse["order_id"]?.toString() ?? "";
-          orderIDD = int.tryParse(orderID);
-          orderNO = jsonResponse["order_no"]?.toString() ?? "Unknown";
-          // Set global order ID if this is the first time
-          if (!globalOrderManager.hasGlobalOrderId()) {
-            globalOrderManager.setGlobalOrderId(int.parse(orderID), orderNO!);
-          }
-
-          // Update local variables
-          orderIDD = globalOrderManager.globalOrderId;
-          orderNO = globalOrderManager.globalOrderNo;
-          apiResponse = jsonResponse;
-          // Extract the data from first category
-          if (jsonResponse['lebels'] != null &&
-              jsonResponse['lebels'].isNotEmpty) {
-            responseData = jsonResponse['lebels'][0]['data'];
-          }
-        });
-
-        // Show success message
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text("Order created successfully!"),
-            backgroundColor: Colors.green,
-          ),
-        );
-      } else {
-        // Handle non-200 responses
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text("Failed to create order: ${response.statusCode}"),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    } on SocketException catch (e) {
-      throw Exception("Network error: $e");
-    } on HttpException catch (e) {
-      throw Exception("HTTP error: $e");
-    } on FormatException catch (e) {
-      throw Exception("Data parsing error: $e");
-    } catch (e) {
-      throw Exception("Unexpected error: $e");
-    } finally {
-      client.close();
-    }
-  }
-
-  TextEditingController baseProductController = TextEditingController();
-  List<dynamic> baseProductResults = [];
-  bool isSearchingBaseProduct = false;
-  String? selectedBaseProduct;
-  FocusNode baseProductFocusNode = FocusNode();
-
-  void _submitData() {
-    if (selectedProduct == null ||
-        selectedColor == null ||
-        selsectedBrand == null) {
-      // Show elegant error message
-      showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: Text('Incomplete Form'),
-          content: Text(
-            'Please fill all required fields to add a product.',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text('OK'),
+    return Scaffold(
+      body: SafeArea(
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [Colors.white, Colors.grey.shade50],
             ),
-          ],
-        ),
-      );
-      return;
-    }
-    postAllData().then((_) {
-      setState(() {
-        submittedData.add({
-          "Product": "Screw Accessories",
-          "UOM": "Feet",
-          "Length": "0",
-          "Nos": "1",
-          "Basic Rate": "0",
-          "SQ": "0",
-          "Amount": "0",
-          "Base Product": "$selectedProduct, $selectedColor, $selsectedBrand,",
-        });
-        selectedProduct = null;
-        selectedColor = null;
-        selsectedBrand = null;
-        productList = [];
-        colorsList = [];
-        brandList = [];
-        _fetchBrands();
-      });
-
-      // Show success message with a more elegant snackbar
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Row(
-            children: [
-              Icon(Icons.check_circle, color: Colors.white),
-              SizedBox(width: 12),
-              Text("Product added successfully"),
-            ],
-          ),
-          backgroundColor: Colors.green,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-          margin: EdgeInsets.all(16),
-          duration: Duration(seconds: 2),
-        ),
-      );
-    });
-  }
-
-  Widget _buildSubmittedDataList() {
-    if (responseData.isEmpty) {
-      return Container(
-        padding: EdgeInsets.symmetric(vertical: 40),
-        alignment: Alignment.center,
-        child: Column(
-          children: [
-            Icon(Icons.inventory_2_outlined, size: 60, color: Colors.grey[400]),
-            SizedBox(height: 16),
-            Text(
-              "No products added yet.",
-              style: TextStyle(fontSize: 16, color: Colors.grey[600]),
-            ),
-          ],
-        ),
-      );
-    }
-
-    return Column(
-      children: responseData.asMap().entries.map((entry) {
-        int index = entry.key;
-        Map<String, dynamic> product = entry.value as Map<String, dynamic>;
-
-        return Card(
-          margin: EdgeInsets.symmetric(vertical: 10),
-          elevation: 2,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
           ),
           child: Padding(
-            padding: EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Header Row with Product Name and Delete Button
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(
-                      child: Text(
-                        "${product['S.No']}. ${product['Products']}",
-                        style: GoogleFonts.figtree(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.black87,
+            padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+            child: SingleChildScrollView(
+              physics: BouncingScrollPhysics(),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 10,
+                          offset: Offset(0, 5),
+                        ),
+                      ],
+                    ),
+                    child: Padding(
+                      padding: EdgeInsets.all(16),
+                      child: Form(
+                        key: controller.formKey,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Subhead(
+                              text: "Add New Product",
+                              weight: FontWeight.w600,
+                              color: Colors.black,
+                            ),
+                            SizedBox(height: 16),
+                            Obx(() => _buildAnimatedDropdown(
+                                  controller.productList,
+                                  controller.selectedProduct.value.isNotEmpty
+                                      ? controller.selectedProduct.value
+                                      : null,
+                                  (value) {
+                                    controller.selectedProduct.value =
+                                        value ?? '';
+                                    controller.selectedColor.value = '';
+                                    controller.selectedBrand.value = '';
+                                    controller.colorsList.clear();
+                                    controller.brandList.clear();
+                                    controller.fetchColors();
+                                  },
+                                  label: "Products",
+                                  icon: Icons.category_outlined,
+                                )),
+                            Obx(() => _buildAnimatedDropdown(
+                                  controller.colorsList,
+                                  controller.selectedColor.value.isNotEmpty
+                                      ? controller.selectedColor.value
+                                      : null,
+                                  (value) {
+                                    controller.selectedColor.value =
+                                        value ?? '';
+                                    controller.selectedBrand.value = '';
+                                    controller.brandList.clear();
+                                    controller.fetchBrand();
+                                  },
+                                  enabled: controller.colorsList.isNotEmpty,
+                                  label: "Color",
+                                  icon: Icons.color_lens_outlined,
+                                )),
+                            Obx(() => _buildAnimatedDropdown(
+                                  controller.brandList,
+                                  controller.selectedBrand.value.isNotEmpty
+                                      ? controller.selectedBrand.value
+                                      : null,
+                                  (value) {
+                                    controller.selectedBrand.value =
+                                        value ?? '';
+                                  },
+                                  enabled: controller.brandList.isNotEmpty,
+                                  label: "Brand",
+                                  icon: Icons.brightness_auto_outlined,
+                                )),
+                            SizedBox(height: 16),
+                            Obx(() => Container(
+                                  padding: EdgeInsets.all(16),
+                                  decoration: BoxDecoration(
+                                    color: Colors.grey[100],
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(
+                                      color: Colors.deepPurple[400]!,
+                                      width: 1.5,
+                                    ),
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        "Selected Product Details",
+                                        style: GoogleFonts.poppins(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w600,
+                                          color: Colors.deepPurple[400],
+                                        ),
+                                      ),
+                                      SizedBox(height: 8),
+                                      Text(
+                                        controller.selectedItems(),
+                                        style: GoogleFonts.poppins(
+                                          fontSize: 13.5,
+                                          color: Colors.black,
+                                          height: 1.5,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                )),
+                            SizedBox(height: 24),
+                            AnimatedContainer(
+                              duration: Duration(milliseconds: 300),
+                              width: double.infinity,
+                              height: 54.h,
+                              child: ElevatedButton(
+                                onPressed: () {
+                                  if (controller
+                                              .selectedProduct.value.isEmpty ||
+                                          controller.selectedColor.value.isEmpty
+                                      // ||
+                                      // controller.selectedBrand.value.isEmpty
+                                      ) {
+                                    Get.snackbar(
+                                      "Error",
+                                      "Please fill all required fields",
+                                      backgroundColor: Colors.red,
+                                      colorText: Colors.white,
+                                    );
+                                    return;
+                                  }
+                                  controller.submitData();
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.deepPurple[400],
+                                  foregroundColor: Colors.white,
+                                  elevation: 0,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(Icons.add_shopping_cart_outlined,
+                                        color: Colors.white),
+                                    SizedBox(width: 10),
+                                    Text(
+                                      "Add Product",
+                                      style: GoogleFonts.poppins(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ),
-                    if (product['id'] != null)
-                      Container(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.blue[50],
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Text(
-                          "ID: ${product['id']}",
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.blue[700],
-                            fontWeight: FontWeight.w500,
+                  ),
+                  Obx(() => controller.responseProducts.isNotEmpty
+                      ? Column(
+                          children: [
+                            SizedBox(height: 24),
+                            Container(
+                              padding: EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: [
+                                    Colors.deepPurple.shade100,
+                                    Colors.blue.shade50
+                                  ],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                ),
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(
+                                    color: Colors.deepPurple.shade100),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.05),
+                                    blurRadius: 10,
+                                    offset: Offset(0, 4),
+                                  ),
+                                ],
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Container(
+                                        padding: EdgeInsets.all(8),
+                                        decoration: BoxDecoration(
+                                          color: Colors.deepPurple.shade100
+                                              .withOpacity(0.5),
+                                          borderRadius:
+                                              BorderRadius.circular(12),
+                                        ),
+                                        child: Icon(
+                                          Icons.shopping_bag_outlined,
+                                          color: Colors.deepPurple.shade700,
+                                          size: 20,
+                                        ),
+                                      ),
+                                      SizedBox(width: 12),
+                                      Text(
+                                        "Added Products",
+                                        style: GoogleFonts.poppins(
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.w600,
+                                          color: Colors.deepPurple,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  SizedBox(height: 16),
+                                  Container(
+                                    padding: EdgeInsets.symmetric(
+                                        horizontal: 12, vertical: 8),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white60,
+                                      borderRadius: BorderRadius.circular(10),
+                                      border: Border.all(
+                                          color: Colors.grey.shade200),
+                                    ),
+                                    child: Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Text(
+                                          "Screw Accessories",
+                                          style: GoogleFonts.poppins(
+                                            fontWeight: FontWeight.w600,
+                                            color: Colors.grey.shade700,
+                                          ),
+                                        ),
+                                        Container(
+                                          padding: EdgeInsets.symmetric(
+                                              horizontal: 10, vertical: 4),
+                                          decoration: BoxDecoration(
+                                            color: Colors.blue.shade50,
+                                            borderRadius:
+                                                BorderRadius.circular(20),
+                                            border: Border.all(
+                                                color: Colors.blue.shade200),
+                                          ),
+                                          child: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Icon(
+                                                Icons.receipt_outlined,
+                                                size: 14,
+                                                color: Colors.blue.shade700,
+                                              ),
+                                              SizedBox(width: 4),
+                                              Text(
+                                                "ID: ${controller.orderNO.value}",
+                                                style: GoogleFonts.figtree(
+                                                  fontSize: 13,
+                                                  fontWeight: FontWeight.w600,
+                                                  color: Colors.blue.shade700,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  SizedBox(height: 16),
+                                  Container(
+                                    margin: EdgeInsets.symmetric(vertical: 4),
+                                    decoration: BoxDecoration(
+                                      gradient: LinearGradient(
+                                        colors: [
+                                          Colors.deepPurple.shade500,
+                                          Colors.deepPurple.shade200
+                                        ],
+                                        begin: Alignment.topLeft,
+                                        end: Alignment.bottomRight,
+                                      ),
+                                      borderRadius: BorderRadius.circular(16),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.blue.withOpacity(0.3),
+                                          blurRadius: 8,
+                                          offset: Offset(0, 4),
+                                        ),
+                                      ],
+                                    ),
+                                    child: Padding(
+                                      padding: EdgeInsets.all(10),
+                                      child: Row(
+                                        children: [
+                                          Expanded(
+                                            flex: 3,
+                                            child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                Text(
+                                                  "TOTAL AMOUNT",
+                                                  style: TextStyle(
+                                                    color: Colors.white70,
+                                                    fontSize: 12,
+                                                    fontWeight: FontWeight.w500,
+                                                    letterSpacing: 0.5,
+                                                  ),
+                                                ),
+                                                SizedBox(height: 4),
+                                                Text(
+                                                  "₹${controller.billamt.value.toStringAsFixed(2)}",
+                                                  style: TextStyle(
+                                                    color: Colors.white,
+                                                    fontSize: 20,
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                  _buildSubmittedDataList(context),
+                                ],
+                              ),
+                            ),
+                          ],
+                        )
+                      : Container()),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSubmittedDataList(BuildContext context) {
+    return Obx(() {
+      if (controller.responseProducts.isEmpty) {
+        return Container(
+          padding: EdgeInsets.symmetric(vertical: 40),
+          alignment: Alignment.center,
+          child: Column(
+            children: [
+              Icon(Icons.inventory_2_outlined,
+                  size: 60, color: Colors.grey[400]),
+              SizedBox(height: 16),
+              Text(
+                "No products added yet.",
+                style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+              ),
+            ],
+          ),
+        );
+      }
+
+      return Column(
+        children: controller.responseProducts.asMap().entries.map((entry) {
+          int index = entry.key;
+          Map<String, dynamic> product = Map<String, dynamic>.from(entry.value);
+          return Card(
+            margin: EdgeInsets.symmetric(vertical: 10),
+            elevation: 2,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.only(top: 15),
+                          child: SizedBox(
+                            height: 40.h,
+                            width: 210.w,
+                            child: Text(
+                              "${index + 1}.  ${product["Products"] ?? "Unknown Product"}",
+                              overflow: TextOverflow.ellipsis,
+                              style: GoogleFonts.figtree(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.black87,
+                              ),
+                            ),
                           ),
                         ),
                       ),
-                    Container(
-                      height: 40,
-                      width: 50,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(10),
-                        color: Colors.deepPurple[50],
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Container(
+                          padding:
+                              EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: Colors.blue[50],
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            "ID: ${product['id'] ?? "N/A"}",
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.blue[700],
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
                       ),
-                      child: IconButton(
-                        icon: Icon(Icons.delete, color: Colors.redAccent),
-                        onPressed: () {
-                          showDialog(
-                            context: context,
-                            builder: (context) => AlertDialog(
-                              title: Text("Delete Product"),
+                      Container(
+                        height: 40.h,
+                        width: 40.w,
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.red[200]!),
+                          borderRadius: BorderRadius.circular(10),
+                          color: Colors.red[50],
+                        ),
+                        child: IconButton(
+                          icon: Icon(Icons.delete_outline,
+                              color: Colors.redAccent, size: 20),
+                          onPressed: () => Get.dialog(
+                            AlertDialog(
+                              title: Text("Delete Item"),
                               content: Text(
-                                "Are you sure you want to delete this item?",
-                              ),
+                                  "Are you sure you want to delete this item?"),
                               actions: [
-                                TextButton(
+                                ElevatedButton(
+                                    onPressed: () => Get.back(),
+                                    child: Text("Cancel")),
+                                ElevatedButton(
                                   onPressed: () {
-                                    setState(() {
-                                      responseData.removeAt(index);
-                                    });
-                                    Navigator.pop(context);
+                                    controller
+                                        .deleteCard(product["id"].toString());
+                                    Get.back();
                                   },
-                                  child: Text("Yes"),
-                                ),
-                                TextButton(
-                                  onPressed: () => Navigator.pop(context),
-                                  child: Text("No"),
+                                  child: Text("Delete"),
                                 ),
                               ],
                             ),
-                          );
-                        },
+                          ),
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-
-                SizedBox(height: 16),
-                // Editable Fields in Rows
                 _buildApiProductDetailInRows(product),
               ],
             ),
-          ),
-        );
-      }).toList(),
-    );
+          );
+        }).toList(),
+      );
+    });
   }
 
   Widget _buildApiProductDetailInRows(Map<String, dynamic> product) {
     return Column(
       children: [
-        // First Row: Basic Rate & Nos
-        Row(
-          children: [
-            Expanded(
-              child: _buildDetailItem(
-                "Basic Rate",
-                _editableTextField(product, 'Basic Rate'),
-              ),
-            ),
-            SizedBox(width: 16),
-            Expanded(
-              child: _buildDetailItem(
-                "Nos",
-                _editableTextField(product, 'Nos'),
-              ),
-            ),
-          ],
-        ),
-        SizedBox(height: 12),
-
-        // Second Row: Amount
-        Row(
-          children: [
-            Expanded(
-              child: _buildDetailItem(
-                "Amount",
-                Text(
-                  product['Amount']?.toString() ?? '0',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Row(
+            children: [
+              Expanded(
+                child: _buildDetailItem(
+                  "Basic Rate",
+                  controller.editableTextField(
+                    product,
+                    'Basic Rate',
+                    (value) => controller.calculateAmount(product),
+                    fieldControllers: controller.fieldControllers,
+                    readOnly: true,
+                  ),
                 ),
               ),
-            ),
-          ],
+              Gap(10),
+              Expanded(
+                child: _buildDetailItem(
+                  "Nos",
+                  controller.editableTextField(
+                    product,
+                    'Nos',
+                    (value) => controller.calculateAmount(product),
+                    fieldControllers: controller.fieldControllers,
+                  ),
+                ),
+              ),
+              Gap(10),
+              Expanded(
+                child: _buildDetailItem(
+                  "Amount",
+                  controller.editableTextField(
+                    product,
+                    'Amount',
+                    (value) {},
+                    readOnly: true,
+                    fieldControllers: controller.fieldControllers,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        Gap(5),
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Row(
+            children: [
+              Expanded(
+                child: _buildDetailItem(
+                  "CGST",
+                  controller.editableTextField(
+                    product,
+                    'cgst',
+                    (value) {},
+                    readOnly: true,
+                    fieldControllers: controller.fieldControllers,
+                  ),
+                ),
+              ),
+              Gap(10),
+              Expanded(
+                child: _buildDetailItem(
+                  "SGST",
+                  controller.editableTextField(
+                    product,
+                    'sgst',
+                    (value) {},
+                    readOnly: true,
+                    fieldControllers: controller.fieldControllers,
+                  ),
+                ),
+              ),
+              Gap(10),
+              Expanded(child: Container()), // Empty space to maintain alignment
+            ],
+          ),
         ),
       ],
     );
@@ -535,41 +605,6 @@ class _ScrewAccessoriesState extends State<ScrewAccessories> {
         field,
       ],
     );
-  }
-
-  Widget _editableTextField(Map<String, dynamic> product, String key) {
-    return TextField(
-      controller: TextEditingController(text: product[key]?.toString() ?? ''),
-      onChanged: (value) {
-        product[key] = value;
-        // Auto-calculate Amount if both Basic Rate and Nos are available
-        if (key == 'Basic Rate' || key == 'Nos') {
-          final rate = double.tryParse(product['Basic Rate'] ?? '0') ?? 0;
-          final nos = double.tryParse(product['Nos'] ?? '0') ?? 0;
-          product['Amount'] = (rate * nos).toStringAsFixed(2);
-        }
-      },
-      decoration: InputDecoration(
-        contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(color: Colors.grey[300]!),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(color: Colors.grey[300]!),
-        ),
-      ),
-    );
-  }
-
-  String _selectedItems() {
-    List<String> value = [
-      if (selectedProduct != null) "Product: $selectedProduct",
-      if (selectedColor != null) "Color: $selectedColor",
-      if (selsectedBrand != null) "Brand: $selsectedBrand",
-    ];
-    return value.isEmpty ? "No selections yet" : value.join(",  ");
   }
 
   Widget _buildAnimatedDropdown(
@@ -630,187 +665,6 @@ class _ScrewAccessoriesState extends State<ScrewAccessories> {
               ),
             ),
             constraints: BoxConstraints(maxHeight: 300),
-            // borderRadius: BorderRadius.circular(12),
-          ),
-        ),
-      ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Subhead(
-          text: 'Screw Accessories',
-          weight: FontWeight.w500,
-          color: Colors.black,
-        ),
-        centerTitle: true,
-        elevation: 0,
-        backgroundColor: Colors.white,
-      ),
-      body: Container(
-        color: Colors.grey[50],
-        child: Padding(
-          padding: EdgeInsets.all(16),
-          child: SingleChildScrollView(
-            physics: BouncingScrollPhysics(),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Card(
-                  elevation: 2,
-                  color: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Padding(
-                    padding: EdgeInsets.all(16),
-                    child: Form(
-                      key: _formKey,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Subhead(
-                            text: "Add New Product",
-                            weight: FontWeight.w600,
-                            color: Colors.black,
-                          ),
-                          SizedBox(height: 16),
-                          _buildAnimatedDropdown(
-                            productList,
-                            selectedProduct,
-                            (value) {
-                              setState(() {
-                                selectedProduct = value;
-
-                                ///clear fields
-                                selectedColor = null;
-                                selsectedBrand = null;
-                                colorsList = [];
-                                brandList = [];
-                              });
-                              _fetchColors();
-                            },
-                            label: "Products",
-                            icon: Icons.category_outlined,
-                          ),
-                          _buildAnimatedDropdown(
-                            colorsList,
-                            selectedColor,
-                            (value) {
-                              setState(() {
-                                selectedColor = value;
-
-                                ///clear fields
-                                selsectedBrand = null;
-                                brandList = [];
-                              });
-                              _fetchBrand();
-                            },
-                            enabled: colorsList.isNotEmpty,
-                            label: "Color",
-                            icon: Icons.color_lens_outlined,
-                          ),
-                          _buildAnimatedDropdown(
-                            brandList,
-                            selsectedBrand,
-                            (value) {
-                              setState(() {
-                                selsectedBrand = value;
-                              });
-                            },
-                            enabled: brandList.isNotEmpty,
-                            label: "Brand",
-                            icon: Icons.brightness_auto_outlined,
-                          ),
-                          // SizedBox(height: 24),
-                          // _buildBaseProductSearchField(),
-                          SizedBox(height: 16),
-                          Container(
-                            padding: EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              color: Colors.grey[100],
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(
-                                color: Colors.deepPurple[400]!,
-                                width: 1.5,
-                              ),
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  "Selected Product Details",
-                                  style: GoogleFonts.poppins(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
-                                    color: Colors.deepPurple[400],
-                                  ),
-                                ),
-                                SizedBox(height: 8),
-                                Text(
-                                  _selectedItems(),
-                                  style: GoogleFonts.poppins(
-                                    fontSize: 13.5,
-                                    color: Colors.black,
-                                    height: 1.5,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          SizedBox(height: 24),
-                          AnimatedContainer(
-                            duration: Duration(milliseconds: 300),
-                            width: double.infinity,
-                            height: 54.h,
-                            child: ElevatedButton(
-                              onPressed: _submitData,
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.deepPurple[400],
-                                foregroundColor: Colors.white,
-                                elevation: 0,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                              ),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(
-                                    Icons.add_shopping_cart_outlined,
-                                    color: Colors.white,
-                                  ),
-                                  SizedBox(width: 10),
-                                  Text(
-                                    "Add Product",
-                                    style: GoogleFonts.poppins(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-                SizedBox(height: 24),
-                if (submittedData.isNotEmpty)
-                  Subhead(
-                    text: "   Added Products",
-                    weight: FontWeight.w600,
-                    color: Colors.black,
-                  ),
-                SizedBox(height: 8),
-                _buildSubmittedDataList(),
-              ],
-            ),
           ),
         ),
       ),

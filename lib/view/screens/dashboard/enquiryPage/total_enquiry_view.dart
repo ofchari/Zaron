@@ -399,6 +399,8 @@ class _TotalEnquiryViewState extends State<TotalEnquiryView> {
           await http.post(Uri.parse(url), headers: headers, body: body);
       print("This is the status code${response.statusCode}");
       if (response.statusCode == 200) {
+        print(response.body);
+        print(response.statusCode);
         print("this is a post Data response : ${response.body}");
 
         // Parse the JSON response
@@ -759,54 +761,75 @@ class _TotalEnquiryViewState extends State<TotalEnquiryView> {
                 color: Colors.white),
           ),
           actions: [
-            // Add toggle button for list/grid view
-            GestureDetector(
-              onTap: () {
-                setState(() {
-                  isGridView = !isGridView;
-                });
-              },
-              child: Icon(
-                isGridView ? Icons.view_list : Icons.grid_view,
-                color: Colors.white,
-                size: 28,
-              ),
-            ),
-            Gap(8),
+            // Language icon in a rounded glassmorphic container
             GestureDetector(
               onTap: () {
                 postOverView();
               },
-              child: Icon(
-                Icons.language,
-                color: Colors.white,
-                size: 28,
+              child: Container(
+                padding: EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(15),
+                  border: Border.all(color: Colors.white.withOpacity(0.3)),
+                ),
+                child: Icon(
+                  Icons.language,
+                  color: Colors.white,
+                  size: 20,
+                ),
               ),
             ),
             Gap(8),
+            // Add icon in a rounded glassmorphic container
             GestureDetector(
               onTap: () {
                 postCreateQuotation(context);
               },
-              child: Icon(
-                Icons.add,
-                color: Colors.white,
-                size: 28,
+              child: Container(
+                padding: EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(15),
+                  border: Border.all(color: Colors.white.withOpacity(0.3)),
+                ),
+                child: Icon(
+                  Icons.add,
+                  color: Colors.white,
+                  size: 20,
+                ),
+              ),
+            ),
+            Gap(8),
+            // Summary icon in a rounded glassmorphic container with adjusted color for contrast
+            GestureDetector(
+              onTap: () {
+                Get.to(SummaryScreen());
+              },
+              child: Container(
+                padding: EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(15),
+                  border: Border.all(
+                    color: Colors.white.withOpacity(0.3),
+                  ),
+                ),
+                // Remove default padding to fit perfectly in container
+                constraints: BoxConstraints(),
+                child: Icon(
+                  Icons.note_alt_sharp,
+                  color: Colors
+                      .white, // Changed to white for consistency and better contrast
+                  size: 20,
+                ),
               ),
             ),
             Gap(10),
-            IconButton(
-                onPressed: () {
-                  Get.to(SummaryScreen());
-                },
-                icon: Icon(
-                  Icons.note_alt_sharp,
-                  color: Colors.black,
-                )),
           ],
         ),
         body: isLoading
-            ? const Center(child: CircularProgressIndicator())
+            ? SafeArea(child: const Center(child: CircularProgressIndicator()))
             : allDataTables.isEmpty
                 ? Center(
                     child: Column(
@@ -834,6 +857,70 @@ class _TotalEnquiryViewState extends State<TotalEnquiryView> {
                   )
                 : Column(
                     children: [
+                      Gap(15),
+                      GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            isGridView = !isGridView;
+                          });
+                        },
+                        child: Container(
+                          padding:
+                              EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: Colors.black87,
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                                color: Colors.white.withOpacity(0.3)),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.1),
+                                blurRadius: 5,
+                                offset: Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              AnimatedContainer(
+                                duration: Duration(milliseconds: 300),
+                                padding: EdgeInsets.all(6),
+                                decoration: BoxDecoration(
+                                  color: isGridView
+                                      ? Colors.blue.shade300.withOpacity(0.5)
+                                      : Colors.transparent,
+                                  borderRadius: BorderRadius.circular(14),
+                                ),
+                                child: Icon(
+                                  Icons.grid_view,
+                                  color: isGridView
+                                      ? Colors.white
+                                      : Colors.white.withOpacity(0.6),
+                                  size: 24,
+                                ),
+                              ),
+                              AnimatedContainer(
+                                duration: Duration(milliseconds: 300),
+                                padding: EdgeInsets.all(6),
+                                decoration: BoxDecoration(
+                                  color: !isGridView
+                                      ? Colors.blue.shade300.withOpacity(0.5)
+                                      : Colors.transparent,
+                                  borderRadius: BorderRadius.circular(14),
+                                ),
+                                child: Icon(
+                                  Icons.view_list,
+                                  color: !isGridView
+                                      ? Colors.white
+                                      : Colors.white.withOpacity(0.6),
+                                  size: 24,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
                       Expanded(
                         child: Scrollbar(
                           thumbVisibility: true,

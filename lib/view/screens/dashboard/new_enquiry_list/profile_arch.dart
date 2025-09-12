@@ -449,45 +449,51 @@ class ProfileRidgeAndArch extends GetView<ProfileRidgeAndArchController> {
           child: Column(
             children: [
               /// Header Row with Product Name, ID, and Delete Button
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.only(top: 15, left: 12),
-                      child: Text(
-                        "${index + 1}. ${data["Products"] ?? 'N/A'}",
-                        overflow: TextOverflow.ellipsis,
-                        style: GoogleFonts.figtree(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.black87,
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.only(top: 15),
+                        child: SizedBox(
+                          height: 40.h,
+                          width: 210.w,
+                          child: Text(
+                            "${index + 1}. ${data["Products"] ?? 'N/A'}",
+                            overflow: TextOverflow.ellipsis,
+                            style: GoogleFonts.figtree(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.black87,
+                            ),
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                  Container(
-                    margin: EdgeInsets.only(top: 15),
-                    padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: Colors.blue[50],
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Text(
-                      "ID: ${data['id'] ?? 'N/A'}",
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.blue[700],
-                        fontWeight: FontWeight.w500,
+                    Container(
+                      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.blue[50],
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        "ID: ${data['id'] ?? 'N/A'}",
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.blue[700],
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
 
               /// Product Detail Fields
               Padding(
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.all(8),
                 child: Column(
                   children: [
                     /// Row 1: UOM, Crimp, Nos
@@ -614,13 +620,18 @@ class ProfileRidgeAndArch extends GetView<ProfileRidgeAndArchController> {
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
                         controller.buildBaseProductSearchField(data),
-                        SizedBox(width: 4),
-                        Material(
-                          color: Colors.green[50],
-                          borderRadius: BorderRadius.circular(8),
-                          child: InkWell(
-                            borderRadius: BorderRadius.circular(8),
-                            onTap: () {
+                        Container(
+                          height: 38.h,
+                          width: 38.w,
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.green[100]!),
+                            borderRadius: BorderRadius.circular(10),
+                            color: Colors.green[50],
+                          ),
+                          child: IconButton(
+                            icon: Icon(Icons.attach_file,
+                                color: Colors.green[600], size: 20),
+                            onPressed: () {
                               Get.to(
                                 ProfileAttachment(
                                   productId: data['id'].toString(),
@@ -630,81 +641,41 @@ class ProfileRidgeAndArch extends GetView<ProfileRidgeAndArchController> {
                                 ),
                               );
                             },
-                            child: Container(
-                              height: 40.h,
-                              width: 36.w,
-                              decoration: BoxDecoration(
-                                  border: Border.all(color: Colors.green[100]!),
-                                  borderRadius: BorderRadius.circular(8)),
-                              child: Icon(Icons.attach_file,
-                                  color: Colors.green[600], size: 18),
+                          ),
+                        ),
+                        Container(
+                          height: 38.h,
+                          width: 38.w,
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.red[200]!),
+                            borderRadius: BorderRadius.circular(10),
+                            color: Colors.red[50],
+                          ),
+                          child: IconButton(
+                            icon: Icon(Icons.delete_outline,
+                                color: Colors.redAccent, size: 20),
+                            onPressed: () => Get.dialog(
+                              AlertDialog(
+                                title: Text("Delete Item"),
+                                content: Text(
+                                    "Are you sure you want to delete this item?"),
+                                actions: [
+                                  ElevatedButton(
+                                      onPressed: () => Get.back(),
+                                      child: Text("Cancel")),
+                                  ElevatedButton(
+                                    onPressed: () {
+                                      controller
+                                          .deleteCard(data["id"].toString());
+                                      Get.back();
+                                    },
+                                    child: Text("Delete"),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                         ),
-                        SizedBox(width: 4),
-                        Material(
-                          color: Colors.red[50],
-                          borderRadius: BorderRadius.circular(8),
-                          child: InkWell(
-                            borderRadius: BorderRadius.circular(8),
-                            onTap: () {
-                              Get.dialog(
-                                AlertDialog(
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  title: const Text(
-                                    "Delete Item",
-                                    style:
-                                        TextStyle(fontWeight: FontWeight.w600),
-                                  ),
-                                  content: const Text(
-                                    "Are you sure you want to delete this item?",
-                                  ),
-                                  actions: [
-                                    TextButton(
-                                      onPressed: () =>
-                                          Get.back(), // close dialog
-                                      child: Text(
-                                        "Cancel",
-                                        style:
-                                            TextStyle(color: Colors.grey[700]),
-                                      ),
-                                    ),
-                                    ElevatedButton(
-                                      onPressed: () {
-                                        controller
-                                            .deleteCard(data["id"].toString());
-                                        Get.back(); // close dialog after delete
-                                      },
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: Colors.red,
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(8),
-                                        ),
-                                      ),
-                                      child: const Text("Delete"),
-                                    ),
-                                  ],
-                                ),
-                              );
-                            },
-                            child: Container(
-                              height: 40.h,
-                              width: 36.w,
-                              decoration: BoxDecoration(
-                                border: Border.all(color: Colors.red[100]!),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Icon(
-                                Icons.delete_outline,
-                                color: Colors.red[600],
-                                size: 20,
-                              ),
-                            ),
-                          ),
-                        )
                       ],
                     ),
                   ],

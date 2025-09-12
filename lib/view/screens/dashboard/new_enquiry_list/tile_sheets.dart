@@ -457,83 +457,82 @@ class TileSheetPage extends GetView<TileSheetController> {
               mainAxisAlignment: MainAxisAlignment.start,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Expanded(
-                      child: Padding(
-                        padding: const EdgeInsets.only(top: 15),
-                        child: SizedBox(
-                          height: 40.h,
-                          width: 210.w,
-                          child: Text(
-                            "  ${index + 1}.  ${data["Products"] ?? "Unknown Product"}",
-                            overflow: TextOverflow.ellipsis,
-                            style: GoogleFonts.figtree(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.black87,
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.only(top: 15),
+                          child: SizedBox(
+                            height: 40.h,
+                            width: 210.w,
+                            child: Text(
+                              "${index + 1}. ${data["Products"] ?? 'N/A'}",
+                              overflow: TextOverflow.ellipsis,
+                              style: GoogleFonts.figtree(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.black87,
+                              ),
                             ),
                           ),
                         ),
                       ),
-                    ),
-                    Container(
-                      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: Colors.blue[50],
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Text(
-                        "ID: ${data['id'] ?? "N/A"}",
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.blue[700],
-                          fontWeight: FontWeight.w500,
+                      Container(
+                        padding:
+                            EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: Colors.blue[50],
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          "ID: ${data['id'] ?? 'N/A'}",
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.blue[700],
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
                       ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Container(
+                      Gap(4.w),
+                      Container(
                         height: 40.h,
-                        width: 50.w,
+                        width: 40.w,
                         decoration: BoxDecoration(
+                          border: Border.all(color: Colors.red[200]!),
                           borderRadius: BorderRadius.circular(10),
-                          color: Colors.deepPurple[50],
+                          color: Colors.red[50],
                         ),
                         child: IconButton(
-                          icon: Icon(Icons.delete, color: Colors.redAccent),
-                          onPressed: () {
-                            Get.dialog(
-                              AlertDialog(
-                                title: Subhead(
-                                  text: "Are you Sure to Delete This Item ?",
-                                  weight: FontWeight.w500,
-                                  color: Colors.black,
-                                ),
-                                actions: [
-                                  ElevatedButton(
-                                    onPressed: () {
-                                      controller
-                                          .deleteCard(data["id"].toString());
-                                      Get.back();
-                                    },
-                                    child: Text("Yes"),
-                                  ),
-                                  ElevatedButton(
+                          icon: Icon(Icons.delete_outline,
+                              color: Colors.redAccent, size: 20),
+                          onPressed: () => Get.dialog(
+                            AlertDialog(
+                              title: Text("Delete Item"),
+                              content: Text(
+                                  "Are you sure you want to delete this item?"),
+                              actions: [
+                                ElevatedButton(
                                     onPressed: () => Get.back(),
-                                    child: Text("No"),
-                                  ),
-                                ],
-                              ),
-                            );
-                          },
+                                    child: Text("Cancel")),
+                                ElevatedButton(
+                                  onPressed: () {
+                                    controller
+                                        .deleteCard(data["id"].toString());
+                                    Get.back();
+                                  },
+                                  child: Text("Delete"),
+                                ),
+                              ],
+                            ),
+                          ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
                 buildProductDetailInRows(data),
               ],

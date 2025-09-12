@@ -60,7 +60,10 @@ class _TotalQuoationViewState extends State<TotalQuoationView> {
       if (response.statusCode == 200) {
         final jsonData = json.decode(response.body);
         print(response.body);
+        print(response.body);
+        print(response.body);
         print(response.statusCode);
+
         if (jsonData['status'] == 'success') {
           final categoriesData =
               List<Map<String, dynamic>>.from(jsonData['categories']);
@@ -339,6 +342,145 @@ class _TotalQuoationViewState extends State<TotalQuoationView> {
     }
   }
 
+  // Helper method for building DataCells
+  DataCell _buildDataCell(String label, Map<String, dynamic> row) {
+    var value = row[label];
+
+    if (label == "UOM" && value is Map) {
+      String selectedValue = value['value']?.toString() ?? '';
+      Map<String, dynamic> options =
+          Map<String, dynamic>.from(value['options'] ?? {});
+
+      return DataCell(
+        DropdownButton<String>(
+          value: options.containsKey(selectedValue) ? selectedValue : null,
+          hint: Text("Select UOM"),
+          isExpanded: true,
+          style: GoogleFonts.outfit(
+            textStyle: TextStyle(
+              fontSize: 14.5,
+              fontWeight: FontWeight.w500,
+              color: Colors.black,
+            ),
+          ),
+          onChanged: (newValue) {
+            setState(() {
+              row[label]['value'] = newValue!;
+            });
+          },
+          items: options.entries
+              .map((entry) => DropdownMenuItem<String>(
+                    value: entry.key,
+                    child: Text(entry.value.toString()),
+                  ))
+              .toList(),
+        ),
+      );
+    } else if (label == "Billing Option" && value is Map) {
+      String selectedValue = value['value']?.toString() ?? '';
+      Map<String, dynamic> options =
+          Map<String, dynamic>.from(value['options'] ?? {});
+
+      return DataCell(
+        DropdownButton<String>(
+          value: options.containsKey(selectedValue) ? selectedValue : null,
+          hint: Text("Select Option"),
+          isExpanded: true,
+          style: GoogleFonts.outfit(
+            textStyle: TextStyle(
+              fontSize: 14.5,
+              fontWeight: FontWeight.w500,
+              color: Colors.black,
+            ),
+          ),
+          onChanged: (newValue) {
+            setState(() {
+              row[label]['value'] = newValue!;
+            });
+          },
+          items: options.entries
+              .map((entry) => DropdownMenuItem<String>(
+                    value: entry.key,
+                    child: Text(entry.value.toString()),
+                  ))
+              .toList(),
+        ),
+      );
+    } else if (label == "Nos" ||
+        label == "Profile" ||
+        label == "Sq.Mtr" ||
+        label == "Length") {
+      return DataCell(
+        SizedBox(
+          width: 80,
+          child: TextFormField(
+            initialValue: value.toString(),
+            keyboardType: TextInputType.number,
+            onChanged: (newVal) {
+              setState(() {
+                row[label] = newVal;
+              });
+            },
+            decoration: const InputDecoration(
+              border: InputBorder.none,
+              contentPadding: EdgeInsets.symmetric(horizontal: 8),
+            ),
+            style: GoogleFonts.outfit(
+              textStyle: TextStyle(
+                fontSize: 14.5,
+                fontWeight: FontWeight.w500,
+                color: Colors.black,
+              ),
+            ),
+          ),
+        ),
+      );
+    } else if (label == "Action") {
+      return DataCell(
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            IconButton(
+              icon: Icon(Icons.groups, color: Colors.blue),
+              onPressed: () {
+                final itemId = row['Action']?.toString();
+                if (itemId != null && itemId.isNotEmpty) {
+                  openGroupDialog(itemId);
+                }
+              },
+            ),
+            IconButton(
+              icon: Icon(Icons.delete, color: Colors.red),
+              onPressed: () {
+                final itemId = row['Action']?.toString();
+                if (itemId != null && itemId.isNotEmpty) {
+                  deleteItem(itemId);
+                }
+              },
+            ),
+            IconButton(
+              icon: Icon(Icons.settings, color: Colors.green),
+              onPressed: () {
+                final itemId = row['Action']?.toString();
+                if (itemId != null && itemId.isNotEmpty) {
+                  openAdditionalDrawer(itemId);
+                }
+              },
+            ),
+          ],
+        ),
+      );
+    } else {
+      return DataCell(
+        MyText(
+          text: value?.toString() ?? '',
+          weight: FontWeight.w400,
+          color: Colors.black,
+        ),
+      );
+    }
+  }
+
   @override
   void dispose() {
     remarkController.dispose();
@@ -463,9 +605,7 @@ class _TotalQuoationViewState extends State<TotalQuoationView> {
                         const SnackBar(content: Text("Please enter a count.")));
                     return;
                   }
-
                   Navigator.of(context).pop(); // Close dialog
-
                   final Map<String, dynamic> payload = {
                     "id": itemId,
                     "count": int.parse(count),
@@ -814,6 +954,7 @@ class _TotalQuoationViewState extends State<TotalQuoationView> {
                                                   ),
                                                 ))
                                             .toList(),
+                                        // Updated DataRow implementation
                                         rows: data.asMap().entries.map((entry) {
                                           int rowIndex = entry.key;
                                           Map<String, dynamic> row =
@@ -839,12 +980,12 @@ class _TotalQuoationViewState extends State<TotalQuoationView> {
                                                     selectedIndices[
                                                             categoryId] ==
                                                         rowIndex) {
-// Deselect if the same row is tapped
+                                                  // Deselect if the same row is tapped
                                                   selectedCategoryId = null;
                                                   selectedIndices[categoryId] =
                                                       null;
                                                 } else {
-// Select the new row
+                                                  // Select the new row
                                                   selectedCategoryId =
                                                       int.parse(categoryId);
                                                   selectedIndices[categoryId] =
@@ -853,127 +994,7 @@ class _TotalQuoationViewState extends State<TotalQuoationView> {
                                               });
                                             },
                                             cells: labels.map((label) {
-                                              var value = row[label];
-
-                                              if (label == "UOM" &&
-                                                  value is Map) {
-                                                String selectedValue =
-                                                    value['value'];
-                                                return DataCell(
-                                                  DropdownButton<String>(
-                                                    style: GoogleFonts.outfit(
-                                                      textStyle: TextStyle(
-                                                        fontSize: 14.5,
-                                                        fontWeight:
-                                                            FontWeight.w500,
-                                                        color: Colors.black,
-                                                      ),
-                                                    ),
-                                                    value: selectedValue,
-                                                    onChanged: (newValue) {
-                                                      setState(() {
-                                                        row[label]['value'] =
-                                                            newValue!;
-                                                      });
-                                                    },
-                                                    items: uomOptions.entries
-                                                        .map(
-                                                          (entry) =>
-                                                              DropdownMenuItem<
-                                                                  String>(
-                                                            value: entry.key,
-                                                            child: Text(
-                                                                entry.value),
-                                                          ),
-                                                        )
-                                                        .toList(),
-                                                  ),
-                                                );
-                                              } else if (label == "Nos" ||
-                                                  label == "Profile" ||
-                                                  label == "Sq.Mtr") {
-                                                return DataCell(
-                                                  SizedBox(
-                                                    width: 80,
-                                                    child: TextFormField(
-                                                      initialValue:
-                                                          value.toString(),
-                                                      keyboardType:
-                                                          TextInputType.number,
-                                                      onChanged: (newVal) {
-                                                        setState(() {
-                                                          row[label] = newVal;
-                                                        });
-                                                      },
-                                                      decoration:
-                                                          const InputDecoration(
-                                                        border:
-                                                            InputBorder.none,
-                                                        contentPadding:
-                                                            EdgeInsets
-                                                                .symmetric(
-                                                                    horizontal:
-                                                                        8),
-                                                      ),
-                                                    ),
-                                                  ),
-                                                );
-                                              } else if (label == "Action") {
-                                                return DataCell(
-                                                  Row(
-                                                    children: [
-                                                      IconButton(
-                                                        icon: const Icon(
-                                                            Icons.groups,
-                                                            color: Colors.blue),
-                                                        onPressed: () {
-                                                          final itemId =
-                                                              row['Action']
-                                                                  .toString();
-                                                          if (itemId != null) {
-                                                            openGroupDialog(
-                                                                itemId);
-                                                          }
-                                                        },
-                                                      ),
-                                                      IconButton(
-                                                        icon: const Icon(
-                                                            Icons.delete,
-                                                            color: Colors.red),
-                                                        onPressed: () {
-                                                          final itemId =
-                                                              row['Action']
-                                                                  .toString();
-                                                          if (itemId != null) {
-                                                            deleteItem(itemId);
-                                                          }
-                                                        },
-                                                      ),
-                                                      IconButton(
-                                                        icon: Icon(
-                                                            Icons.settings,
-                                                            color:
-                                                                Colors.green),
-                                                        onPressed: () {
-                                                          final itemId =
-                                                              row['Action']
-                                                                  .toString();
-                                                          if (itemId != null) {
-                                                            openAdditionalDrawer(
-                                                                itemId);
-                                                          }
-                                                        },
-                                                      ),
-                                                    ],
-                                                  ),
-                                                );
-                                              } else {
-                                                return DataCell(MyText(
-                                                  text: value.toString(),
-                                                  weight: FontWeight.w500,
-                                                  color: Colors.black,
-                                                ));
-                                              }
+                                              return _buildDataCell(label, row);
                                             }).toList(),
                                           );
                                         }).toList(),
@@ -981,8 +1002,8 @@ class _TotalQuoationViewState extends State<TotalQuoationView> {
                                     ),
                                   ),
                                 ),
-// Gap(10),
-// Divider(height: 30, thickness: 1),
+                                // Gap(10),
+                                // Divider(height: 30, thickness: 1),
                               ],
                             );
                           }).toList(),

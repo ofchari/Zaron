@@ -7,12 +7,14 @@ import 'package:zaron/view/screens/controller/acessories_get_controller.dart';
 import 'package:zaron/view/screens/controller/aluminum_get_controller.dart';
 import 'package:zaron/view/screens/controller/cuttolength_controller.dart';
 import 'package:zaron/view/screens/controller/decking_get_controller.dart';
+import 'package:zaron/view/screens/controller/gi_stiffner_get_controller.dart';
 import 'package:zaron/view/screens/controller/ironsteel_get_controller.dart';
 import 'package:zaron/view/screens/controller/linear_sheet_get_controller.dart';
 import 'package:zaron/view/screens/controller/polycarbonate_get_controller.dart';
 import 'package:zaron/view/screens/controller/profile_ridge_get_controller.dart';
 import 'package:zaron/view/screens/controller/purlin_get_controller.dart';
 import 'package:zaron/view/screens/controller/roll_sheet_get_controller.dart';
+import 'package:zaron/view/screens/controller/screw_acesssories_get_controller.dart';
 import 'package:zaron/view/screens/controller/screw_get_controller.dart';
 import 'package:zaron/view/screens/controller/tilesheet_get_controller.dart';
 import 'package:zaron/view/screens/controller/upvc_accessories_get_controller.dart';
@@ -34,6 +36,8 @@ void main() async {
   Get.put(UpvcAccessoriesController());
   Get.put(ProfileRidgeAndArchController());
   Get.put(RollSheetController());
+  Get.put(GIStiffnerController());
+  Get.put(ScrewAccessoriesController(data: {}));
   await Hive.initFlutter();
   await Hive.openBox('accessories_products'); // Open a box without model
   runApp(const MyApp());

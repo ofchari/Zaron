@@ -438,7 +438,7 @@ class ProfileRidgeAndArchController extends GetxController {
                   EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               suffixIcon: isSearchingBaseProducts[productId] == true
                   ? Padding(
-                      padding: EdgeInsets.all(12),
+                      padding: EdgeInsets.all(8),
                       child: SizedBox(
                         width: 20,
                         height: 20,

@@ -411,14 +411,27 @@ class UpvcTiles extends GetView<UpvcTilesController> {
                                         Row(
                                           mainAxisAlignment:
                                               MainAxisAlignment.spaceBetween,
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.center,
                                           children: [
                                             Expanded(
-                                              child: Text(
-                                                "${index + 1}. ${data["Products"] ?? 'N/A'}",
-                                                style: GoogleFonts.figtree(
-                                                  fontSize: 16,
-                                                  fontWeight: FontWeight.w600,
-                                                  color: Colors.black87,
+                                              child: Padding(
+                                                padding: const EdgeInsets.only(
+                                                    top: 15),
+                                                child: SizedBox(
+                                                  height: 40.h,
+                                                  width: 210.w,
+                                                  child: Text(
+                                                    "${index + 1}. ${data["Products"] ?? 'N/A'}",
+                                                    overflow:
+                                                        TextOverflow.ellipsis,
+                                                    style: GoogleFonts.figtree(
+                                                      fontSize: 18,
+                                                      fontWeight:
+                                                          FontWeight.w600,
+                                                      color: Colors.black87,
+                                                    ),
+                                                  ),
                                                 ),
                                               ),
                                             ),
@@ -439,34 +452,43 @@ class UpvcTiles extends GetView<UpvcTilesController> {
                                                 ),
                                               ),
                                             ),
-                                            IconButton(
-                                              icon: Icon(Icons.delete,
-                                                  color: Colors.redAccent),
-                                              onPressed: () => showDialog(
-                                                context: context,
-                                                builder: (context) =>
-                                                    AlertDialog(
-                                                  title: Text("Delete Product"),
-                                                  content: Text(
-                                                    "Are you sure you want to delete this item?",
+                                            Gap(4.w),
+                                            Container(
+                                              height: 40.h,
+                                              width: 40.w,
+                                              decoration: BoxDecoration(
+                                                border: Border.all(
+                                                    color: Colors.red[200]!),
+                                                borderRadius:
+                                                    BorderRadius.circular(10),
+                                                color: Colors.red[50],
+                                              ),
+                                              child: IconButton(
+                                                icon: Icon(Icons.delete_outline,
+                                                    color: Colors.redAccent,
+                                                    size: 20),
+                                                onPressed: () => Get.dialog(
+                                                  AlertDialog(
+                                                    title: Text("Delete Item"),
+                                                    content: Text(
+                                                        "Are you sure you want to delete this item?"),
+                                                    actions: [
+                                                      ElevatedButton(
+                                                          onPressed: () =>
+                                                              Get.back(),
+                                                          child:
+                                                              Text("Cancel")),
+                                                      ElevatedButton(
+                                                        onPressed: () {
+                                                          controller.deleteCard(
+                                                              data["id"]
+                                                                  .toString());
+                                                          Get.back();
+                                                        },
+                                                        child: Text("Delete"),
+                                                      ),
+                                                    ],
                                                   ),
-                                                  actions: [
-                                                    TextButton(
-                                                      onPressed: () =>
-                                                          Navigator.pop(
-                                                              context),
-                                                      child: Text("Cancel"),
-                                                    ),
-                                                    ElevatedButton(
-                                                      onPressed: () {
-                                                        controller.deleteCard(
-                                                            data["id"]
-                                                                .toString());
-                                                        Navigator.pop(context);
-                                                      },
-                                                      child: Text("Delete"),
-                                                    ),
-                                                  ],
                                                 ),
                                               ),
                                             ),

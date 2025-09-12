@@ -14,12 +14,14 @@ import '../screens/controller/acessories_get_controller.dart';
 import '../screens/controller/aluminum_get_controller.dart';
 import '../screens/controller/cuttolength_controller.dart';
 import '../screens/controller/decking_get_controller.dart';
+import '../screens/controller/gi_stiffner_get_controller.dart';
 import '../screens/controller/ironsteel_get_controller.dart';
 import '../screens/controller/linear_sheet_get_controller.dart';
 import '../screens/controller/polycarbonate_get_controller.dart';
 import '../screens/controller/profile_ridge_get_controller.dart';
 import '../screens/controller/purlin_get_controller.dart';
 import '../screens/controller/roll_sheet_get_controller.dart';
+import '../screens/controller/screw_acesssories_get_controller.dart';
 import '../screens/controller/upvc_accessories_get_controller.dart';
 import '../screens/controller/upvc_get_controller.dart';
 import '../widgets/subhead.dart';
@@ -450,6 +452,8 @@ class SummaryScreen extends StatelessWidget {
             : Get.put(ProfileRidgeAndArchController(), permanent: true);
     final upvcAccessoriesController = Get.find<UpvcAccessoriesController>();
     final rollSheetController = Get.find<RollSheetController>(); // Add this
+    final giStiffnerController = Get.find<GIStiffnerController>();
+    final screwAcesssController = Get.find<ScrewAccessoriesController>();
 
     double calculateTotalBill() {
       double total = 0.0;
@@ -522,6 +526,16 @@ class SummaryScreen extends StatelessWidget {
       }
       // Roll Sheet products
       for (var p in rollSheetController.responseProducts) {
+        total += (double.tryParse(p["Amount"]?.toString() ?? "0") ?? 0) +
+            (double.tryParse(p["cgst"]?.toString() ?? "0") ?? 0) +
+            (double.tryParse(p["sgst"]?.toString() ?? "0") ?? 0);
+      }
+      for (var p in giStiffnerController.responseProducts) {
+        total += (double.tryParse(p["Amount"]?.toString() ?? "0") ?? 0) +
+            (double.tryParse(p["cgst"]?.toString() ?? "0") ?? 0) +
+            (double.tryParse(p["sgst"]?.toString() ?? "0") ?? 0);
+      }
+      for (var p in screwAcesssController.responseProducts) {
         total += (double.tryParse(p["Amount"]?.toString() ?? "0") ?? 0) +
             (double.tryParse(p["cgst"]?.toString() ?? "0") ?? 0) +
             (double.tryParse(p["sgst"]?.toString() ?? "0") ?? 0);
@@ -3010,7 +3024,7 @@ class SummaryScreen extends StatelessWidget {
                                         content: Text(
                                             "Are you sure you want to delete this item?"),
                                         actions: [
-                                          TextButton(
+                                          ElevatedButton(
                                               onPressed: () => Get.back(),
                                               child: Text("Cancel")),
                                           ElevatedButton(
@@ -3932,6 +3946,457 @@ class SummaryScreen extends StatelessWidget {
                         );
                       }).toList(),
                     ],
+                    Obx(() => giStiffnerController.responseProducts.isNotEmpty
+                        ? Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Gap(24),
+                              Text(
+                                "GI Stiffner Products",
+                                style: GoogleFonts.poppins(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.black87,
+                                ),
+                              ),
+                              Gap(16),
+                              ...giStiffnerController.responseProducts
+                                  .asMap()
+                                  .entries
+                                  .map((entry) {
+                                final index = entry.key;
+                                final data =
+                                    Map<String, dynamic>.from(entry.value);
+                                return Card(
+                                  margin: EdgeInsets.symmetric(vertical: 10),
+                                  elevation: 2,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Column(
+                                    children: [
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Expanded(
+                                            child: Text(
+                                              "${index + 1}. ${data["Products"] ?? 'N/A'}",
+                                              style: GoogleFonts.figtree(
+                                                fontSize: 18,
+                                                fontWeight: FontWeight.w600,
+                                                color: Colors.black87,
+                                              ),
+                                            ),
+                                          ),
+                                          Container(
+                                            padding: EdgeInsets.symmetric(
+                                                horizontal: 8, vertical: 4),
+                                            decoration: BoxDecoration(
+                                              color: Colors.blue[50],
+                                              borderRadius:
+                                                  BorderRadius.circular(6),
+                                            ),
+                                            child: Text(
+                                              "ID: ${data['id'] ?? 'N/A'}",
+                                              style: TextStyle(
+                                                fontSize: 12,
+                                                color: Colors.blue[700],
+                                                fontWeight: FontWeight.w500,
+                                              ),
+                                            ),
+                                          ),
+                                          IconButton(
+                                            icon: Icon(Icons.delete,
+                                                color: Colors.redAccent),
+                                            onPressed: () => Get.dialog(
+                                              AlertDialog(
+                                                title: Text("Delete Item"),
+                                                content: Text(
+                                                    "Are you sure you want to delete this item?"),
+                                                actions: [
+                                                  TextButton(
+                                                    onPressed: () => Get.back(),
+                                                    child: Text("Cancel"),
+                                                  ),
+                                                  ElevatedButton(
+                                                    onPressed: () {
+                                                      giStiffnerController
+                                                          .deleteCard(data["id"]
+                                                              .toString());
+                                                      Get.back();
+                                                    },
+                                                    child: Text("Delete"),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      Padding(
+                                        padding: EdgeInsets.all(8),
+                                        child: Column(
+                                          children: [
+                                            Row(
+                                              children: [
+                                                Expanded(
+                                                  child: buildDetailItem(
+                                                    "UOM",
+                                                    giStiffnerController
+                                                        .uomDropdown(data),
+                                                  ),
+                                                ),
+                                                Gap(10),
+                                                Expanded(
+                                                  child: buildDetailItem(
+                                                    "Billing Option",
+                                                    giStiffnerController
+                                                        .billingDropdown(data),
+                                                  ),
+                                                ),
+                                                Gap(10),
+                                                Expanded(
+                                                  child: buildDetailItem(
+                                                    "Length",
+                                                    editableTextField(
+                                                      data,
+                                                      "Length",
+                                                      (v) {
+                                                        data["Length"] = v;
+                                                        giStiffnerController
+                                                            .debounceCalculation(
+                                                                data);
+                                                      },
+                                                      fieldControllers:
+                                                          giStiffnerController
+                                                              .fieldControllers,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                            Gap(5),
+                                            Row(
+                                              children: [
+                                                Expanded(
+                                                  child: buildDetailItem(
+                                                    "Nos",
+                                                    editableTextField(
+                                                      data,
+                                                      "Nos",
+                                                      (v) {
+                                                        data["Nos"] = v;
+                                                        giStiffnerController
+                                                            .debounceCalculation(
+                                                                data);
+                                                      },
+                                                      fieldControllers:
+                                                          giStiffnerController
+                                                              .fieldControllers,
+                                                    ),
+                                                  ),
+                                                ),
+                                                Gap(10),
+                                                Expanded(
+                                                  child: buildDetailItem(
+                                                    "Basic Rate",
+                                                    editableTextField(
+                                                      data,
+                                                      "Basic Rate",
+                                                      (v) {
+                                                        data["Basic Rate"] = v;
+                                                        giStiffnerController
+                                                            .debounceCalculation(
+                                                                data);
+                                                      },
+                                                      readOnly: true,
+                                                      fieldControllers:
+                                                          giStiffnerController
+                                                              .fieldControllers,
+                                                    ),
+                                                  ),
+                                                ),
+                                                Gap(10),
+                                                Expanded(
+                                                  child: buildDetailItem(
+                                                    "Qty",
+                                                    editableTextField(
+                                                      data,
+                                                      "qty",
+                                                      (v) {},
+                                                      readOnly: true,
+                                                      fieldControllers:
+                                                          giStiffnerController
+                                                              .fieldControllers,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                            Gap(5),
+                                            Row(
+                                              children: [
+                                                Expanded(
+                                                  child: buildDetailItem(
+                                                    "Amount",
+                                                    editableTextField(
+                                                      data,
+                                                      "Amount",
+                                                      (v) {},
+                                                      readOnly: true,
+                                                      fieldControllers:
+                                                          giStiffnerController
+                                                              .fieldControllers,
+                                                    ),
+                                                  ),
+                                                ),
+                                                Gap(10),
+                                                Expanded(
+                                                  child: buildDetailItem(
+                                                    "CGST",
+                                                    editableTextField(
+                                                      data,
+                                                      "cgst",
+                                                      (v) {},
+                                                      readOnly: true,
+                                                      fieldControllers:
+                                                          giStiffnerController
+                                                              .fieldControllers,
+                                                    ),
+                                                  ),
+                                                ),
+                                                Gap(10),
+                                                Expanded(
+                                                  child: buildDetailItem(
+                                                    "SGST",
+                                                    editableTextField(
+                                                      data,
+                                                      "sgst",
+                                                      (v) {},
+                                                      readOnly: true,
+                                                      fieldControllers:
+                                                          giStiffnerController
+                                                              .fieldControllers,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              }),
+                            ],
+                          )
+                        : Container()),
+                    Obx(() => screwAcesssController.responseProducts.isNotEmpty
+                        ? Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Gap(24),
+                              Text(
+                                "Screw Accessories Products",
+                                style: GoogleFonts.poppins(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.black87,
+                                ),
+                              ),
+                              Gap(16),
+                              ...screwAcesssController.responseProducts
+                                  .asMap()
+                                  .entries
+                                  .map((entry) {
+                                final index = entry.key;
+                                final data =
+                                    Map<String, dynamic>.from(entry.value);
+                                // Ensure Amount, CGST, and SGST are initialized
+                                data['Amount'] =
+                                    data['Amount']?.toString() ?? '0';
+                                data['cgst'] = data['cgst']?.toString() ?? '0';
+                                data['sgst'] = data['sgst']?.toString() ?? '0';
+                                screwAcesssController.calculateAmount(
+                                    data); // Recalculate to ensure consistency
+                                return Card(
+                                  margin: EdgeInsets.symmetric(vertical: 10),
+                                  elevation: 2,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Padding(
+                                    padding: EdgeInsets.all(16),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            Expanded(
+                                              child: Text(
+                                                "${index + 1}. ${data["Products"] ?? 'N/A'}",
+                                                style: GoogleFonts.figtree(
+                                                  fontSize: 18,
+                                                  fontWeight: FontWeight.w600,
+                                                  color: Colors.black87,
+                                                ),
+                                              ),
+                                            ),
+                                            Container(
+                                              padding: EdgeInsets.symmetric(
+                                                  horizontal: 8, vertical: 4),
+                                              decoration: BoxDecoration(
+                                                color: Colors.blue[50],
+                                                borderRadius:
+                                                    BorderRadius.circular(6),
+                                              ),
+                                              child: Text(
+                                                "ID: ${data['id'] ?? 'N/A'}",
+                                                style: TextStyle(
+                                                  fontSize: 12,
+                                                  color: Colors.blue[700],
+                                                  fontWeight: FontWeight.w500,
+                                                ),
+                                              ),
+                                            ),
+                                            IconButton(
+                                              icon: Icon(Icons.delete,
+                                                  color: Colors.redAccent),
+                                              onPressed: () => Get.dialog(
+                                                AlertDialog(
+                                                  title: Text("Delete Item"),
+                                                  content: Text(
+                                                      "Are you sure you want to delete this item?"),
+                                                  actions: [
+                                                    TextButton(
+                                                      onPressed: () =>
+                                                          Get.back(),
+                                                      child: Text("Cancel"),
+                                                    ),
+                                                    ElevatedButton(
+                                                      onPressed: () {
+                                                        screwAcesssController
+                                                            .deleteCard(data[
+                                                                    "id"]
+                                                                .toString());
+                                                        Get.back();
+                                                      },
+                                                      child: Text("Delete"),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        SizedBox(height: 16),
+                                        Column(
+                                          children: [
+                                            Row(
+                                              children: [
+                                                Expanded(
+                                                  child: buildDetailItem(
+                                                    "Basic Rate",
+                                                    editableTextField(
+                                                      data,
+                                                      "Basic Rate",
+                                                      (v) {
+                                                        data["Basic Rate"] = v;
+                                                        screwAcesssController
+                                                            .calculateAmount(
+                                                                data);
+                                                      },
+                                                      fieldControllers:
+                                                          screwAcesssController
+                                                              .fieldControllers,
+                                                    ),
+                                                  ),
+                                                ),
+                                                Gap(10),
+                                                Expanded(
+                                                  child: buildDetailItem(
+                                                    "Nos",
+                                                    editableTextField(
+                                                      data,
+                                                      "Nos",
+                                                      (v) {
+                                                        data["Nos"] = v;
+                                                        screwAcesssController
+                                                            .calculateAmount(
+                                                                data);
+                                                      },
+                                                      fieldControllers:
+                                                          screwAcesssController
+                                                              .fieldControllers,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                            Gap(5),
+                                            Row(
+                                              children: [
+                                                Expanded(
+                                                  child: buildDetailItem(
+                                                    "Amount",
+                                                    editableTextField(
+                                                      data,
+                                                      "Amount",
+                                                      (v) {},
+                                                      readOnly: true,
+                                                      fieldControllers:
+                                                          screwController
+                                                              .fieldControllers,
+                                                    ),
+                                                  ),
+                                                ),
+                                                Gap(10),
+                                                Expanded(
+                                                  child: buildDetailItem(
+                                                    "CGST",
+                                                    editableTextField(
+                                                      data,
+                                                      "cgst",
+                                                      (v) {},
+                                                      readOnly: true,
+                                                      fieldControllers:
+                                                          screwController
+                                                              .fieldControllers,
+                                                    ),
+                                                  ),
+                                                ),
+                                                Gap(10),
+                                                Expanded(
+                                                  child: buildDetailItem(
+                                                    "SGST",
+                                                    editableTextField(
+                                                      data,
+                                                      "sgst",
+                                                      (v) {},
+                                                      readOnly: true,
+                                                      fieldControllers:
+                                                          screwController
+                                                              .fieldControllers,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                );
+                              }),
+                            ],
+                          )
+                        : Container()),
                   ],
                 );
               }),

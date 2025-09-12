@@ -3,7 +3,6 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:gap/gap.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:zaron/view/widgets/subhead.dart';
 
 import '../../../getx/summary_screen.dart';
 import '../../controller/ironsteel_get_controller.dart';
@@ -84,7 +83,8 @@ class IronSteel extends GetView<IronSteelController> {
                                   controller.brandsList,
                                   controller.selectedBrand.value,
                                   (value) {
-                                    controller.selectedBrand.value = value ?? '';
+                                    controller.selectedBrand.value =
+                                        value ?? '';
                                     controller.selectedColor.value = '';
                                     controller.selectedThickness.value = '';
                                     controller.selectedCoatingMass.value = '';
@@ -100,7 +100,8 @@ class IronSteel extends GetView<IronSteelController> {
                                   controller.colorsList,
                                   controller.selectedColor.value,
                                   (value) {
-                                    controller.selectedColor.value = value ?? '';
+                                    controller.selectedColor.value =
+                                        value ?? '';
                                     controller.selectedThickness.value = '';
                                     controller.selectedCoatingMass.value = '';
                                     controller.thicknessList.clear();
@@ -132,7 +133,8 @@ class IronSteel extends GetView<IronSteelController> {
                                     controller.selectedCoatingMass.value =
                                         value ?? '';
                                   },
-                                  enabled: controller.coatingMassList.isNotEmpty,
+                                  enabled:
+                                      controller.coatingMassList.isNotEmpty,
                                   label: "Coating Mass",
                                   icon: Icons.layers_outlined,
                                 ),
@@ -148,7 +150,8 @@ class IronSteel extends GetView<IronSteelController> {
                                     ),
                                   ),
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Text(
                                         "Selected Product Details",
@@ -186,7 +189,8 @@ class IronSteel extends GetView<IronSteelController> {
                                       ),
                                     ),
                                     child: Row(
-                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
                                       children: [
                                         Icon(Icons.add_shopping_cart_outlined,
                                             color: Colors.white),
@@ -243,7 +247,8 @@ class IronSteel extends GetView<IronSteelController> {
                               end: Alignment.bottomRight,
                             ),
                             borderRadius: BorderRadius.circular(16),
-                            border: Border.all(color: Colors.deepPurple.shade100),
+                            border:
+                                Border.all(color: Colors.deepPurple.shade100),
                             boxShadow: [
                               BoxShadow(
                                 color: Colors.black.withOpacity(0.05),
@@ -288,7 +293,8 @@ class IronSteel extends GetView<IronSteelController> {
                                 decoration: BoxDecoration(
                                   color: Colors.white60,
                                   borderRadius: BorderRadius.circular(10),
-                                  border: Border.all(color: Colors.grey.shade200),
+                                  border:
+                                      Border.all(color: Colors.grey.shade200),
                                 ),
                                 child: Row(
                                   mainAxisAlignment:
@@ -404,92 +410,93 @@ class IronSteel extends GetView<IronSteelController> {
                                   ),
                                   child: Column(
                                     children: [
-                                      Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.spaceBetween,
-                                        children: [
-                                          Expanded(
-                                            child: Padding(
-                                              padding:
-                                                  const EdgeInsets.only(top: 15),
-                                              child: SizedBox(
-                                                height: 40.h,
-                                                width: 210.w,
-                                                child: Text(
-                                                  "  ${index + 1}. ${data["Products"] ?? 'N/A'}",
-                                                  overflow: TextOverflow.ellipsis,
-                                                  style: GoogleFonts.figtree(
-                                                    fontSize: 18,
-                                                    fontWeight: FontWeight.w600,
-                                                    color: Colors.black87,
+                                      Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 8.0),
+                                        child: Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            Expanded(
+                                              child: Padding(
+                                                padding: const EdgeInsets.only(
+                                                    top: 15),
+                                                child: SizedBox(
+                                                  height: 40.h,
+                                                  width: 210.w,
+                                                  child: Text(
+                                                    "${index + 1}. ${data["Products"] ?? 'N/A'}",
+                                                    overflow:
+                                                        TextOverflow.ellipsis,
+                                                    style: GoogleFonts.figtree(
+                                                      fontSize: 18,
+                                                      fontWeight:
+                                                          FontWeight.w600,
+                                                      color: Colors.black87,
+                                                    ),
                                                   ),
                                                 ),
                                               ),
                                             ),
-                                          ),
-                                          Container(
-                                            padding: EdgeInsets.symmetric(
-                                                horizontal: 8, vertical: 4),
-                                            decoration: BoxDecoration(
-                                              color: Colors.blue[50],
-                                              borderRadius:
-                                                  BorderRadius.circular(6),
-                                            ),
-                                            child: Text(
-                                              "ID: ${data['id'] ?? 'N/A'}",
-                                              style: TextStyle(
-                                                fontSize: 12,
-                                                color: Colors.blue[700],
-                                                fontWeight: FontWeight.w500,
+                                            Container(
+                                              padding: EdgeInsets.symmetric(
+                                                  horizontal: 8, vertical: 4),
+                                              decoration: BoxDecoration(
+                                                color: Colors.blue[50],
+                                                borderRadius:
+                                                    BorderRadius.circular(6),
+                                              ),
+                                              child: Text(
+                                                "ID: ${data['id'] ?? 'N/A'}",
+                                                style: TextStyle(
+                                                  fontSize: 12,
+                                                  color: Colors.blue[700],
+                                                  fontWeight: FontWeight.w500,
+                                                ),
                                               ),
                                             ),
-                                          ),
-                                          Padding(
-                                            padding: const EdgeInsets.all(8.0),
-                                            child: Container(
+                                            Gap(4.w),
+                                            Container(
                                               height: 40.h,
-                                              width: 50.w,
+                                              width: 40.w,
                                               decoration: BoxDecoration(
+                                                border: Border.all(
+                                                    color: Colors.red[200]!),
                                                 borderRadius:
                                                     BorderRadius.circular(10),
-                                                color: Colors.deepPurple[50],
+                                                color: Colors.red[50],
                                               ),
                                               child: IconButton(
-                                                icon: Icon(Icons.delete,
-                                                    color: Colors.redAccent),
-                                                onPressed: () => showDialog(
-                                                  context: context,
-                                                  builder: (context) =>
-                                                      AlertDialog(
-                                                    title: Subhead(
-                                                      text:
-                                                          "Are you sure you want to delete this item?",
-                                                      weight: FontWeight.w500,
-                                                      color: Colors.black,
-                                                    ),
+                                                icon: Icon(Icons.delete_outline,
+                                                    color: Colors.redAccent,
+                                                    size: 20),
+                                                onPressed: () => Get.dialog(
+                                                  AlertDialog(
+                                                    title: Text("Delete Item"),
+                                                    content: Text(
+                                                        "Are you sure you want to delete this item?"),
                                                     actions: [
-                                                      TextButton(
-                                                        onPressed: () =>
-                                                            Navigator.pop(
-                                                                context),
-                                                        child: Text("No"),
-                                                      ),
+                                                      ElevatedButton(
+                                                          onPressed: () =>
+                                                              Get.back(),
+                                                          child:
+                                                              Text("Cancel")),
                                                       ElevatedButton(
                                                         onPressed: () {
                                                           controller.deleteCard(
                                                               data["id"]
                                                                   .toString());
-                                                          Navigator.pop(context);
+                                                          Get.back();
                                                         },
-                                                        child: Text("Yes"),
+                                                        child: Text("Delete"),
                                                       ),
                                                     ],
                                                   ),
                                                 ),
                                               ),
                                             ),
-                                          ),
-                                        ],
+                                          ],
+                                        ),
                                       ),
                                       Column(
                                         children: [
@@ -500,7 +507,8 @@ class IronSteel extends GetView<IronSteelController> {
                                                 Expanded(
                                                   child: buildDetailItem(
                                                     "UOM",
-                                                    controller.uomDropdown(data),
+                                                    controller
+                                                        .uomDropdown(data),
                                                   ),
                                                 ),
                                                 Gap(10),
@@ -516,8 +524,9 @@ class IronSteel extends GetView<IronSteelController> {
                                                             .debounceCalculation(
                                                                 data);
                                                       },
-                                                      fieldControllers: controller
-                                                          .fieldControllers,
+                                                      fieldControllers:
+                                                          controller
+                                                              .fieldControllers,
                                                     ),
                                                   ),
                                                 ),
@@ -534,8 +543,9 @@ class IronSteel extends GetView<IronSteelController> {
                                                             .debounceCalculation(
                                                                 data);
                                                       },
-                                                      fieldControllers: controller
-                                                          .fieldControllers,
+                                                      fieldControllers:
+                                                          controller
+                                                              .fieldControllers,
                                                     ),
                                                   ),
                                                 ),
@@ -559,8 +569,9 @@ class IronSteel extends GetView<IronSteelController> {
                                                             .debounceCalculation(
                                                                 data);
                                                       },
-                                                      fieldControllers: controller
-                                                          .fieldControllers,
+                                                      fieldControllers:
+                                                          controller
+                                                              .fieldControllers,
                                                     ),
                                                   ),
                                                 ),
@@ -578,8 +589,9 @@ class IronSteel extends GetView<IronSteelController> {
                                                                 data);
                                                       },
                                                       readOnly: true,
-                                                      fieldControllers: controller
-                                                          .fieldControllers,
+                                                      fieldControllers:
+                                                          controller
+                                                              .fieldControllers,
                                                     ),
                                                   ),
                                                 ),
@@ -592,8 +604,9 @@ class IronSteel extends GetView<IronSteelController> {
                                                       "SQMtr",
                                                       (v) {},
                                                       readOnly: true,
-                                                      fieldControllers: controller
-                                                          .fieldControllers,
+                                                      fieldControllers:
+                                                          controller
+                                                              .fieldControllers,
                                                     ),
                                                   ),
                                                 ),
@@ -613,8 +626,9 @@ class IronSteel extends GetView<IronSteelController> {
                                                       "Amount",
                                                       (v) {},
                                                       readOnly: true,
-                                                      fieldControllers: controller
-                                                          .fieldControllers,
+                                                      fieldControllers:
+                                                          controller
+                                                              .fieldControllers,
                                                     ),
                                                   ),
                                                 ),
@@ -627,8 +641,9 @@ class IronSteel extends GetView<IronSteelController> {
                                                       "Cgst",
                                                       (v) {},
                                                       readOnly: true,
-                                                      fieldControllers: controller
-                                                          .fieldControllers,
+                                                      fieldControllers:
+                                                          controller
+                                                              .fieldControllers,
                                                     ),
                                                   ),
                                                 ),
@@ -641,8 +656,9 @@ class IronSteel extends GetView<IronSteelController> {
                                                       "Sgst",
                                                       (v) {},
                                                       readOnly: true,
-                                                      fieldControllers: controller
-                                                          .fieldControllers,
+                                                      fieldControllers:
+                                                          controller
+                                                              .fieldControllers,
                                                     ),
                                                   ),
                                                 ),

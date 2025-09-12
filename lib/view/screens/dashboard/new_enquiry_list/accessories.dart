@@ -3,7 +3,6 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:gap/gap.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:path/path.dart%20';
 import 'package:zaron/view/widgets/subhead.dart';
 
 import '../../../getx/summary_screen.dart';
@@ -510,31 +509,26 @@ class Accessories extends GetView<AccessoriesController> {
                           child: IconButton(
                             icon: Icon(Icons.delete_outline,
                                 color: Colors.redAccent, size: 20),
-                            onPressed: () {
-                              showDialog(
-                                context: (context) as BuildContext,
-                                builder: (context) => AlertDialog(
-                                  title: Subhead(
-                                      text:
-                                          "Are you Sure to Delete This Item ?",
-                                      weight: FontWeight.w500,
-                                      color: Colors.black),
-                                  actions: [
-                                    ElevatedButton(
-                                      onPressed: () {
-                                        controller
-                                            .deleteCard(data["id"].toString());
-                                        Navigator.pop(context);
-                                      },
-                                      child: Text("Yes"),
-                                    ),
-                                    ElevatedButton(
-                                        onPressed: () => Navigator.pop(context),
-                                        child: Text("No")),
-                                  ],
-                                ),
-                              );
-                            },
+                            onPressed: () => Get.dialog(
+                              AlertDialog(
+                                title: Text("Delete Item"),
+                                content: Text(
+                                    "Are you sure you want to delete this item?"),
+                                actions: [
+                                  ElevatedButton(
+                                      onPressed: () => Get.back(),
+                                      child: Text("Cancel")),
+                                  ElevatedButton(
+                                    onPressed: () {
+                                      controller
+                                          .deleteCard(data["id"].toString());
+                                      Get.back();
+                                    },
+                                    child: Text("Delete"),
+                                  ),
+                                ],
+                              ),
+                            ),
                           ),
                         ),
                       ],
