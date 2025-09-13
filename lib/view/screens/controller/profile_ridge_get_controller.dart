@@ -26,13 +26,12 @@ class ProfileRidgeAndArchController extends GetxController {
   var baseProductResults = <String, List<dynamic>>{}.obs;
   var selectedBaseProducts = <String, String?>{}.obs;
   var isSearchingBaseProducts = <String, bool>{}.obs;
-  var baseProductControllers = <String, TextEditingController>{}.obs;
-  var baseProductFocusNodes = <String, FocusNode>{}.obs;
   var previousUomValues = <String, String?>{}.obs;
   var calculationResults = <String, dynamic>{}.obs;
   var rawProfilearch = <dynamic>[].obs;
   var categoryMeta = <String, dynamic>{}.obs;
   var billamt = 0.0.obs;
+  var isBaseProductUpdated = false.obs;
 
   // Non-reactive variables
   var selectedMaterial = null;
@@ -61,8 +60,6 @@ class ProfileRidgeAndArchController extends GetxController {
     fieldControllers.forEach((_, controllers) {
       controllers.forEach((_, controller) => controller.dispose());
     });
-    baseProductControllers.forEach((_, controller) => controller.dispose());
-    baseProductFocusNodes.forEach((_, node) => node.dispose());
     super.onClose();
   }
 
@@ -95,6 +92,8 @@ class ProfileRidgeAndArchController extends GetxController {
       }
     } catch (e) {
       print("Exception fetching materials: $e");
+    } finally {
+      client.close();
     }
   }
 
@@ -122,6 +121,8 @@ class ProfileRidgeAndArchController extends GetxController {
       }
     } catch (e) {
       print("Exception fetching brands: $e");
+    } finally {
+      client.close();
     }
   }
 
@@ -164,6 +165,8 @@ class ProfileRidgeAndArchController extends GetxController {
       }
     } catch (e) {
       print("Exception fetching colors: $e");
+    } finally {
+      client.close();
     }
   }
 
@@ -206,6 +209,8 @@ class ProfileRidgeAndArchController extends GetxController {
       }
     } catch (e) {
       print("Exception fetching thickness: $e");
+    } finally {
+      client.close();
     }
   }
 
@@ -263,10 +268,25 @@ class ProfileRidgeAndArchController extends GetxController {
       }
     } catch (e) {
       print("Exception fetching coating mass: $e");
+    } finally {
+      client.close();
     }
   }
 
   Future<void> postAllData() async {
+    if (selectedMaterial == null ||
+            selectedBrands == null ||
+            selectedColors == null ||
+            selectedThickness == null
+
+        // ||
+        // selectedCoatingMass == null
+        ) {
+      Get.snackbar("Error", "Please fill all required fields",
+          backgroundColor: Colors.red, colorText: Colors.white);
+      return;
+    }
+
     final client =
         IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
     final url = Uri.parse('$apiUrl/addbag');
@@ -286,7 +306,8 @@ class ProfileRidgeAndArchController extends GetxController {
       "product_id": productID,
       "product_name": selectedMaterial,
       "product_base_id": null,
-      "product_base_name": selectedProductBaseId,
+      "product_base_name":
+          "${selectedBrands},${selectedColors},${selectedThickness},${selectedCoatingMass},",
       "category_id": categoryId,
       "category_name": categoryName,
       "OrderID": globalOrderManager.globalOrderId,
@@ -299,69 +320,81 @@ class ProfileRidgeAndArchController extends GetxController {
         body: jsonEncode(data),
       );
 
-      final responseData = jsonDecode(response.body);
-      final String orderID = responseData["order_id"]?.toString() ?? "";
-      orderIDD = int.tryParse(orderID);
-      orderNO = responseData["order_no"]?.toString() ?? "Unknown";
+      if (response.statusCode == 200) {
+        final responseData = jsonDecode(response.body);
+        final String orderID = responseData["order_id"]?.toString() ?? "";
+        final String orderNo =
+            responseData["order_no"]?.toString() ?? "Unknown";
 
-      if (!globalOrderManager.hasGlobalOrderId()) {
-        globalOrderManager.setGlobalOrderId(int.parse(orderID), orderNO);
-      }
-
-      orderIDD = globalOrderManager.globalOrderId;
-      orderNO = globalOrderManager.globalOrderNo;
-      currentMainProductId = responseData["product_id"]?.toString();
-
-      if (responseData["lebels"] != null && responseData["lebels"].isNotEmpty) {
-        List<dynamic> fullList = responseData["lebels"][0]["data"];
-        List<Map<String, dynamic>> newProducts = [];
-
-        for (var item in fullList) {
-          if (item is Map<String, dynamic>) {
-            Map<String, dynamic> product = Map<String, dynamic>.from(item);
-            String productId = product["id"].toString();
-
-            bool alreadyExists = responseProducts
-                .any((existing) => existing["id"].toString() == productId);
-
-            if (!alreadyExists) {
-              newProducts.add(product);
-            }
-
-            if (product["UOM"] != null && product["UOM"]["options"] != null) {
-              uomOptions[productId] = Map<String, String>.from(
-                (product["UOM"]["options"] as Map).map(
-                  (key, value) => MapEntry(key.toString(), value.toString()),
-                ),
-              );
-            }
-          }
+        if (!globalOrderManager.hasGlobalOrderId()) {
+          globalOrderManager.setGlobalOrderId(int.parse(orderID), orderNo);
         }
 
-        responseProducts.addAll(newProducts);
+        orderIDD = globalOrderManager.globalOrderId;
+        orderNO = globalOrderManager.globalOrderNo;
+        currentMainProductId = responseData["product_id"]?.toString();
+
+        if (responseData["lebels"] != null &&
+            responseData["lebels"].isNotEmpty) {
+          List<dynamic> fullList = responseData["lebels"][0]["data"];
+          List<Map<String, dynamic>> newProducts = [];
+
+          for (var item in fullList) {
+            if (item is Map<String, dynamic>) {
+              Map<String, dynamic> product = Map<String, dynamic>.from(item);
+              String productId = product["id"].toString();
+
+              bool alreadyExists = responseProducts
+                  .any((existing) => existing["id"].toString() == productId);
+
+              if (!alreadyExists) {
+                newProducts.add(product);
+              }
+
+              if (product["UOM"] != null && product["UOM"]["options"] != null) {
+                uomOptions[productId] = Map<String, String>.from(
+                  (product["UOM"]["options"] as Map).map(
+                    (key, value) => MapEntry(key.toString(), value.toString()),
+                  ),
+                );
+              }
+            }
+          }
+
+          responseProducts.addAll(newProducts);
+        }
+
+        Get.snackbar("Success", "Product added successfully",
+            backgroundColor: Colors.green, colorText: Colors.white);
+        resetSelections();
+        fetchMaterial();
+        fetchBrandData();
+      } else {
+        throw Exception("Server returned ${response.statusCode}");
       }
     } catch (e) {
-      print("Error posting data: $e");
+      Get.snackbar("Error", "Error adding product: $e",
+          backgroundColor: Colors.red, colorText: Colors.white);
+    } finally {
+      client.close();
     }
   }
 
   Future<void> deleteCard(String deleteId) async {
-    final url = Uri.parse('$apiUrl/enquirydelete/$deleteId');
     try {
-      final response = await http.delete(url);
+      final response =
+          await http.delete(Uri.parse('$apiUrl/enquirydelete/$deleteId'));
       if (response.statusCode == 200) {
         responseProducts
             .removeWhere((product) => product["id"].toString() == deleteId);
         Get.snackbar("Success", "Data deleted successfully",
-            backgroundColor: Colors.red.shade400,
-            snackPosition: SnackPosition.BOTTOM);
+            backgroundColor: Colors.red.shade400, colorText: Colors.white);
       } else {
         throw Exception("Failed to delete card with ID $deleteId");
       }
     } catch (e) {
-      print("Error deleting card: $e");
       Get.snackbar("Error", "Error deleting card: $e",
-          backgroundColor: Colors.red, snackPosition: SnackPosition.BOTTOM);
+          backgroundColor: Colors.red, colorText: Colors.white);
     }
   }
 
@@ -372,235 +405,270 @@ class ProfileRidgeAndArchController extends GetxController {
     }
 
     isSearchingBaseProducts[productId] = true;
-    final client =
-        IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
-    final url = Uri.parse("$apiUrl/baseproducts_search");
+    update();
+
+    HttpClient client = HttpClient()
+      ..badCertificateCallback = ((_, __, ___) => true);
+    IOClient ioClient = IOClient(client);
+    final headers = {"Content-Type": "application/json"};
+    final data = {"category_id": "1", "searchbase": query};
 
     try {
-      final response = await client.post(
-        url,
-        headers: {"Content-Type": "application/json"},
-        body: jsonEncode({"category_id": "1", "searchbase": query}),
+      final response = await ioClient.post(
+        Uri.parse("$apiUrl/baseproducts_search"),
+        headers: headers,
+        body: jsonEncode(data),
       );
 
       if (response.statusCode == 200) {
         final responseData = jsonDecode(response.body);
+        print(response.body);
+        print(response.body);
+        print(response.body);
+        print(response.statusCode);
         baseProductResults[productId] = responseData['base_products'] ?? [];
-        isSearchingBaseProducts[productId] = false;
       } else {
         baseProductResults[productId] = [];
-        isSearchingBaseProducts[productId] = false;
       }
     } catch (e) {
-      print("Error searching base products: $e");
+      print("Error searching base products for $productId: $e");
       baseProductResults[productId] = [];
+    } finally {
       isSearchingBaseProducts[productId] = false;
+      ioClient.close();
+      update();
+    }
+  }
+
+  Future<void> updateBaseProduct(String productId, String baseProduct) async {
+    HttpClient client = HttpClient()
+      ..badCertificateCallback = ((_, __, ___) => true);
+    IOClient ioClient = IOClient(client);
+    final headers = {"Content-Type": "application/json"};
+    final data = {"id": productId, "base_product": baseProduct};
+
+    try {
+      final response = await ioClient.post(
+        Uri.parse("$apiUrl/baseproduct_update"),
+        headers: headers,
+        body: jsonEncode(data),
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        isBaseProductUpdated.value = true;
+        print(response.body);
+        print(response.body);
+        print(response.body);
+        print(response.statusCode);
+
+        Get.snackbar("Success", "Base product updated successfully!",
+            backgroundColor: Colors.green, colorText: Colors.white);
+      } else {
+        Get.snackbar(
+            "Error", "Failed to update base product. Please try again.",
+            backgroundColor: Colors.red, colorText: Colors.white);
+      }
+    } catch (e) {
+      Get.snackbar("Error", "Error updating base product: $e",
+          backgroundColor: Colors.red, colorText: Colors.white);
+    } finally {
+      ioClient.close();
     }
   }
 
   Widget buildBaseProductSearchField(Map<String, dynamic> data) {
     String productId = data["id"].toString();
 
-    if (!baseProductControllers.containsKey(productId)) {
-      baseProductControllers[productId] = TextEditingController();
-      baseProductFocusNodes[productId] = FocusNode();
-      baseProductResults[productId] = [];
-      selectedBaseProducts[productId] = null;
-      isSearchingBaseProducts[productId] = false;
+    fieldControllers.putIfAbsent(productId, () => {});
+    baseProductResults.putIfAbsent(productId, () => []);
+    selectedBaseProducts.putIfAbsent(productId, () => null);
+    isSearchingBaseProducts.putIfAbsent(productId, () => false);
+    if (!fieldControllers[productId]!.containsKey("BaseProduct")) {
+      fieldControllers[productId]!["BaseProduct"] = TextEditingController();
     }
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          "Base Product",
-          style: TextStyle(
-              fontWeight: FontWeight.w500,
-              color: Colors.grey[700],
-              fontSize: 15),
-        ),
-        Gap(5),
-        Container(
-          height: 40.h,
-          width: 200.w,
-          decoration: BoxDecoration(
-            border: Border.all(color: Colors.grey[300]!),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: TextField(
-            controller: baseProductControllers[productId],
-            focusNode: baseProductFocusNodes[productId],
-            decoration: InputDecoration(
-              hintText: "Search base product...",
-              prefixIcon: Icon(Icons.search),
-              border: InputBorder.none,
-              contentPadding:
-                  EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              suffixIcon: isSearchingBaseProducts[productId] == true
-                  ? Padding(
-                      padding: EdgeInsets.all(8),
-                      child: SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      ),
-                    )
-                  : null,
+    return Obx(() => Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              "Base Product",
+              style: TextStyle(
+                  fontWeight: FontWeight.w500,
+                  color: Colors.grey[700],
+                  fontSize: 15),
             ),
-            onChanged: (value) => searchBaseProducts(value, productId),
-            onTap: () {
-              if (baseProductControllers[productId]!.text.isNotEmpty) {
-                searchBaseProducts(
-                    baseProductControllers[productId]!.text, productId);
-              }
-            },
-          ),
-        ),
-        if (baseProductResults[productId]?.isNotEmpty == true)
-          Container(
-            width: 200.w,
-            margin: EdgeInsets.only(top: 8),
-            padding: EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.grey[50],
-              border: Border.all(color: Colors.grey[300]!),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  "Search Results:",
-                  style: GoogleFonts.figtree(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.black87),
+            Gap(5),
+            Container(
+              height: 40.h,
+              width: 200.w,
+              decoration: BoxDecoration(
+                border: Border.all(color: Colors.grey[300]!),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: TextField(
+                controller: fieldControllers[productId]!["BaseProduct"],
+                decoration: InputDecoration(
+                  hintText: "Search base product...",
+                  prefixIcon: Icon(Icons.search),
+                  border: InputBorder.none,
+                  contentPadding:
+                      EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  suffixIcon: isSearchingBaseProducts[productId]!
+                      ? Padding(
+                          padding: EdgeInsets.all(12),
+                          child: SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2)),
+                        )
+                      : null,
                 ),
-                SizedBox(height: 8),
-                ...baseProductResults[productId]!.map((product) {
-                  return GestureDetector(
-                    onTap: () {
-                      selectedBaseProducts[productId] = product.toString();
-                      baseProductControllers[productId]!.text =
-                          product.toString();
-                      baseProductResults[productId] = [];
-                      update();
-                    },
-                    child: Container(
-                      width: double.infinity,
-                      padding:
-                          EdgeInsets.symmetric(vertical: 12, horizontal: 12),
-                      margin: EdgeInsets.only(bottom: 6),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(6),
-                        border: Border.all(color: Colors.grey[300]!),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.grey.withOpacity(0.1),
-                            spreadRadius: 1,
-                            blurRadius: 2,
-                            offset: Offset(0, 1),
-                          ),
-                        ],
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(Icons.inventory_2, size: 16, color: Colors.blue),
-                          SizedBox(width: 10),
-                          Expanded(
-                            child: Text(
-                              product.toString(),
-                              style: GoogleFonts.figtree(
-                                  fontSize: 14,
-                                  color: Colors.black87,
-                                  fontWeight: FontWeight.w400),
-                            ),
-                          ),
-                          Icon(Icons.arrow_forward_ios,
-                              size: 12, color: Colors.grey[400]),
-                        ],
-                      ),
+                onChanged: (value) => searchBaseProducts(value, productId),
+              ),
+            ),
+            if (baseProductResults[productId]?.isNotEmpty ?? false)
+              Container(
+                width: 200.w,
+                margin: EdgeInsets.only(top: 8),
+                padding: EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.grey[50],
+                  border: Border.all(color: Colors.grey[300]!),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "Search Results:",
+                      style: GoogleFonts.figtree(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.black87),
                     ),
-                  );
-                }),
-              ],
-            ),
-          ),
-        if (selectedBaseProducts[productId] != null)
-          Container(
-            width: 200.w,
-            margin: EdgeInsets.only(top: 8),
-            padding: EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.blue[50],
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.blue[200]!),
-            ),
-            child: Row(
-              children: [
-                Icon(Icons.check_circle, color: Colors.green, size: 20),
-                SizedBox(width: 8),
-                Expanded(
+                    SizedBox(height: 8),
+                    ...baseProductResults[productId]!
+                        .map((product) => GestureDetector(
+                              onTap: () {
+                                selectedBaseProducts[productId] =
+                                    product.toString();
+                                fieldControllers[productId]!["BaseProduct"]!
+                                    .text = product.toString();
+                                baseProductResults[productId] = [];
+                                isBaseProductUpdated.value = false;
+                                update();
+                              },
+                              child: Container(
+                                width: double.infinity,
+                                padding: EdgeInsets.symmetric(
+                                    vertical: 12, horizontal: 12),
+                                margin: EdgeInsets.only(bottom: 6),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(6),
+                                  border: Border.all(color: Colors.grey[300]!),
+                                  boxShadow: [
+                                    BoxShadow(
+                                        color: Colors.grey.withOpacity(0.1),
+                                        spreadRadius: 1,
+                                        blurRadius: 2,
+                                        offset: Offset(0, 1))
+                                  ],
+                                ),
+                                child: Row(
+                                  children: [
+                                    Icon(Icons.inventory_2,
+                                        size: 16, color: Colors.blue),
+                                    SizedBox(width: 10),
+                                    Expanded(
+                                        child: Text(product.toString(),
+                                            style: GoogleFonts.figtree(
+                                                fontSize: 14,
+                                                color: Colors.black87,
+                                                fontWeight: FontWeight.w400))),
+                                    Icon(Icons.arrow_forward_ios,
+                                        size: 12, color: Colors.grey[400]),
+                                  ],
+                                ),
+                              ),
+                            )),
+                  ],
+                ),
+              ),
+            if (selectedBaseProducts[productId] != null)
+              Container(
+                width: 200.w,
+                margin: EdgeInsets.only(top: 8),
+                padding: EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.blue[50],
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.blue[200]!),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.check_circle, color: Colors.green, size: 20),
+                    SizedBox(width: 8),
+                    Expanded(
+                        child: Text(
+                            "Selected: ${selectedBaseProducts[productId]}",
+                            style: GoogleFonts.figtree(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                                color: Colors.black87))),
+                    GestureDetector(
+                      onTap: () {
+                        selectedBaseProducts[productId] = null;
+                        fieldControllers[productId]!["BaseProduct"]!.clear();
+                        baseProductResults[productId] = [];
+                        update();
+                      },
+                      child:
+                          Icon(Icons.close, color: Colors.grey[600], size: 20),
+                    ),
+                  ],
+                ),
+              ),
+            if (selectedBaseProducts[productId] != null &&
+                !isBaseProductUpdated.value)
+              Container(
+                margin: EdgeInsets.only(top: 8),
+                width: 200.w,
+                child: ElevatedButton(
+                  onPressed: () => updateBaseProduct(
+                      productId, selectedBaseProducts[productId]!),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue,
+                    padding: EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8)),
+                  ),
                   child: Text(
-                    "Selected: ${selectedBaseProducts[productId]}",
+                    "Update Base Product",
                     style: GoogleFonts.figtree(
                         fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.black87),
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white),
                   ),
                 ),
-                GestureDetector(
-                  onTap: () {
-                    selectedBaseProducts[productId] = null;
-                    baseProductControllers[productId]!.clear();
-                    baseProductResults[productId] = [];
-                    update();
-                  },
-                  child: Icon(Icons.close, color: Colors.grey[600], size: 20),
-                ),
-              ],
-            ),
-          ),
-      ],
-    );
+              ),
+          ],
+        ));
   }
 
-  Future<void> updateBaseProduct(String productId, String baseProduct) async {
-    final client =
-        IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true);
-    final url = Uri.parse("$apiUrl/baseproduct_update");
-    final data = {"id": productId, "base_product": baseProduct};
-
-    try {
-      final response = await client.post(
-        url,
-        headers: {"Content-Type": "application/json"},
-        body: jsonEncode(data),
-      );
-
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        Get.snackbar("Success", "Base product updated successfully!",
-            backgroundColor: Colors.green);
-      } else {
-        Get.snackbar("Error", "Failed to update base product.",
-            backgroundColor: Colors.red);
-      }
-    } catch (e) {
-      print("Error updating base product: $e");
-      Get.snackbar("Error", "Error updating base product: $e",
-          backgroundColor: Colors.red);
-    }
-  }
-
-  void updateSelectedBaseProduct(String productId) {
-    if (selectedBaseProducts[productId] != null &&
-        selectedBaseProducts[productId]!.isNotEmpty) {
-      updateBaseProduct(productId, selectedBaseProducts[productId]!);
-    } else {
-      Get.snackbar("Warning", "Please select a base product first.",
-          backgroundColor: Colors.orange);
-    }
+  void resetSelections() {
+    selectedMaterial = null;
+    selectedBrands = null;
+    selectedColors = null;
+    selectedThickness = null;
+    selectedCoatingMass = null;
+    selectedProductBaseId = null;
+    selectedBaseProductId = null;
+    materialList.clear();
+    brandandList.clear();
+    colorandList.clear();
+    thickAndList.clear();
+    coatingAndList.clear();
   }
 
   void clearSelection() {
@@ -616,8 +684,6 @@ class ProfileRidgeAndArchController extends GetxController {
     orderNO = null;
     responseProducts.clear();
     fieldControllers.clear();
-    baseProductControllers.clear();
-    baseProductFocusNodes.clear();
     previousUomValues.clear();
     calculationResults.clear();
     billamt.value = 0.0;
@@ -646,30 +712,42 @@ class ProfileRidgeAndArchController extends GetxController {
   Widget editableTextField(
       Map<String, dynamic> data, String key, Function(String) onChanged,
       {bool readOnly = false,
-      required RxMap<String, Map<String, TextEditingController>>
+      required Map<String, Map<String, TextEditingController>>
           fieldControllers}) {
-    final controller = getController(data, key);
+    String productId = data["id"].toString();
+    fieldControllers.putIfAbsent(productId, () => {});
+    if (!fieldControllers[productId]!.containsKey(key)) {
+      String initialValue = (data[key] != null && data[key].toString() != "0")
+          ? data[key].toString()
+          : "";
+      fieldControllers[productId]![key] =
+          TextEditingController(text: initialValue);
+    } else {
+      final controller = fieldControllers[productId]![key]!;
+      final dataValue = data[key]?.toString() ?? "";
+      if (controller.text.isEmpty && dataValue.isNotEmpty && dataValue != "0") {
+        controller.text = dataValue;
+      }
+    }
+
     return SizedBox(
       height: 38.h,
       child: TextField(
         readOnly: readOnly,
         style: GoogleFonts.figtree(
             fontWeight: FontWeight.w500, color: Colors.black, fontSize: 15.sp),
-        controller: controller,
-        keyboardType: (key == "Profile" ||
-                key == "Nos" ||
-                key == "Basic Rate" ||
-                key == "Amount" ||
-                key == "SQMtr" ||
-                key == "cgst" ||
-                key == "sgst" ||
-                key == "height")
-            ? TextInputType.numberWithOptions(decimal: true)
-            : TextInputType.text,
+        controller: fieldControllers[productId]![key],
+        keyboardType: TextInputType.numberWithOptions(decimal: true),
         onChanged: (val) {
-          data[key] = val;
-          onChanged(val);
-          update();
+          if (val.trim().isNotEmpty) {
+            final numVal = double.tryParse(val);
+            if (numVal != null && numVal != 0) {
+              data[key] = val;
+              onChanged(val);
+            }
+          } else {
+            data.remove(key);
+          }
         },
         decoration: InputDecoration(
           contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 0),
@@ -681,7 +759,7 @@ class ProfileRidgeAndArchController extends GetxController {
               borderSide: BorderSide(color: Colors.grey[300]!)),
           focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(6),
-              borderSide: BorderSide(color: Colors.deepPurple, width: 2)),
+              borderSide: BorderSide(color: Get.theme.primaryColor, width: 2)),
           filled: true,
           fillColor: Colors.grey[50],
         ),
@@ -690,49 +768,47 @@ class ProfileRidgeAndArchController extends GetxController {
   }
 
   Widget uomDropdown(Map<String, dynamic> data) {
-    Map<String, dynamic>? uomData = data['UOM'];
-    String? currentValue = uomData?['value']?.toString();
-    Map<String, dynamic>? options =
-        uomData?['options'] as Map<String, dynamic>?;
+    String productId = data["id"].toString();
+    Map<String, String>? options = uomOptions[productId];
 
     if (options == null || options.isEmpty) {
-      return editableTextField(data, "UOM", (val) {},
-          fieldControllers: fieldControllers);
+      return editableTextField(data, "UOM", (val) {
+        data["UOM"] = val;
+        debounceCalculation(data);
+      }, fieldControllers: fieldControllers);
     }
+
+    String? currentValue = data["UOM"] is Map
+        ? data["UOM"]["value"]?.toString()
+        : data["UOM"]?.toString();
 
     return SizedBox(
       height: 38.h,
       child: DropdownButtonFormField<String>(
-          value: currentValue,
-          items: options.entries
-              .map((entry) => DropdownMenuItem(
-                    value: entry.key,
-                    child: Text(entry.value.toString()),
-                  ))
-              .toList(),
-          onChanged: (val) {
-            if (data['UOM'] is! Map) {
-              data['UOM'] = {};
-            }
-            data['UOM']['value'] = val;
-            data['UOM']['options'] = options;
-            debounceCalculation(data);
-          },
-          decoration: InputDecoration(
-            contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 0),
-            border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(6),
-                borderSide: BorderSide(color: Colors.grey[300]!)),
-            enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(6),
-                borderSide: BorderSide(color: Colors.grey[300]!)),
-            focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(6),
-                borderSide:
-                    BorderSide(color: Get.theme.primaryColor, width: 2)),
-            filled: true,
-            fillColor: Colors.grey[50],
-          )),
+        value: currentValue,
+        items: options.entries
+            .map((entry) =>
+                DropdownMenuItem(value: entry.key, child: Text(entry.value)))
+            .toList(),
+        onChanged: (val) {
+          data["UOM"] = {"value": val, "options": options};
+          debounceCalculation(data);
+        },
+        decoration: InputDecoration(
+          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 0),
+          border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(6),
+              borderSide: BorderSide(color: Colors.grey[300]!)),
+          enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(6),
+              borderSide: BorderSide(color: Colors.grey[300]!)),
+          focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(6),
+              borderSide: BorderSide(color: Get.theme.primaryColor, width: 2)),
+          filled: true,
+          fillColor: Colors.grey[50],
+        ),
+      ),
     );
   }
 
@@ -751,20 +827,26 @@ class ProfileRidgeAndArchController extends GetxController {
     String? currentUom = data["UOM"] is Map
         ? data["UOM"]["value"]?.toString()
         : data["UOM"]?.toString();
+
+    double? profileValue;
     String? profileText = fieldControllers[productId]?["Profile"]?.text ??
         data["Profile"]?.toString();
-    double? profileValue = profileText != null && profileText.isNotEmpty
-        ? double.tryParse(profileText)
-        : null;
+    if (profileText != null && profileText.isNotEmpty) {
+      profileValue = double.tryParse(profileText);
+    }
+
+    int nosValue = 0;
     String? nosText =
         fieldControllers[productId]?["Nos"]?.text ?? data["Nos"]?.toString();
-    int nosValue =
-        nosText != null && nosText.isNotEmpty ? int.tryParse(nosText) ?? 1 : 1;
+    if (nosText != null && nosText.isNotEmpty) {
+      nosValue = int.tryParse(nosText) ?? 1;
+    }
+
     String? heightValue = fieldControllers[productId]?["height"]?.text ??
         data["height"]?.toString();
 
     final requestBody = {
-      "id": int.tryParse(productId) ?? 0,
+      "id": int.tryParse(data["id"].toString()) ?? 0,
       "category_id": 32,
       "product": data["Products"]?.toString() ?? "",
       "height": heightValue,
@@ -772,13 +854,9 @@ class ProfileRidgeAndArchController extends GetxController {
           ? int.tryParse(previousUomValues[productId]!)
           : null,
       "current_uom": currentUom != null ? int.tryParse(currentUom) : null,
-      "length": null,
+      "length": profileValue ?? 0,
       "nos": nosValue,
-      "basic_rate": double.tryParse(
-              fieldControllers[productId]?["Basic Rate"]?.text ??
-                  data["Basic Rate"]?.toString() ??
-                  "0") ??
-          0,
+      "basic_rate": double.tryParse(data["Basic Rate"]?.toString() ?? "0") ?? 0,
     };
 
     try {
@@ -796,18 +874,14 @@ class ProfileRidgeAndArchController extends GetxController {
 
           if (responseData["rate"] != null) {
             data["Basic Rate"] = responseData["rate"].toString();
-            if (fieldControllers[productId]?["Basic Rate"] != null) {
-              fieldControllers[productId]!["Basic Rate"]!.text =
-                  responseData["rate"].toString();
-            }
+            fieldControllers[productId]?["Basic Rate"]?.text =
+                responseData["rate"].toString();
           }
 
           if (responseData["Length"] != null) {
             data["Profile"] = responseData["Length"].toString();
-            if (fieldControllers[productId]?["Profile"] != null) {
-              fieldControllers[productId]!["Profile"]!.text =
-                  responseData["Length"].toString();
-            }
+            fieldControllers[productId]?["Profile"]?.text =
+                responseData["Length"].toString();
           }
 
           if (responseData["Nos"] != null) {
@@ -816,58 +890,47 @@ class ProfileRidgeAndArchController extends GetxController {
                 fieldControllers[productId]?["Nos"]?.text.trim() ?? "";
             if (currentInput.isEmpty || currentInput == "0") {
               data["Nos"] = newNos;
-              if (fieldControllers[productId]?["Nos"] != null) {
-                fieldControllers[productId]!["Nos"]!.text = newNos;
-              }
+              fieldControllers[productId]?["Nos"]?.text = newNos;
             }
           }
 
           if (responseData["crimp"] != null) {
             data["height"] = responseData["crimp"].toString();
-            if (fieldControllers[productId]?["height"] != null) {
-              fieldControllers[productId]!["height"]!.text =
-                  responseData["crimp"].toString();
-            }
+            fieldControllers[productId]?["height"]?.text =
+                responseData["crimp"].toString();
           }
 
           if (responseData["sqmtr"] != null) {
             data["SQMtr"] = responseData["sqmtr"].toString();
-            if (fieldControllers[productId]?["SQMtr"] != null) {
-              fieldControllers[productId]!["SQMtr"]!.text =
-                  responseData["sqmtr"].toString();
-            }
+            fieldControllers[productId]?["SQMtr"]?.text =
+                responseData["sqmtr"].toString();
           }
 
           if (responseData["cgst"] != null) {
             data["cgst"] = responseData["cgst"].toString();
-            if (fieldControllers[productId]?["cgst"] != null) {
-              fieldControllers[productId]!["cgst"]!.text =
-                  responseData["cgst"].toString();
-            }
+            fieldControllers[productId]?["cgst"]?.text =
+                responseData["cgst"].toString();
           }
 
           if (responseData["sgst"] != null) {
             data["sgst"] = responseData["sgst"].toString();
-            if (fieldControllers[productId]?["sgst"] != null) {
-              fieldControllers[productId]!["sgst"]!.text =
-                  responseData["sgst"].toString();
-            }
+            fieldControllers[productId]?["sgst"]?.text =
+                responseData["sgst"].toString();
           }
 
           if (responseData["Amount"] != null) {
             data["Amount"] = responseData["Amount"].toString();
-            if (fieldControllers[productId]?["Amount"] != null) {
-              fieldControllers[productId]!["Amount"]!.text =
-                  responseData["Amount"].toString();
-            }
+            fieldControllers[productId]?["Amount"]?.text =
+                responseData["Amount"].toString();
           }
 
           previousUomValues[productId] = currentUom;
-          update();
         }
       }
     } catch (e) {
       print("Calculation API Error: $e");
+    } finally {
+      client.close();
     }
   }
 }

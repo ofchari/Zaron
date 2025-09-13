@@ -30,8 +30,8 @@ class UpvcTilesController extends GetxController {
   var orderNO = ''.obs;
   var calculationResults = <String, dynamic>{}.obs;
   var previousUomValues = <String, String?>{}.obs;
-  // var availableLengths = <String, List<String>>{}.obs;
-  // var selectedLengths = <String, String?>{}.obs;
+  var availableLengths = <String, List<String>>{}.obs;
+  var selectedLengths = <String, String?>{}.obs;
   Map<String, Map<String, TextEditingController>> fieldControllers = {};
 
   Timer? debounceTimer;
@@ -262,80 +262,101 @@ class UpvcTilesController extends GetxController {
     }
   }
 
-  // Widget lengthDropdown(Map<String, dynamic> data) {
-  //   String productId = data["id"].toString();
-  //   List<String> lengths = availableLengths[productId] ?? [];
-  //
-  //   if (lengths.isEmpty) {
-  //     return SizedBox(
-  //       height: 38.h,
-  //       child: Container(
-  //         decoration: BoxDecoration(
-  //           border: Border.all(color: Colors.grey[300]!),
-  //           borderRadius: BorderRadius.circular(6),
-  //           color: Colors.grey[50],
-  //         ),
-  //         child: Center(
-  //           child: Text(
-  //             "Loading lengths...",
-  //             style: TextStyle(
-  //               fontWeight: FontWeight.w400,
-  //               color: Colors.grey[600],
-  //               fontSize: 15,
-  //             ),
-  //           ),
-  //         ),
-  //       ),
-  //     );
-  //   }
-  //
-  //   String? selectedValue = selectedLengths[productId];
-  //   if (selectedValue != null && !lengths.contains(selectedValue)) {
-  //     selectedValue = null;
-  //     selectedLengths[productId] = null;
-  //   }
-  //
-  //   return SizedBox(
-  //     height: 38.h,
-  //     child: DropdownButtonFormField<String>(
-  //       value: selectedValue,
-  //       decoration: InputDecoration(
-  //         contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 0),
-  //         border: OutlineInputBorder(borderRadius: BorderRadius.circular(6)),
-  //         enabledBorder:
-  //             OutlineInputBorder(borderRadius: BorderRadius.circular(6)),
-  //         focusedBorder: OutlineInputBorder(
-  //           borderRadius: BorderRadius.circular(6),
-  //           borderSide: BorderSide(color: Colors.deepPurple, width: 2),
-  //         ),
-  //         filled: true,
-  //         fillColor: Colors.grey[50],
-  //       ),
-  //       hint: Text(
-  //         "Select Length",
-  //         style: TextStyle(
-  //           fontWeight: FontWeight.w400,
-  //           color: Colors.grey[600],
-  //           fontSize: 15,
-  //         ),
-  //       ),
-  //       items: lengths.map((String length) {
-  //         return DropdownMenuItem<String>(
-  //           value: length,
-  //           child: Text('$length ft'),
-  //         );
-  //       }).toList(),
-  //       onChanged: (String? newValue) {
-  //         if (newValue != null) {
-  //           selectedLengths[productId] = newValue;
-  //           data["Length"] = newValue;
-  //           debounceCalculation(data);
-  //         }
-  //       },
-  //       isExpanded: true,
-  //     ),
-  //   );
-  // }
+  Widget lengthDropdown(Map<String, dynamic> data) {
+    String productId = data["id"].toString();
+    List<String> lengths = availableLengths[productId] ?? [];
+
+    if (lengths.isEmpty) {
+      return SizedBox(
+        height: 38.h,
+        child: Container(
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.grey[300]!),
+            borderRadius: BorderRadius.circular(6),
+            color: Colors.grey[50],
+          ),
+          child: Center(
+            child: Text(
+              "Loading lengths...",
+              style: TextStyle(
+                fontWeight: FontWeight.w400,
+                color: Colors.grey[600],
+                fontSize: 15,
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    String? selectedValue = selectedLengths[productId];
+    if (selectedValue != null && !lengths.contains(selectedValue)) {
+      selectedValue = null;
+      selectedLengths[productId] = null;
+    }
+
+    return SizedBox(
+      height: 38.h,
+      child: DropdownButtonFormField<String>(
+        value: selectedValue,
+        decoration: InputDecoration(
+          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 0),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(6)),
+          enabledBorder:
+              OutlineInputBorder(borderRadius: BorderRadius.circular(6)),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(6),
+            borderSide: BorderSide(color: Colors.deepPurple, width: 2),
+          ),
+          filled: true,
+          fillColor: Colors.grey[50],
+        ),
+        hint: Text(
+          "Select Length",
+          style: TextStyle(
+            fontWeight: FontWeight.w400,
+            color: Colors.grey[600],
+            fontSize: 15,
+          ),
+        ),
+        items: lengths.map((String length) {
+          return DropdownMenuItem<String>(
+            value: length,
+            child: Text('$length ft'),
+          );
+        }).toList(),
+        onChanged: (String? newValue) {
+          if (newValue != null) {
+            selectedLengths[productId] = newValue;
+            data["Length"] = newValue;
+            debounceCalculation(data);
+          }
+        },
+        isExpanded: true,
+      ),
+    );
+  }
+
+  bool _isValidNonZeroNumber(String value) {
+    if (value.isEmpty) return false;
+    double? parsedValue = double.tryParse(value);
+    return parsedValue != null && parsedValue != 0.0;
+  }
+
+  String _getFieldValue(
+      String productId, String fieldName, Map<String, dynamic> data) {
+    String? value;
+    if (fieldControllers.containsKey(productId) &&
+        fieldControllers[productId]!.containsKey(fieldName)) {
+      value = fieldControllers[productId]![fieldName]!.text.trim();
+    }
+    if (value == null || value.isEmpty) {
+      value = data[fieldName]?.toString();
+    }
+    return value ?? "";
+  }
+
+  ///part 2
 
   Future<void> performCalculation(Map<String, dynamic> data) async {
     final client =
@@ -346,12 +367,20 @@ class UpvcTilesController extends GetxController {
     String? currentUom = data["UOM"] is Map
         ? data["UOM"]["value"]?.toString()
         : data["UOM"]?.toString();
-    String? lengthText = fieldControllers[productId]?["Length"]?.text ??
-        data["Length"]?.toString();
-    double? lengthValue = double.tryParse(lengthText ?? "0");
-    String? nosText =
-        fieldControllers[productId]?["Nos"]?.text ?? data["Nos"]?.toString();
-    int nosValue = int.tryParse(nosText ?? "1") ?? 1;
+
+    // Get Length value from selected dropdown (same logic as Part 1)
+    double lengthValue = 0;
+    String? lengthText = selectedLengths[productId];
+    if (lengthText == null || lengthText.isEmpty) {
+      lengthText = _getFieldValue(productId, "Length", data);
+    }
+    if (lengthText != null && lengthText.isNotEmpty) {
+      lengthValue = double.tryParse(lengthText) ?? 0;
+    }
+
+    String nosText = _getFieldValue(productId, "Nos", data);
+    int nosValue =
+        _isValidNonZeroNumber(nosText) ? (int.tryParse(nosText) ?? 0) : 0;
 
     final requestBody = {
       "id": int.tryParse(productId) ?? 0,
@@ -362,7 +391,7 @@ class UpvcTilesController extends GetxController {
           ? int.tryParse(previousUomValues[productId]!)
           : null,
       "current_uom": currentUom != null ? int.tryParse(currentUom) : null,
-      "length": lengthValue ?? 0,
+      "length": lengthValue,
       "nos": nosValue,
       "basic_rate": double.tryParse(data["Basic Rate"]?.toString() ?? "0") ?? 0,
     };
@@ -385,12 +414,84 @@ class UpvcTilesController extends GetxController {
         if (responseData["status"] == "success") {
           billamt.value = responseData["bill_total"]?.toDouble() ?? 0.0;
           calculationResults[productId] = responseData;
-          data["Length"] = responseData["length"]?.toString();
-          data["Nos"] = responseData["nos"]?.toString();
+
+          // Extract available lengths from profile array (same logic as Part 1)
+          if (responseData["profile"] != null &&
+              responseData["profile"] is List) {
+            Set<String> lengthSet = {};
+            for (var profile in responseData["profile"]) {
+              String? lengthValue;
+              if (profile["length_mm"] != null) {
+                lengthValue = profile["length_mm"].toString().trim();
+              } else if (profile["length_feet"] != null) {
+                lengthValue = profile["length_feet"].toString().trim();
+              } else if (profile["length_mtr"] != null) {
+                lengthValue = profile["length_mtr"].toString().trim();
+              } else if (profile["length_inch"] != null) {
+                lengthValue = profile["length_inch"].toString().trim();
+              }
+              if (lengthValue != null &&
+                  lengthValue.isNotEmpty &&
+                  lengthValue != "0" &&
+                  lengthValue != "0.0") {
+                lengthSet.add(lengthValue);
+              }
+            }
+            List<String> lengths = lengthSet.toList();
+            lengths.sort((a, b) {
+              double aNum = double.tryParse(a) ?? 0;
+              double bNum = double.tryParse(b) ?? 0;
+              return aNum.compareTo(bNum);
+            });
+            availableLengths[productId] = lengths;
+
+            // Set initial selected value if not already set
+            if (selectedLengths[productId] == null && lengths.isNotEmpty) {
+              String? currentLength = data["Length"]?.toString()?.trim();
+              if (currentLength != null && lengths.contains(currentLength)) {
+                selectedLengths[productId] = currentLength;
+              } else {
+                selectedLengths[productId] = lengths.first;
+                data["Length"] = lengths.first;
+              }
+            }
+          }
+
+          // Handle Length update
+          if (responseData["length"] != null) {
+            String newLength = responseData["length"].toString().trim();
+            data["Length"] = newLength;
+            selectedLengths[productId] = newLength;
+          }
+
+          // Handle Nos field update
+          if (responseData["Nos"] != null) {
+            String newNos = responseData["Nos"].toString().trim();
+            String currentInput =
+                fieldControllers[productId]?["Nos"]?.text.trim() ?? "";
+            if (!_isValidNonZeroNumber(currentInput)) {
+              data["Nos"] = newNos;
+              if (fieldControllers[productId]?["Nos"] != null) {
+                fieldControllers[productId]!["Nos"]!.text = newNos;
+              }
+            }
+          } else if (responseData["nos"] != null) {
+            String newNos = responseData["nos"].toString().trim();
+            String currentInput =
+                fieldControllers[productId]?["Nos"]?.text.trim() ?? "";
+            if (!_isValidNonZeroNumber(currentInput)) {
+              data["Nos"] = newNos;
+              if (fieldControllers[productId]?["Nos"] != null) {
+                fieldControllers[productId]!["Nos"]!.text = newNos;
+              }
+            }
+          }
+
           data["Sq.Mtr"] = responseData["sqmtr"]?.toString();
           data["Amount"] = responseData["Amount"]?.toString();
           data["cgst"] = responseData["cgst"]?.toString() ?? "0";
           data["sgst"] = responseData["sgst"]?.toString() ?? "0";
+
           if (fieldControllers[productId] != null) {
             fieldControllers[productId]!["Length"]?.text = data["Length"] ?? "";
             fieldControllers[productId]!["Nos"]?.text = data["Nos"] ?? "";
@@ -399,11 +500,13 @@ class UpvcTilesController extends GetxController {
             fieldControllers[productId]!["cgst"]?.text = data["cgst"] ?? "";
             fieldControllers[productId]!["sgst"]?.text = data["sgst"] ?? "";
           }
+
           if (responseData["rate"] != null) {
             data["Basic Rate"] = responseData["rate"]?.toString();
             fieldControllers[productId]?["Basic Rate"]?.text =
                 data["Basic Rate"] ?? "";
           }
+
           previousUomValues[productId] = currentUom;
           responseProducts.refresh();
         }

@@ -665,9 +665,19 @@ class _TotalEnquiryViewState extends State<TotalEnquiryView> {
                   );
 
                   print("Response status: ${response.statusCode}");
+                  print("Response status: ${response.statusCode}");
+                  print("Response status: ${response.statusCode}");
+                  print("Response body: ${response.body}");
+                  print("Response body: ${response.body}");
                   print("Response body: ${response.body}");
 
                   if (response.statusCode == 200) {
+                    print("Response status: ${response.statusCode}");
+                    print("Response status: ${response.statusCode}");
+                    print("Response status: ${response.statusCode}");
+                    print("Response body: ${response.body}");
+                    print("Response body: ${response.body}");
+                    print("Response body: ${response.body}");
                     ScaffoldMessenger.of(rootContext).showSnackBar(
                       const SnackBar(
                         backgroundColor: Colors.green,
@@ -675,6 +685,10 @@ class _TotalEnquiryViewState extends State<TotalEnquiryView> {
                       ),
                     );
                   } else {
+                    print("Response status: ${response.statusCode}");
+                    print("Response status: ${response.statusCode}");
+                    print("Response status: ${response.statusCode}");
+
                     ScaffoldMessenger.of(rootContext).showSnackBar(
                       const SnackBar(
                         backgroundColor: Colors.red,

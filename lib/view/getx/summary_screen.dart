@@ -156,6 +156,108 @@ Widget editableTextField(
   );
 }
 
+/// Reusable Product Card Widget
+Widget _buildProductCard({
+  required int index,
+  required Map<String, dynamic> data,
+  required String productName,
+  required Widget headerActions,
+  required List<Widget> detailRows,
+  Widget? footer,
+  required VoidCallback onDelete,
+  Widget? attachmentButton,
+}) {
+  return Container(
+    margin: EdgeInsets.symmetric(vertical: 12.h),
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(16.r),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.black.withOpacity(0.08),
+          blurRadius: 12.r,
+          offset: Offset(0, 4.h),
+        ),
+      ],
+      border: Border.all(color: Colors.grey.shade200!),
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Header
+        Container(
+          padding: EdgeInsets.all(10.w),
+          decoration: BoxDecoration(
+            color: Colors.deepPurple.shade50,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(16.r)),
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "${index + 1}. $productName",
+                      style: GoogleFonts.figtree(
+                        fontSize: 14.sp,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black87,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    Gap(4.h),
+                    Container(
+                      padding:
+                          EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(6.r),
+                      ),
+                      child: Text(
+                        "ID: ${data['id'] ?? 'N/A'}",
+                        style: TextStyle(
+                          fontSize: 10.sp,
+                          color: Colors.blue.shade700,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (attachmentButton != null) ...[
+                Gap(4.w),
+                attachmentButton,
+              ],
+              Gap(8.w),
+              IconButton(
+                icon: Icon(Icons.delete_outline_outlined,
+                    color: Colors.red.shade400, size: 20.sp),
+                onPressed: onDelete,
+                tooltip: "Delete Item",
+              ),
+            ],
+          ),
+        ),
+        // Body
+        Padding(
+          padding: EdgeInsets.all(16.w),
+          child: Column(
+            children: [
+              ...detailRows,
+              if (footer != null) ...[
+                Gap(12.h),
+                footer,
+              ],
+            ],
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
 /// For Rolles Sheet Base product //
 // In SummaryScreen class - Add this complete private method
 Widget _buildRollSheetBaseProductSearchField(
@@ -684,245 +786,191 @@ class SummaryScreen extends StatelessWidget {
                           .map((entry) {
                         final index = entry.key;
                         final data = Map<String, dynamic>.from(entry.value);
-                        return Card(
-                          margin: EdgeInsets.symmetric(vertical: 10),
-                          elevation: 2,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Column(
-                            children: [
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Expanded(
-                                    child: Text(
-                                      "  ${index + 1}. ${data["Products"] ?? 'N/A'}",
-                                      overflow: TextOverflow.ellipsis,
-                                      style: GoogleFonts.figtree(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.w600,
-                                        color: Colors.black87,
-                                      ),
-                                    ),
+                        final productName = data["Products"] ?? 'N/A';
+                        return _buildProductCard(
+                          index: index,
+                          data: data,
+                          productName: productName,
+                          headerActions: SizedBox.shrink(),
+                          detailRows: [
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: buildDetailItem(
+                                    "UOM",
+                                    aluminumController.uomDropdown(data),
                                   ),
-                                  Container(
-                                    padding: EdgeInsets.symmetric(
-                                        horizontal: 8, vertical: 4),
-                                    decoration: BoxDecoration(
-                                      color: Colors.blue[50],
-                                      borderRadius: BorderRadius.circular(6),
-                                    ),
-                                    child: Text(
-                                      "ID: ${data['id'] ?? 'N/A'}",
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: Colors.blue[700],
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                    ),
-                                  ),
-                                  IconButton(
-                                    icon: Icon(Icons.delete,
-                                        color: Colors.redAccent),
-                                    onPressed: () => Get.dialog(
-                                      AlertDialog(
-                                        title: Text("Delete Item"),
-                                        content: Text(
-                                            "Are you sure you want to delete this item?"),
-                                        actions: [
-                                          TextButton(
-                                            onPressed: () => Get.back(),
-                                            child: Text("Cancel"),
-                                          ),
-                                          ElevatedButton(
-                                            onPressed: () {
-                                              aluminumController.deleteCard(
-                                                  data["id"].toString());
-                                              Get.back();
-                                            },
-                                            child: Text("Delete"),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              Padding(
-                                padding: EdgeInsets.all(8),
-                                child: Column(
-                                  children: [
-                                    Row(
-                                      children: [
-                                        Expanded(
-                                          child: buildDetailItem(
-                                            "UOM",
-                                            aluminumController
-                                                .uomDropdown(data),
-                                          ),
-                                        ),
-                                        Gap(10),
-                                        Expanded(
-                                          child: buildDetailItem(
-                                            "Billing Option",
-                                            aluminumController
-                                                .billingDropdown(data),
-                                          ),
-                                        ),
-                                        Gap(10),
-                                        Expanded(
-                                          child: buildDetailItem(
-                                            "Length",
-                                            editableTextField(
-                                              data,
-                                              "Length",
-                                              (v) {
-                                                data["Length"] = v;
-                                                aluminumController
-                                                    .debounceCalculation(data);
-                                              },
-                                              fieldControllers:
-                                                  aluminumController
-                                                      .fieldControllers,
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    Gap(5),
-                                    Row(
-                                      children: [
-                                        Expanded(
-                                          child: buildDetailItem(
-                                            "Crimp",
-                                            editableTextField(
-                                              data,
-                                              "Crimp",
-                                              (v) {
-                                                data["Crimp"] = v;
-                                                aluminumController
-                                                    .debounceCalculation(data);
-                                              },
-                                              fieldControllers:
-                                                  aluminumController
-                                                      .fieldControllers,
-                                            ),
-                                          ),
-                                        ),
-                                        Gap(10),
-                                        Expanded(
-                                          child: buildDetailItem(
-                                            "Nos",
-                                            editableTextField(
-                                              data,
-                                              "Nos",
-                                              (v) {
-                                                data["Nos"] = v;
-                                                aluminumController
-                                                    .debounceCalculation(data);
-                                              },
-                                              fieldControllers:
-                                                  aluminumController
-                                                      .fieldControllers,
-                                            ),
-                                          ),
-                                        ),
-                                        Gap(10),
-                                        Expanded(
-                                          child: buildDetailItem(
-                                            "Basic Rate",
-                                            editableTextField(
-                                              data,
-                                              "Basic Rate",
-                                              (v) {
-                                                data["Basic Rate"] = v;
-                                                aluminumController
-                                                    .debounceCalculation(data);
-                                              },
-                                              readOnly: true,
-                                              fieldControllers:
-                                                  aluminumController
-                                                      .fieldControllers,
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    Gap(5),
-                                    Row(
-                                      children: [
-                                        Expanded(
-                                          child: buildDetailItem(
-                                            "SQMtr",
-                                            editableTextField(
-                                              data,
-                                              "SQMtr",
-                                              (v) {},
-                                              readOnly: true,
-                                              fieldControllers:
-                                                  aluminumController
-                                                      .fieldControllers,
-                                            ),
-                                          ),
-                                        ),
-                                        Gap(10),
-                                        Expanded(
-                                          child: buildDetailItem(
-                                            "Amount",
-                                            editableTextField(
-                                              data,
-                                              "Amount",
-                                              (v) {},
-                                              readOnly: true,
-                                              fieldControllers:
-                                                  aluminumController
-                                                      .fieldControllers,
-                                            ),
-                                          ),
-                                        ),
-                                        Gap(10),
-                                        Expanded(
-                                          child: buildDetailItem(
-                                            "CGST",
-                                            editableTextField(
-                                              data,
-                                              "cgst",
-                                              (v) {},
-                                              readOnly: true,
-                                              fieldControllers:
-                                                  aluminumController
-                                                      .fieldControllers,
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    Gap(5),
-                                    Row(
-                                      children: [
-                                        Expanded(
-                                          child: buildDetailItem(
-                                            "SGST",
-                                            editableTextField(
-                                              data,
-                                              "sgst",
-                                              (v) {},
-                                              readOnly: true,
-                                              fieldControllers:
-                                                  aluminumController
-                                                      .fieldControllers,
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
                                 ),
-                              ),
-                            ],
+                                Gap(10.w),
+                                Expanded(
+                                  child: buildDetailItem(
+                                    "Billing Option",
+                                    aluminumController.billingDropdown(data),
+                                  ),
+                                ),
+                                Gap(10.w),
+                                Expanded(
+                                  child: buildDetailItem(
+                                    "Length",
+                                    editableTextField(
+                                      data,
+                                      "Length",
+                                      (v) {
+                                        data["Length"] = v;
+                                        aluminumController
+                                            .debounceCalculation(data);
+                                      },
+                                      fieldControllers:
+                                          aluminumController.fieldControllers,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Gap(8.h),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: buildDetailItem(
+                                    "Crimp",
+                                    editableTextField(
+                                      data,
+                                      "Crimp",
+                                      (v) {
+                                        data["Crimp"] = v;
+                                        aluminumController
+                                            .debounceCalculation(data);
+                                      },
+                                      fieldControllers:
+                                          aluminumController.fieldControllers,
+                                    ),
+                                  ),
+                                ),
+                                Gap(10.w),
+                                Expanded(
+                                  child: buildDetailItem(
+                                    "Nos",
+                                    editableTextField(
+                                      data,
+                                      "Nos",
+                                      (v) {
+                                        data["Nos"] = v;
+                                        aluminumController
+                                            .debounceCalculation(data);
+                                      },
+                                      fieldControllers:
+                                          aluminumController.fieldControllers,
+                                    ),
+                                  ),
+                                ),
+                                Gap(10.w),
+                                Expanded(
+                                  child: buildDetailItem(
+                                    "Basic Rate",
+                                    editableTextField(
+                                      data,
+                                      "Basic Rate",
+                                      (v) {
+                                        data["Basic Rate"] = v;
+                                        aluminumController
+                                            .debounceCalculation(data);
+                                      },
+                                      readOnly: true,
+                                      fieldControllers:
+                                          aluminumController.fieldControllers,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Gap(8.h),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: buildDetailItem(
+                                    "SQMtr",
+                                    editableTextField(
+                                      data,
+                                      "SQMtr",
+                                      (v) {},
+                                      readOnly: true,
+                                      fieldControllers:
+                                          aluminumController.fieldControllers,
+                                    ),
+                                  ),
+                                ),
+                                Gap(10.w),
+                                Expanded(
+                                  child: buildDetailItem(
+                                    "Amount",
+                                    editableTextField(
+                                      data,
+                                      "Amount",
+                                      (v) {},
+                                      readOnly: true,
+                                      fieldControllers:
+                                          aluminumController.fieldControllers,
+                                    ),
+                                  ),
+                                ),
+                                Gap(10.w),
+                                Expanded(
+                                  child: buildDetailItem(
+                                    "CGST",
+                                    editableTextField(
+                                      data,
+                                      "cgst",
+                                      (v) {},
+                                      readOnly: true,
+                                      fieldControllers:
+                                          aluminumController.fieldControllers,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Gap(8.h),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: buildDetailItem(
+                                    "SGST",
+                                    editableTextField(
+                                      data,
+                                      "sgst",
+                                      (v) {},
+                                      readOnly: true,
+                                      fieldControllers:
+                                          aluminumController.fieldControllers,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                          footer: SizedBox.shrink(),
+                          onDelete: () => Get.dialog(
+                            AlertDialog(
+                              title: Text("Delete Item"),
+                              content: Text(
+                                  "Are you sure you want to delete this item?"),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Get.back(),
+                                  child: Text("Cancel"),
+                                ),
+                                ElevatedButton(
+                                  onPressed: () {
+                                    aluminumController
+                                        .deleteCard(data["id"].toString());
+                                    Get.back();
+                                  },
+                                  child: Text("Delete"),
+                                ),
+                              ],
+                            ),
                           ),
+                          attachmentButton: SizedBox.shrink(),
                         );
                       }),
                     ],
@@ -943,161 +991,121 @@ class SummaryScreen extends StatelessWidget {
                           .map((entry) {
                         final index = entry.key;
                         final data = Map<String, dynamic>.from(entry.value);
-                        return Card(
-                          margin: EdgeInsets.symmetric(vertical: 10),
-                          elevation: 2,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Padding(
-                            padding: EdgeInsets.all(8),
-                            child: Column(
+                        final productName = data["Products"] ?? 'N/A';
+                        return _buildProductCard(
+                          index: index,
+                          data: data,
+                          productName: productName,
+                          headerActions: SizedBox.shrink(),
+                          detailRows: [
+                            Row(
                               children: [
-                                Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Expanded(
-                                      child: Text(
-                                        "${index + 1}. ${data["Products"] ?? 'N/A'}",
-                                        overflow: TextOverflow.ellipsis,
-                                        style: GoogleFonts.figtree(
-                                          fontSize: 18,
-                                          fontWeight: FontWeight.w600,
-                                          color: Colors.black87,
-                                        ),
-                                      ),
+                                Expanded(
+                                  child: buildDetailItem(
+                                    "Basic Rate",
+                                    editableTextField(
+                                      data,
+                                      "Basic Rate",
+                                      (v) {
+                                        data["Basic Rate"] = v;
+                                        screwController
+                                            .debounceCalculation(data);
+                                      },
+                                      readOnly: true,
+                                      fieldControllers:
+                                          screwController.fieldControllers,
                                     ),
-                                    Container(
-                                      padding: EdgeInsets.symmetric(
-                                          horizontal: 8, vertical: 4),
-                                      decoration: BoxDecoration(
-                                        color: Colors.blue[50],
-                                        borderRadius: BorderRadius.circular(6),
-                                      ),
-                                      child: Text(
-                                        "ID: ${data['id'] ?? 'N/A'}",
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          color: Colors.blue[700],
-                                          fontWeight: FontWeight.w500,
-                                        ),
-                                      ),
-                                    ),
-                                    IconButton(
-                                      icon: Icon(Icons.delete,
-                                          color: Colors.redAccent),
-                                      onPressed: () => Get.dialog(
-                                        AlertDialog(
-                                          title: Text("Delete Item"),
-                                          content: Text(
-                                              "Are you sure you want to delete this item?"),
-                                          actions: [
-                                            TextButton(
-                                              onPressed: () => Get.back(),
-                                              child: Text("Cancel"),
-                                            ),
-                                            ElevatedButton(
-                                              onPressed: () {
-                                                screwController.deleteCard(
-                                                    data["id"].toString());
-                                                Get.back();
-                                              },
-                                              child: Text("Delete"),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                  ],
+                                  ),
                                 ),
-                                Row(
-                                  children: [
-                                    Expanded(
-                                      child: buildDetailItem(
-                                        "Basic Rate",
-                                        editableTextField(
-                                          data,
-                                          "Basic Rate",
-                                          (v) {
-                                            data["Basic Rate"] = v;
-                                            screwController
-                                                .debounceCalculation(data);
-                                          },
-                                          readOnly: true,
-                                          fieldControllers:
-                                              screwController.fieldControllers,
-                                        ),
-                                      ),
+                                Gap(10.w),
+                                Expanded(
+                                  child: buildDetailItem(
+                                    "Nos",
+                                    editableTextField(
+                                      data,
+                                      "Nos",
+                                      (v) {
+                                        data["Nos"] = v;
+                                        screwController
+                                            .debounceCalculation(data);
+                                      },
+                                      fieldControllers:
+                                          screwController.fieldControllers,
                                     ),
-                                    Gap(5),
-                                    Expanded(
-                                      child: buildDetailItem(
-                                        "Nos",
-                                        editableTextField(
-                                          data,
-                                          "Nos",
-                                          (v) {
-                                            data["Nos"] = v;
-                                            screwController
-                                                .debounceCalculation(data);
-                                          },
-                                          fieldControllers:
-                                              screwController.fieldControllers,
-                                        ),
-                                      ),
-                                    ),
-                                    Gap(5),
-                                    Expanded(
-                                      child: buildDetailItem(
-                                        "Amount",
-                                        editableTextField(
-                                          data,
-                                          "Amount",
-                                          (v) {},
-                                          readOnly: true,
-                                          fieldControllers:
-                                              screwController.fieldControllers,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
+                                  ),
                                 ),
-                                Gap(16),
-                                Row(
-                                  children: [
-                                    Expanded(
-                                      child: buildDetailItem(
-                                        "CGST",
-                                        editableTextField(
-                                          data,
-                                          "Cgst",
-                                          (v) {},
-                                          readOnly: true,
-                                          fieldControllers:
-                                              screwController.fieldControllers,
-                                        ),
-                                      ),
+                                Gap(10.w),
+                                Expanded(
+                                  child: buildDetailItem(
+                                    "Amount",
+                                    editableTextField(
+                                      data,
+                                      "Amount",
+                                      (v) {},
+                                      readOnly: true,
+                                      fieldControllers:
+                                          screwController.fieldControllers,
                                     ),
-                                    Gap(10),
-                                    Expanded(
-                                      child: buildDetailItem(
-                                        "SGST",
-                                        editableTextField(
-                                          data,
-                                          "Sgst",
-                                          (v) {},
-                                          readOnly: true,
-                                          fieldControllers:
-                                              screwController.fieldControllers,
-                                        ),
-                                      ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Gap(8.h),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: buildDetailItem(
+                                    "CGST",
+                                    editableTextField(
+                                      data,
+                                      "Cgst",
+                                      (v) {},
+                                      readOnly: true,
+                                      fieldControllers:
+                                          screwController.fieldControllers,
                                     ),
-                                  ],
+                                  ),
+                                ),
+                                Gap(10.w),
+                                Expanded(
+                                  child: buildDetailItem(
+                                    "SGST",
+                                    editableTextField(
+                                      data,
+                                      "Sgst",
+                                      (v) {},
+                                      readOnly: true,
+                                      fieldControllers:
+                                          screwController.fieldControllers,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                          footer: SizedBox.shrink(),
+                          onDelete: () => Get.dialog(
+                            AlertDialog(
+                              title: Text("Delete Item"),
+                              content: Text(
+                                  "Are you sure you want to delete this item?"),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Get.back(),
+                                  child: Text("Cancel"),
+                                ),
+                                ElevatedButton(
+                                  onPressed: () {
+                                    screwController
+                                        .deleteCard(data["id"].toString());
+                                    Get.back();
+                                  },
+                                  child: Text("Delete"),
                                 ),
                               ],
                             ),
                           ),
+                          attachmentButton: SizedBox.shrink(),
                         );
                       }),
                     ],
@@ -1118,207 +1126,163 @@ class SummaryScreen extends StatelessWidget {
                           .map((entry) {
                         final index = entry.key;
                         final data = Map<String, dynamic>.from(entry.value);
-                        return Card(
-                          margin: EdgeInsets.symmetric(vertical: 10),
-                          elevation: 2,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Column(
-                            children: [
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Expanded(
-                                    child: Text(
-                                      "  ${index + 1}. ${data["Products"] ?? 'N/A'}",
-                                      overflow: TextOverflow.ellipsis,
-                                      style: GoogleFonts.figtree(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.w600,
-                                        color: Colors.black87,
-                                      ),
-                                    ),
+                        final productName = data["Products"] ?? 'N/A';
+                        return _buildProductCard(
+                          index: index,
+                          data: data,
+                          productName: productName,
+                          headerActions: SizedBox.shrink(),
+                          detailRows: [
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: buildDetailItem(
+                                    "UOM",
+                                    polyController.uomDropdown(data),
                                   ),
-                                  Container(
-                                    padding: EdgeInsets.symmetric(
-                                        horizontal: 8, vertical: 4),
-                                    decoration: BoxDecoration(
-                                      color: Colors.blue[50],
-                                      borderRadius: BorderRadius.circular(6),
-                                    ),
-                                    child: Text(
-                                      "ID: ${data['id'] ?? 'N/A'}",
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: Colors.blue[700],
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                    ),
-                                  ),
-                                  IconButton(
-                                    icon: Icon(Icons.delete,
-                                        color: Colors.redAccent),
-                                    onPressed: () => Get.dialog(
-                                      AlertDialog(
-                                        title: Text("Delete Item"),
-                                        content: Text(
-                                            "Are you sure you want to delete this item?"),
-                                        actions: [
-                                          TextButton(
-                                            onPressed: () => Get.back(),
-                                            child: Text("Cancel"),
-                                          ),
-                                          ElevatedButton(
-                                            onPressed: () {
-                                              polyController.deleteCard(
-                                                  data["id"].toString());
-                                              Get.back();
-                                            },
-                                            child: Text("Delete"),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              Padding(
-                                padding: EdgeInsets.all(8),
-                                child: Column(
-                                  children: [
-                                    Row(
-                                      children: [
-                                        Expanded(
-                                          child: buildDetailItem(
-                                            "UOM",
-                                            polyController.uomDropdown(data),
-                                          ),
-                                        ),
-                                        Gap(10),
-                                        Expanded(
-                                          child: buildDetailItem(
-                                            "Length",
-                                            editableTextField(
-                                              data,
-                                              "Length",
-                                              (v) {
-                                                data["Length"] = v;
-                                                polyController
-                                                    .debounceCalculation(data);
-                                              },
-                                              fieldControllers: polyController
-                                                  .fieldControllers,
-                                            ),
-                                          ),
-                                        ),
-                                        Gap(10),
-                                        Expanded(
-                                          child: buildDetailItem(
-                                            "Nos",
-                                            editableTextField(
-                                              data,
-                                              "Nos",
-                                              (v) {
-                                                data["Nos"] = v;
-                                                polyController
-                                                    .debounceCalculation(data);
-                                              },
-                                              fieldControllers: polyController
-                                                  .fieldControllers,
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    Gap(5),
-                                    Row(
-                                      children: [
-                                        Expanded(
-                                          child: buildDetailItem(
-                                            "Basic Rate",
-                                            editableTextField(
-                                              data,
-                                              "Basic Rate",
-                                              (v) {
-                                                data["Basic Rate"] = v;
-                                                polyController
-                                                    .debounceCalculation(data);
-                                              },
-                                              readOnly: true,
-                                              fieldControllers: polyController
-                                                  .fieldControllers,
-                                            ),
-                                          ),
-                                        ),
-                                        Gap(10),
-                                        Expanded(
-                                          child: buildDetailItem(
-                                            "SQMtr",
-                                            editableTextField(
-                                              data,
-                                              "SQMtr",
-                                              (v) {},
-                                              readOnly: true,
-                                              fieldControllers: polyController
-                                                  .fieldControllers,
-                                            ),
-                                          ),
-                                        ),
-                                        Gap(10),
-                                        Expanded(
-                                          child: buildDetailItem(
-                                            "Amount",
-                                            editableTextField(
-                                              data,
-                                              "Amount",
-                                              (v) {},
-                                              readOnly: true,
-                                              fieldControllers: polyController
-                                                  .fieldControllers,
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    Gap(5),
-                                    Row(
-                                      children: [
-                                        Expanded(
-                                          child: buildDetailItem(
-                                            "CGST",
-                                            editableTextField(
-                                              data,
-                                              "cgst",
-                                              (v) {},
-                                              readOnly: true,
-                                              fieldControllers: polyController
-                                                  .fieldControllers,
-                                            ),
-                                          ),
-                                        ),
-                                        Gap(10),
-                                        Expanded(
-                                          child: buildDetailItem(
-                                            "SGST",
-                                            editableTextField(
-                                              data,
-                                              "sgst",
-                                              (v) {},
-                                              readOnly: true,
-                                              fieldControllers: polyController
-                                                  .fieldControllers,
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
                                 ),
-                              ),
-                            ],
+                                Gap(10.w),
+                                Expanded(
+                                  child: buildDetailItem(
+                                    "Length",
+                                    editableTextField(
+                                      data,
+                                      "Length",
+                                      (v) {
+                                        data["Length"] = v;
+                                        polyController
+                                            .debounceCalculation(data);
+                                      },
+                                      fieldControllers:
+                                          polyController.fieldControllers,
+                                    ),
+                                  ),
+                                ),
+                                Gap(10.w),
+                                Expanded(
+                                  child: buildDetailItem(
+                                    "Nos",
+                                    editableTextField(
+                                      data,
+                                      "Nos",
+                                      (v) {
+                                        data["Nos"] = v;
+                                        polyController
+                                            .debounceCalculation(data);
+                                      },
+                                      fieldControllers:
+                                          polyController.fieldControllers,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Gap(8.h),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: buildDetailItem(
+                                    "Basic Rate",
+                                    editableTextField(
+                                      data,
+                                      "Basic Rate",
+                                      (v) {
+                                        data["Basic Rate"] = v;
+                                        polyController
+                                            .debounceCalculation(data);
+                                      },
+                                      readOnly: true,
+                                      fieldControllers:
+                                          polyController.fieldControllers,
+                                    ),
+                                  ),
+                                ),
+                                Gap(10.w),
+                                Expanded(
+                                  child: buildDetailItem(
+                                    "SQMtr",
+                                    editableTextField(
+                                      data,
+                                      "SQMtr",
+                                      (v) {},
+                                      readOnly: true,
+                                      fieldControllers:
+                                          polyController.fieldControllers,
+                                    ),
+                                  ),
+                                ),
+                                Gap(10.w),
+                                Expanded(
+                                  child: buildDetailItem(
+                                    "Amount",
+                                    editableTextField(
+                                      data,
+                                      "Amount",
+                                      (v) {},
+                                      readOnly: true,
+                                      fieldControllers:
+                                          polyController.fieldControllers,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Gap(8.h),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: buildDetailItem(
+                                    "CGST",
+                                    editableTextField(
+                                      data,
+                                      "cgst",
+                                      (v) {},
+                                      readOnly: true,
+                                      fieldControllers:
+                                          polyController.fieldControllers,
+                                    ),
+                                  ),
+                                ),
+                                Gap(10.w),
+                                Expanded(
+                                  child: buildDetailItem(
+                                    "SGST",
+                                    editableTextField(
+                                      data,
+                                      "sgst",
+                                      (v) {},
+                                      readOnly: true,
+                                      fieldControllers:
+                                          polyController.fieldControllers,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                          footer: SizedBox.shrink(),
+                          onDelete: () => Get.dialog(
+                            AlertDialog(
+                              title: Text("Delete Item"),
+                              content: Text(
+                                  "Are you sure you want to delete this item?"),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Get.back(),
+                                  child: Text("Cancel"),
+                                ),
+                                ElevatedButton(
+                                  onPressed: () {
+                                    polyController
+                                        .deleteCard(data["id"].toString());
+                                    Get.back();
+                                  },
+                                  child: Text("Delete"),
+                                ),
+                              ],
+                            ),
                           ),
+                          attachmentButton: SizedBox.shrink(),
                         );
                       }),
                     ],
@@ -1339,207 +1303,153 @@ class SummaryScreen extends StatelessWidget {
                           .map((entry) {
                         final index = entry.key;
                         final data = Map<String, dynamic>.from(entry.value);
-                        return Card(
-                          margin: EdgeInsets.symmetric(vertical: 10),
-                          elevation: 2,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Column(
-                            children: [
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Expanded(
-                                    child: Text(
-                                      "${index + 1}. ${data["Products"] ?? 'N/A'}",
-                                      overflow: TextOverflow.ellipsis,
-                                      style: GoogleFonts.figtree(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.w600,
-                                        color: Colors.black87,
-                                      ),
-                                    ),
+                        final productName = data["Products"] ?? 'N/A';
+                        return _buildProductCard(
+                          index: index,
+                          data: data,
+                          productName: productName,
+                          headerActions: SizedBox.shrink(),
+                          detailRows: [
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: buildDetailItem(
+                                    "UOM",
+                                    upvcController.uomDropdown(data),
                                   ),
-                                  Container(
-                                    padding: EdgeInsets.symmetric(
-                                        horizontal: 8, vertical: 4),
-                                    decoration: BoxDecoration(
-                                      color: Colors.blue[50],
-                                      borderRadius: BorderRadius.circular(6),
-                                    ),
-                                    child: Text(
-                                      "ID: ${data['id'] ?? 'N/A'}",
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: Colors.blue[700],
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                    ),
-                                  ),
-                                  IconButton(
-                                    icon: Icon(Icons.delete,
-                                        color: Colors.redAccent),
-                                    onPressed: () => Get.dialog(
-                                      AlertDialog(
-                                        title: Text("Delete Item"),
-                                        content: Text(
-                                            "Are you sure you want to delete this item?"),
-                                        actions: [
-                                          TextButton(
-                                            onPressed: () => Get.back(),
-                                            child: Text("Cancel"),
-                                          ),
-                                          ElevatedButton(
-                                            onPressed: () {
-                                              upvcController.deleteCard(
-                                                  data["id"].toString());
-                                              Get.back();
-                                            },
-                                            child: Text("Delete"),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              Padding(
-                                padding: EdgeInsets.all(8),
-                                child: Column(
-                                  children: [
-                                    Row(
-                                      children: [
-                                        Expanded(
-                                          child: buildDetailItem(
-                                            "UOM",
-                                            upvcController.uomDropdown(data),
-                                          ),
-                                        ),
-                                        Gap(10),
-                                        Expanded(
-                                          child: buildDetailItem(
-                                            "Length",
-                                            editableTextField(
-                                              data,
-                                              "Length",
-                                              (v) {
-                                                data["Length"] = v;
-                                                upvcController
-                                                    .debounceCalculation(data);
-                                              },
-                                              fieldControllers: upvcController
-                                                  .fieldControllers,
-                                            ),
-                                          ),
-                                        ),
-                                        Gap(10),
-                                        Expanded(
-                                          child: buildDetailItem(
-                                            "Nos",
-                                            editableTextField(
-                                              data,
-                                              "Nos",
-                                              (v) {
-                                                data["Nos"] = v;
-                                                upvcController
-                                                    .debounceCalculation(data);
-                                              },
-                                              fieldControllers: upvcController
-                                                  .fieldControllers,
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    Gap(5),
-                                    Row(
-                                      children: [
-                                        Expanded(
-                                          child: buildDetailItem(
-                                            "Basic Rate",
-                                            editableTextField(
-                                              data,
-                                              "Basic Rate",
-                                              (v) {
-                                                data["Basic Rate"] = v;
-                                                upvcController
-                                                    .debounceCalculation(data);
-                                              },
-                                              readOnly: true,
-                                              fieldControllers: upvcController
-                                                  .fieldControllers,
-                                            ),
-                                          ),
-                                        ),
-                                        Gap(10),
-                                        Expanded(
-                                          child: buildDetailItem(
-                                            "SQMtr",
-                                            editableTextField(
-                                              data,
-                                              "Sq.Mtr",
-                                              (v) {},
-                                              readOnly: true,
-                                              fieldControllers: upvcController
-                                                  .fieldControllers,
-                                            ),
-                                          ),
-                                        ),
-                                        Gap(10),
-                                        Expanded(
-                                          child: buildDetailItem(
-                                            "Amount",
-                                            editableTextField(
-                                              data,
-                                              "Amount",
-                                              (v) {},
-                                              readOnly: true,
-                                              fieldControllers: upvcController
-                                                  .fieldControllers,
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    Gap(5),
-                                    Row(
-                                      children: [
-                                        Expanded(
-                                          child: buildDetailItem(
-                                            "CGST",
-                                            editableTextField(
-                                              data,
-                                              "cgst",
-                                              (v) {},
-                                              readOnly: true,
-                                              fieldControllers: upvcController
-                                                  .fieldControllers,
-                                            ),
-                                          ),
-                                        ),
-                                        Gap(10),
-                                        Expanded(
-                                          child: buildDetailItem(
-                                            "SGST",
-                                            editableTextField(
-                                              data,
-                                              "sgst",
-                                              (v) {},
-                                              readOnly: true,
-                                              fieldControllers: upvcController
-                                                  .fieldControllers,
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
                                 ),
-                              ),
-                            ],
+                                Gap(10.w),
+                                Expanded(
+                                  child: buildDetailItem(
+                                    "Length",
+                                    upvcController.lengthDropdown(data),
+                                  ),
+                                ),
+                                Gap(10.w),
+                                Expanded(
+                                  child: buildDetailItem(
+                                    "Nos",
+                                    editableTextField(
+                                      data,
+                                      "Nos",
+                                      (v) {
+                                        data["Nos"] = v;
+                                        upvcController
+                                            .debounceCalculation(data);
+                                      },
+                                      fieldControllers:
+                                          upvcController.fieldControllers,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Gap(8.h),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: buildDetailItem(
+                                    "Basic Rate",
+                                    editableTextField(
+                                      data,
+                                      "Basic Rate",
+                                      (v) {
+                                        data["Basic Rate"] = v;
+                                        upvcController
+                                            .debounceCalculation(data);
+                                      },
+                                      readOnly: true,
+                                      fieldControllers:
+                                          upvcController.fieldControllers,
+                                    ),
+                                  ),
+                                ),
+                                Gap(10.w),
+                                Expanded(
+                                  child: buildDetailItem(
+                                    "SQMtr",
+                                    editableTextField(
+                                      data,
+                                      "Sq.Mtr",
+                                      (v) {},
+                                      readOnly: true,
+                                      fieldControllers:
+                                          upvcController.fieldControllers,
+                                    ),
+                                  ),
+                                ),
+                                Gap(10.w),
+                                Expanded(
+                                  child: buildDetailItem(
+                                    "Amount",
+                                    editableTextField(
+                                      data,
+                                      "Amount",
+                                      (v) {},
+                                      readOnly: true,
+                                      fieldControllers:
+                                          upvcController.fieldControllers,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Gap(8.h),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: buildDetailItem(
+                                    "CGST",
+                                    editableTextField(
+                                      data,
+                                      "cgst",
+                                      (v) {},
+                                      readOnly: true,
+                                      fieldControllers:
+                                          upvcController.fieldControllers,
+                                    ),
+                                  ),
+                                ),
+                                Gap(10.w),
+                                Expanded(
+                                  child: buildDetailItem(
+                                    "SGST",
+                                    editableTextField(
+                                      data,
+                                      "sgst",
+                                      (v) {},
+                                      readOnly: true,
+                                      fieldControllers:
+                                          upvcController.fieldControllers,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                          footer: SizedBox.shrink(),
+                          onDelete: () => Get.dialog(
+                            AlertDialog(
+                              title: Text("Delete Item"),
+                              content: Text(
+                                  "Are you sure you want to delete this item?"),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Get.back(),
+                                  child: Text("Cancel"),
+                                ),
+                                ElevatedButton(
+                                  onPressed: () {
+                                    upvcController
+                                        .deleteCard(data["id"].toString());
+                                    Get.back();
+                                  },
+                                  child: Text("Delete"),
+                                ),
+                              ],
+                            ),
                           ),
+                          attachmentButton: SizedBox.shrink(),
                         );
                       }),
                     ],
@@ -1560,233 +1470,180 @@ class SummaryScreen extends StatelessWidget {
                           .map((entry) {
                         final index = entry.key;
                         final data = Map<String, dynamic>.from(entry.value);
-                        return Card(
-                          margin: EdgeInsets.symmetric(vertical: 10),
-                          elevation: 2,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Column(
-                            children: [
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Expanded(
-                                    child: Text(
-                                      "  ${index + 1}. ${data["Products"] ?? 'N/A'}",
-                                      overflow: TextOverflow.ellipsis,
-                                      style: GoogleFonts.figtree(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.w600,
-                                        color: Colors.black87,
-                                      ),
-                                    ),
+                        final productName = data["Products"] ?? 'N/A';
+                        return _buildProductCard(
+                          index: index,
+                          data: data,
+                          productName: productName,
+                          headerActions: SizedBox.shrink(),
+                          detailRows: [
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: buildDetailItem(
+                                    "UOM",
+                                    ironSteelController.uomDropdown(data),
                                   ),
-                                  Container(
-                                    padding: EdgeInsets.symmetric(
-                                        horizontal: 8, vertical: 4),
-                                    decoration: BoxDecoration(
-                                      color: Colors.blue[50],
-                                      borderRadius: BorderRadius.circular(6),
-                                    ),
-                                    child: Text(
-                                      "ID: ${data['id'] ?? 'N/A'}",
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: Colors.blue[700],
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                    ),
-                                  ),
-                                  IconButton(
-                                    icon: Icon(Icons.delete,
-                                        color: Colors.redAccent),
-                                    onPressed: () => Get.dialog(
-                                      AlertDialog(
-                                        title: Text("Delete Item"),
-                                        content: Text(
-                                            "Are you sure you want to delete this item?"),
-                                        actions: [
-                                          TextButton(
-                                            onPressed: () => Get.back(),
-                                            child: Text("Cancel"),
-                                          ),
-                                          ElevatedButton(
-                                            onPressed: () {
-                                              ironSteelController.deleteCard(
-                                                  data["id"].toString());
-                                              Get.back();
-                                            },
-                                            child: Text("Delete"),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              Padding(
-                                padding: EdgeInsets.all(8),
-                                child: Column(
-                                  children: [
-                                    Row(
-                                      children: [
-                                        Expanded(
-                                          child: buildDetailItem(
-                                            "UOM",
-                                            ironSteelController
-                                                .uomDropdown(data),
-                                          ),
-                                        ),
-                                        Gap(10),
-                                        Expanded(
-                                          child: buildDetailItem(
-                                            "Length",
-                                            editableTextField(
-                                              data,
-                                              "Length",
-                                              (v) {
-                                                data["Length"] = v;
-                                                ironSteelController
-                                                    .debounceCalculation(data);
-                                              },
-                                              fieldControllers:
-                                                  ironSteelController
-                                                      .fieldControllers,
-                                            ),
-                                          ),
-                                        ),
-                                        Gap(10),
-                                        Expanded(
-                                          child: buildDetailItem(
-                                            "Crimp",
-                                            editableTextField(
-                                              data,
-                                              "height",
-                                              (v) {
-                                                data["height"] = v;
-                                                ironSteelController
-                                                    .debounceCalculation(data);
-                                              },
-                                              fieldControllers:
-                                                  ironSteelController
-                                                      .fieldControllers,
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    Gap(5),
-                                    Row(
-                                      children: [
-                                        Expanded(
-                                          child: buildDetailItem(
-                                            "Nos",
-                                            editableTextField(
-                                              data,
-                                              "Nos",
-                                              (v) {
-                                                data["Nos"] = v;
-                                                ironSteelController
-                                                    .debounceCalculation(data);
-                                              },
-                                              fieldControllers:
-                                                  ironSteelController
-                                                      .fieldControllers,
-                                            ),
-                                          ),
-                                        ),
-                                        Gap(10),
-                                        Expanded(
-                                          child: buildDetailItem(
-                                            "Basic Rate",
-                                            editableTextField(
-                                              data,
-                                              "Basic Rate",
-                                              (v) {
-                                                data["Basic Rate"] = v;
-                                                ironSteelController
-                                                    .debounceCalculation(data);
-                                              },
-                                              readOnly: true,
-                                              fieldControllers:
-                                                  ironSteelController
-                                                      .fieldControllers,
-                                            ),
-                                          ),
-                                        ),
-                                        Gap(10),
-                                        Expanded(
-                                          child: buildDetailItem(
-                                            "SQMtr",
-                                            editableTextField(
-                                              data,
-                                              "SQMtr",
-                                              (v) {},
-                                              readOnly: true,
-                                              fieldControllers:
-                                                  ironSteelController
-                                                      .fieldControllers,
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    Gap(5),
-                                    Row(
-                                      children: [
-                                        Expanded(
-                                          child: buildDetailItem(
-                                            "Amount",
-                                            editableTextField(
-                                              data,
-                                              "Amount",
-                                              (v) {},
-                                              readOnly: true,
-                                              fieldControllers:
-                                                  ironSteelController
-                                                      .fieldControllers,
-                                            ),
-                                          ),
-                                        ),
-                                        Gap(10),
-                                        Expanded(
-                                          child: buildDetailItem(
-                                            "CGST",
-                                            editableTextField(
-                                              data,
-                                              "Cgst",
-                                              (v) {},
-                                              readOnly: true,
-                                              fieldControllers:
-                                                  ironSteelController
-                                                      .fieldControllers,
-                                            ),
-                                          ),
-                                        ),
-                                        Gap(10),
-                                        Expanded(
-                                          child: buildDetailItem(
-                                            "SGST",
-                                            editableTextField(
-                                              data,
-                                              "Sgst",
-                                              (v) {},
-                                              readOnly: true,
-                                              fieldControllers:
-                                                  ironSteelController
-                                                      .fieldControllers,
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
                                 ),
-                              ),
-                            ],
+                                Gap(10.w),
+                                Expanded(
+                                  child: buildDetailItem(
+                                    "Length",
+                                    editableTextField(
+                                      data,
+                                      "Length",
+                                      (v) {
+                                        data["Length"] = v;
+                                        ironSteelController
+                                            .debounceCalculation(data);
+                                      },
+                                      fieldControllers:
+                                          ironSteelController.fieldControllers,
+                                    ),
+                                  ),
+                                ),
+                                Gap(10.w),
+                                Expanded(
+                                  child: buildDetailItem(
+                                    "Crimp",
+                                    editableTextField(
+                                      data,
+                                      "height",
+                                      (v) {
+                                        data["height"] = v;
+                                        ironSteelController
+                                            .debounceCalculation(data);
+                                      },
+                                      fieldControllers:
+                                          ironSteelController.fieldControllers,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Gap(8.h),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: buildDetailItem(
+                                    "Nos",
+                                    editableTextField(
+                                      data,
+                                      "Nos",
+                                      (v) {
+                                        data["Nos"] = v;
+                                        ironSteelController
+                                            .debounceCalculation(data);
+                                      },
+                                      fieldControllers:
+                                          ironSteelController.fieldControllers,
+                                    ),
+                                  ),
+                                ),
+                                Gap(10.w),
+                                Expanded(
+                                  child: buildDetailItem(
+                                    "Basic Rate",
+                                    editableTextField(
+                                      data,
+                                      "Basic Rate",
+                                      (v) {
+                                        data["Basic Rate"] = v;
+                                        ironSteelController
+                                            .debounceCalculation(data);
+                                      },
+                                      readOnly: true,
+                                      fieldControllers:
+                                          ironSteelController.fieldControllers,
+                                    ),
+                                  ),
+                                ),
+                                Gap(10.w),
+                                Expanded(
+                                  child: buildDetailItem(
+                                    "SQMtr",
+                                    editableTextField(
+                                      data,
+                                      "SQMtr",
+                                      (v) {},
+                                      readOnly: true,
+                                      fieldControllers:
+                                          ironSteelController.fieldControllers,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Gap(8.h),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: buildDetailItem(
+                                    "Amount",
+                                    editableTextField(
+                                      data,
+                                      "Amount",
+                                      (v) {},
+                                      readOnly: true,
+                                      fieldControllers:
+                                          ironSteelController.fieldControllers,
+                                    ),
+                                  ),
+                                ),
+                                Gap(10.w),
+                                Expanded(
+                                  child: buildDetailItem(
+                                    "CGST",
+                                    editableTextField(
+                                      data,
+                                      "Cgst",
+                                      (v) {},
+                                      readOnly: true,
+                                      fieldControllers:
+                                          ironSteelController.fieldControllers,
+                                    ),
+                                  ),
+                                ),
+                                Gap(10.w),
+                                Expanded(
+                                  child: buildDetailItem(
+                                    "SGST",
+                                    editableTextField(
+                                      data,
+                                      "Sgst",
+                                      (v) {},
+                                      readOnly: true,
+                                      fieldControllers:
+                                          ironSteelController.fieldControllers,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                          footer: SizedBox.shrink(),
+                          onDelete: () => Get.dialog(
+                            AlertDialog(
+                              title: Text("Delete Item"),
+                              content: Text(
+                                  "Are you sure you want to delete this item?"),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Get.back(),
+                                  child: Text("Cancel"),
+                                ),
+                                ElevatedButton(
+                                  onPressed: () {
+                                    ironSteelController
+                                        .deleteCard(data["id"].toString());
+                                    Get.back();
+                                  },
+                                  child: Text("Delete"),
+                                ),
+                              ],
+                            ),
                           ),
+                          attachmentButton: SizedBox.shrink(),
                         );
                       }),
                     ],
@@ -1807,233 +1664,177 @@ class SummaryScreen extends StatelessWidget {
                           .map((entry) {
                         final index = entry.key;
                         final data = Map<String, dynamic>.from(entry.value);
-                        return Card(
-                          margin: EdgeInsets.symmetric(vertical: 10),
-                          elevation: 2,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.start,
-                            children: [
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Expanded(
-                                    child: Text(
-                                      "  ${index + 1}. ${data["Products"] ?? 'N/A'}",
-                                      overflow: TextOverflow.ellipsis,
-                                      style: GoogleFonts.figtree(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.w600,
-                                        color: Colors.black87,
-                                      ),
-                                    ),
+                        final productName = data["Products"] ?? 'N/A';
+                        return _buildProductCard(
+                          index: index,
+                          data: data,
+                          productName: productName,
+                          headerActions: SizedBox.shrink(),
+                          detailRows: [
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: buildDetailItem(
+                                    "UOM",
+                                    cutToLengthController.uomDropdown(data),
                                   ),
-                                  Container(
-                                    padding: EdgeInsets.symmetric(
-                                        horizontal: 8, vertical: 4),
-                                    decoration: BoxDecoration(
-                                      color: Colors.blue[50],
-                                      borderRadius: BorderRadius.circular(6),
-                                    ),
-                                    child: Text(
-                                      "ID: ${data['id'] ?? 'N/A'}",
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: Colors.blue[700],
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                    ),
-                                  ),
-                                  IconButton(
-                                    icon: Icon(Icons.delete,
-                                        color: Colors.redAccent),
-                                    onPressed: () => Get.dialog(
-                                      AlertDialog(
-                                        title: Text("Delete Item"),
-                                        content: Text(
-                                            "Are you sure you want to delete this item?"),
-                                        actions: [
-                                          TextButton(
-                                            onPressed: () => Get.back(),
-                                            child: Text("Cancel"),
-                                          ),
-                                          ElevatedButton(
-                                            onPressed: () {
-                                              cutToLengthController.deleteCard(
-                                                  data["id"].toString());
-                                              Get.back();
-                                            },
-                                            child: Text("Delete"),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              Padding(
-                                padding: EdgeInsets.all(8),
-                                child: Column(
-                                  children: [
-                                    Row(
-                                      children: [
-                                        Expanded(
-                                          child: buildDetailItem(
-                                            "UOM",
-                                            cutToLengthController
-                                                .uomDropdown(data),
-                                          ),
-                                        ),
-                                        Gap(10),
-                                        Expanded(
-                                          child: buildDetailItem(
-                                            "Billing Option",
-                                            cutToLengthController
-                                                .billingDropdown(data),
-                                          ),
-                                        ),
-                                        Gap(10),
-                                        Expanded(
-                                          child: buildDetailItem(
-                                            "Length",
-                                            editableTextField(
-                                              data,
-                                              "Length",
-                                              (v) {
-                                                data["Length"] = v;
-                                                cutToLengthController
-                                                    .debounceCalculation(data);
-                                              },
-                                              fieldControllers:
-                                                  cutToLengthController
-                                                      .fieldControllers,
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    Gap(5),
-                                    Row(
-                                      children: [
-                                        Expanded(
-                                          child: buildDetailItem(
-                                            "Nos",
-                                            editableTextField(
-                                              data,
-                                              "Nos",
-                                              (v) {
-                                                data["Nos"] = v;
-                                                cutToLengthController
-                                                    .debounceCalculation(data);
-                                              },
-                                              fieldControllers:
-                                                  cutToLengthController
-                                                      .fieldControllers,
-                                            ),
-                                          ),
-                                        ),
-                                        Gap(10),
-                                        Expanded(
-                                          child: buildDetailItem(
-                                            "Basic Rate",
-                                            editableTextField(
-                                              data,
-                                              "Basic Rate",
-                                              (v) {
-                                                data["Basic Rate"] = v;
-                                                cutToLengthController
-                                                    .debounceCalculation(data);
-                                              },
-                                              readOnly: true,
-                                              fieldControllers:
-                                                  cutToLengthController
-                                                      .fieldControllers,
-                                            ),
-                                          ),
-                                        ),
-                                        Gap(10),
-                                        Expanded(
-                                          child: buildDetailItem(
-                                            "Qty",
-                                            editableTextField(
-                                              data,
-                                              "qty",
-                                              (v) {},
-                                              readOnly: true,
-                                              fieldControllers:
-                                                  cutToLengthController
-                                                      .fieldControllers,
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    Gap(5),
-                                    Row(
-                                      children: [
-                                        Expanded(
-                                          child: buildDetailItem(
-                                            "Amount",
-                                            editableTextField(
-                                              data,
-                                              "Amount",
-                                              (v) {},
-                                              readOnly: true,
-                                              fieldControllers:
-                                                  cutToLengthController
-                                                      .fieldControllers,
-                                            ),
-                                          ),
-                                        ),
-                                        Gap(10),
-                                        Expanded(
-                                          child: buildDetailItem(
-                                            "CGST",
-                                            editableTextField(
-                                              data,
-                                              "cgst",
-                                              (v) {},
-                                              readOnly: true,
-                                              fieldControllers:
-                                                  cutToLengthController
-                                                      .fieldControllers,
-                                            ),
-                                          ),
-                                        ),
-                                        Gap(10),
-                                        Expanded(
-                                          child: buildDetailItem(
-                                            "SGST",
-                                            editableTextField(
-                                              data,
-                                              "sgst",
-                                              (v) {},
-                                              readOnly: true,
-                                              fieldControllers:
-                                                  cutToLengthController
-                                                      .fieldControllers,
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    // Gap(5),
-                                    Align(
-                                      alignment: Alignment.centerLeft,
-                                      child: buildDetailItem(
-                                        "",
-                                        cutToLengthController
-                                            .buildBaseProductSearchField(data),
-                                      ),
-                                    ),
-                                  ],
                                 ),
-                              ),
-                            ],
+                                Gap(10.w),
+                                Expanded(
+                                  child: buildDetailItem(
+                                    "Billing Option",
+                                    cutToLengthController.billingDropdown(data),
+                                  ),
+                                ),
+                                Gap(10.w),
+                                Expanded(
+                                  child: buildDetailItem(
+                                    "Length",
+                                    editableTextField(
+                                      data,
+                                      "Length",
+                                      (v) {
+                                        data["Length"] = v;
+                                        cutToLengthController
+                                            .debounceCalculation(data);
+                                      },
+                                      fieldControllers: cutToLengthController
+                                          .fieldControllers,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Gap(8.h),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: buildDetailItem(
+                                    "Nos",
+                                    editableTextField(
+                                      data,
+                                      "Nos",
+                                      (v) {
+                                        data["Nos"] = v;
+                                        cutToLengthController
+                                            .debounceCalculation(data);
+                                      },
+                                      fieldControllers: cutToLengthController
+                                          .fieldControllers,
+                                    ),
+                                  ),
+                                ),
+                                Gap(10.w),
+                                Expanded(
+                                  child: buildDetailItem(
+                                    "Basic Rate",
+                                    editableTextField(
+                                      data,
+                                      "Basic Rate",
+                                      (v) {
+                                        data["Basic Rate"] = v;
+                                        cutToLengthController
+                                            .debounceCalculation(data);
+                                      },
+                                      readOnly: true,
+                                      fieldControllers: cutToLengthController
+                                          .fieldControllers,
+                                    ),
+                                  ),
+                                ),
+                                Gap(10.w),
+                                Expanded(
+                                  child: buildDetailItem(
+                                    "Qty",
+                                    editableTextField(
+                                      data,
+                                      "qty",
+                                      (v) {},
+                                      readOnly: true,
+                                      fieldControllers: cutToLengthController
+                                          .fieldControllers,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Gap(8.h),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: buildDetailItem(
+                                    "Amount",
+                                    editableTextField(
+                                      data,
+                                      "Amount",
+                                      (v) {},
+                                      readOnly: true,
+                                      fieldControllers: cutToLengthController
+                                          .fieldControllers,
+                                    ),
+                                  ),
+                                ),
+                                Gap(10.w),
+                                Expanded(
+                                  child: buildDetailItem(
+                                    "CGST",
+                                    editableTextField(
+                                      data,
+                                      "cgst",
+                                      (v) {},
+                                      readOnly: true,
+                                      fieldControllers: cutToLengthController
+                                          .fieldControllers,
+                                    ),
+                                  ),
+                                ),
+                                Gap(10.w),
+                                Expanded(
+                                  child: buildDetailItem(
+                                    "SGST",
+                                    editableTextField(
+                                      data,
+                                      "sgst",
+                                      (v) {},
+                                      readOnly: true,
+                                      fieldControllers: cutToLengthController
+                                          .fieldControllers,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                          footer: Align(
+                            alignment: Alignment.centerLeft,
+                            child: buildDetailItem(
+                              "",
+                              cutToLengthController
+                                  .buildBaseProductSearchField(data),
+                            ),
                           ),
+                          onDelete: () => Get.dialog(
+                            AlertDialog(
+                              title: Text("Delete Item"),
+                              content: Text(
+                                  "Are you sure you want to delete this item?"),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Get.back(),
+                                  child: Text("Cancel"),
+                                ),
+                                ElevatedButton(
+                                  onPressed: () {
+                                    cutToLengthController
+                                        .deleteCard(data["id"].toString());
+                                    Get.back();
+                                  },
+                                  child: Text("Delete"),
+                                ),
+                              ],
+                            ),
+                          ),
+                          attachmentButton: SizedBox.shrink(),
                         );
                       }),
                     ],
@@ -2055,225 +1856,171 @@ class SummaryScreen extends StatelessWidget {
                           .map((entry) {
                         final index = entry.key;
                         final data = Map<String, dynamic>.from(entry.value);
-                        return Card(
-                          margin: EdgeInsets.symmetric(vertical: 10),
-                          elevation: 2,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Column(
-                            children: [
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Expanded(
-                                    child: Text(
-                                      "  ${index + 1}. ${data["Products"] ?? 'N/A'}",
-                                      overflow: TextOverflow.ellipsis,
-                                      style: GoogleFonts.figtree(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.w600,
-                                        color: Colors.black87,
-                                      ),
-                                    ),
+                        final productName = data["Products"] ?? 'N/A';
+                        return _buildProductCard(
+                          index: index,
+                          data: data,
+                          productName: productName,
+                          headerActions: SizedBox.shrink(),
+                          detailRows: [
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: buildDetailItem(
+                                    "UOM",
+                                    deckingSheetsController.uomDropdown(data),
                                   ),
-                                  Container(
-                                    padding: EdgeInsets.symmetric(
-                                        horizontal: 8, vertical: 4),
-                                    decoration: BoxDecoration(
-                                      color: Colors.blue[50],
-                                      borderRadius: BorderRadius.circular(6),
-                                    ),
-                                    child: Text(
-                                      "ID: ${data['id'] ?? 'N/A'}",
-                                      overflow: TextOverflow.ellipsis,
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: Colors.blue[700],
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                    ),
-                                  ),
-                                  IconButton(
-                                    icon: Icon(Icons.delete,
-                                        color: Colors.redAccent),
-                                    onPressed: () => Get.dialog(
-                                      AlertDialog(
-                                        title: Text("Delete Item"),
-                                        content: Text(
-                                            "Are you sure you want to delete this item?"),
-                                        actions: [
-                                          TextButton(
-                                            onPressed: () => Get.back(),
-                                            child: Text("Cancel"),
-                                          ),
-                                          ElevatedButton(
-                                            onPressed: () {
-                                              deckingSheetsController
-                                                  .deleteCard(
-                                                      data["id"].toString());
-                                              Get.back();
-                                            },
-                                            child: Text("Delete"),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              Padding(
-                                padding: EdgeInsets.all(8),
-                                child: Column(
-                                  children: [
-                                    Row(
-                                      children: [
-                                        Expanded(
-                                          child: buildDetailItem(
-                                            "UOM",
-                                            deckingSheetsController
-                                                .uomDropdown(data),
-                                          ),
-                                        ),
-                                        Gap(10),
-                                        Expanded(
-                                          child: buildDetailItem(
-                                            "Billing Option",
-                                            deckingSheetsController
-                                                .billingDropdown(data),
-                                          ),
-                                        ),
-                                        Gap(10),
-                                        Expanded(
-                                          child: buildDetailItem(
-                                            "Length",
-                                            editableTextField(
-                                              data,
-                                              "Length",
-                                              (v) {
-                                                data["Length"] = v;
-                                                deckingSheetsController
-                                                    .debounceCalculation(data);
-                                              },
-                                              fieldControllers:
-                                                  deckingSheetsController
-                                                      .fieldControllers,
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    Gap(5),
-                                    Row(
-                                      children: [
-                                        Expanded(
-                                          child: buildDetailItem(
-                                            "Nos",
-                                            editableTextField(
-                                              data,
-                                              "Nos",
-                                              (v) {
-                                                data["Nos"] = v;
-                                                deckingSheetsController
-                                                    .debounceCalculation(data);
-                                              },
-                                              fieldControllers:
-                                                  deckingSheetsController
-                                                      .fieldControllers,
-                                            ),
-                                          ),
-                                        ),
-                                        Gap(10),
-                                        Expanded(
-                                          child: buildDetailItem(
-                                            "Basic Rate",
-                                            editableTextField(
-                                              data,
-                                              "Basic Rate",
-                                              (v) {
-                                                data["Basic Rate"] = v;
-                                                deckingSheetsController
-                                                    .debounceCalculation(data);
-                                              },
-                                              readOnly: true,
-                                              fieldControllers:
-                                                  deckingSheetsController
-                                                      .fieldControllers,
-                                            ),
-                                          ),
-                                        ),
-                                        Gap(10),
-                                        Expanded(
-                                          child: buildDetailItem(
-                                            "Qty",
-                                            editableTextField(
-                                              data,
-                                              "qty",
-                                              (v) {},
-                                              readOnly: true,
-                                              fieldControllers:
-                                                  deckingSheetsController
-                                                      .fieldControllers,
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    Gap(5),
-                                    Row(
-                                      children: [
-                                        Expanded(
-                                          child: buildDetailItem(
-                                            "Amount",
-                                            editableTextField(
-                                              data,
-                                              "Amount",
-                                              (v) {},
-                                              readOnly: true,
-                                              fieldControllers:
-                                                  deckingSheetsController
-                                                      .fieldControllers,
-                                            ),
-                                          ),
-                                        ),
-                                        Gap(10),
-                                        Expanded(
-                                          child: buildDetailItem(
-                                            "CGST",
-                                            editableTextField(
-                                              data,
-                                              "cgst",
-                                              (v) {},
-                                              readOnly: true,
-                                              fieldControllers:
-                                                  deckingSheetsController
-                                                      .fieldControllers,
-                                            ),
-                                          ),
-                                        ),
-                                        Gap(10),
-                                        Expanded(
-                                          child: buildDetailItem(
-                                            "SGST",
-                                            editableTextField(
-                                              data,
-                                              "sgst",
-                                              (v) {},
-                                              readOnly: true,
-                                              fieldControllers:
-                                                  deckingSheetsController
-                                                      .fieldControllers,
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
                                 ),
-                              ),
-                            ],
+                                Gap(10.w),
+                                Expanded(
+                                  child: buildDetailItem(
+                                    "Billing Option",
+                                    deckingSheetsController
+                                        .billingDropdown(data),
+                                  ),
+                                ),
+                                Gap(10.w),
+                                Expanded(
+                                  child: buildDetailItem(
+                                    "Length",
+                                    editableTextField(
+                                      data,
+                                      "Length",
+                                      (v) {
+                                        data["Length"] = v;
+                                        deckingSheetsController
+                                            .debounceCalculation(data);
+                                      },
+                                      fieldControllers: deckingSheetsController
+                                          .fieldControllers,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Gap(8.h),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: buildDetailItem(
+                                    "Nos",
+                                    editableTextField(
+                                      data,
+                                      "Nos",
+                                      (v) {
+                                        data["Nos"] = v;
+                                        deckingSheetsController
+                                            .debounceCalculation(data);
+                                      },
+                                      fieldControllers: deckingSheetsController
+                                          .fieldControllers,
+                                    ),
+                                  ),
+                                ),
+                                Gap(10.w),
+                                Expanded(
+                                  child: buildDetailItem(
+                                    "Basic Rate",
+                                    editableTextField(
+                                      data,
+                                      "Basic Rate",
+                                      (v) {
+                                        data["Basic Rate"] = v;
+                                        deckingSheetsController
+                                            .debounceCalculation(data);
+                                      },
+                                      readOnly: true,
+                                      fieldControllers: deckingSheetsController
+                                          .fieldControllers,
+                                    ),
+                                  ),
+                                ),
+                                Gap(10.w),
+                                Expanded(
+                                  child: buildDetailItem(
+                                    "Qty",
+                                    editableTextField(
+                                      data,
+                                      "qty",
+                                      (v) {},
+                                      readOnly: true,
+                                      fieldControllers: deckingSheetsController
+                                          .fieldControllers,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Gap(8.h),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: buildDetailItem(
+                                    "Amount",
+                                    editableTextField(
+                                      data,
+                                      "Amount",
+                                      (v) {},
+                                      readOnly: true,
+                                      fieldControllers: deckingSheetsController
+                                          .fieldControllers,
+                                    ),
+                                  ),
+                                ),
+                                Gap(10.w),
+                                Expanded(
+                                  child: buildDetailItem(
+                                    "CGST",
+                                    editableTextField(
+                                      data,
+                                      "cgst",
+                                      (v) {},
+                                      readOnly: true,
+                                      fieldControllers: deckingSheetsController
+                                          .fieldControllers,
+                                    ),
+                                  ),
+                                ),
+                                Gap(10.w),
+                                Expanded(
+                                  child: buildDetailItem(
+                                    "SGST",
+                                    editableTextField(
+                                      data,
+                                      "sgst",
+                                      (v) {},
+                                      readOnly: true,
+                                      fieldControllers: deckingSheetsController
+                                          .fieldControllers,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                          footer: SizedBox.shrink(),
+                          onDelete: () => Get.dialog(
+                            AlertDialog(
+                              title: Text("Delete Item"),
+                              content: Text(
+                                  "Are you sure you want to delete this item?"),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Get.back(),
+                                  child: Text("Cancel"),
+                                ),
+                                ElevatedButton(
+                                  onPressed: () {
+                                    deckingSheetsController
+                                        .deleteCard(data["id"].toString());
+                                    Get.back();
+                                  },
+                                  child: Text("Delete"),
+                                ),
+                              ],
+                            ),
                           ),
+                          attachmentButton: SizedBox.shrink(),
                         );
                       }),
                     ],
@@ -2295,204 +2042,153 @@ class SummaryScreen extends StatelessWidget {
                           .map((entry) {
                         final index = entry.key;
                         final data = Map<String, dynamic>.from(entry.value);
-                        return Card(
-                          margin: EdgeInsets.symmetric(vertical: 10),
-                          elevation: 2,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Column(
-                            children: [
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Expanded(
-                                    child: Text(
-                                      "${index + 1}. ${data["Products"] ?? 'N/A'}",
-                                      style: GoogleFonts.figtree(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.w600,
-                                        color: Colors.black87,
-                                      ),
-                                    ),
+                        final productName = data["Products"] ?? 'N/A';
+                        return _buildProductCard(
+                          index: index,
+                          data: data,
+                          productName: productName,
+                          headerActions: SizedBox.shrink(),
+                          detailRows: [
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: buildDetailItem(
+                                    "UOM",
+                                    tileSheetController.uomDropdown(data),
                                   ),
-                                  Container(
-                                    padding: EdgeInsets.symmetric(
-                                        horizontal: 8, vertical: 4),
-                                    decoration: BoxDecoration(
-                                      color: Colors.blue[50],
-                                      borderRadius: BorderRadius.circular(6),
-                                    ),
-                                    child: Text(
-                                      "ID: ${data['id'] ?? 'N/A'}",
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: Colors.blue[700],
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                    ),
-                                  ),
-                                  IconButton(
-                                    icon: Icon(Icons.delete,
-                                        color: Colors.redAccent),
-                                    onPressed: () => Get.dialog(
-                                      AlertDialog(
-                                        title: Text("Delete Item"),
-                                        content: Text(
-                                            "Are you sure you want to delete this item?"),
-                                        actions: [
-                                          TextButton(
-                                            onPressed: () => Get.back(),
-                                            child: Text("Cancel"),
-                                          ),
-                                          ElevatedButton(
-                                            onPressed: () {
-                                              tileSheetController.deleteCard(
-                                                  data["id"].toString());
-                                              Get.back();
-                                            },
-                                            child: Text("Delete"),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              Padding(
-                                padding: EdgeInsets.all(8),
-                                child: Column(
-                                  children: [
-                                    Row(
-                                      children: [
-                                        Expanded(
-                                          child: buildDetailItem(
-                                            "UOM",
-                                            tileSheetController
-                                                .uomDropdown(data),
-                                          ),
-                                        ),
-                                        Gap(10),
-                                        Expanded(
-                                          child: buildDetailItem(
-                                            "Length",
-                                            tileSheetController
-                                                .lengthDropdown(data),
-                                          ),
-                                        ),
-                                        Gap(10),
-                                        Expanded(
-                                          child: buildDetailItem(
-                                            "Nos",
-                                            editableTextField(
-                                              data,
-                                              "Nos",
-                                              (v) {
-                                                data["Nos"] = v;
-                                                tileSheetController
-                                                    .debounceCalculation(data);
-                                              },
-                                              fieldControllers:
-                                                  tileSheetController
-                                                      .fieldControllers,
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    Gap(5),
-                                    Row(
-                                      children: [
-                                        Expanded(
-                                          child: buildDetailItem(
-                                            "Basic Rate",
-                                            editableTextField(
-                                              data,
-                                              "Basic Rate",
-                                              (v) {
-                                                data["Basic Rate"] = v;
-                                                tileSheetController
-                                                    .debounceCalculation(data);
-                                              },
-                                              readOnly: true,
-                                              fieldControllers:
-                                                  tileSheetController
-                                                      .fieldControllers,
-                                            ),
-                                          ),
-                                        ),
-                                        Gap(10),
-                                        Expanded(
-                                          child: buildDetailItem(
-                                            "SQMtr",
-                                            editableTextField(
-                                              data,
-                                              "SQMtr",
-                                              (v) {},
-                                              readOnly: true,
-                                              fieldControllers:
-                                                  tileSheetController
-                                                      .fieldControllers,
-                                            ),
-                                          ),
-                                        ),
-                                        Gap(10),
-                                        Expanded(
-                                          child: buildDetailItem(
-                                            "Amount",
-                                            editableTextField(
-                                              data,
-                                              "Amount",
-                                              (v) {},
-                                              readOnly: true,
-                                              fieldControllers:
-                                                  tileSheetController
-                                                      .fieldControllers,
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    Gap(5),
-                                    Row(
-                                      children: [
-                                        Expanded(
-                                          child: buildDetailItem(
-                                            "CGST",
-                                            editableTextField(
-                                              data,
-                                              "cgst",
-                                              (v) {},
-                                              readOnly: true,
-                                              fieldControllers:
-                                                  tileSheetController
-                                                      .fieldControllers,
-                                            ),
-                                          ),
-                                        ),
-                                        Gap(10),
-                                        Expanded(
-                                          child: buildDetailItem(
-                                            "SGST",
-                                            editableTextField(
-                                              data,
-                                              "sgst",
-                                              (v) {},
-                                              readOnly: true,
-                                              fieldControllers:
-                                                  tileSheetController
-                                                      .fieldControllers,
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
                                 ),
-                              ),
-                            ],
+                                Gap(10.w),
+                                Expanded(
+                                  child: buildDetailItem(
+                                    "Length",
+                                    tileSheetController.lengthDropdown(data),
+                                  ),
+                                ),
+                                Gap(10.w),
+                                Expanded(
+                                  child: buildDetailItem(
+                                    "Nos",
+                                    editableTextField(
+                                      data,
+                                      "Nos",
+                                      (v) {
+                                        data["Nos"] = v;
+                                        tileSheetController
+                                            .debounceCalculation(data);
+                                      },
+                                      fieldControllers:
+                                          tileSheetController.fieldControllers,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Gap(8.h),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: buildDetailItem(
+                                    "Basic Rate",
+                                    editableTextField(
+                                      data,
+                                      "Basic Rate",
+                                      (v) {
+                                        data["Basic Rate"] = v;
+                                        tileSheetController
+                                            .debounceCalculation(data);
+                                      },
+                                      readOnly: true,
+                                      fieldControllers:
+                                          tileSheetController.fieldControllers,
+                                    ),
+                                  ),
+                                ),
+                                Gap(10.w),
+                                Expanded(
+                                  child: buildDetailItem(
+                                    "SQMtr",
+                                    editableTextField(
+                                      data,
+                                      "SQMtr",
+                                      (v) {},
+                                      readOnly: true,
+                                      fieldControllers:
+                                          tileSheetController.fieldControllers,
+                                    ),
+                                  ),
+                                ),
+                                Gap(10.w),
+                                Expanded(
+                                  child: buildDetailItem(
+                                    "Amount",
+                                    editableTextField(
+                                      data,
+                                      "Amount",
+                                      (v) {},
+                                      readOnly: true,
+                                      fieldControllers:
+                                          tileSheetController.fieldControllers,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Gap(8.h),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: buildDetailItem(
+                                    "CGST",
+                                    editableTextField(
+                                      data,
+                                      "cgst",
+                                      (v) {},
+                                      readOnly: true,
+                                      fieldControllers:
+                                          tileSheetController.fieldControllers,
+                                    ),
+                                  ),
+                                ),
+                                Gap(10.w),
+                                Expanded(
+                                  child: buildDetailItem(
+                                    "SGST",
+                                    editableTextField(
+                                      data,
+                                      "sgst",
+                                      (v) {},
+                                      readOnly: true,
+                                      fieldControllers:
+                                          tileSheetController.fieldControllers,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                          footer: SizedBox.shrink(),
+                          onDelete: () => Get.dialog(
+                            AlertDialog(
+                              title: Text("Delete Item"),
+                              content: Text(
+                                  "Are you sure you want to delete this item?"),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Get.back(),
+                                  child: Text("Cancel"),
+                                ),
+                                ElevatedButton(
+                                  onPressed: () {
+                                    tileSheetController
+                                        .deleteCard(data["id"].toString());
+                                    Get.back();
+                                  },
+                                  child: Text("Delete"),
+                                ),
+                              ],
+                            ),
                           ),
+                          attachmentButton: SizedBox.shrink(),
                         );
                       }).toList(),
                     ],
@@ -2515,233 +2211,161 @@ class SummaryScreen extends StatelessWidget {
                             final index = entry.key;
                             final data =
                                 Map<String, dynamic>.from(entry.value ?? {});
-                            return Card(
-                              margin: EdgeInsets.symmetric(vertical: 10),
-                              elevation: 2,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Column(
-                                children: [
-                                  Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Expanded(
-                                        child: Text(
-                                          "  ${index + 1}. ${data["Products"] ?? 'N/A'}",
-                                          overflow: TextOverflow.ellipsis,
-                                          style: GoogleFonts.figtree(
-                                            fontSize: 18,
-                                            fontWeight: FontWeight.w600,
-                                            color: Colors.black87,
-                                          ),
+                            final productName = data["Products"] ?? 'N/A';
+                            return _buildProductCard(
+                              index: index,
+                              data: data,
+                              productName: productName,
+                              headerActions: SizedBox.shrink(),
+                              detailRows: [
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: buildDetailItem(
+                                        "UOM",
+                                        linerSheetController.uomDropdown(data),
+                                      ),
+                                    ),
+                                    Gap(10.w),
+                                    Expanded(
+                                      child: buildDetailItem(
+                                        "Length",
+                                        editableTextField(
+                                          data,
+                                          "Length",
+                                          (v) {
+                                            data["Length"] = v;
+                                            linerSheetController
+                                                .debounceCalculation(data);
+                                          },
+                                          fieldControllers: linerSheetController
+                                              .fieldControllers,
                                         ),
                                       ),
-                                      Container(
-                                        padding: EdgeInsets.symmetric(
-                                            horizontal: 8, vertical: 4),
-                                        decoration: BoxDecoration(
-                                          color: Colors.blue[50],
-                                          borderRadius:
-                                              BorderRadius.circular(6),
-                                        ),
-                                        child: Text(
-                                          "ID: ${data['id'] ?? 'N/A'}",
-                                          style: TextStyle(
-                                            fontSize: 12,
-                                            color: Colors.blue[700],
-                                            fontWeight: FontWeight.w500,
-                                          ),
-                                        ),
-                                      ),
-                                      IconButton(
-                                        icon: Icon(Icons.delete,
-                                            color: Colors.redAccent),
-                                        onPressed: () => Get.dialog(
-                                          AlertDialog(
-                                            title: Text("Delete Item"),
-                                            content: Text(
-                                                "Are you sure you want to delete this item?"),
-                                            actions: [
-                                              TextButton(
-                                                onPressed: () => Get.back(),
-                                                child: Text("Cancel"),
-                                              ),
-                                              ElevatedButton(
-                                                onPressed: () {
-                                                  linerSheetController
-                                                      .deleteCard(data["id"]
-                                                          .toString());
-                                                  Get.back();
-                                                },
-                                                child: Text("Delete"),
-                                              ),
-                                            ],
-                                          ),
+                                    ),
+                                    Gap(10.w),
+                                    Expanded(
+                                      child: buildDetailItem(
+                                        "Nos",
+                                        editableTextField(
+                                          data,
+                                          "Nos",
+                                          (v) {
+                                            data["Nos"] = v;
+                                            linerSheetController
+                                                .debounceCalculation(data);
+                                          },
+                                          fieldControllers: linerSheetController
+                                              .fieldControllers,
                                         ),
                                       ),
-                                    ],
-                                  ),
-                                  Padding(
-                                    padding: EdgeInsets.all(8),
-                                    child: Column(
-                                      children: [
-                                        Row(
-                                          children: [
-                                            Expanded(
-                                              child: buildDetailItem(
-                                                "UOM",
-                                                linerSheetController
-                                                    .uomDropdown(data),
-                                              ),
-                                            ),
-                                            // Gap(10),
-                                            // Expanded(
-                                            //   child: buildDetailItem(
-                                            //     "Billing Option",
-                                            //     linerSheetController
-                                            //         .billingDropdown(data),
-                                            //   ),
-                                            // ),
-                                            Gap(10),
-                                            Expanded(
-                                              child: buildDetailItem(
-                                                "Length",
-                                                editableTextField(
-                                                  data,
-                                                  "Length",
-                                                  (v) {
-                                                    data["Length"] = v;
-                                                    linerSheetController
-                                                        .debounceCalculation(
-                                                            data);
-                                                  },
-                                                  fieldControllers:
-                                                      linerSheetController
-                                                          .fieldControllers,
-                                                ),
-                                              ),
-                                            ),
-                                            // Expanded(
-                                            //   child: buildDetailItem(
-                                            //     "Length",
-                                            //     linerSheetController.lengthDropdown(data),
-                                            //   ),
-                                            // ),
-                                            Gap(10),
-                                            Expanded(
-                                              child: buildDetailItem(
-                                                "Nos",
-                                                editableTextField(
-                                                  data,
-                                                  "Nos",
-                                                  (v) {
-                                                    data["Nos"] = v;
-                                                    linerSheetController
-                                                        .debounceCalculation(
-                                                            data);
-                                                  },
-                                                  fieldControllers:
-                                                      linerSheetController
-                                                          .fieldControllers,
-                                                ),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                        Gap(5),
-                                        Row(children: [
-                                          Expanded(
-                                            child: buildDetailItem(
-                                              "Basic Rate",
-                                              editableTextField(
-                                                data,
-                                                "Basic Rate",
-                                                (v) {
-                                                  data["Basic Rate"] = v;
-                                                  linerSheetController
-                                                      .debounceCalculation(
-                                                          data);
-                                                },
-                                                readOnly: true,
-                                                fieldControllers:
-                                                    linerSheetController
-                                                        .fieldControllers,
-                                              ),
-                                            ),
-                                          ),
-                                          Gap(10),
-                                          Expanded(
-                                            child: buildDetailItem(
-                                              "SQMtr",
-                                              editableTextField(
-                                                data,
-                                                "SQMtr",
-                                                (v) {},
-                                                readOnly: true,
-                                                fieldControllers:
-                                                    linerSheetController
-                                                        .fieldControllers,
-                                              ),
-                                            ),
-                                          ),
-                                          Gap(10),
-                                          Expanded(
-                                            child: buildDetailItem(
-                                              "Amount",
-                                              editableTextField(
-                                                data,
-                                                "Amount",
-                                                (v) {},
-                                                readOnly: true,
-                                                fieldControllers:
-                                                    linerSheetController
-                                                        .fieldControllers,
-                                              ),
-                                            ),
-                                          ),
-                                        ]),
-                                        Gap(5),
-                                        Row(
-                                          children: [
-                                            Gap(10),
-                                            Expanded(
-                                              child: buildDetailItem(
-                                                "CGST",
-                                                editableTextField(
-                                                  data,
-                                                  "cgst",
-                                                  (v) {},
-                                                  readOnly: true,
-                                                  fieldControllers:
-                                                      linerSheetController
-                                                          .fieldControllers,
-                                                ),
-                                              ),
-                                            ),
-                                            Gap(10),
-                                            Expanded(
-                                              child: buildDetailItem(
-                                                "SGST",
-                                                editableTextField(
-                                                  data,
-                                                  "sgst",
-                                                  (v) {},
-                                                  readOnly: true,
-                                                  fieldControllers:
-                                                      linerSheetController
-                                                          .fieldControllers,
-                                                ),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ],
+                                    ),
+                                  ],
+                                ),
+                                Gap(8.h),
+                                Row(children: [
+                                  Expanded(
+                                    child: buildDetailItem(
+                                      "Basic Rate",
+                                      editableTextField(
+                                        data,
+                                        "Basic Rate",
+                                        (v) {
+                                          data["Basic Rate"] = v;
+                                          linerSheetController
+                                              .debounceCalculation(data);
+                                        },
+                                        readOnly: true,
+                                        fieldControllers: linerSheetController
+                                            .fieldControllers,
+                                      ),
                                     ),
                                   ),
-                                ],
+                                  Gap(10.w),
+                                  Expanded(
+                                    child: buildDetailItem(
+                                      "SQMtr",
+                                      editableTextField(
+                                        data,
+                                        "SQMtr",
+                                        (v) {},
+                                        readOnly: true,
+                                        fieldControllers: linerSheetController
+                                            .fieldControllers,
+                                      ),
+                                    ),
+                                  ),
+                                  Gap(10.w),
+                                  Expanded(
+                                    child: buildDetailItem(
+                                      "Amount",
+                                      editableTextField(
+                                        data,
+                                        "Amount",
+                                        (v) {},
+                                        readOnly: true,
+                                        fieldControllers: linerSheetController
+                                            .fieldControllers,
+                                      ),
+                                    ),
+                                  ),
+                                ]),
+                                Gap(8.h),
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: buildDetailItem(
+                                        "CGST",
+                                        editableTextField(
+                                          data,
+                                          "cgst",
+                                          (v) {},
+                                          readOnly: true,
+                                          fieldControllers: linerSheetController
+                                              .fieldControllers,
+                                        ),
+                                      ),
+                                    ),
+                                    Gap(10.w),
+                                    Expanded(
+                                      child: buildDetailItem(
+                                        "SGST",
+                                        editableTextField(
+                                          data,
+                                          "sgst",
+                                          (v) {},
+                                          readOnly: true,
+                                          fieldControllers: linerSheetController
+                                              .fieldControllers,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                              footer: SizedBox.shrink(),
+                              onDelete: () => Get.dialog(
+                                AlertDialog(
+                                  title: Text("Delete Item"),
+                                  content: Text(
+                                      "Are you sure you want to delete this item?"),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () => Get.back(),
+                                      child: Text("Cancel"),
+                                    ),
+                                    ElevatedButton(
+                                      onPressed: () {
+                                        linerSheetController
+                                            .deleteCard(data["id"].toString());
+                                        Get.back();
+                                      },
+                                      child: Text("Delete"),
+                                    ),
+                                  ],
+                                ),
                               ),
+                              attachmentButton: SizedBox.shrink(),
                             );
                           }) ??
                           []),
@@ -2764,203 +2388,159 @@ class SummaryScreen extends StatelessWidget {
                           .map((entry) {
                         final index = entry.key;
                         final data = Map<String, dynamic>.from(entry.value);
-                        return Card(
-                          margin: EdgeInsets.symmetric(vertical: 10),
-                          elevation: 2,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Column(
-                            children: [
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Expanded(
-                                    child: Text(
-                                      "${index + 1}. ${data["Products"] ?? 'N/A'}",
-                                      overflow: TextOverflow.ellipsis,
-                                      style: GoogleFonts.figtree(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.w600,
-                                        color: Colors.black87,
-                                      ),
-                                    ),
+                        final productName = data["Products"] ?? 'N/A';
+                        return _buildProductCard(
+                          index: index,
+                          data: data,
+                          productName: productName,
+                          headerActions: SizedBox.shrink(),
+                          detailRows: [
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: buildDetailItem(
+                                    "UOM",
+                                    purlinController.uomDropdown(data),
                                   ),
-                                  Container(
-                                    padding: EdgeInsets.symmetric(
-                                        horizontal: 8, vertical: 4),
-                                    decoration: BoxDecoration(
-                                      color: Colors.blue[50],
-                                      borderRadius: BorderRadius.circular(6),
-                                    ),
-                                    child: Text(
-                                      "ID: ${data['id'] ?? 'N/A'}",
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: Colors.blue[700],
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                    ),
-                                  ),
-                                  IconButton(
-                                    icon: Icon(Icons.delete,
-                                        color: Colors.redAccent),
-                                    onPressed: () => Get.dialog(
-                                      AlertDialog(
-                                        title: Text("Delete Item"),
-                                        content: Text(
-                                            "Are you sure you want to delete this item?"),
-                                        actions: [
-                                          TextButton(
-                                            onPressed: () => Get.back(),
-                                            child: Text("Cancel"),
-                                          ),
-                                          ElevatedButton(
-                                            onPressed: () {
-                                              purlinController.deleteCard(
-                                                  data["id"].toString());
-                                              Get.back();
-                                            },
-                                            child: Text("Delete"),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              Padding(
-                                padding: EdgeInsets.all(8),
-                                child: Column(
-                                  children: [
-                                    Row(
-                                      children: [
-                                        Expanded(
-                                          child: buildDetailItem(
-                                            "UOM",
-                                            purlinController.uomDropdown(data),
-                                          ),
-                                        ),
-                                        Gap(10),
-                                        Expanded(
-                                          child: buildDetailItem(
-                                            "Length",
-                                            purlinController.editableTextField(
-                                              data,
-                                              "Profile",
-                                              (v) {
-                                                data["Profile"] = v;
-                                                purlinController
-                                                    .debounceCalculation(data);
-                                              },
-                                              fieldControllers: purlinController
-                                                  .fieldControllers,
-                                            ),
-                                          ),
-                                        ),
-                                        Gap(10),
-                                        Expanded(
-                                          child: buildDetailItem(
-                                            "Nos",
-                                            purlinController.editableTextField(
-                                              data,
-                                              "Nos",
-                                              (v) {
-                                                data["Nos"] = v;
-                                                purlinController
-                                                    .debounceCalculation(data);
-                                              },
-                                              fieldControllers: purlinController
-                                                  .fieldControllers,
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    Gap(5),
-                                    Row(
-                                      children: [
-                                        Expanded(
-                                          child: buildDetailItem(
-                                            "Basic Rate",
-                                            purlinController.editableTextField(
-                                              data,
-                                              "Basic Rate",
-                                              (v) {},
-                                              readOnly: true,
-                                              fieldControllers: purlinController
-                                                  .fieldControllers,
-                                            ),
-                                          ),
-                                        ),
-                                        Gap(10),
-                                        Expanded(
-                                          child: buildDetailItem(
-                                            "Kg",
-                                            purlinController.editableTextField(
-                                              data,
-                                              "kg",
-                                              (v) {},
-                                              readOnly: true,
-                                              fieldControllers: purlinController
-                                                  .fieldControllers,
-                                            ),
-                                          ),
-                                        ),
-                                        Gap(10),
-                                        Expanded(
-                                          child: buildDetailItem(
-                                            "Amount",
-                                            purlinController.editableTextField(
-                                              data,
-                                              "Amount",
-                                              (v) {},
-                                              readOnly: true,
-                                              fieldControllers: purlinController
-                                                  .fieldControllers,
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    Gap(5),
-                                    Row(
-                                      children: [
-                                        Expanded(
-                                          child: buildDetailItem(
-                                            "CGST",
-                                            purlinController.editableTextField(
-                                              data,
-                                              "cgst",
-                                              (v) {},
-                                              readOnly: true,
-                                              fieldControllers: purlinController
-                                                  .fieldControllers,
-                                            ),
-                                          ),
-                                        ),
-                                        Gap(10),
-                                        Expanded(
-                                          child: buildDetailItem(
-                                            "SGST",
-                                            purlinController.editableTextField(
-                                              data,
-                                              "sgst",
-                                              (v) {},
-                                              readOnly: true,
-                                              fieldControllers: purlinController
-                                                  .fieldControllers,
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
                                 ),
-                              ),
-                            ],
+                                Gap(10.w),
+                                Expanded(
+                                  child: buildDetailItem(
+                                    "Length",
+                                    purlinController.editableTextField(
+                                      data,
+                                      "Profile",
+                                      (v) {
+                                        data["Profile"] = v;
+                                        purlinController
+                                            .debounceCalculation(data);
+                                      },
+                                      fieldControllers:
+                                          purlinController.fieldControllers,
+                                    ),
+                                  ),
+                                ),
+                                Gap(10.w),
+                                Expanded(
+                                  child: buildDetailItem(
+                                    "Nos",
+                                    purlinController.editableTextField(
+                                      data,
+                                      "Nos",
+                                      (v) {
+                                        data["Nos"] = v;
+                                        purlinController
+                                            .debounceCalculation(data);
+                                      },
+                                      fieldControllers:
+                                          purlinController.fieldControllers,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Gap(8.h),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: buildDetailItem(
+                                    "Basic Rate",
+                                    purlinController.editableTextField(
+                                      data,
+                                      "Basic Rate",
+                                      (v) {},
+                                      readOnly: true,
+                                      fieldControllers:
+                                          purlinController.fieldControllers,
+                                    ),
+                                  ),
+                                ),
+                                Gap(10.w),
+                                Expanded(
+                                  child: buildDetailItem(
+                                    "Kg",
+                                    purlinController.editableTextField(
+                                      data,
+                                      "kg",
+                                      (v) {},
+                                      readOnly: true,
+                                      fieldControllers:
+                                          purlinController.fieldControllers,
+                                    ),
+                                  ),
+                                ),
+                                Gap(10.w),
+                                Expanded(
+                                  child: buildDetailItem(
+                                    "Amount",
+                                    purlinController.editableTextField(
+                                      data,
+                                      "Amount",
+                                      (v) {},
+                                      readOnly: true,
+                                      fieldControllers:
+                                          purlinController.fieldControllers,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Gap(8.h),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: buildDetailItem(
+                                    "CGST",
+                                    purlinController.editableTextField(
+                                      data,
+                                      "cgst",
+                                      (v) {},
+                                      readOnly: true,
+                                      fieldControllers:
+                                          purlinController.fieldControllers,
+                                    ),
+                                  ),
+                                ),
+                                Gap(10.w),
+                                Expanded(
+                                  child: buildDetailItem(
+                                    "SGST",
+                                    purlinController.editableTextField(
+                                      data,
+                                      "sgst",
+                                      (v) {},
+                                      readOnly: true,
+                                      fieldControllers:
+                                          purlinController.fieldControllers,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                          footer: SizedBox.shrink(),
+                          onDelete: () => Get.dialog(
+                            AlertDialog(
+                              title: Text("Delete Item"),
+                              content: Text(
+                                  "Are you sure you want to delete this item?"),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Get.back(),
+                                  child: Text("Cancel"),
+                                ),
+                                ElevatedButton(
+                                  onPressed: () {
+                                    purlinController
+                                        .deleteCard(data["id"].toString());
+                                    Get.back();
+                                  },
+                                  child: Text("Delete"),
+                                ),
+                              ],
+                            ),
                           ),
+                          attachmentButton: SizedBox.shrink(),
                         );
                       }),
                     ],
@@ -2981,183 +2561,132 @@ class SummaryScreen extends StatelessWidget {
                           .map((entry) {
                         final index = entry.key;
                         final data = Map<String, dynamic>.from(entry.value);
-                        return Card(
-                          margin: EdgeInsets.symmetric(vertical: 10),
-                          elevation: 2,
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12)),
-                          child: Column(
-                            children: [
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Expanded(
-                                    child: Text(
-                                      "${index + 1}. ${data["Products"] ?? 'N/A'}",
-                                      style: GoogleFonts.figtree(
-                                          fontSize: 18,
-                                          fontWeight: FontWeight.w600,
-                                          color: Colors.black87),
-                                    ),
+                        final productName = data["Products"] ?? 'N/A';
+                        return _buildProductCard(
+                          index: index,
+                          data: data,
+                          productName: productName,
+                          headerActions: SizedBox.shrink(),
+                          detailRows: [
+                            Row(
+                              children: [
+                                Expanded(
+                                    child: buildDetailItem(
+                                        "UOM",
+                                        accessoriesController
+                                            .uomDropdown(data))),
+                                Gap(10.w),
+                                Expanded(
+                                  child: buildDetailItem(
+                                    "Length",
+                                    editableTextField(data, "Profile", (v) {
+                                      data["Profile"] = v;
+                                      accessoriesController
+                                          .debounceCalculation(data);
+                                    },
+                                        fieldControllers: accessoriesController
+                                            .fieldControllers),
                                   ),
-                                  Container(
-                                    padding: EdgeInsets.symmetric(
-                                        horizontal: 8, vertical: 4),
-                                    decoration: BoxDecoration(
-                                        color: Colors.blue[50],
-                                        borderRadius: BorderRadius.circular(6)),
-                                    child: Text(
-                                      "ID: ${data['id'] ?? 'N/A'}",
-                                      style: TextStyle(
-                                          fontSize: 12,
-                                          color: Colors.blue[700],
-                                          fontWeight: FontWeight.w500),
-                                    ),
-                                  ),
-                                  IconButton(
-                                    icon: Icon(Icons.delete,
-                                        color: Colors.redAccent),
-                                    onPressed: () => Get.dialog(
-                                      AlertDialog(
-                                        title: Text("Delete Item"),
-                                        content: Text(
-                                            "Are you sure you want to delete this item?"),
-                                        actions: [
-                                          ElevatedButton(
-                                              onPressed: () => Get.back(),
-                                              child: Text("Cancel")),
-                                          ElevatedButton(
-                                            onPressed: () {
-                                              accessoriesController.deleteCard(
-                                                  data["id"].toString());
-                                              Get.back();
-                                            },
-                                            child: Text("Delete"),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              Padding(
-                                padding: EdgeInsets.all(8),
-                                child: Column(
-                                  children: [
-                                    Row(
-                                      children: [
-                                        Expanded(
-                                            child: buildDetailItem(
-                                                "UOM",
-                                                accessoriesController
-                                                    .uomDropdown(data))),
-                                        Gap(10),
-                                        Expanded(
-                                          child: buildDetailItem(
-                                            "Length",
-                                            editableTextField(data, "Profile",
-                                                (v) {
-                                              data["Profile"] = v;
-                                              accessoriesController
-                                                  .debounceCalculation(data);
-                                            },
-                                                fieldControllers:
-                                                    accessoriesController
-                                                        .fieldControllers),
-                                          ),
-                                        ),
-                                        Gap(10),
-                                        Expanded(
-                                          child: buildDetailItem(
-                                            "Nos",
-                                            editableTextField(data, "Nos", (v) {
-                                              data["Nos"] = v;
-                                              accessoriesController
-                                                  .debounceCalculation(data);
-                                            },
-                                                fieldControllers:
-                                                    accessoriesController
-                                                        .fieldControllers),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    Gap(5),
-                                    Row(
-                                      children: [
-                                        Expanded(
-                                          child: buildDetailItem(
-                                            "Basic Rate",
-                                            editableTextField(
-                                                data, "Basic Rate", (v) {},
-                                                readOnly: true,
-                                                fieldControllers:
-                                                    accessoriesController
-                                                        .fieldControllers),
-                                          ),
-                                        ),
-                                        Gap(10),
-                                        Expanded(
-                                          child: buildDetailItem(
-                                            "R.Ft",
-                                            editableTextField(
-                                                data, "R.Ft", (v) {},
-                                                readOnly: true,
-                                                fieldControllers:
-                                                    accessoriesController
-                                                        .fieldControllers),
-                                          ),
-                                        ),
-                                        Gap(10),
-                                        Expanded(
-                                          child: buildDetailItem(
-                                            "Amount",
-                                            editableTextField(
-                                                data, "Amount", (v) {},
-                                                readOnly: true,
-                                                fieldControllers:
-                                                    accessoriesController
-                                                        .fieldControllers),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    Gap(5),
-                                    Row(
-                                      children: [
-                                        Expanded(
-                                          child: buildDetailItem(
-                                            "CGST",
-                                            editableTextField(
-                                                data, "cgst", (v) {},
-                                                readOnly: true,
-                                                fieldControllers:
-                                                    accessoriesController
-                                                        .fieldControllers),
-                                          ),
-                                        ),
-                                        Gap(10),
-                                        Expanded(
-                                          child: buildDetailItem(
-                                            "SGST",
-                                            editableTextField(
-                                                data, "sgst", (v) {},
-                                                readOnly: true,
-                                                fieldControllers:
-                                                    accessoriesController
-                                                        .fieldControllers),
-                                          ),
-                                        ),
-                                        Gap(10),
-                                        Expanded(child: Container()),
-                                      ],
-                                    ),
-                                  ],
                                 ),
-                              ),
-                            ],
+                                Gap(10.w),
+                                Expanded(
+                                  child: buildDetailItem(
+                                    "Nos",
+                                    editableTextField(data, "Nos", (v) {
+                                      data["Nos"] = v;
+                                      accessoriesController
+                                          .debounceCalculation(data);
+                                    },
+                                        fieldControllers: accessoriesController
+                                            .fieldControllers),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Gap(8.h),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: buildDetailItem(
+                                    "Basic Rate",
+                                    editableTextField(
+                                        data, "Basic Rate", (v) {},
+                                        readOnly: true,
+                                        fieldControllers: accessoriesController
+                                            .fieldControllers),
+                                  ),
+                                ),
+                                Gap(10.w),
+                                Expanded(
+                                  child: buildDetailItem(
+                                    "R.Ft",
+                                    editableTextField(data, "R.Ft", (v) {},
+                                        readOnly: true,
+                                        fieldControllers: accessoriesController
+                                            .fieldControllers),
+                                  ),
+                                ),
+                                Gap(10.w),
+                                Expanded(
+                                  child: buildDetailItem(
+                                    "Amount",
+                                    editableTextField(data, "Amount", (v) {},
+                                        readOnly: true,
+                                        fieldControllers: accessoriesController
+                                            .fieldControllers),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Gap(8.h),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: buildDetailItem(
+                                    "CGST",
+                                    editableTextField(data, "cgst", (v) {},
+                                        readOnly: true,
+                                        fieldControllers: accessoriesController
+                                            .fieldControllers),
+                                  ),
+                                ),
+                                Gap(10.w),
+                                Expanded(
+                                  child: buildDetailItem(
+                                    "SGST",
+                                    editableTextField(data, "sgst", (v) {},
+                                        readOnly: true,
+                                        fieldControllers: accessoriesController
+                                            .fieldControllers),
+                                  ),
+                                ),
+                                Gap(10.w),
+                                Expanded(child: Container()),
+                              ],
+                            ),
+                          ],
+                          footer: SizedBox.shrink(),
+                          onDelete: () => Get.dialog(
+                            AlertDialog(
+                              title: Text("Delete Item"),
+                              content: Text(
+                                  "Are you sure you want to delete this item?"),
+                              actions: [
+                                ElevatedButton(
+                                    onPressed: () => Get.back(),
+                                    child: Text("Cancel")),
+                                ElevatedButton(
+                                  onPressed: () {
+                                    accessoriesController
+                                        .deleteCard(data["id"].toString());
+                                    Get.back();
+                                  },
+                                  child: Text("Delete"),
+                                ),
+                              ],
+                            ),
                           ),
+                          attachmentButton: SizedBox.shrink(),
                         );
                       }),
                     ],
@@ -3183,293 +2712,213 @@ class SummaryScreen extends StatelessWidget {
                           final index = entry.key;
                           final Map<String, dynamic> data =
                               Map<String, dynamic>.from(entry.value);
+                          final productName = data["Products"] ?? 'N/A';
 
-                          return Card(
-                            margin: const EdgeInsets.symmetric(vertical: 10),
-                            elevation: 2,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                          return _buildProductCard(
+                            index: index,
+                            data: data,
+                            productName: productName,
+                            headerActions: SizedBox.shrink(),
+                            detailRows: [
+                              /// Row 1: UOM, Crimp, Nos
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: buildDetailItem(
+                                      "UOM",
+                                      profileRidgeAndArchController
+                                          .uomDropdown(data),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: buildDetailItem(
+                                      "Crimp",
+                                      editableTextField(
+                                        data,
+                                        "height",
+                                        (v) {
+                                          data["height"] = v;
+                                          profileRidgeAndArchController
+                                              .debounceCalculation(data);
+                                        },
+                                        fieldControllers:
+                                            profileRidgeAndArchController
+                                                .fieldControllers,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: buildDetailItem(
+                                      "Nos",
+                                      editableTextField(
+                                        data,
+                                        "Nos",
+                                        (v) {
+                                          data["Nos"] = v;
+                                          profileRidgeAndArchController
+                                              .debounceCalculation(data);
+                                        },
+                                        fieldControllers:
+                                            profileRidgeAndArchController
+                                                .fieldControllers,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 16),
+
+                              /// Row 2: Basic Rate, SQMtr, Amount
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: buildDetailItem(
+                                      "Basic Rate",
+                                      editableTextField(
+                                        data,
+                                        "Basic Rate",
+                                        (v) {},
+                                        readOnly: true,
+                                        fieldControllers:
+                                            profileRidgeAndArchController
+                                                .fieldControllers,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: buildDetailItem(
+                                      "SQMtr",
+                                      editableTextField(
+                                        data,
+                                        "SQMtr",
+                                        (v) {},
+                                        readOnly: true,
+                                        fieldControllers:
+                                            profileRidgeAndArchController
+                                                .fieldControllers,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: buildDetailItem(
+                                      "Amount",
+                                      editableTextField(
+                                        data,
+                                        "Amount",
+                                        (v) {},
+                                        readOnly: true,
+                                        fieldControllers:
+                                            profileRidgeAndArchController
+                                                .fieldControllers,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 16),
+
+                              /// Row 3: CGST, SGST
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: buildDetailItem(
+                                      "CGST",
+                                      editableTextField(
+                                        data,
+                                        "cgst",
+                                        (v) {},
+                                        readOnly: true,
+                                        fieldControllers:
+                                            profileRidgeAndArchController
+                                                .fieldControllers,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: buildDetailItem(
+                                      "SGST",
+                                      editableTextField(
+                                        data,
+                                        "sgst",
+                                        (v) {},
+                                        readOnly: true,
+                                        fieldControllers:
+                                            profileRidgeAndArchController
+                                                .fieldControllers,
+                                      ),
+                                    ),
+                                  ),
+                                  const Expanded(
+                                      child: SizedBox()), // keeps spacing
+                                ],
+                              ),
+                            ],
+                            footer: Row(
                               children: [
-                                /// Header Row with Product, ID, Delete
-                                Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Expanded(
-                                      child: Padding(
-                                        padding: const EdgeInsets.only(
-                                            top: 15, left: 12),
-                                        child: Text(
-                                          "${index + 1}. ${data["Products"] ?? 'N/A'}",
-                                          overflow: TextOverflow.ellipsis,
-                                          style: GoogleFonts.figtree(
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.w600,
-                                            color: Colors.black87,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                    Container(
-                                      margin: const EdgeInsets.only(top: 15),
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 8, vertical: 4),
-                                      decoration: BoxDecoration(
-                                        color: Colors.blue[50],
-                                        borderRadius: BorderRadius.circular(6),
-                                      ),
-                                      child: Text(
-                                        "ID: ${data['id'] ?? 'N/A'}",
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          color: Colors.blue[700],
-                                          fontWeight: FontWeight.w500,
-                                        ),
-                                      ),
-                                    ),
-                                    Padding(
-                                      padding: const EdgeInsets.all(8.0),
-                                      child: Container(
-                                        height: 40,
-                                        width: 40,
-                                        decoration: BoxDecoration(
-                                          borderRadius:
-                                              BorderRadius.circular(10),
-                                          color: Colors.red[50],
-                                          border: Border.all(
-                                              color: Colors.red[200]!),
-                                        ),
-                                        child: IconButton(
-                                          icon: const Icon(Icons.delete_outline,
-                                              color: Colors.redAccent,
-                                              size: 20),
-                                          onPressed: () => Get.dialog(
-                                            AlertDialog(
-                                              title: const Text("Delete Item"),
-                                              content: const Text(
-                                                  "Are you sure you want to delete this item?"),
-                                              actions: [
-                                                TextButton(
-                                                  onPressed: () => Get.back(),
-                                                  child: const Text("Cancel"),
-                                                ),
-                                                ElevatedButton(
-                                                  onPressed: () {
-                                                    profileRidgeAndArchController
-                                                        .deleteCard(data["id"]
-                                                            .toString());
-                                                    Get.back();
-                                                  },
-                                                  child: const Text("Delete"),
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ],
+                                Expanded(
+                                  flex: 3,
+                                  child: profileRidgeAndArchController
+                                      .buildBaseProductSearchField(data),
                                 ),
-
-                                /// Detail Rows
-                                Padding(
-                                  padding: const EdgeInsets.all(12),
-                                  child: Column(
-                                    children: [
-                                      /// Row 1: UOM, Crimp, Nos
-                                      Row(
-                                        children: [
-                                          Expanded(
-                                            child: buildDetailItem(
-                                              "UOM",
-                                              profileRidgeAndArchController
-                                                  .uomDropdown(data),
-                                            ),
+                                const SizedBox(width: 12),
+                                Container(
+                                  height: 40,
+                                  width: 40,
+                                  decoration: BoxDecoration(
+                                    color: Colors.green[50],
+                                    borderRadius: BorderRadius.circular(10),
+                                    border:
+                                        Border.all(color: Colors.green[200]!),
+                                  ),
+                                  child: IconButton(
+                                    icon: Icon(Icons.attach_file,
+                                        color: Colors.green[600], size: 20),
+                                    onPressed: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) =>
+                                              ProfileAttachment(
+                                            productId: data['id'].toString(),
+                                            mainProductId:
+                                                profileRidgeAndArchController
+                                                        .currentMainProductId ??
+                                                    "Unknown ID",
                                           ),
-                                          const SizedBox(width: 12),
-                                          Expanded(
-                                            child: buildDetailItem(
-                                              "Crimp",
-                                              editableTextField(
-                                                data,
-                                                "height",
-                                                (v) {
-                                                  data["height"] = v;
-                                                  profileRidgeAndArchController
-                                                      .debounceCalculation(
-                                                          data);
-                                                },
-                                                fieldControllers:
-                                                    profileRidgeAndArchController
-                                                        .fieldControllers,
-                                              ),
-                                            ),
-                                          ),
-                                          const SizedBox(width: 12),
-                                          Expanded(
-                                            child: buildDetailItem(
-                                              "Nos",
-                                              editableTextField(
-                                                data,
-                                                "Nos",
-                                                (v) {
-                                                  data["Nos"] = v;
-                                                  profileRidgeAndArchController
-                                                      .debounceCalculation(
-                                                          data);
-                                                },
-                                                fieldControllers:
-                                                    profileRidgeAndArchController
-                                                        .fieldControllers,
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                      const SizedBox(height: 16),
-
-                                      /// Row 2: Basic Rate, SQMtr, Amount
-                                      Row(
-                                        children: [
-                                          Expanded(
-                                            child: buildDetailItem(
-                                              "Basic Rate",
-                                              editableTextField(
-                                                data,
-                                                "Basic Rate",
-                                                (v) {},
-                                                readOnly: true,
-                                                fieldControllers:
-                                                    profileRidgeAndArchController
-                                                        .fieldControllers,
-                                              ),
-                                            ),
-                                          ),
-                                          const SizedBox(width: 12),
-                                          Expanded(
-                                            child: buildDetailItem(
-                                              "SQMtr",
-                                              editableTextField(
-                                                data,
-                                                "SQMtr",
-                                                (v) {},
-                                                readOnly: true,
-                                                fieldControllers:
-                                                    profileRidgeAndArchController
-                                                        .fieldControllers,
-                                              ),
-                                            ),
-                                          ),
-                                          const SizedBox(width: 12),
-                                          Expanded(
-                                            child: buildDetailItem(
-                                              "Amount",
-                                              editableTextField(
-                                                data,
-                                                "Amount",
-                                                (v) {},
-                                                readOnly: true,
-                                                fieldControllers:
-                                                    profileRidgeAndArchController
-                                                        .fieldControllers,
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                      const SizedBox(height: 16),
-
-                                      /// Row 3: CGST, SGST
-                                      Row(
-                                        children: [
-                                          Expanded(
-                                            child: buildDetailItem(
-                                              "CGST",
-                                              editableTextField(
-                                                data,
-                                                "cgst",
-                                                (v) {},
-                                                readOnly: true,
-                                                fieldControllers:
-                                                    profileRidgeAndArchController
-                                                        .fieldControllers,
-                                              ),
-                                            ),
-                                          ),
-                                          const SizedBox(width: 12),
-                                          Expanded(
-                                            child: buildDetailItem(
-                                              "SGST",
-                                              editableTextField(
-                                                data,
-                                                "sgst",
-                                                (v) {},
-                                                readOnly: true,
-                                                fieldControllers:
-                                                    profileRidgeAndArchController
-                                                        .fieldControllers,
-                                              ),
-                                            ),
-                                          ),
-                                          const Expanded(
-                                              child:
-                                                  SizedBox()), // keeps spacing
-                                        ],
-                                      ),
-                                      const SizedBox(height: 16),
-
-                                      /// Row 4: Base Product Search + Attach button
-                                      Row(
-                                        children: [
-                                          Expanded(
-                                            flex: 3,
-                                            child: profileRidgeAndArchController
-                                                .buildBaseProductSearchField(
-                                                    data),
-                                          ),
-                                          const SizedBox(width: 12),
-                                          Container(
-                                            height: 40,
-                                            width: 40,
-                                            decoration: BoxDecoration(
-                                              color: Colors.green[50],
-                                              borderRadius:
-                                                  BorderRadius.circular(10),
-                                              border: Border.all(
-                                                  color: Colors.green[200]!),
-                                            ),
-                                            child: IconButton(
-                                              icon: Icon(Icons.attach_file,
-                                                  color: Colors.green[600],
-                                                  size: 20),
-                                              onPressed: () {
-                                                Navigator.push(
-                                                  context,
-                                                  MaterialPageRoute(
-                                                    builder: (context) =>
-                                                        ProfileAttachment(
-                                                      productId:
-                                                          data['id'].toString(),
-                                                      mainProductId:
-                                                          profileRidgeAndArchController
-                                                                  .currentMainProductId ??
-                                                              "Unknown ID",
-                                                    ),
-                                                  ),
-                                                );
-                                              },
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ],
+                                        ),
+                                      );
+                                    },
                                   ),
                                 ),
                               ],
                             ),
+                            onDelete: () => Get.dialog(
+                              AlertDialog(
+                                title: const Text("Delete Item"),
+                                content: const Text(
+                                    "Are you sure you want to delete this item?"),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Get.back(),
+                                    child: const Text("Cancel"),
+                                  ),
+                                  ElevatedButton(
+                                    onPressed: () {
+                                      profileRidgeAndArchController
+                                          .deleteCard(data["id"].toString());
+                                      Get.back();
+                                    },
+                                    child: const Text("Delete"),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            attachmentButton: SizedBox.shrink(),
                           );
                         }).toList(),
                       ),
@@ -3496,179 +2945,123 @@ class SummaryScreen extends StatelessWidget {
                                 final index = entry.key;
                                 final data =
                                     Map<String, dynamic>.from(entry.value);
-                                return Card(
-                                  margin: EdgeInsets.symmetric(vertical: 10),
-                                  elevation: 2,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: Column(
-                                    children: [
-                                      Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.spaceBetween,
-                                        children: [
-                                          Expanded(
-                                            child: Text(
-                                              "${data['S.No'] ?? (index + 1)}. ${data["Products"] ?? 'N/A'}",
-                                              style: GoogleFonts.figtree(
-                                                fontSize: 18,
-                                                fontWeight: FontWeight.w600,
-                                                color: Colors.black87,
-                                              ),
+                                final productName = data["Products"] ?? 'N/A';
+                                return _buildProductCard(
+                                  index: index,
+                                  data: data,
+                                  productName: productName,
+                                  headerActions: SizedBox.shrink(),
+                                  detailRows: [
+                                    Row(
+                                      children: [
+                                        Expanded(
+                                          child: buildDetailItem(
+                                            "Basic Rate",
+                                            editableTextField(
+                                              data,
+                                              "Basic Rate",
+                                              (v) {},
+                                              readOnly: true,
+                                              fieldControllers:
+                                                  upvcAccessoriesController
+                                                      .fieldControllers,
                                             ),
                                           ),
-                                          Container(
-                                            padding: EdgeInsets.symmetric(
-                                                horizontal: 8, vertical: 4),
-                                            decoration: BoxDecoration(
-                                              color: Colors.blue[50],
-                                              borderRadius:
-                                                  BorderRadius.circular(6),
-                                            ),
-                                            child: Text(
-                                              "ID: ${data['id'] ?? 'N/A'}",
-                                              style: TextStyle(
-                                                fontSize: 12,
-                                                color: Colors.blue[700],
-                                                fontWeight: FontWeight.w500,
-                                              ),
-                                            ),
-                                          ),
-                                          Container(
-                                            height: 40.h,
-                                            width: 50.w,
-                                            decoration: BoxDecoration(
-                                              borderRadius:
-                                                  BorderRadius.circular(10),
-                                              color: Colors.deepPurple[50],
-                                            ),
-                                            child: IconButton(
-                                              icon: Icon(Icons.delete,
-                                                  color: Colors.redAccent),
-                                              onPressed: () => Get.dialog(
-                                                AlertDialog(
-                                                  title: Text("Delete Item"),
-                                                  content: Text(
-                                                      "Are you sure you want to delete this item?"),
-                                                  actions: [
-                                                    TextButton(
-                                                      onPressed: () =>
-                                                          Get.back(),
-                                                      child: Text("Cancel"),
-                                                    ),
-                                                    ElevatedButton(
-                                                      onPressed: () {
-                                                        upvcAccessoriesController
-                                                            .deleteCard(data[
-                                                                    "id"]
-                                                                .toString());
-                                                        Get.back();
-                                                      },
-                                                      child: Text("Delete"),
-                                                    ),
-                                                  ],
-                                                ),
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                      Padding(
-                                        padding: EdgeInsets.all(8),
-                                        child: Column(
-                                          children: [
-                                            Row(
-                                              children: [
-                                                Expanded(
-                                                  child: buildDetailItem(
-                                                    "Basic Rate",
-                                                    editableTextField(
-                                                      data,
-                                                      "Basic Rate",
-                                                      (v) {},
-                                                      readOnly: true,
-                                                      fieldControllers:
-                                                          upvcAccessoriesController
-                                                              .fieldControllers,
-                                                    ),
-                                                  ),
-                                                ),
-                                                Gap(10),
-                                                Expanded(
-                                                  child: buildDetailItem(
-                                                    "Nos",
-                                                    editableTextField(
-                                                      data,
-                                                      "Nos",
-                                                      (v) {
-                                                        data["Nos"] = v;
-                                                        upvcAccessoriesController
-                                                            .debounceCalculation(
-                                                                data);
-                                                      },
-                                                      fieldControllers:
-                                                          upvcAccessoriesController
-                                                              .fieldControllers,
-                                                    ),
-                                                  ),
-                                                ),
-                                                Gap(10),
-                                                Expanded(
-                                                  child: buildDetailItem(
-                                                    "Amount",
-                                                    editableTextField(
-                                                      data,
-                                                      "Amount",
-                                                      (v) {},
-                                                      readOnly: true,
-                                                      fieldControllers:
-                                                          upvcAccessoriesController
-                                                              .fieldControllers,
-                                                    ),
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                            Gap(5),
-                                            Row(
-                                              children: [
-                                                Expanded(
-                                                  child: buildDetailItem(
-                                                    "CGST",
-                                                    editableTextField(
-                                                      data,
-                                                      "cgst",
-                                                      (v) {},
-                                                      readOnly: true,
-                                                      fieldControllers:
-                                                          upvcAccessoriesController
-                                                              .fieldControllers,
-                                                    ),
-                                                  ),
-                                                ),
-                                                Gap(10),
-                                                Expanded(
-                                                  child: buildDetailItem(
-                                                    "SGST",
-                                                    editableTextField(
-                                                      data,
-                                                      "sgst",
-                                                      (v) {},
-                                                      readOnly: true,
-                                                      fieldControllers:
-                                                          upvcAccessoriesController
-                                                              .fieldControllers,
-                                                    ),
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ],
                                         ),
-                                      ),
-                                    ],
+                                        Gap(10.w),
+                                        Expanded(
+                                          child: buildDetailItem(
+                                            "Nos",
+                                            editableTextField(
+                                              data,
+                                              "Nos",
+                                              (v) {
+                                                data["Nos"] = v;
+                                                upvcAccessoriesController
+                                                    .debounceCalculation(data);
+                                              },
+                                              fieldControllers:
+                                                  upvcAccessoriesController
+                                                      .fieldControllers,
+                                            ),
+                                          ),
+                                        ),
+                                        Gap(10.w),
+                                        Expanded(
+                                          child: buildDetailItem(
+                                            "Amount",
+                                            editableTextField(
+                                              data,
+                                              "Amount",
+                                              (v) {},
+                                              readOnly: true,
+                                              fieldControllers:
+                                                  upvcAccessoriesController
+                                                      .fieldControllers,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    Gap(8.h),
+                                    Row(
+                                      children: [
+                                        Expanded(
+                                          child: buildDetailItem(
+                                            "CGST",
+                                            editableTextField(
+                                              data,
+                                              "cgst",
+                                              (v) {},
+                                              readOnly: true,
+                                              fieldControllers:
+                                                  upvcAccessoriesController
+                                                      .fieldControllers,
+                                            ),
+                                          ),
+                                        ),
+                                        Gap(10.w),
+                                        Expanded(
+                                          child: buildDetailItem(
+                                            "SGST",
+                                            editableTextField(
+                                              data,
+                                              "sgst",
+                                              (v) {},
+                                              readOnly: true,
+                                              fieldControllers:
+                                                  upvcAccessoriesController
+                                                      .fieldControllers,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                  footer: SizedBox.shrink(),
+                                  onDelete: () => Get.dialog(
+                                    AlertDialog(
+                                      title: Text("Delete Item"),
+                                      content: Text(
+                                          "Are you sure you want to delete this item?"),
+                                      actions: [
+                                        TextButton(
+                                          onPressed: () => Get.back(),
+                                          child: Text("Cancel"),
+                                        ),
+                                        ElevatedButton(
+                                          onPressed: () {
+                                            upvcAccessoriesController
+                                                .deleteCard(
+                                                    data["id"].toString());
+                                            Get.back();
+                                          },
+                                          child: Text("Delete"),
+                                        ),
+                                      ],
+                                    ),
                                   ),
+                                  attachmentButton: SizedBox.shrink(),
                                 );
                               }).toList(),
                             ],
@@ -3694,255 +3087,196 @@ class SummaryScreen extends StatelessWidget {
                           .map((entry) {
                         final index = entry.key;
                         final data = Map<String, dynamic>.from(entry.value);
-                        return Card(
-                          margin: EdgeInsets.symmetric(vertical: 10),
-                          elevation: 2,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                        final productName = data["Products"] ?? 'N/A';
+                        final attachmentButton = Container(
+                          height: 40.h,
+                          width: 40.w,
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.green[100]!),
+                            borderRadius: BorderRadius.circular(10),
+                            color: Colors.green[50],
                           ),
-                          child: Column(
-                            children: [
-                              // Header Row with product name, ID, and delete button
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Expanded(
-                                    child: Text(
-                                      "${index + 1}. ${data["Products"] ?? 'N/A'}",
-                                      style: GoogleFonts.figtree(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.w600,
-                                        color: Colors.black87,
-                                      ),
-                                    ),
+                          child: IconButton(
+                            icon: Icon(Icons.attach_file,
+                                color: Colors.green[600], size: 20),
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => RollAttachment(
+                                    productId: data['id'].toString(),
+                                    mainProductId: rollSheetController
+                                        .currentMainProductId.value,
                                   ),
-                                  Container(
-                                    padding: EdgeInsets.symmetric(
-                                        horizontal: 8, vertical: 4),
-                                    decoration: BoxDecoration(
-                                      color: Colors.blue[50],
-                                      borderRadius: BorderRadius.circular(6),
-                                    ),
-                                    child: Text(
-                                      "ID: ${data['id'] ?? 'N/A'}",
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: Colors.blue[700],
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                    ),
-                                  ),
-                                  // Attachment Button for Roll Sheet
-                                  Container(
-                                    height: 40.h,
-                                    width: 40.w,
-                                    decoration: BoxDecoration(
-                                      border:
-                                          Border.all(color: Colors.green[100]!),
-                                      borderRadius: BorderRadius.circular(10),
-                                      color: Colors.green[50],
-                                    ),
-                                    child: IconButton(
-                                      icon: Icon(Icons.attach_file,
-                                          color: Colors.green[600], size: 20),
-                                      onPressed: () {
-                                        Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (context) =>
-                                                RollAttachment(
-                                              productId: data['id'].toString(),
-                                              mainProductId: rollSheetController
-                                                  .currentMainProductId.value,
-                                            ),
-                                          ),
-                                        );
-                                      },
-                                    ),
-                                  ),
-                                  IconButton(
-                                    icon: Icon(Icons.delete,
-                                        color: Colors.redAccent),
-                                    onPressed: () => Get.dialog(
-                                      AlertDialog(
-                                        title: Text("Delete Item"),
-                                        content: Text(
-                                            "Are you sure you want to delete this item?"),
-                                        actions: [
-                                          TextButton(
-                                            onPressed: () => Get.back(),
-                                            child: Text("Cancel"),
-                                          ),
-                                          ElevatedButton(
-                                            onPressed: () {
-                                              rollSheetController.deleteCard(
-                                                  data["id"].toString());
-                                              Get.back();
-                                            },
-                                            style: ElevatedButton.styleFrom(
-                                              backgroundColor: Colors.red,
-                                              foregroundColor: Colors.white,
-                                            ),
-                                            child: Text("Delete"),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              // Product Details
-                              Padding(
-                                padding: EdgeInsets.all(8),
-                                child: Column(
-                                  children: [
-                                    // First Row: UOM, Profile, Nos
-                                    Row(
-                                      children: [
-                                        Expanded(
-                                          child: buildDetailItem(
-                                            "UOM",
-                                            rollSheetController
-                                                .uomDropdown(data),
-                                          ),
-                                        ),
-                                        Gap(10),
-                                        Expanded(
-                                          child: buildDetailItem(
-                                            "Profile",
-                                            editableTextField(
-                                              data,
-                                              "Profile",
-                                              (v) {
-                                                data["Profile"] = v;
-                                                rollSheetController
-                                                    .debounceCalculation(data);
-                                              },
-                                              fieldControllers:
-                                                  rollSheetController
-                                                      .fieldControllers,
-                                            ),
-                                          ),
-                                        ),
-                                        Gap(10),
-                                        Expanded(
-                                          child: buildDetailItem(
-                                            "Nos",
-                                            editableTextField(
-                                              data,
-                                              "Nos",
-                                              (v) {
-                                                data["Nos"] = v;
-                                                rollSheetController
-                                                    .debounceCalculation(data);
-                                              },
-                                              fieldControllers:
-                                                  rollSheetController
-                                                      .fieldControllers,
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    Gap(5),
-                                    // Second Row: Basic Rate, SQMtr, Amount
-                                    Row(
-                                      children: [
-                                        Expanded(
-                                          child: buildDetailItem(
-                                            "Basic Rate",
-                                            editableTextField(
-                                              data,
-                                              "Basic Rate",
-                                              (v) {
-                                                data["Basic Rate"] = v;
-                                                rollSheetController
-                                                    .debounceCalculation(data);
-                                              },
-                                              readOnly: true,
-                                              fieldControllers:
-                                                  rollSheetController
-                                                      .fieldControllers,
-                                            ),
-                                          ),
-                                        ),
-                                        Gap(10),
-                                        Expanded(
-                                          child: buildDetailItem(
-                                            "SQMtr",
-                                            editableTextField(
-                                              data,
-                                              "SQMtr",
-                                              (v) {},
-                                              readOnly: true,
-                                              fieldControllers:
-                                                  rollSheetController
-                                                      .fieldControllers,
-                                            ),
-                                          ),
-                                        ),
-                                        Gap(10),
-                                        Expanded(
-                                          child: buildDetailItem(
-                                            "Amount",
-                                            editableTextField(
-                                              data,
-                                              "Amount",
-                                              (v) {},
-                                              readOnly: true,
-                                              fieldControllers:
-                                                  rollSheetController
-                                                      .fieldControllers,
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    Gap(5),
-                                    // Third Row: CGST, SGST
-                                    Row(
-                                      children: [
-                                        Expanded(
-                                          child: buildDetailItem(
-                                            "CGST",
-                                            editableTextField(
-                                              data,
-                                              "cgst",
-                                              (v) {},
-                                              readOnly: true,
-                                              fieldControllers:
-                                                  rollSheetController
-                                                      .fieldControllers,
-                                            ),
-                                          ),
-                                        ),
-                                        Gap(10),
-                                        Expanded(
-                                          child: buildDetailItem(
-                                            "SGST",
-                                            editableTextField(
-                                              data,
-                                              "sgst",
-                                              (v) {},
-                                              readOnly: true,
-                                              fieldControllers:
-                                                  rollSheetController
-                                                      .fieldControllers,
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    Gap(10),
-                                    // Base Product Search Field - USE THE PRIVATE METHOD HERE
-                                    _buildRollSheetBaseProductSearchField(
-                                        rollSheetController, data),
-                                  ],
                                 ),
-                              ),
-                            ],
+                              );
+                            },
                           ),
+                        );
+                        return _buildProductCard(
+                          index: index,
+                          data: data,
+                          productName: productName,
+                          headerActions: SizedBox.shrink(),
+                          detailRows: [
+                            // First Row: UOM, Profile, Nos
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: buildDetailItem(
+                                    "UOM",
+                                    rollSheetController.uomDropdown(data),
+                                  ),
+                                ),
+                                Gap(10.w),
+                                Expanded(
+                                  child: buildDetailItem(
+                                    "Profile",
+                                    editableTextField(
+                                      data,
+                                      "Profile",
+                                      (v) {
+                                        data["Profile"] = v;
+                                        rollSheetController
+                                            .debounceCalculation(data);
+                                      },
+                                      fieldControllers:
+                                          rollSheetController.fieldControllers,
+                                    ),
+                                  ),
+                                ),
+                                Gap(10.w),
+                                Expanded(
+                                  child: buildDetailItem(
+                                    "Nos",
+                                    editableTextField(
+                                      data,
+                                      "Nos",
+                                      (v) {
+                                        data["Nos"] = v;
+                                        rollSheetController
+                                            .debounceCalculation(data);
+                                      },
+                                      fieldControllers:
+                                          rollSheetController.fieldControllers,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Gap(8.h),
+                            // Second Row: Basic Rate, SQMtr, Amount
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: buildDetailItem(
+                                    "Basic Rate",
+                                    editableTextField(
+                                      data,
+                                      "Basic Rate",
+                                      (v) {
+                                        data["Basic Rate"] = v;
+                                        rollSheetController
+                                            .debounceCalculation(data);
+                                      },
+                                      readOnly: true,
+                                      fieldControllers:
+                                          rollSheetController.fieldControllers,
+                                    ),
+                                  ),
+                                ),
+                                Gap(10.w),
+                                Expanded(
+                                  child: buildDetailItem(
+                                    "SQMtr",
+                                    editableTextField(
+                                      data,
+                                      "SQMtr",
+                                      (v) {},
+                                      readOnly: true,
+                                      fieldControllers:
+                                          rollSheetController.fieldControllers,
+                                    ),
+                                  ),
+                                ),
+                                Gap(10.w),
+                                Expanded(
+                                  child: buildDetailItem(
+                                    "Amount",
+                                    editableTextField(
+                                      data,
+                                      "Amount",
+                                      (v) {},
+                                      readOnly: true,
+                                      fieldControllers:
+                                          rollSheetController.fieldControllers,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Gap(8.h),
+                            // Third Row: CGST, SGST
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: buildDetailItem(
+                                    "CGST",
+                                    editableTextField(
+                                      data,
+                                      "cgst",
+                                      (v) {},
+                                      readOnly: true,
+                                      fieldControllers:
+                                          rollSheetController.fieldControllers,
+                                    ),
+                                  ),
+                                ),
+                                Gap(10.w),
+                                Expanded(
+                                  child: buildDetailItem(
+                                    "SGST",
+                                    editableTextField(
+                                      data,
+                                      "sgst",
+                                      (v) {},
+                                      readOnly: true,
+                                      fieldControllers:
+                                          rollSheetController.fieldControllers,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                          footer: _buildRollSheetBaseProductSearchField(
+                              rollSheetController, data),
+                          onDelete: () => Get.dialog(
+                            AlertDialog(
+                              title: Text("Delete Item"),
+                              content: Text(
+                                  "Are you sure you want to delete this item?"),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Get.back(),
+                                  child: Text("Cancel"),
+                                ),
+                                ElevatedButton(
+                                  onPressed: () {
+                                    rollSheetController
+                                        .deleteCard(data["id"].toString());
+                                    Get.back();
+                                  },
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.red,
+                                    foregroundColor: Colors.white,
+                                  ),
+                                  child: Text("Delete"),
+                                ),
+                              ],
+                            ),
+                          ),
+                          attachmentButton: attachmentButton,
                         );
                       }).toList(),
                     ],
@@ -3967,227 +3301,179 @@ class SummaryScreen extends StatelessWidget {
                                 final index = entry.key;
                                 final data =
                                     Map<String, dynamic>.from(entry.value);
-                                return Card(
-                                  margin: EdgeInsets.symmetric(vertical: 10),
-                                  elevation: 2,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: Column(
-                                    children: [
-                                      Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.spaceBetween,
-                                        children: [
-                                          Expanded(
-                                            child: Text(
-                                              "${index + 1}. ${data["Products"] ?? 'N/A'}",
-                                              style: GoogleFonts.figtree(
-                                                fontSize: 18,
-                                                fontWeight: FontWeight.w600,
-                                                color: Colors.black87,
-                                              ),
-                                            ),
+                                final productName = data["Products"] ?? 'N/A';
+                                return _buildProductCard(
+                                  index: index,
+                                  data: data,
+                                  productName: productName,
+                                  headerActions: SizedBox.shrink(),
+                                  detailRows: [
+                                    Row(
+                                      children: [
+                                        Expanded(
+                                          child: buildDetailItem(
+                                            "UOM",
+                                            giStiffnerController
+                                                .uomDropdown(data),
                                           ),
-                                          Container(
-                                            padding: EdgeInsets.symmetric(
-                                                horizontal: 8, vertical: 4),
-                                            decoration: BoxDecoration(
-                                              color: Colors.blue[50],
-                                              borderRadius:
-                                                  BorderRadius.circular(6),
-                                            ),
-                                            child: Text(
-                                              "ID: ${data['id'] ?? 'N/A'}",
-                                              style: TextStyle(
-                                                fontSize: 12,
-                                                color: Colors.blue[700],
-                                                fontWeight: FontWeight.w500,
-                                              ),
-                                            ),
-                                          ),
-                                          IconButton(
-                                            icon: Icon(Icons.delete,
-                                                color: Colors.redAccent),
-                                            onPressed: () => Get.dialog(
-                                              AlertDialog(
-                                                title: Text("Delete Item"),
-                                                content: Text(
-                                                    "Are you sure you want to delete this item?"),
-                                                actions: [
-                                                  TextButton(
-                                                    onPressed: () => Get.back(),
-                                                    child: Text("Cancel"),
-                                                  ),
-                                                  ElevatedButton(
-                                                    onPressed: () {
-                                                      giStiffnerController
-                                                          .deleteCard(data["id"]
-                                                              .toString());
-                                                      Get.back();
-                                                    },
-                                                    child: Text("Delete"),
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                      Padding(
-                                        padding: EdgeInsets.all(8),
-                                        child: Column(
-                                          children: [
-                                            Row(
-                                              children: [
-                                                Expanded(
-                                                  child: buildDetailItem(
-                                                    "UOM",
-                                                    giStiffnerController
-                                                        .uomDropdown(data),
-                                                  ),
-                                                ),
-                                                Gap(10),
-                                                Expanded(
-                                                  child: buildDetailItem(
-                                                    "Billing Option",
-                                                    giStiffnerController
-                                                        .billingDropdown(data),
-                                                  ),
-                                                ),
-                                                Gap(10),
-                                                Expanded(
-                                                  child: buildDetailItem(
-                                                    "Length",
-                                                    editableTextField(
-                                                      data,
-                                                      "Length",
-                                                      (v) {
-                                                        data["Length"] = v;
-                                                        giStiffnerController
-                                                            .debounceCalculation(
-                                                                data);
-                                                      },
-                                                      fieldControllers:
-                                                          giStiffnerController
-                                                              .fieldControllers,
-                                                    ),
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                            Gap(5),
-                                            Row(
-                                              children: [
-                                                Expanded(
-                                                  child: buildDetailItem(
-                                                    "Nos",
-                                                    editableTextField(
-                                                      data,
-                                                      "Nos",
-                                                      (v) {
-                                                        data["Nos"] = v;
-                                                        giStiffnerController
-                                                            .debounceCalculation(
-                                                                data);
-                                                      },
-                                                      fieldControllers:
-                                                          giStiffnerController
-                                                              .fieldControllers,
-                                                    ),
-                                                  ),
-                                                ),
-                                                Gap(10),
-                                                Expanded(
-                                                  child: buildDetailItem(
-                                                    "Basic Rate",
-                                                    editableTextField(
-                                                      data,
-                                                      "Basic Rate",
-                                                      (v) {
-                                                        data["Basic Rate"] = v;
-                                                        giStiffnerController
-                                                            .debounceCalculation(
-                                                                data);
-                                                      },
-                                                      readOnly: true,
-                                                      fieldControllers:
-                                                          giStiffnerController
-                                                              .fieldControllers,
-                                                    ),
-                                                  ),
-                                                ),
-                                                Gap(10),
-                                                Expanded(
-                                                  child: buildDetailItem(
-                                                    "Qty",
-                                                    editableTextField(
-                                                      data,
-                                                      "qty",
-                                                      (v) {},
-                                                      readOnly: true,
-                                                      fieldControllers:
-                                                          giStiffnerController
-                                                              .fieldControllers,
-                                                    ),
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                            Gap(5),
-                                            Row(
-                                              children: [
-                                                Expanded(
-                                                  child: buildDetailItem(
-                                                    "Amount",
-                                                    editableTextField(
-                                                      data,
-                                                      "Amount",
-                                                      (v) {},
-                                                      readOnly: true,
-                                                      fieldControllers:
-                                                          giStiffnerController
-                                                              .fieldControllers,
-                                                    ),
-                                                  ),
-                                                ),
-                                                Gap(10),
-                                                Expanded(
-                                                  child: buildDetailItem(
-                                                    "CGST",
-                                                    editableTextField(
-                                                      data,
-                                                      "cgst",
-                                                      (v) {},
-                                                      readOnly: true,
-                                                      fieldControllers:
-                                                          giStiffnerController
-                                                              .fieldControllers,
-                                                    ),
-                                                  ),
-                                                ),
-                                                Gap(10),
-                                                Expanded(
-                                                  child: buildDetailItem(
-                                                    "SGST",
-                                                    editableTextField(
-                                                      data,
-                                                      "sgst",
-                                                      (v) {},
-                                                      readOnly: true,
-                                                      fieldControllers:
-                                                          giStiffnerController
-                                                              .fieldControllers,
-                                                    ),
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ],
                                         ),
-                                      ),
-                                    ],
+                                        Gap(10.w),
+                                        Expanded(
+                                          child: buildDetailItem(
+                                            "Billing Option",
+                                            giStiffnerController
+                                                .billingDropdown(data),
+                                          ),
+                                        ),
+                                        Gap(10.w),
+                                        Expanded(
+                                          child: buildDetailItem(
+                                            "Length",
+                                            editableTextField(
+                                              data,
+                                              "Length",
+                                              (v) {
+                                                data["Length"] = v;
+                                                giStiffnerController
+                                                    .debounceCalculation(data);
+                                              },
+                                              fieldControllers:
+                                                  giStiffnerController
+                                                      .fieldControllers,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    Gap(8.h),
+                                    Row(
+                                      children: [
+                                        Expanded(
+                                          child: buildDetailItem(
+                                            "Nos",
+                                            editableTextField(
+                                              data,
+                                              "Nos",
+                                              (v) {
+                                                data["Nos"] = v;
+                                                giStiffnerController
+                                                    .debounceCalculation(data);
+                                              },
+                                              fieldControllers:
+                                                  giStiffnerController
+                                                      .fieldControllers,
+                                            ),
+                                          ),
+                                        ),
+                                        Gap(10.w),
+                                        Expanded(
+                                          child: buildDetailItem(
+                                            "Basic Rate",
+                                            editableTextField(
+                                              data,
+                                              "Basic Rate",
+                                              (v) {
+                                                data["Basic Rate"] = v;
+                                                giStiffnerController
+                                                    .debounceCalculation(data);
+                                              },
+                                              readOnly: true,
+                                              fieldControllers:
+                                                  giStiffnerController
+                                                      .fieldControllers,
+                                            ),
+                                          ),
+                                        ),
+                                        Gap(10.w),
+                                        Expanded(
+                                          child: buildDetailItem(
+                                            "Qty",
+                                            editableTextField(
+                                              data,
+                                              "qty",
+                                              (v) {},
+                                              readOnly: true,
+                                              fieldControllers:
+                                                  giStiffnerController
+                                                      .fieldControllers,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    Gap(8.h),
+                                    Row(
+                                      children: [
+                                        Expanded(
+                                          child: buildDetailItem(
+                                            "Amount",
+                                            editableTextField(
+                                              data,
+                                              "Amount",
+                                              (v) {},
+                                              readOnly: true,
+                                              fieldControllers:
+                                                  giStiffnerController
+                                                      .fieldControllers,
+                                            ),
+                                          ),
+                                        ),
+                                        Gap(10.w),
+                                        Expanded(
+                                          child: buildDetailItem(
+                                            "CGST",
+                                            editableTextField(
+                                              data,
+                                              "cgst",
+                                              (v) {},
+                                              readOnly: true,
+                                              fieldControllers:
+                                                  giStiffnerController
+                                                      .fieldControllers,
+                                            ),
+                                          ),
+                                        ),
+                                        Gap(10.w),
+                                        Expanded(
+                                          child: buildDetailItem(
+                                            "SGST",
+                                            editableTextField(
+                                              data,
+                                              "sgst",
+                                              (v) {},
+                                              readOnly: true,
+                                              fieldControllers:
+                                                  giStiffnerController
+                                                      .fieldControllers,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                  footer: SizedBox.shrink(),
+                                  onDelete: () => Get.dialog(
+                                    AlertDialog(
+                                      title: Text("Delete Item"),
+                                      content: Text(
+                                          "Are you sure you want to delete this item?"),
+                                      actions: [
+                                        TextButton(
+                                          onPressed: () => Get.back(),
+                                          child: Text("Cancel"),
+                                        ),
+                                        ElevatedButton(
+                                          onPressed: () {
+                                            giStiffnerController.deleteCard(
+                                                data["id"].toString());
+                                            Get.back();
+                                          },
+                                          child: Text("Delete"),
+                                        ),
+                                      ],
+                                    ),
                                   ),
+                                  attachmentButton: SizedBox.shrink(),
                                 );
                               }),
                             ],
@@ -4221,177 +3507,122 @@ class SummaryScreen extends StatelessWidget {
                                 data['sgst'] = data['sgst']?.toString() ?? '0';
                                 screwAcesssController.calculateAmount(
                                     data); // Recalculate to ensure consistency
-                                return Card(
-                                  margin: EdgeInsets.symmetric(vertical: 10),
-                                  elevation: 2,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: Padding(
-                                    padding: EdgeInsets.all(16),
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
+                                final productName = data["Products"] ?? 'N/A';
+                                return _buildProductCard(
+                                  index: index,
+                                  data: data,
+                                  productName: productName,
+                                  headerActions: SizedBox.shrink(),
+                                  detailRows: [
+                                    Row(
                                       children: [
-                                        Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.spaceBetween,
-                                          children: [
-                                            Expanded(
-                                              child: Text(
-                                                "${index + 1}. ${data["Products"] ?? 'N/A'}",
-                                                style: GoogleFonts.figtree(
-                                                  fontSize: 18,
-                                                  fontWeight: FontWeight.w600,
-                                                  color: Colors.black87,
-                                                ),
-                                              ),
+                                        Expanded(
+                                          child: buildDetailItem(
+                                            "Basic Rate",
+                                            editableTextField(
+                                              data,
+                                              "Basic Rate",
+                                              (v) {
+                                                data["Basic Rate"] = v;
+                                                screwAcesssController
+                                                    .calculateAmount(data);
+                                              },
+                                              fieldControllers:
+                                                  screwAcesssController
+                                                      .fieldControllers,
                                             ),
-                                            Container(
-                                              padding: EdgeInsets.symmetric(
-                                                  horizontal: 8, vertical: 4),
-                                              decoration: BoxDecoration(
-                                                color: Colors.blue[50],
-                                                borderRadius:
-                                                    BorderRadius.circular(6),
-                                              ),
-                                              child: Text(
-                                                "ID: ${data['id'] ?? 'N/A'}",
-                                                style: TextStyle(
-                                                  fontSize: 12,
-                                                  color: Colors.blue[700],
-                                                  fontWeight: FontWeight.w500,
-                                                ),
-                                              ),
-                                            ),
-                                            IconButton(
-                                              icon: Icon(Icons.delete,
-                                                  color: Colors.redAccent),
-                                              onPressed: () => Get.dialog(
-                                                AlertDialog(
-                                                  title: Text("Delete Item"),
-                                                  content: Text(
-                                                      "Are you sure you want to delete this item?"),
-                                                  actions: [
-                                                    TextButton(
-                                                      onPressed: () =>
-                                                          Get.back(),
-                                                      child: Text("Cancel"),
-                                                    ),
-                                                    ElevatedButton(
-                                                      onPressed: () {
-                                                        screwAcesssController
-                                                            .deleteCard(data[
-                                                                    "id"]
-                                                                .toString());
-                                                        Get.back();
-                                                      },
-                                                      child: Text("Delete"),
-                                                    ),
-                                                  ],
-                                                ),
-                                              ),
-                                            ),
-                                          ],
+                                          ),
                                         ),
-                                        SizedBox(height: 16),
-                                        Column(
-                                          children: [
-                                            Row(
-                                              children: [
-                                                Expanded(
-                                                  child: buildDetailItem(
-                                                    "Basic Rate",
-                                                    editableTextField(
-                                                      data,
-                                                      "Basic Rate",
-                                                      (v) {
-                                                        data["Basic Rate"] = v;
-                                                        screwAcesssController
-                                                            .calculateAmount(
-                                                                data);
-                                                      },
-                                                      fieldControllers:
-                                                          screwAcesssController
-                                                              .fieldControllers,
-                                                    ),
-                                                  ),
-                                                ),
-                                                Gap(10),
-                                                Expanded(
-                                                  child: buildDetailItem(
-                                                    "Nos",
-                                                    editableTextField(
-                                                      data,
-                                                      "Nos",
-                                                      (v) {
-                                                        data["Nos"] = v;
-                                                        screwAcesssController
-                                                            .calculateAmount(
-                                                                data);
-                                                      },
-                                                      fieldControllers:
-                                                          screwAcesssController
-                                                              .fieldControllers,
-                                                    ),
-                                                  ),
-                                                ),
-                                              ],
+                                        Gap(10.w),
+                                        Expanded(
+                                          child: buildDetailItem(
+                                            "Nos",
+                                            editableTextField(
+                                              data,
+                                              "Nos",
+                                              (v) {
+                                                data["Nos"] = v;
+                                                screwAcesssController
+                                                    .calculateAmount(data);
+                                              },
+                                              fieldControllers:
+                                                  screwAcesssController
+                                                      .fieldControllers,
                                             ),
-                                            Gap(5),
-                                            Row(
-                                              children: [
-                                                Expanded(
-                                                  child: buildDetailItem(
-                                                    "Amount",
-                                                    editableTextField(
-                                                      data,
-                                                      "Amount",
-                                                      (v) {},
-                                                      readOnly: true,
-                                                      fieldControllers:
-                                                          screwController
-                                                              .fieldControllers,
-                                                    ),
-                                                  ),
-                                                ),
-                                                Gap(10),
-                                                Expanded(
-                                                  child: buildDetailItem(
-                                                    "CGST",
-                                                    editableTextField(
-                                                      data,
-                                                      "cgst",
-                                                      (v) {},
-                                                      readOnly: true,
-                                                      fieldControllers:
-                                                          screwController
-                                                              .fieldControllers,
-                                                    ),
-                                                  ),
-                                                ),
-                                                Gap(10),
-                                                Expanded(
-                                                  child: buildDetailItem(
-                                                    "SGST",
-                                                    editableTextField(
-                                                      data,
-                                                      "sgst",
-                                                      (v) {},
-                                                      readOnly: true,
-                                                      fieldControllers:
-                                                          screwController
-                                                              .fieldControllers,
-                                                    ),
-                                                  ),
-                                                ),
-                                              ],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    Gap(8.h),
+                                    Row(
+                                      children: [
+                                        Expanded(
+                                          child: buildDetailItem(
+                                            "Amount",
+                                            editableTextField(
+                                              data,
+                                              "Amount",
+                                              (v) {},
+                                              readOnly: true,
+                                              fieldControllers: screwController
+                                                  .fieldControllers,
                                             ),
-                                          ],
+                                          ),
+                                        ),
+                                        Gap(10.w),
+                                        Expanded(
+                                          child: buildDetailItem(
+                                            "CGST",
+                                            editableTextField(
+                                              data,
+                                              "cgst",
+                                              (v) {},
+                                              readOnly: true,
+                                              fieldControllers: screwController
+                                                  .fieldControllers,
+                                            ),
+                                          ),
+                                        ),
+                                        Gap(10.w),
+                                        Expanded(
+                                          child: buildDetailItem(
+                                            "SGST",
+                                            editableTextField(
+                                              data,
+                                              "sgst",
+                                              (v) {},
+                                              readOnly: true,
+                                              fieldControllers: screwController
+                                                  .fieldControllers,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                  footer: SizedBox.shrink(),
+                                  onDelete: () => Get.dialog(
+                                    AlertDialog(
+                                      title: Text("Delete Item"),
+                                      content: Text(
+                                          "Are you sure you want to delete this item?"),
+                                      actions: [
+                                        TextButton(
+                                          onPressed: () => Get.back(),
+                                          child: Text("Cancel"),
+                                        ),
+                                        ElevatedButton(
+                                          onPressed: () {
+                                            screwAcesssController.deleteCard(
+                                                data["id"].toString());
+                                            Get.back();
+                                          },
+                                          child: Text("Delete"),
                                         ),
                                       ],
                                     ),
                                   ),
+                                  attachmentButton: SizedBox.shrink(),
                                 );
                               }),
                             ],

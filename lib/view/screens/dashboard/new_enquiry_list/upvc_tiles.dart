@@ -505,19 +505,12 @@ class UpvcTiles extends GetView<UpvcTilesController> {
                                                             data))),
                                                 Gap(10),
                                                 Expanded(
-                                                    child: buildDetailItem(
-                                                        "Length",
-                                                        editableTextField(
-                                                            data, "Length",
-                                                            (v) {
-                                                          data["Length"] = v;
-                                                          controller
-                                                              .debounceCalculation(
-                                                                  data);
-                                                        },
-                                                            fieldControllers:
-                                                                controller
-                                                                    .fieldControllers))),
+                                                  child: buildDetailItem(
+                                                    "Length",
+                                                    controller
+                                                        .lengthDropdown(data),
+                                                  ),
+                                                ),
                                                 Gap(10),
                                                 Expanded(
                                                     child: buildDetailItem(

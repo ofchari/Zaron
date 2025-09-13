@@ -803,88 +803,118 @@ class _TotalQuoationViewState extends State<TotalQuoationView> {
     return Scaffold(
         backgroundColor: Colors.blue.shade50,
         appBar: AppBar(
-          centerTitle: true,
-          elevation: 0,
-          backgroundColor: Colors.transparent,
-          flexibleSpace: Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  Colors.blue.shade200,
-                  Colors.blue,
-                ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.only(
-                bottomLeft: Radius.circular(25),
-                bottomRight: Radius.circular(25),
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
-                  blurRadius: 5,
-                  offset: Offset(0, 5),
+            centerTitle: true,
+            elevation: 0,
+            backgroundColor: Colors.transparent,
+            flexibleSpace: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    Colors.blue.shade200,
+                    Colors.blue,
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
                 ),
-              ],
-            ),
-          ),
-          title: Container(
-            width: width * 0.4, // Give more width to title
-            padding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: Colors.white.withOpacity(0.3)),
-            ),
-            child: MyText(
-                text: "Total Quotation View",
-                weight: FontWeight.w600,
-                color: Colors.white),
-          ),
-          actions: [
-            GestureDetector(
-              onTap: () {
-                postOverView();
-              },
-              child: Icon(
-                Icons.language,
-                color: Colors.white,
-                size: 28,
+                borderRadius: BorderRadius.only(
+                  bottomLeft: Radius.circular(25),
+                  bottomRight: Radius.circular(25),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 5,
+                    offset: Offset(0, 5),
+                  ),
+                ],
               ),
             ),
-            Gap(8),
-            GestureDetector(
-              onTap: () {
-                List<Map<String, dynamic>> allRows = [];
-                categoryData.forEach((key, value) {
-                  allRows.addAll(value);
-                });
-                showModalBottomSheet(
-                  context: context,
-                  isScrollControlled: true,
-                  backgroundColor: Colors.transparent,
-                  builder: (context) =>
-                      DeliveryTimeBottomSheet(allRows: allRows, id: widget.id),
-                );
-              },
-              child: Icon(
-                Icons.add,
-                color: Colors.white,
-                size: 28,
+            title: Container(
+              width: width * 0.4, // Give more width to title
+              padding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: Colors.white.withOpacity(0.3)),
               ),
+              child: MyText(
+                  text: "Total Quotation View",
+                  weight: FontWeight.w600,
+                  color: Colors.white),
             ),
-            Gap(10),
-            IconButton(
-                onPressed: () {
+            actions: [
+              // Language icon in a rounded glassmorphic container
+              GestureDetector(
+                onTap: () {
+                  postOverView();
+                },
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(15),
+                    border: Border.all(color: Colors.white.withOpacity(0.3)),
+                  ),
+                  child: const Icon(
+                    Icons.language,
+                    color: Colors.white,
+                    size: 20,
+                  ),
+                ),
+              ),
+              const Gap(4),
+
+              // Add icon in a rounded glassmorphic container
+              GestureDetector(
+                onTap: () {
+                  List<Map<String, dynamic>> allRows = [];
+                  categoryData.forEach((key, value) {
+                    allRows.addAll(value);
+                  });
+                  showModalBottomSheet(
+                    context: context,
+                    isScrollControlled: true,
+                    backgroundColor: Colors.transparent,
+                    builder: (context) => DeliveryTimeBottomSheet(
+                        allRows: allRows, id: widget.id),
+                  );
+                },
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(15),
+                    border: Border.all(color: Colors.white.withOpacity(0.3)),
+                  ),
+                  child: const Icon(
+                    Icons.add,
+                    color: Colors.white,
+                    size: 20,
+                  ),
+                ),
+              ),
+              const Gap(4),
+              // Summary icon in a rounded glassmorphic container
+              GestureDetector(
+                onTap: () {
                   Get.to(SummaryScreen());
                 },
-                icon: Icon(
-                  Icons.note_alt_sharp,
-                  color: Colors.black,
-                )),
-          ],
-        ),
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(15),
+                    border: Border.all(color: Colors.white.withOpacity(0.3)),
+                  ),
+                  child: const Icon(
+                    Icons.note_alt_sharp,
+                    color: Colors.white, // consistent white color
+                    size: 20,
+                  ),
+                ),
+              ),
+              const Gap(10),
+            ]),
         body: isLoading
             ? const Center(child: CircularProgressIndicator())
             : Column(

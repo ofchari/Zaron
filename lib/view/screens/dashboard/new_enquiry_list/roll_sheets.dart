@@ -1,4 +1,3 @@
-// roll_sheet_screen.dart
 import 'package:dropdown_search/dropdown_search.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -696,6 +695,8 @@ class RollSheet extends GetView<RollSheetController> {
       controller.baseProductResults[productId] = [];
       controller.selectedBaseProducts[productId] = null;
       controller.isSearchingBaseProducts[productId] = false;
+      controller.showUpdateButton[productId] =
+          false; // Initialize button visibility
     }
 
     return Column(
@@ -727,7 +728,6 @@ class RollSheet extends GetView<RollSheetController> {
                 horizontal: 16,
                 vertical: 10,
               ),
-              // Fixed suffixIcon - use conditional widget instead of null
               suffixIcon: Obx(() {
                 if (controller.isSearchingBaseProducts[productId] == true) {
                   return Padding(
@@ -739,15 +739,18 @@ class RollSheet extends GetView<RollSheetController> {
                     ),
                   );
                 }
-                return SizedBox.shrink(); // Return empty widget instead of null
+                return SizedBox.shrink();
               }),
             ),
             onChanged: (value) {
               controller.searchBaseProducts(value, productId);
+              // Show button when user starts typing
+              if (value.isNotEmpty) {
+                controller.showUpdateButton[productId] = true;
+              }
             },
           ),
         ),
-        // Rest of the code remains the same...
         Obx(() => controller.baseProductResults[productId]?.isNotEmpty == true
             ? Container(
                 width: 200.w,
@@ -778,6 +781,8 @@ class RollSheet extends GetView<RollSheetController> {
                           controller.baseProductControllers[productId]!.text =
                               controller.selectedBaseProducts[productId]!;
                           controller.baseProductResults[productId] = [];
+                          controller.showUpdateButton[productId] =
+                              true; // Show button on selection
                         },
                         child: Container(
                           width: double.infinity,
@@ -857,6 +862,7 @@ class RollSheet extends GetView<RollSheetController> {
                         controller.selectedBaseProducts[productId] = null;
                         controller.baseProductControllers[productId]!.clear();
                         controller.baseProductResults[productId] = [];
+                        controller.showUpdateButton[productId] = false;
                       },
                       child:
                           Icon(Icons.close, color: Colors.grey[600], size: 20),
@@ -865,7 +871,8 @@ class RollSheet extends GetView<RollSheetController> {
                 ),
               )
             : SizedBox.shrink()),
-        Obx(() => controller.selectedBaseProducts[productId] != null
+        Obx(() => controller.showUpdateButton[productId] == true &&
+                controller.selectedBaseProducts[productId] != null
             ? Container(
                 margin: EdgeInsets.only(top: 8),
                 width: 200.w,

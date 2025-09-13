@@ -42,6 +42,8 @@ class RollSheetController extends GetxController {
   var baseProductResults = <String, List<dynamic>>{}.obs;
   var selectedBaseProducts = <String, String?>{}.obs;
   var isSearchingBaseProducts = <String, bool>{}.obs;
+  // New reactive map to control update button visibility per productId
+  var showUpdateButton = <String, bool>{}.obs;
 
   @override
   void onInit() {
@@ -477,6 +479,21 @@ class RollSheetController extends GetxController {
           backgroundColor: Colors.green,
           colorText: Colors.white,
         );
+        ScaffoldMessenger.of(Get.context!).showSnackBar(
+          SnackBar(
+            content: const Text(
+              "Product deleted successfully",
+              style: TextStyle(color: Colors.white),
+            ),
+            backgroundColor: Colors.green,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            margin: const EdgeInsets.all(16),
+            duration: const Duration(seconds: 2),
+          ),
+        );
       } else {
         throw Exception("Failed to delete card with ID $deleteId");
       }
@@ -766,6 +783,11 @@ class RollSheetController extends GetxController {
       );
 
       if (response.statusCode == 200) {
+        print(response.body);
+        print(response.body);
+        print(response.body);
+        print(response.statusCode);
+        print(response.statusCode);
         final responseData = jsonDecode(response.body);
         print("Base product response for $productId: $responseData");
         baseProductResults[productId] = responseData['base_products'] ?? [];
@@ -794,6 +816,11 @@ class RollSheetController extends GetxController {
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
+        print(response.body);
+        print(response.body);
+        print(response.body);
+        print(response.statusCode);
+        print(response.statusCode);
         final responseData = jsonDecode(response.body);
         print("Base product updated successfully: $responseData");
         Get.snackbar(
@@ -802,6 +829,12 @@ class RollSheetController extends GetxController {
           backgroundColor: Colors.green,
           colorText: Colors.white,
         );
+
+        // Hide only the update button after successful update
+        showUpdateButton[productId] = false;
+
+        // Note: Do NOT clear selectedBaseProducts, baseProductControllers, or baseProductResults
+        // This keeps the text field value and selected product visible
       } else {
         print(
             "Failed to update base product. Status code: ${response.statusCode}");

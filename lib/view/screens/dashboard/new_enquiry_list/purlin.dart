@@ -532,40 +532,6 @@ class Purlin extends GetView<PurlinController> {
                           ),
                         ),
                       ),
-                      Gap(4.w),
-                      Container(
-                        height: 40.h,
-                        width: 40.w,
-                        decoration: BoxDecoration(
-                          border: Border.all(color: Colors.red[200]!),
-                          borderRadius: BorderRadius.circular(10),
-                          color: Colors.red[50],
-                        ),
-                        child: IconButton(
-                          icon: Icon(Icons.delete_outline,
-                              color: Colors.redAccent, size: 20),
-                          onPressed: () => Get.dialog(
-                            AlertDialog(
-                              title: Text("Delete Item"),
-                              content: Text(
-                                  "Are you sure you want to delete this item?"),
-                              actions: [
-                                ElevatedButton(
-                                    onPressed: () => Get.back(),
-                                    child: Text("Cancel")),
-                                ElevatedButton(
-                                  onPressed: () {
-                                    controller
-                                        .deleteCard(data["id"].toString());
-                                    Get.back();
-                                  },
-                                  child: Text("Delete"),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
                     ],
                   ),
                 ),
@@ -717,6 +683,38 @@ class Purlin extends GetView<PurlinController> {
                       Icons.attach_file,
                       color: Colors.green[600],
                       size: 18,
+                    ),
+                  ),
+                ),
+              ),
+              Gap(4.w),
+              Container(
+                height: 40.h,
+                width: 40.w,
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.red[200]!),
+                  borderRadius: BorderRadius.circular(10),
+                  color: Colors.red[50],
+                ),
+                child: IconButton(
+                  icon: Icon(Icons.delete_outline,
+                      color: Colors.redAccent, size: 20),
+                  onPressed: () => Get.dialog(
+                    AlertDialog(
+                      title: Text("Delete Item"),
+                      content:
+                          Text("Are you sure you want to delete this item?"),
+                      actions: [
+                        ElevatedButton(
+                            onPressed: () => Get.back(), child: Text("Cancel")),
+                        ElevatedButton(
+                          onPressed: () {
+                            controller.deleteCard(data["id"].toString());
+                            Get.back();
+                          },
+                          child: Text("Delete"),
+                        ),
+                      ],
                     ),
                   ),
                 ),

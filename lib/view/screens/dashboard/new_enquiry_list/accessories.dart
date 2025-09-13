@@ -17,25 +17,6 @@ class Accessories extends GetView<AccessoriesController> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // appBar: AppBar(
-      //   title: Text(
-      //     'Accessories',
-      //     style: GoogleFonts.poppins(
-      //         fontSize: 20, fontWeight: FontWeight.w600, color: Colors.black87),
-      //   ),
-      //   centerTitle: true,
-      //   elevation: 0,
-      //   backgroundColor: Colors.white,
-      //   leading: IconButton(
-      //       icon: Icon(Icons.arrow_back, color: Colors.black87),
-      //       onPressed: () => Navigator.pop(context)),
-      //   // actions: [
-      //   //   IconButton(
-      //   //     icon: Icon(Icons.view_list, color: Colors.black87),
-      //   //     onPressed: () => Get.to(() => SummaryScreen()),
-      //   //   ),
-      //   // ],
-      // ),
       body: SafeArea(
         child: Container(
           decoration: BoxDecoration(
